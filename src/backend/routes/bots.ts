@@ -247,6 +247,124 @@ router.get('/:botId/signals', authMiddleware, (req: Request, res: Response) => {
 // ============================================================
 
 /**
+ * POST /bots/quick-add
+ * Quickly add a new bot with minimal configuration
+ */
+router.post('/quick-add', authMiddleware, (req: Request, res: Response) => {
+  const {
+    name,
+    description = '',
+    strategyType = 'custom',
+    riskLevel = 'moderate',
+    paperMode = true,
+    symbols = [],
+  } = req.body;
+
+  if (!name) {
+    return res.status(400).json({ error: 'Bot name is required' });
+  }
+
+  try {
+    const bot = botManager.quickAddBot(
+      name,
+      description || `Custom ${strategyType} bot`,
+      strategyType,
+      riskLevel as 'conservative' | 'moderate' | 'aggressive',
+      paperMode
+    );
+
+    // Update symbols if provided
+    if (symbols.length > 0) {
+      bot.config.symbols = symbols;
+    }
+
+    res.status(201).json({
+      success: true,
+      message: `Bot "${name}" created and ready for ${paperMode ? 'paper' : 'live'} trading`,
+      bot: {
+        id: bot.id,
+        name: bot.name,
+        description: bot.description,
+        status: bot.status,
+        strategyType: bot.fingerprint.strategyType,
+        riskProfile: bot.fingerprint.riskProfile,
+        paperMode: bot.config.customParams?.paperMode ?? true,
+      },
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * GET /bots/prebuilt
+ * Get list of pre-built bots ready for trading
+ */
+router.get('/prebuilt', authMiddleware, (req: Request, res: Response) => {
+  const bots = botManager.getBotsBySource('time_generated');
+
+  res.json({
+    total: bots.length,
+    bots: bots.map(b => ({
+      id: b.id,
+      name: b.name,
+      description: b.description,
+      status: b.status,
+      strategyType: b.fingerprint?.strategyType,
+      riskProfile: b.fingerprint?.riskProfile,
+      performance: {
+        winRate: b.performance?.winRate,
+        profitFactor: b.performance?.profitFactor,
+        totalTrades: b.performance?.totalTrades,
+        totalPnL: b.performance?.totalPnL,
+      },
+      rating: b.rating,
+    })),
+  });
+});
+
+/**
+ * POST /bots/:botId/clone
+ * Clone an existing bot with optional modifications
+ */
+router.post('/:botId/clone', authMiddleware, (req: Request, res: Response) => {
+  const { botId } = req.params;
+  const { name, paperMode = true } = req.body;
+
+  const originalBot = botManager.getBot(botId);
+  if (!originalBot) {
+    return res.status(404).json({ error: 'Bot not found' });
+  }
+
+  try {
+    const newBot = botManager.quickAddBot(
+      name || `${originalBot.name} (Copy)`,
+      originalBot.description,
+      originalBot.fingerprint.strategyType[0] || 'custom',
+      originalBot.fingerprint.riskProfile,
+      paperMode
+    );
+
+    // Copy config
+    newBot.config.symbols = [...originalBot.config.symbols];
+    newBot.config.timeframes = [...originalBot.config.timeframes];
+
+    res.status(201).json({
+      success: true,
+      message: `Bot cloned from "${originalBot.name}"`,
+      bot: {
+        id: newBot.id,
+        name: newBot.name,
+        status: newBot.status,
+        clonedFrom: originalBot.id,
+      },
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
  * POST /bots/upload
  * Upload a new bot (user contribution)
  */

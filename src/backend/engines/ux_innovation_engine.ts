@@ -1,19 +1,19 @@
 /**
  * TIME — UX Innovation Engine
  *
- * Addresses the weaknesses of existing trading platforms:
+ * Addresses common weaknesses in the trading platform industry:
  *
  * PROBLEMS SOLVED:
- * 1. Platform outages during volatile markets (Schwab, Robinhood, Coinbase)
- * 2. Complex interfaces that intimidate beginners (Interactive Brokers, Binance)
- * 3. Poor mobile experience (Schwab vs TD Ameritrade)
- * 4. Slow customer support (Coinbase)
- * 5. Account lockouts and withdrawal limits (Coinbase, Kraken)
- * 6. High fees hidden in complex structures (Coinbase, traditional brokers)
- * 7. Lack of 24/7 trading (most traditional brokers)
+ * 1. Platform outages during volatile markets (common industry-wide)
+ * 2. Complex interfaces that intimidate beginners
+ * 3. Inconsistent mobile experiences across platforms
+ * 4. Slow customer support response times
+ * 5. Account lockouts and restrictive withdrawal limits
+ * 6. Hidden fees in complex fee structures
+ * 7. Lack of 24/7 trading for global markets
  * 8. No unified view across multiple brokers
  * 9. Limited educational resources
- * 10. No social/copy trading
+ * 10. No social/copy trading features
  *
  * INNOVATIONS CREATED:
  * 1. Predictive Load Balancing - prevents outages

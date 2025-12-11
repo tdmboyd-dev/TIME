@@ -1,18 +1,18 @@
 /**
  * TIME — NFT & Alternative Assets Marketplace
  *
- * A revolutionary marketplace that addresses the weaknesses of
- * existing platforms (OpenSea, Blur) with innovative features:
+ * A revolutionary marketplace that addresses common industry weaknesses
+ * with innovative features not seen elsewhere:
  *
  * KEY INNOVATIONS:
- * 1. Multi-Chain Support (not just Ethereum like Blur)
+ * 1. Multi-Chain Support (8+ blockchains, not single-chain)
  * 2. Creator-First Royalties (enforced on-chain)
- * 3. Fractional NFT Ownership
+ * 3. Fractional NFT Ownership with governance
  * 4. AI-Powered Price Discovery
  * 5. NFT-to-DeFi Integration (collateralize NFTs)
  * 6. Cross-Platform Aggregation
- * 7. Mobile-First Design (unlike Blur's desktop-only)
- * 8. Zero Wash Trading Detection
+ * 7. Mobile-First Design (fully responsive)
+ * 8. Zero Wash Trading Detection (AI-powered)
  * 9. Real-Time Portfolio Valuation
  * 10. Social Trading for NFTs
  */
@@ -22,7 +22,7 @@ import { createComponentLogger } from '../utils/logger';
 
 const logger = createComponentLogger('NFTMarketplace');
 
-// Supported Blockchains (unlike Blur which only supports Ethereum)
+// Supported Blockchains (comprehensive multi-chain support)
 type SupportedChain =
   | 'ethereum'
   | 'polygon'
