@@ -80,11 +80,206 @@ All changes, additions, patches, inventions, and evolution steps are logged here
 - [x] Initialize Git repository and push to GitHub ✅ DONE
 - [x] Build frontend with React/Next.js ✅ DONE
 - [x] Build admin panel with evolution toggle ✅ DONE
-- [ ] Implement broker integrations (Alpaca, OANDA, MT4/MT5)
-- [ ] Add database persistence (MongoDB)
-- [ ] Create Bot Research Pipeline for web scraping
+- [x] Implement broker integrations (Alpaca, OANDA) ✅ DONE
+- [x] Add database persistence (MongoDB schemas) ✅ DONE
+- [x] Create Bot Research Pipeline for web scraping ✅ DONE
+- [x] Build Bot Fingerprinting System ✅ DONE
+- [x] Create Training Simulator for 24/7 demo trading ✅ DONE
+- [x] Build Trade Story Generator ✅ DONE
+- [x] Implement WebSocket Real-Time Updates ✅ DONE
 - [ ] Add more API endpoints
 - [ ] Write unit tests
+
+---
+
+## [2025-12-11] WebSocket Real-Time Updates
+
+### Created
+
+**WebSocket Service:**
+- `src/backend/websocket/realtime_service.ts` — Core WebSocket server with Socket.IO
+- `src/backend/websocket/event_hub.ts` — Central event routing from all TIME components
+- `src/backend/websocket/index.ts` — Module exports
+
+**Frontend Hook:**
+- `frontend/src/hooks/useWebSocket.ts` — React hook for WebSocket connections
+- `frontend/src/hooks/index.ts` — Hook exports
+
+### Key Features
+
+**Realtime Service:**
+- Socket.IO server with ping/pong heartbeat
+- Client authentication support
+- Channel-based subscriptions (11 channels)
+- Rate limiting per client
+- Connection statistics tracking
+- Graceful shutdown with client notification
+
+**Channels Available:**
+1. `trades` — Live trade executions
+2. `signals` — Bot signals
+3. `regime` — Market regime changes
+4. `bots` — Bot status updates
+5. `strategies` — Strategy performance
+6. `insights` — Learning insights
+7. `system` — System health
+8. `evolution` — Evolution proposals
+9. `prices` — Price streaming (batch support)
+10. `alerts` — User alerts (by priority)
+11. `portfolio` — Portfolio updates
+
+**Event Hub:**
+- Registers all TIME components
+- Routes internal events to WebSocket clients
+- Event throttling (100ms default)
+- Price batching (250ms)
+- Event history for reconnecting clients
+- Component health tracking
+
+**Frontend Hook (useWebSocket):**
+- Auto-connect/reconnect
+- Channel subscription management
+- Typed event handlers
+- Connection state tracking
+- Convenience hooks (useTradeUpdates, useAlerts, etc.)
+
+**API Endpoints Added:**
+- `GET /api/v1/ws/stats` — WebSocket statistics
+- `GET /api/v1/ws/clients` — Connected clients
+- `GET /api/v1/ws/history` — Event history
+- `POST /api/v1/admin/announce` — System announcements
+
+---
+
+## [2025-12-11] Trade Story Generator
+
+### Created
+
+- `src/backend/stories/trade_story_generator.ts` — Narrative trade explanations
+
+### Key Features
+
+- Transforms raw trade data into compelling narratives
+- 6 explanation modes: plain_english, beginner, intermediate, pro, quant, story
+- Story sections: setup, entry, management, exit, attribution, lessons
+- Dynamic templates based on trade outcome (winning/losing/breakeven)
+- Story caching for performance optimization
+- Event emission for real-time story updates
+
+---
+
+## [2025-12-11] Training Simulator & Database
+
+### Created
+
+**Training Simulator:**
+- `src/backend/simulator/training_simulator.ts` — 24/7 demo trading environment
+
+**Database Schemas:**
+- `src/backend/database/schemas.ts` — MongoDB schemas for all TIME data
+
+### Training Simulator Features
+
+- Simulated market with realistic volatility
+- Bot registration and execution
+- Trade lifecycle management
+- Performance tracking per bot (win rate, Sharpe, drawdown)
+- Speed control (1x to 100x)
+- Market regime simulation
+- Event emission for learning engine
+
+### Database Schemas
+
+- UserSchema — User profiles, consent, broker connections
+- BotSchema — Bot definitions, fingerprints, performance
+- StrategySchema — Strategy configs, backtest results, evolution history
+- TradeSchema — Trade records with attribution
+- SignalSchema — Bot signals with outcomes
+- LearningEventSchema — Learning data with insights
+- InsightSchema — Generated insights with outcomes
+- SystemConfigSchema — System configuration
+- EvolutionStateSchema — Evolution mode tracking
+- EnsembleSchema — Bot ensemble definitions
+- MarketRegimeHistorySchema — Regime history
+- PriceBarSchema — OHLCV data
+- NotificationSchema — User notifications
+- AuditLogSchema — System audit trail
+
+---
+
+## [2025-12-11] Broker Integrations
+
+### Created
+
+**Broker Interface:**
+- `src/backend/brokers/broker_interface.ts` — Abstract interface for all brokers
+
+**Broker Implementations:**
+- `src/backend/brokers/alpaca_broker.ts` — US Stocks + Crypto (paper/live)
+- `src/backend/brokers/oanda_broker.ts` — Forex trading (70+ pairs)
+
+**Broker Manager:**
+- `src/backend/brokers/broker_manager.ts` — Multi-broker management
+
+### Key Features
+
+**Alpaca Broker:**
+- US Stock trading (market, limit, stop orders)
+- Crypto trading (24/7)
+- Paper trading support
+- Real-time position tracking
+- Account balance monitoring
+- Order management
+
+**OANDA Broker:**
+- 70+ forex pairs
+- Spread-based commission model
+- Order execution with SL/TP
+- Position management
+- Account metrics
+
+**Broker Manager:**
+- Multiple broker connections per user
+- Default broker selection
+- Order routing
+- Aggregated positions
+- Health monitoring
+- Trade event emission
+
+---
+
+## [2025-12-11] Bot Research & Fingerprinting
+
+### Created
+
+**Bot Research Pipeline:**
+- `src/backend/research/bot_research_pipeline.ts` — Web scraping for free bots
+
+**Bot Fingerprinting:**
+- `src/backend/fingerprint/bot_fingerprinting.ts` — Unique bot DNA generation
+
+### Bot Research Features
+
+- Multi-source search (GitHub, MQL5, cTrader, TradingView, Forums)
+- Minimum rating filter (4.0+)
+- Candidate evaluation scoring:
+  - Code quality
+  - Documentation
+  - Community trust
+  - Activity level
+  - Safety score
+- Scam/malware detection
+- Automatic ingestion pipeline
+
+### Bot Fingerprinting Features
+
+- Behavior signature (strategy type, time of day, holding period)
+- Signal signature (indicators, signal type, threshold)
+- Risk signature (position sizing, SL/TP ratios, risk-reward)
+- Performance signature (win rate, profit factor, Sharpe, drawdown)
+- SHA-256 DNA hash generation
+- Similarity detection (60%+ threshold)
+- Complementary bot discovery
 
 ---
 
@@ -282,6 +477,15 @@ Current Mode: **CONTROLLED**
 | Bot Ingestion | 🟢 Ready | 2025-12-11 |
 | Consent Manager | 🟢 Ready | 2025-12-11 |
 | Notification Service | 🟢 Ready | 2025-12-11 |
+| Bot Research Pipeline | 🟢 Ready | 2025-12-11 |
+| Bot Fingerprinting | 🟢 Ready | 2025-12-11 |
+| Broker Manager | 🟢 Ready | 2025-12-11 |
+| Alpaca Broker | 🟢 Ready | 2025-12-11 |
+| OANDA Broker | 🟢 Ready | 2025-12-11 |
+| Training Simulator | 🟢 Ready | 2025-12-11 |
+| Trade Story Generator | 🟢 Ready | 2025-12-11 |
+| Realtime Service | 🟢 Ready | 2025-12-11 |
+| Event Hub | 🟢 Ready | 2025-12-11 |
 
 Legend: 🟢 Ready | 🟡 Building | 🔴 Offline | ⚪ Not Started
 
@@ -298,16 +502,36 @@ TIME/
 ├── TIME_MASTERPROMPT.md
 ├── TIME_TODO.md
 ├── COPILOT1.md
-├── FROMCOPILOT.txt (user provided)
+├── frontend/
+│   ├── package.json
+│   ├── tsconfig.json
+│   ├── tailwind.config.js
+│   └── src/
+│       ├── app/
+│       │   ├── page.tsx (Dashboard)
+│       │   ├── bots/page.tsx
+│       │   ├── strategies/page.tsx
+│       │   ├── learn/page.tsx
+│       │   ├── history/page.tsx
+│       │   ├── vision/page.tsx
+│       │   ├── settings/page.tsx
+│       │   └── admin/
+│       │       ├── page.tsx
+│       │       └── health/page.tsx
+│       ├── components/
+│       │   ├── dashboard/ (StatsCard, RegimeIndicator, etc.)
+│       │   ├── charts/LiveChart.tsx
+│       │   └── layout/ (Sidebar, TopNav)
+│       ├── hooks/
+│       │   ├── index.ts
+│       │   └── useWebSocket.ts
+│       └── store/timeStore.ts
 └── src/
     └── backend/
         ├── index.ts
-        ├── config/
-        │   └── index.ts
-        ├── utils/
-        │   └── logger.ts
-        ├── types/
-        │   └── index.ts
+        ├── config/index.ts
+        ├── utils/logger.ts
+        ├── types/index.ts
         ├── core/
         │   ├── time_governor.ts
         │   ├── evolution_controller.ts
@@ -323,10 +547,29 @@ TIME/
         ├── bots/
         │   ├── bot_manager.ts
         │   └── bot_ingestion.ts
+        ├── brokers/
+        │   ├── broker_interface.ts
+        │   ├── alpaca_broker.ts
+        │   ├── oanda_broker.ts
+        │   └── broker_manager.ts
         ├── consent/
         │   └── consent_manager.ts
-        └── notifications/
-            └── notification_service.ts
+        ├── database/
+        │   └── schemas.ts
+        ├── fingerprint/
+        │   └── bot_fingerprinting.ts
+        ├── notifications/
+        │   └── notification_service.ts
+        ├── research/
+        │   └── bot_research_pipeline.ts
+        ├── simulator/
+        │   └── training_simulator.ts
+        ├── stories/
+        │   └── trade_story_generator.ts
+        └── websocket/
+            ├── index.ts
+            ├── realtime_service.ts
+            └── event_hub.ts
 ```
 
 ---

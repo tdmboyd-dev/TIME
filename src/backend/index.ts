@@ -11,7 +11,6 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import { createServer } from 'http';
-import { Server as SocketServer } from 'socket.io';
 
 import config, { validateConfig } from './config';
 import { logger, loggers } from './utils/logger';
@@ -38,7 +37,14 @@ import { botIngestion } from './bots/bot_ingestion';
 import { consentManager } from './consent/consent_manager';
 import { notificationService } from './notifications/notification_service';
 
+// WebSocket Real-Time
+import { realtimeService, RealtimeService } from './websocket/realtime_service';
+import { EventHub, createEventHub } from './websocket/event_hub';
+
 const log = loggers.api;
+
+// Global event hub instance
+let eventHub: EventHub | null = null;
 
 /**
  * Initialize TIME
@@ -244,46 +250,79 @@ async function main(): Promise<void> {
     // Create HTTP server
     const server = createServer(app);
 
-    // Create Socket.IO server for real-time updates
-    const io = new SocketServer(server, {
-      cors: {
-        origin: config.frontend.corsOrigins,
-        credentials: true,
-      },
+    // Initialize WebSocket Real-Time Service
+    realtimeService.initialize(server);
+    log.info('WebSocket real-time service initialized');
+
+    // Create Event Hub and register all components
+    eventHub = createEventHub(realtimeService, {
+      enableEventHistory: true,
+      maxHistorySize: 1000,
+      throttleInterval: 100,
+      batchPriceUpdates: true,
+      priceBatchInterval: 250,
     });
 
-    // Socket.IO connection handling
-    io.on('connection', (socket) => {
-      log.debug('Client connected', { socketId: socket.id });
+    // Register all TIME components with the Event Hub for real-time broadcasting
+    eventHub.registerComponent(timeGovernor);
+    eventHub.registerComponent(evolutionController);
+    eventHub.registerComponent(learningEngine);
+    eventHub.registerComponent(riskEngine);
+    eventHub.registerComponent(regimeDetector);
+    eventHub.registerComponent(recursiveSynthesisEngine);
+    eventHub.registerComponent(marketVisionEngine);
+    eventHub.registerComponent(teachingEngine);
+    eventHub.registerComponent(attributionEngine);
+    eventHub.registerComponent(botManager);
+    eventHub.registerComponent(notificationService);
 
-      socket.on('subscribe', (channel: string) => {
-        socket.join(channel);
-        log.debug('Client subscribed to channel', {
-          socketId: socket.id,
-          channel,
-        });
+    log.info('Event Hub registered with all TIME components');
+
+    // Additional WebSocket API endpoints
+    app.get('/api/v1/ws/stats', (req, res) => {
+      res.json(realtimeService.getStats());
+    });
+
+    app.get('/api/v1/ws/clients', (req, res) => {
+      const clients = realtimeService.getConnectedClients();
+      res.json({
+        total: clients.length,
+        clients: clients.map(c => ({
+          socketId: c.socketId,
+          role: c.role,
+          connectedAt: c.connectedAt,
+          subscriptions: Array.from(c.subscriptions),
+        })),
       });
+    });
 
-      socket.on('disconnect', () => {
-        log.debug('Client disconnected', { socketId: socket.id });
+    app.get('/api/v1/ws/history', (req, res) => {
+      const since = req.query.since
+        ? new Date(req.query.since as string)
+        : new Date(Date.now() - 3600000); // Last hour by default
+      const channels = req.query.channels
+        ? (req.query.channels as string).split(',')
+        : undefined;
+
+      const events = eventHub?.getRecentEvents(since, channels) || [];
+      res.json({
+        total: events.length,
+        since,
+        events,
       });
     });
 
-    // Forward TIME events to Socket.IO
-    timeGovernor.on('evolution:mode_changed', (state) => {
-      io.to('admin').emit('evolution:mode_changed', state);
-    });
+    // System announcement endpoint (admin only)
+    app.post('/api/v1/admin/announce', (req, res) => {
+      const { title, message, priority } = req.body;
 
-    timeGovernor.on('regime:changed', (regime) => {
-      io.to('market').emit('regime:changed', regime);
-    });
+      if (!title || !message) {
+        return res.status(400).json({ error: 'Title and message required' });
+      }
 
-    timeGovernor.on('learning:insight', (insight) => {
-      io.to('learning').emit('insight', insight);
-    });
+      eventHub?.broadcastAnnouncement(title, message, priority || 'medium');
 
-    timeGovernor.on('risk:alert', (alert) => {
-      io.to('risk').emit('alert', alert);
+      res.json({ success: true, message: 'Announcement broadcast' });
     });
 
     // Start server
@@ -299,7 +338,20 @@ async function main(): Promise<void> {
     // Graceful shutdown
     const shutdown = async () => {
       log.info('Shutting down TIME...');
+
+      // Shutdown Event Hub first (stops event routing)
+      if (eventHub) {
+        eventHub.shutdown();
+        log.info('Event Hub shutdown complete');
+      }
+
+      // Shutdown WebSocket service (notifies all clients)
+      realtimeService.shutdown();
+      log.info('WebSocket service shutdown complete');
+
+      // Shutdown TIME Governor (shuts down all components)
       await timeGovernor.shutdown();
+
       server.close(() => {
         log.info('Server closed');
         process.exit(0);
