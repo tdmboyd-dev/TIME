@@ -1,0 +1,59 @@
+{
+  "file": {
+    "id": "cb01e862-ab89-4f55-b6a7-88b61a2eec72",
+    "filename": "jimtin-algorithmic-trading-bot_main.py",
+    "filepath": "dropzone\\incoming\\jimtin-algorithmic-trading-bot_main.py",
+    "fileType": "python",
+    "size": 2947,
+    "hash": "ba300ad92e5a07b6e9ade266b0d928e2",
+    "droppedAt": "2025-12-11T10:41:37.922Z",
+    "status": "rejected",
+    "error": "Rating too low: 3.1/5.0 (min: 4)"
+  },
+  "report": {
+    "fileId": "cb01e862-ab89-4f55-b6a7-88b61a2eec72",
+    "filename": "jimtin-algorithmic-trading-bot_main.py",
+    "safetyScan": {
+      "safe": true,
+      "score": 100,
+      "threats": [],
+      "warnings": [],
+      "scannedAt": "2025-12-11T10:41:37.922Z"
+    },
+    "analysis": {
+      "strategyType": "Pattern Recognition",
+      "indicators": [],
+      "timeframes": [
+        "Unknown"
+      ],
+      "assets": [
+        "BTCUSDT"
+      ],
+      "entryLogic": "No clear entry logic found",
+      "exitLogic": "Exit logic detected",
+      "riskManagement": {
+        "hasStopLoss": true,
+        "hasTakeProfit": true,
+        "hasPositionSizing": false,
+        "maxDrawdownProtection": false
+      },
+      "complexity": "simple",
+      "codeQuality": 75
+    },
+    "rating": {
+      "overall": 3.1,
+      "breakdown": {
+        "codeQuality": 3.75,
+        "strategyClarity": 3.75,
+        "riskManagement": 2.5,
+        "documentation": 3,
+        "uniqueness": 2.5
+      },
+      "recommendation": "review",
+      "reasoning": "Moderate quality. Consider manual review. Weakness in risk management."
+    },
+    "absorbed": false,
+    "learningsExtracted": []
+  },
+  "rejectedAt": "2025-12-11T10:41:38.852Z"
+}

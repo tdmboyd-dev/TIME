@@ -8,7 +8,26 @@
       "Bash(gh:*)",
       "Bash(git commit:*)",
       "Bash(git push:*)",
-      "Bash(git reset:*)"
+      "Bash(git reset:*)",
+      "Bash(dir:*)",
+      "Bash(npm install)",
+      "Bash(npx ts-node:*)",
+      "Bash(timeout 15 npx ts-node:*)",
+      "Bash(timeout 20 npx ts-node:*)",
+      "Bash(timeout 25 npx ts-node:*)",
+      "Bash(npx tsc:*)",
+      "WebSearch",
+      "WebFetch(domain:snaptrade.com)",
+      "WebFetch(domain:forexrobotnation.com)",
+      "WebFetch(domain:dec-masters.com)",
+      "Bash(findstr:*)",
+      "Bash(npm install:*)",
+      "Bash(timeout 30 npx ts-node:*)",
+      "Bash(netstat:*)",
+      "Bash(taskkill /F /PID 26740)",
+      "Bash(taskkill //F //PID 26740)",
+      "Bash(curl:*)",
+      "Bash(taskkill //F //PID 25368)"
     ]
   }
 }

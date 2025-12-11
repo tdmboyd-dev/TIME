@@ -17,6 +17,18 @@ export interface EvolutionState {
 }
 
 // ============================================
+// TIME COMPONENT INTERFACE
+// ============================================
+
+export interface TIMEComponent {
+  name: string;
+  status: 'online' | 'offline' | 'degraded' | 'building';
+  initialize(): Promise<void>;
+  shutdown(): Promise<void>;
+  getHealth(): SystemHealth;
+}
+
+// ============================================
 // USER & CONSENT
 // ============================================
 
@@ -71,7 +83,10 @@ export type BotSource =
   | 'github'
   | 'forum'
   | 'strategy_library'
-  | 'time_generated';
+  | 'time_generated'
+  | 'mql5'
+  | 'ctrader'
+  | 'tradingview';
 
 export type BotStatus =
   | 'pending_review'
@@ -487,7 +502,7 @@ export interface Visualization {
 // TEACHING ENGINE
 // ============================================
 
-export type TeachingMode = 'beginner' | 'intermediate' | 'pro' | 'quant' | 'story';
+export type TeachingMode = 'plain_english' | 'beginner' | 'intermediate' | 'pro' | 'quant' | 'story';
 
 export interface Lesson {
   id: string;

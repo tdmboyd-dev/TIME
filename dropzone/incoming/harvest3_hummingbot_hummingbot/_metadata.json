@@ -1,0 +1,12 @@
+{
+  "name": "hummingbot",
+  "fullName": "hummingbot/hummingbot",
+  "stars": 15306,
+  "language": "Python",
+  "description": "Open source software that helps you create and deploy high-frequency crypto trading bots",
+  "url": "https://github.com/hummingbot/hummingbot",
+  "license": "Apache-2.0",
+  "harvest": 3,
+  "harvestName": "Crypto/DeFi Bots",
+  "downloadedAt": "2025-12-11T09:59:10.328Z"
+}

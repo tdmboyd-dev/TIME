@@ -1,0 +1,12 @@
+{
+  "name": "artemis",
+  "fullName": "paradigmxyz/artemis",
+  "stars": 2856,
+  "language": "Rust",
+  "description": "A simple, modular, and fast framework for writing MEV bots in Rust.",
+  "url": "https://github.com/paradigmxyz/artemis",
+  "license": "Apache-2.0",
+  "harvest": 3,
+  "harvestName": "Crypto/DeFi Bots",
+  "downloadedAt": "2025-12-11T09:59:26.264Z"
+}

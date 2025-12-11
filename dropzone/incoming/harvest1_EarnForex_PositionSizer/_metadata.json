@@ -1,0 +1,12 @@
+{
+  "name": "PositionSizer",
+  "fullName": "EarnForex/PositionSizer",
+  "stars": 520,
+  "language": "MQL5",
+  "description": "Calculate your position size based on the risk and account size and execute your trades with this free MetaTrader expert advisor. ",
+  "url": "https://github.com/EarnForex/PositionSizer",
+  "license": "Apache-2.0",
+  "harvest": 1,
+  "harvestName": "MQL4/MQL5 Expert Advisors",
+  "downloadedAt": "2025-12-11T09:57:15.210Z"
+}

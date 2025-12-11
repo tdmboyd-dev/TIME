@@ -1,0 +1,28 @@
+{
+  "file": {
+    "id": "898a00ec-5b05-4c91-b844-269324032d3a",
+    "filename": "jimtin-how-to-build-a-metatrader5-trading-bot-expert-advisor_mt5_interface.py",
+    "filepath": "dropzone\\incoming\\jimtin-how-to-build-a-metatrader5-trading-bot-expert-advisor_mt5_interface.py",
+    "fileType": "python",
+    "size": 6124,
+    "hash": "e3ed588a759816f4ddc9182f20cc1c83",
+    "droppedAt": "2025-12-11T10:41:37.927Z",
+    "status": "rejected",
+    "error": "Failed safety scan: Found credentials pattern: password"
+  },
+  "report": {
+    "safe": false,
+    "score": 60,
+    "threats": [
+      {
+        "type": "credential_access",
+        "severity": "critical",
+        "description": "Found credentials pattern: password",
+        "location": "Line 5"
+      }
+    ],
+    "warnings": [],
+    "scannedAt": "2025-12-11T10:41:37.927Z"
+  },
+  "rejectedAt": "2025-12-11T10:41:38.525Z"
+}

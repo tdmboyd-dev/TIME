@@ -91,6 +91,7 @@ export class BotResearchPipeline extends EventEmitter implements TIMEComponent {
 
   public readonly name = 'BotResearchPipeline';
   public readonly version = '1.0.0';
+  public status: 'online' | 'offline' | 'degraded' | 'building' = 'offline';
 
   private constructor() {
     super();
@@ -194,13 +195,33 @@ export class BotResearchPipeline extends EventEmitter implements TIMEComponent {
   }
 
   public async initialize(): Promise<void> {
+    this.status = 'building';
     logger.info('Initializing Bot Research Pipeline');
 
     // Register with TIME Governor
     const governor = TIMEGovernor.getInstance();
     governor.registerComponent(this);
 
+    this.status = 'online';
     logger.info('Bot Research Pipeline initialized');
+  }
+
+  public async shutdown(): Promise<void> {
+    this.stop();
+    this.status = 'offline';
+    logger.info('Bot Research Pipeline shut down');
+  }
+
+  public getHealth(): { component: string; status: 'online' | 'offline' | 'degraded'; lastCheck: Date; metrics: Record<string, number> } {
+    return {
+      component: this.name,
+      status: this.isRunning ? 'online' : 'offline',
+      lastCheck: new Date(),
+      metrics: {
+        candidates: this.candidates.size,
+        sources: this.sources.size,
+      },
+    };
   }
 
   public async start(): Promise<void> {
@@ -313,7 +334,7 @@ export class BotResearchPipeline extends EventEmitter implements TIMEComponent {
 
       return candidates;
     } catch (error) {
-      logger.error(`Error searching ${source.name}:`, error);
+      logger.error(`Error searching ${source.name}:`, error as object);
       return [];
     }
   }
@@ -885,8 +906,8 @@ export class BotResearchPipeline extends EventEmitter implements TIMEComponent {
     if (filter?.source) {
       results = results.filter((c) => c.source === filter.source);
     }
-    if (filter?.minRating) {
-      results = results.filter((c) => c.rating >= filter.minRating);
+    if (filter?.minRating !== undefined) {
+      results = results.filter((c) => c.rating >= filter.minRating!);
     }
 
     return results.sort((a, b) => b.rating - a.rating);

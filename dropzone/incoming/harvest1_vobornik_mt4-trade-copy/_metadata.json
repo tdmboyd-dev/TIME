@@ -1,0 +1,12 @@
+{
+  "name": "mt4-trade-copy",
+  "fullName": "vobornik/mt4-trade-copy",
+  "stars": 253,
+  "language": "MQL4",
+  "description": "Free MT4 trade copier - Metatrader4 EA software to copy all trades from one to one or more Metatrader4 terminals written in MQL4 language (*.mq4)",
+  "url": "https://github.com/vobornik/mt4-trade-copy",
+  "license": "GPL-2.0",
+  "harvest": 1,
+  "harvestName": "MQL4/MQL5 Expert Advisors",
+  "downloadedAt": "2025-12-11T09:57:21.384Z"
+}

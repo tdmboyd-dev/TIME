@@ -1,0 +1,28 @@
+{
+  "file": {
+    "id": "7f4aa599-1684-44d7-9e1f-0a1ce2a7ca18",
+    "filename": "robertmartin8-MachineLearningStocks_download_historical_prices.py",
+    "filepath": "dropzone\\incoming\\robertmartin8-MachineLearningStocks_download_historical_prices.py",
+    "fileType": "python",
+    "size": 2652,
+    "hash": "f31f6ac04ef5a58e33f3e91e06c9331b",
+    "droppedAt": "2025-12-11T10:41:37.982Z",
+    "status": "rejected",
+    "error": "Failed safety scan: Found fileAccess pattern: os.remove"
+  },
+  "report": {
+    "safe": false,
+    "score": 75,
+    "threats": [
+      {
+        "type": "file_access",
+        "severity": "high",
+        "description": "Found fileAccess pattern: os.remove",
+        "location": "Line 23"
+      }
+    ],
+    "warnings": [],
+    "scannedAt": "2025-12-11T10:41:37.983Z"
+  },
+  "rejectedAt": "2025-12-11T10:41:38.556Z"
+}

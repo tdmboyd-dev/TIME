@@ -1,0 +1,28 @@
+{
+  "file": {
+    "id": "b4fd76f8-4439-4265-82d8-af3591636cf8",
+    "filename": "Superalgos-Superalgos_Environment.js",
+    "filepath": "dropzone\\incoming\\Superalgos-Superalgos_Environment.js",
+    "fileType": "javascript",
+    "size": 8256,
+    "hash": "a99db862d953a2a67dcc272f77476b91",
+    "droppedAt": "2025-12-11T10:41:38.006Z",
+    "status": "rejected",
+    "error": "Failed safety scan: Found credentials pattern: password"
+  },
+  "report": {
+    "safe": false,
+    "score": 60,
+    "threats": [
+      {
+        "type": "credential_access",
+        "severity": "critical",
+        "description": "Found credentials pattern: password",
+        "location": "Line 119"
+      }
+    ],
+    "warnings": [],
+    "scannedAt": "2025-12-11T10:41:38.007Z"
+  },
+  "rejectedAt": "2025-12-11T10:41:38.569Z"
+}

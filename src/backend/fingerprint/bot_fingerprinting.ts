@@ -27,6 +27,7 @@ import {
   Signal,
   MarketRegime,
   TIMEComponent,
+  StrategyType,
 } from '../types';
 import * as crypto from 'crypto';
 
@@ -70,14 +71,21 @@ interface PerformanceSignature {
 }
 
 interface DetailedFingerprint extends BotFingerprint {
+  tradingStyle: string;
+  characteristics: {
+    avgHoldTime: number;
+    winRate: number;
+    profitFactor: number;
+    maxDrawdown: number;
+    sharpeRatio: number;
+  };
+  patterns: string[];
   behavior: BehaviorSignature;
   signals: SignalSignature;
   risk: RiskSignature;
   performance: PerformanceSignature;
   dnaHash: string;
   similarity: Map<string, number>; // botId -> similarity score
-  createdAt: Date;
-  updatedAt: Date;
   version: number;
 }
 
@@ -102,6 +110,7 @@ export class BotFingerprintingSystem extends EventEmitter implements TIMECompone
 
   public readonly name = 'BotFingerprintingSystem';
   public readonly version = '1.0.0';
+  public status: 'online' | 'offline' | 'degraded' | 'building' = 'offline';
 
   private constructor() {
     super();
@@ -115,13 +124,29 @@ export class BotFingerprintingSystem extends EventEmitter implements TIMECompone
   }
 
   public async initialize(): Promise<void> {
+    this.status = 'building';
     logger.info('Initializing Bot Fingerprinting System');
 
     // Register with TIME Governor
     const governor = TIMEGovernor.getInstance();
     governor.registerComponent(this);
 
+    this.status = 'online';
     logger.info('Bot Fingerprinting System initialized');
+  }
+
+  public async shutdown(): Promise<void> {
+    this.status = 'offline';
+    logger.info('Bot Fingerprinting System shut down');
+  }
+
+  public getHealth(): { component: string; status: 'online' | 'offline' | 'degraded'; lastCheck: Date; metrics: Record<string, number> } {
+    return {
+      component: this.name,
+      status: this.status === 'online' ? 'online' : 'offline',
+      lastCheck: new Date(),
+      metrics: { fingerprints: this.fingerprints.size },
+    };
   }
 
   public getStatus(): { fingerprintCount: number; lastUpdate: Date | null } {
@@ -154,8 +179,23 @@ export class BotFingerprintingSystem extends EventEmitter implements TIMECompone
     const dnaHash = this.generateDNAHash(behavior, signalSig, risk, performance);
 
     const fingerprint: DetailedFingerprint = {
+      // BotFingerprint required fields
+      id: `fp-${bot.id}-${Date.now()}`,
       botId: bot.id,
-      strategyType: this.inferStrategyType(behavior, signalSig),
+      strategyType: [this.inferStrategyType(behavior, signalSig)],
+      indicators: signalSig.indicatorsUsed,
+      signalPatterns: [...signalSig.entryPatterns, ...signalSig.exitPatterns],
+      riskProfile: this.inferRiskProfile(risk),
+      preferredRegimes: [],
+      weakRegimes: [],
+      avgHoldingPeriod: behavior.avgHoldingPeriod,
+      winRate: performance.winRate,
+      profitFactor: performance.profitFactor,
+      sharpeRatio: performance.sharpeRatio,
+      maxDrawdown: performance.maxDrawdown,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      // DetailedFingerprint additional fields
       tradingStyle: this.inferTradingStyle(behavior),
       characteristics: {
         avgHoldTime: behavior.avgHoldingPeriod,
@@ -171,8 +211,6 @@ export class BotFingerprintingSystem extends EventEmitter implements TIMECompone
       performance,
       dnaHash,
       similarity: new Map(),
-      createdAt: new Date(),
-      updatedAt: new Date(),
       version: 1,
     };
 
@@ -274,17 +312,27 @@ export class BotFingerprintingSystem extends EventEmitter implements TIMECompone
     const indicators = new Set<string>();
 
     signals.forEach((signal) => {
-      if (signal.metadata) {
-        if (signal.metadata.pattern) {
-          if (signal.direction === 'long' || signal.direction === 'short') {
-            entryPatterns.add(signal.metadata.pattern as string);
-          } else {
-            exitPatterns.add(signal.metadata.pattern as string);
+      // Extract patterns and indicators from reasoning text
+      if (signal.reasoning) {
+        const reasoningLower = signal.reasoning.toLowerCase();
+        // Infer patterns from reasoning
+        const patternKeywords = ['breakout', 'reversal', 'trend', 'momentum', 'support', 'resistance'];
+        patternKeywords.forEach((pattern) => {
+          if (reasoningLower.includes(pattern)) {
+            if (signal.direction === 'long' || signal.direction === 'short') {
+              entryPatterns.add(pattern);
+            } else {
+              exitPatterns.add(pattern);
+            }
           }
-        }
-        if (signal.metadata.indicator) {
-          indicators.add(signal.metadata.indicator as string);
-        }
+        });
+        // Infer indicators from reasoning
+        const indicatorKeywords = ['rsi', 'macd', 'ema', 'sma', 'bollinger', 'volume', 'atr'];
+        indicatorKeywords.forEach((indicator) => {
+          if (reasoningLower.includes(indicator)) {
+            indicators.add(indicator.toUpperCase());
+          }
+        });
       }
     });
 
@@ -471,7 +519,7 @@ export class BotFingerprintingSystem extends EventEmitter implements TIMECompone
   private inferStrategyType(
     behavior: BehaviorSignature,
     signals: SignalSignature
-  ): string {
+  ): StrategyType {
     const indicators = signals.indicatorsUsed.map((i) => i.toLowerCase());
     const patterns = [...signals.entryPatterns, ...signals.exitPatterns].map((p) =>
       p.toLowerCase()
@@ -500,10 +548,10 @@ export class BotFingerprintingSystem extends EventEmitter implements TIMECompone
 
     // Check for swing trading
     if (behavior.avgHoldingPeriod > 240) {
-      return 'swing_trading';
+      return 'swing';
     }
 
-    return 'unknown';
+    return 'hybrid';
   }
 
   /**
@@ -514,6 +562,25 @@ export class BotFingerprintingSystem extends EventEmitter implements TIMECompone
     if (behavior.avgHoldingPeriod < 60) return 'day_trader';
     if (behavior.avgHoldingPeriod < 1440) return 'intraday';
     return 'swing_position';
+  }
+
+  /**
+   * Infer risk profile from risk signature
+   */
+  private inferRiskProfile(risk: RiskSignature): 'conservative' | 'moderate' | 'aggressive' {
+    // Combine multiple risk factors to determine profile
+    // Use position size, stop loss range, and drawdown tolerance
+    const avgStopLoss = (risk.stopLossRange[0] + risk.stopLossRange[1]) / 2;
+    const hasWidestops = avgStopLoss > 5; // Wide stop losses = more aggressive
+
+    const riskScore =
+      (risk.avgPositionSize / 10) * 0.4 + // Normalize position size (assume max 10%)
+      (hasWidestops ? 0.3 : 0) + // Wide stops = more risk
+      (risk.drawdownTolerance / 30) * 0.3; // Normalize drawdown tolerance (assume max 30%)
+
+    if (riskScore < 0.33) return 'conservative';
+    if (riskScore < 0.66) return 'moderate';
+    return 'aggressive';
   }
 
   /**
@@ -755,10 +822,11 @@ export class BotFingerprintingSystem extends EventEmitter implements TIMECompone
     const groups = new Map<string, string[]>();
 
     for (const [botId, fp] of this.fingerprints) {
-      const type = fp.strategyType;
-      const bots = groups.get(type) || [];
+      // Handle array of strategy types - group by primary (first) type
+      const primaryType = fp.strategyType[0] || 'unknown';
+      const bots = groups.get(primaryType) || [];
       bots.push(botId);
-      groups.set(type, bots);
+      groups.set(primaryType, bots);
     }
 
     return groups;

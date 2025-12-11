@@ -79,10 +79,36 @@ export const config = {
     },
   },
 
-  // Market Data
+  // Market Data Providers
   marketData: {
     alphaVantageKey: process.env.ALPHA_VANTAGE_API_KEY || '',
     polygonKey: process.env.POLYGON_API_KEY || '',
+    twelveDataKey: process.env.TWELVE_DATA_API_KEY || '',
+    finnhubKey: process.env.FINNHUB_API_KEY || '',
+  },
+
+  // Broker Connections
+  brokers: {
+    alpaca: {
+      apiKey: process.env.ALPACA_API_KEY || '',
+      secretKey: process.env.ALPACA_SECRET_KEY || '',
+      paper: process.env.ALPACA_PAPER === 'true',
+      dataFeed: (process.env.ALPACA_DATA_FEED || 'iex') as 'iex' | 'sip',
+    },
+    oanda: {
+      apiKey: process.env.OANDA_API_KEY || '',
+      accountId: process.env.OANDA_ACCOUNT_ID || '',
+      practice: process.env.OANDA_PRACTICE !== 'false',
+    },
+    snaptrade: {
+      clientId: process.env.SNAPTRADE_CLIENT_ID || '',
+      consumerKey: process.env.SNAPTRADE_CONSUMER_KEY || '',
+    },
+    interactiveBrokers: {
+      host: process.env.IB_HOST || '127.0.0.1',
+      port: parseInt(process.env.IB_PORT || '7497', 10),
+      clientId: parseInt(process.env.IB_CLIENT_ID || '1', 10),
+    },
   },
 
   // Bot Research

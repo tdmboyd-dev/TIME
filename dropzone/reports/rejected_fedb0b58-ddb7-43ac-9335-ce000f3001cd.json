@@ -1,0 +1,59 @@
+{
+  "file": {
+    "id": "fedb0b58-ddb7-43ac-9335-ce000f3001cd",
+    "filename": "PacktPublishing-Machine-Learning-for-Algorithmic-Trading-Second-Edition-Original_utils.py",
+    "filepath": "dropzone\\incoming\\PacktPublishing-Machine-Learning-for-Algorithmic-Trading-Second-Edition-Original_utils.py",
+    "fileType": "python",
+    "size": 2187,
+    "hash": "2deb55fb4f470581b839fc626d80305a",
+    "droppedAt": "2025-12-11T10:41:37.960Z",
+    "status": "rejected",
+    "error": "Rating too low: 2/5.0 (min: 4)"
+  },
+  "report": {
+    "fileId": "fedb0b58-ddb7-43ac-9335-ce000f3001cd",
+    "filename": "PacktPublishing-Machine-Learning-for-Algorithmic-Trading-Second-Edition-Original_utils.py",
+    "safetyScan": {
+      "safe": true,
+      "score": 100,
+      "threats": [],
+      "warnings": [],
+      "scannedAt": "2025-12-11T10:41:37.960Z"
+    },
+    "analysis": {
+      "strategyType": "Unknown",
+      "indicators": [],
+      "timeframes": [
+        "Unknown"
+      ],
+      "assets": [
+        "Multi-Asset"
+      ],
+      "entryLogic": "No clear entry logic found",
+      "exitLogic": "No clear exit logic found",
+      "riskManagement": {
+        "hasStopLoss": false,
+        "hasTakeProfit": false,
+        "hasPositionSizing": false,
+        "maxDrawdownProtection": false
+      },
+      "complexity": "simple",
+      "codeQuality": 75
+    },
+    "rating": {
+      "overall": 2,
+      "breakdown": {
+        "codeQuality": 3.75,
+        "strategyClarity": 2.5,
+        "riskManagement": 0,
+        "documentation": 2,
+        "uniqueness": 2.5
+      },
+      "recommendation": "reject",
+      "reasoning": "Quality below threshold. Issues with risk management."
+    },
+    "absorbed": false,
+    "learningsExtracted": []
+  },
+  "rejectedAt": "2025-12-11T10:41:38.897Z"
+}

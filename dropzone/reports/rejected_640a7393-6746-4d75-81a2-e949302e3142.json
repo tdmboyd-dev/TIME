@@ -1,0 +1,66 @@
+{
+  "file": {
+    "id": "640a7393-6746-4d75-81a2-e949302e3142",
+    "filename": "yacoubb-stock-trading-ml_tech_ind_model.py",
+    "filepath": "dropzone\\incoming\\yacoubb-stock-trading-ml_tech_ind_model.py",
+    "fileType": "python",
+    "size": 3037,
+    "hash": "7fd5bb881e35263a4d6c78787a705932",
+    "droppedAt": "2025-12-11T10:41:38.053Z",
+    "status": "rejected",
+    "error": "Rating too low: 1.7/5.0 (min: 4)"
+  },
+  "report": {
+    "fileId": "640a7393-6746-4d75-81a2-e949302e3142",
+    "filename": "yacoubb-stock-trading-ml_tech_ind_model.py",
+    "safetyScan": {
+      "safe": true,
+      "score": 85,
+      "threats": [
+        {
+          "type": "obfuscation",
+          "severity": "medium",
+          "description": "Found obfuscation pattern: compile(",
+          "location": "Line 61"
+        }
+      ],
+      "warnings": [],
+      "scannedAt": "2025-12-11T10:41:38.054Z"
+    },
+    "analysis": {
+      "strategyType": "Machine Learning",
+      "indicators": [],
+      "timeframes": [
+        "D1"
+      ],
+      "assets": [
+        "Multi-Asset"
+      ],
+      "entryLogic": "No clear entry logic found",
+      "exitLogic": "No clear exit logic found",
+      "riskManagement": {
+        "hasStopLoss": false,
+        "hasTakeProfit": false,
+        "hasPositionSizing": false,
+        "maxDrawdownProtection": false
+      },
+      "complexity": "simple",
+      "codeQuality": 55
+    },
+    "rating": {
+      "overall": 1.7,
+      "breakdown": {
+        "codeQuality": 2.75,
+        "strategyClarity": 3.5,
+        "riskManagement": 0,
+        "documentation": 2,
+        "uniqueness": 2.5
+      },
+      "recommendation": "reject",
+      "reasoning": "Quality below threshold. Issues with risk management."
+    },
+    "absorbed": false,
+    "learningsExtracted": []
+  },
+  "rejectedAt": "2025-12-11T10:41:38.968Z"
+}

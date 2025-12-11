@@ -1,0 +1,12 @@
+{
+  "name": "freqtrade",
+  "fullName": "freqtrade/freqtrade",
+  "stars": 45214,
+  "language": "Python",
+  "description": "Free, open source crypto trading bot",
+  "url": "https://github.com/freqtrade/freqtrade",
+  "license": "GPL-3.0",
+  "harvest": 3,
+  "harvestName": "Crypto/DeFi Bots",
+  "downloadedAt": "2025-12-11T09:59:07.147Z"
+}

@@ -1,0 +1,12 @@
+{
+  "name": "MQL-CopyTrade",
+  "fullName": "jiowcl/MQL-CopyTrade",
+  "stars": 183,
+  "language": "MQL4",
+  "description": "MT4/MT5 Client Copy Trade Application (Based on ZMQ)",
+  "url": "https://github.com/jiowcl/MQL-CopyTrade",
+  "license": "MIT",
+  "harvest": 1,
+  "harvestName": "MQL4/MQL5 Expert Advisors",
+  "downloadedAt": "2025-12-11T09:57:30.420Z"
+}

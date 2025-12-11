@@ -1,0 +1,81 @@
+{
+  "file": {
+    "id": "6e814f68-6093-49f0-861d-b0d9be6a786c",
+    "filename": "Haehnchen-crypto-trading-bot_instance.js.dist_trade_binance_margin.js",
+    "filepath": "dropzone\\incoming\\Haehnchen-crypto-trading-bot_instance.js.dist_trade_binance_margin.js",
+    "fileType": "javascript",
+    "size": 22454,
+    "hash": "65e550b20811972c111bb7aebb87924a",
+    "droppedAt": "2025-12-11T10:41:37.639Z",
+    "status": "rejected",
+    "error": "Rating too low: 3.3/5.0 (min: 4)"
+  },
+  "report": {
+    "fileId": "6e814f68-6093-49f0-861d-b0d9be6a786c",
+    "filename": "Haehnchen-crypto-trading-bot_instance.js.dist_trade_binance_margin.js",
+    "safetyScan": {
+      "safe": true,
+      "score": 100,
+      "threats": [],
+      "warnings": [],
+      "scannedAt": "2025-12-11T10:41:37.640Z"
+    },
+    "analysis": {
+      "strategyType": "Trend Following",
+      "indicators": [
+        "MACD",
+        "Volume",
+        "CCI"
+      ],
+      "timeframes": [
+        "Unknown"
+      ],
+      "assets": [
+        "BTC",
+        "ETH",
+        "BTCUSDT",
+        "ETHUSDT",
+        "ADAUSDT",
+        "BCHUSDT",
+        "BNBUSDT",
+        "DOTUSDT",
+        "LINKUSDT",
+        "LTCUSDT",
+        "XRPUSDT",
+        "ADABTC",
+        "BCHBTC",
+        "BNBBTC",
+        "DOTBTC",
+        "ETHBTC",
+        "LINKBTC",
+        "LTCBTC",
+        "XRPBTC"
+      ],
+      "entryLogic": "No clear entry logic found",
+      "exitLogic": "Exit logic detected",
+      "riskManagement": {
+        "hasStopLoss": true,
+        "hasTakeProfit": false,
+        "hasPositionSizing": false,
+        "maxDrawdownProtection": false
+      },
+      "complexity": "advanced",
+      "codeQuality": 80
+    },
+    "rating": {
+      "overall": 3.3,
+      "breakdown": {
+        "codeQuality": 4,
+        "strategyClarity": 4.75,
+        "riskManagement": 1.5,
+        "documentation": 3,
+        "uniqueness": 3.5
+      },
+      "recommendation": "review",
+      "reasoning": "Moderate quality. Consider manual review. Weakness in risk management."
+    },
+    "absorbed": false,
+    "learningsExtracted": []
+  },
+  "rejectedAt": "2025-12-11T10:41:38.807Z"
+}

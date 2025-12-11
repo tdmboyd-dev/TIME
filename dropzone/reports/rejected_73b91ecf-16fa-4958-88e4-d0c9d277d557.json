@@ -1,0 +1,67 @@
+{
+  "file": {
+    "id": "73b91ecf-16fa-4958-88e4-d0c9d277d557",
+    "filename": "whittlem-pycryptobot_screener.py",
+    "filepath": "dropzone\\incoming\\whittlem-pycryptobot_screener.py",
+    "fileType": "python",
+    "size": 20293,
+    "hash": "06080e9a1e6076c2e818fe6b46e1abc0",
+    "droppedAt": "2025-12-11T10:41:38.044Z",
+    "status": "rejected",
+    "error": "Rating too low: 2.6/5.0 (min: 4)"
+  },
+  "report": {
+    "fileId": "73b91ecf-16fa-4958-88e4-d0c9d277d557",
+    "filename": "whittlem-pycryptobot_screener.py",
+    "safetyScan": {
+      "safe": true,
+      "score": 100,
+      "threats": [],
+      "warnings": [],
+      "scannedAt": "2025-12-11T10:41:38.045Z"
+    },
+    "analysis": {
+      "strategyType": "Unknown",
+      "indicators": [
+        "RSI",
+        "MACD",
+        "Bollinger Bands",
+        "ATR",
+        "ADX",
+        "Volume",
+        "Williams %R"
+      ],
+      "timeframes": [
+        "Unknown"
+      ],
+      "assets": [
+        "Multi-Asset"
+      ],
+      "entryLogic": "No clear entry logic found",
+      "exitLogic": "Exit logic detected",
+      "riskManagement": {
+        "hasStopLoss": false,
+        "hasTakeProfit": false,
+        "hasPositionSizing": false,
+        "maxDrawdownProtection": false
+      },
+      "complexity": "advanced",
+      "codeQuality": 85
+    },
+    "rating": {
+      "overall": 2.6,
+      "breakdown": {
+        "codeQuality": 4.25,
+        "strategyClarity": 3.75,
+        "riskManagement": 0,
+        "documentation": 2,
+        "uniqueness": 4
+      },
+      "recommendation": "reject",
+      "reasoning": "Quality below threshold. Issues with risk management."
+    },
+    "absorbed": false,
+    "learningsExtracted": []
+  },
+  "rejectedAt": "2025-12-11T10:41:38.961Z"
+}

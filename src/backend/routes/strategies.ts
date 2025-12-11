@@ -12,6 +12,7 @@ import { Router, Request, Response } from 'express';
 import { authMiddleware, adminMiddleware } from './auth';
 import { recursiveSynthesisEngine } from '../engines/recursive_synthesis_engine';
 import { regimeDetector } from '../engines/regime_detector';
+import strategyBuilder from '../engines/strategy_builder';
 
 const router = Router();
 
@@ -510,6 +511,461 @@ router.post('/admin/auto-synthesize', authMiddleware, adminMiddleware, async (re
     confidence: regimeState.confidence,
     status: 'synthesizing',
   });
+});
+
+// ============================================================
+// STRATEGY BUILDER ROUTES (No-Code Strategy Building)
+// ============================================================
+
+/**
+ * GET /strategies/builder/templates
+ * Get all available strategy templates
+ */
+router.get('/builder/templates', (req: Request, res: Response) => {
+  try {
+    const templates = strategyBuilder.getTemplates();
+    res.json({
+      success: true,
+      templates,
+      count: templates.length,
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * GET /strategies/builder/indicators
+ * Get all available indicators for building conditions
+ */
+router.get('/builder/indicators', (_req: Request, res: Response) => {
+  try {
+    const indicators = [
+      // Trend Indicators
+      { id: 'sma', name: 'Simple Moving Average', category: 'trend', params: ['period'], description: 'Average price over N periods' },
+      { id: 'ema', name: 'Exponential Moving Average', category: 'trend', params: ['period'], description: 'Weighted average giving more weight to recent prices' },
+      { id: 'macd', name: 'MACD', category: 'trend', params: ['fastPeriod', 'slowPeriod', 'signalPeriod'], description: 'Moving Average Convergence Divergence' },
+      { id: 'adx', name: 'Average Directional Index', category: 'trend', params: ['period'], description: 'Measures trend strength (0-100)' },
+      { id: 'ichimoku', name: 'Ichimoku Cloud', category: 'trend', params: ['conversionPeriod', 'basePeriod', 'spanPeriod'], description: 'Comprehensive trend system' },
+
+      // Momentum Indicators
+      { id: 'rsi', name: 'Relative Strength Index', category: 'momentum', params: ['period'], description: 'Momentum oscillator (0-100), overbought >70, oversold <30' },
+      { id: 'stochastic', name: 'Stochastic Oscillator', category: 'momentum', params: ['kPeriod', 'dPeriod'], description: 'Compares closing price to price range' },
+      { id: 'cci', name: 'Commodity Channel Index', category: 'momentum', params: ['period'], description: 'Measures price deviation from average' },
+      { id: 'williams', name: 'Williams %R', category: 'momentum', params: ['period'], description: 'Momentum indicator similar to stochastic' },
+      { id: 'momentum', name: 'Momentum', category: 'momentum', params: ['period'], description: 'Rate of price change' },
+
+      // Volatility Indicators
+      { id: 'bollinger', name: 'Bollinger Bands', category: 'volatility', params: ['period', 'stdDev'], description: 'Price channels based on standard deviation' },
+      { id: 'atr', name: 'Average True Range', category: 'volatility', params: ['period'], description: 'Average volatility over N periods' },
+      { id: 'keltner', name: 'Keltner Channel', category: 'volatility', params: ['period', 'multiplier'], description: 'Volatility-based envelope' },
+
+      // Volume Indicators
+      { id: 'volume', name: 'Volume', category: 'volume', params: [], description: 'Trading volume' },
+      { id: 'obv', name: 'On Balance Volume', category: 'volume', params: [], description: 'Cumulative buying/selling pressure' },
+      { id: 'vwap', name: 'Volume Weighted Average Price', category: 'volume', params: [], description: 'Average price weighted by volume' },
+
+      // Price
+      { id: 'price', name: 'Price', category: 'price', params: [], description: 'Current price' },
+      { id: 'high', name: 'High', category: 'price', params: [], description: 'High price' },
+      { id: 'low', name: 'Low', category: 'price', params: [], description: 'Low price' },
+      { id: 'open', name: 'Open', category: 'price', params: [], description: 'Opening price' },
+      { id: 'close', name: 'Close', category: 'price', params: [], description: 'Closing price' },
+    ];
+
+    const operators = [
+      { id: 'crosses_above', name: 'Crosses Above', description: 'First value crosses above second' },
+      { id: 'crosses_below', name: 'Crosses Below', description: 'First value crosses below second' },
+      { id: 'greater_than', name: 'Greater Than', description: 'First value is greater than second' },
+      { id: 'less_than', name: 'Less Than', description: 'First value is less than second' },
+      { id: 'equals', name: 'Equals', description: 'Values are equal' },
+      { id: 'between', name: 'Between', description: 'Value is between two others' },
+    ];
+
+    const logicOperators = ['AND', 'OR'];
+
+    res.json({
+      success: true,
+      indicators,
+      operators,
+      logicOperators,
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * POST /strategies/builder/create
+ * Create new strategy with builder
+ */
+router.post('/builder/create', (req: Request, res: Response) => {
+  try {
+    const { userId, config } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        error: 'userId is required',
+      });
+    }
+
+    const strategy = strategyBuilder.createStrategy(userId, config || {});
+
+    res.json({
+      success: true,
+      strategy,
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * POST /strategies/builder/from-template
+ * Create strategy from template
+ */
+router.post('/builder/from-template', (req: Request, res: Response) => {
+  try {
+    const { userId, templateId, customizations } = req.body;
+
+    if (!userId || !templateId) {
+      return res.status(400).json({
+        success: false,
+        error: 'userId and templateId are required',
+      });
+    }
+
+    const strategy = strategyBuilder.createFromTemplate(userId, templateId, customizations);
+
+    res.json({
+      success: true,
+      strategy,
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * GET /strategies/builder/user/:userId
+ * Get all builder strategies for a user
+ */
+router.get('/builder/user/:userId', (req: Request, res: Response) => {
+  try {
+    const strategies = strategyBuilder.getUserStrategies(req.params.userId);
+
+    res.json({
+      success: true,
+      strategies,
+      count: strategies.length,
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * GET /strategies/builder/:strategyId
+ * Get specific builder strategy
+ */
+router.get('/builder/:strategyId', (req: Request, res: Response) => {
+  try {
+    const strategy = strategyBuilder.getStrategy(req.params.strategyId);
+
+    if (!strategy) {
+      return res.status(404).json({
+        success: false,
+        error: 'Strategy not found',
+      });
+    }
+
+    res.json({
+      success: true,
+      strategy,
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * PUT /strategies/builder/:strategyId
+ * Update builder strategy
+ */
+router.put('/builder/:strategyId', (req: Request, res: Response) => {
+  try {
+    const { updates } = req.body;
+    const strategy = strategyBuilder.updateStrategy(req.params.strategyId, updates);
+
+    if (!strategy) {
+      return res.status(404).json({
+        success: false,
+        error: 'Strategy not found',
+      });
+    }
+
+    res.json({
+      success: true,
+      strategy,
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * POST /strategies/builder/:strategyId/entry
+ * Add entry condition
+ */
+router.post('/builder/:strategyId/entry', (req: Request, res: Response) => {
+  try {
+    const { condition } = req.body;
+    const strategy = strategyBuilder.addEntryCondition(req.params.strategyId, condition);
+
+    if (!strategy) {
+      return res.status(404).json({
+        success: false,
+        error: 'Strategy not found',
+      });
+    }
+
+    res.json({
+      success: true,
+      strategy,
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * POST /strategies/builder/:strategyId/exit
+ * Add exit condition
+ */
+router.post('/builder/:strategyId/exit', (req: Request, res: Response) => {
+  try {
+    const { condition } = req.body;
+    const strategy = strategyBuilder.addExitCondition(req.params.strategyId, condition);
+
+    if (!strategy) {
+      return res.status(404).json({
+        success: false,
+        error: 'Strategy not found',
+      });
+    }
+
+    res.json({
+      success: true,
+      strategy,
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * POST /strategies/builder/:strategyId/risk
+ * Set risk management
+ */
+router.post('/builder/:strategyId/risk', (req: Request, res: Response) => {
+  try {
+    const { riskManagement } = req.body;
+    const strategy = strategyBuilder.setRiskManagement(req.params.strategyId, riskManagement);
+
+    if (!strategy) {
+      return res.status(404).json({
+        success: false,
+        error: 'Strategy not found',
+      });
+    }
+
+    res.json({
+      success: true,
+      strategy,
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * POST /strategies/builder/:strategyId/backtest
+ * Run backtest on builder strategy
+ */
+router.post('/builder/:strategyId/backtest', async (req: Request, res: Response) => {
+  try {
+    const { startDate, endDate, initialCapital } = req.body;
+
+    // Default to 1 year backtest if not specified
+    const defaultEndDate = new Date();
+    const defaultStartDate = new Date();
+    defaultStartDate.setFullYear(defaultStartDate.getFullYear() - 1);
+
+    const result = await strategyBuilder.runBacktest(req.params.strategyId, {
+      startDate: startDate ? new Date(startDate) : defaultStartDate,
+      endDate: endDate ? new Date(endDate) : defaultEndDate,
+      initialCapital: initialCapital || 10000,
+    });
+
+    res.json({
+      success: true,
+      result,
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * POST /strategies/builder/:strategyId/optimize
+ * AI optimize strategy
+ */
+router.post('/builder/:strategyId/optimize', async (req: Request, res: Response) => {
+  try {
+    const optimization = await strategyBuilder.optimizeStrategy(req.params.strategyId);
+
+    res.json({
+      success: true,
+      ...optimization,
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * POST /strategies/builder/:strategyId/validate
+ * Validate strategy
+ */
+router.post('/builder/:strategyId/validate', (req: Request, res: Response) => {
+  try {
+    const validation = strategyBuilder.validateStrategy(req.params.strategyId);
+
+    res.json({
+      success: true,
+      ...validation,
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * POST /strategies/builder/:strategyId/deploy
+ * Deploy strategy (make it live)
+ */
+router.post('/builder/:strategyId/deploy', (req: Request, res: Response) => {
+  try {
+    const strategy = strategyBuilder.deployStrategy(req.params.strategyId);
+
+    if (!strategy) {
+      return res.status(404).json({
+        success: false,
+        error: 'Strategy not found',
+      });
+    }
+
+    res.json({
+      success: true,
+      strategy,
+      message: 'Strategy deployed successfully',
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * POST /strategies/builder/:strategyId/pause
+ * Pause strategy
+ */
+router.post('/builder/:strategyId/pause', (req: Request, res: Response) => {
+  try {
+    const strategy = strategyBuilder.pauseStrategy(req.params.strategyId);
+
+    if (!strategy) {
+      return res.status(404).json({
+        success: false,
+        error: 'Strategy not found',
+      });
+    }
+
+    res.json({
+      success: true,
+      strategy,
+      message: 'Strategy paused',
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * DELETE /strategies/builder/:strategyId
+ * Delete builder strategy
+ */
+router.delete('/builder/:strategyId', (req: Request, res: Response) => {
+  try {
+    const success = strategyBuilder.deleteStrategy(req.params.strategyId);
+
+    res.json({
+      success,
+      message: success ? 'Strategy deleted' : 'Strategy not found',
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * GET /strategies/builder/:strategyId/export
+ * Export strategy as JSON
+ */
+router.get('/builder/:strategyId/export', (req: Request, res: Response) => {
+  try {
+    const json = strategyBuilder.exportStrategy(req.params.strategyId);
+
+    if (!json) {
+      return res.status(404).json({
+        success: false,
+        error: 'Strategy not found',
+      });
+    }
+
+    res.json({
+      success: true,
+      data: json,
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * POST /strategies/builder/import
+ * Import strategy from JSON
+ */
+router.post('/builder/import', (req: Request, res: Response) => {
+  try {
+    const { userId, json } = req.body;
+
+    if (!userId || !json) {
+      return res.status(400).json({
+        success: false,
+        error: 'userId and json are required',
+      });
+    }
+
+    const strategy = strategyBuilder.importStrategy(userId, json);
+
+    res.json({
+      success: true,
+      strategy,
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
 });
 
 export default router;

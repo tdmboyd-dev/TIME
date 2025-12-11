@@ -1,0 +1,12 @@
+{
+  "name": "dwx-zeromq-connector",
+  "fullName": "darwinex/dwx-zeromq-connector",
+  "stars": 358,
+  "language": "Python",
+  "description": "Wrapper library for algorithmic trading in Python 3, providing DMA/STP access to Darwinex liquidity via a ZeroMQ-enabled MetaTrader Bridge EA.",
+  "url": "https://github.com/darwinex/dwx-zeromq-connector",
+  "license": "BSD-3-Clause",
+  "harvest": 1,
+  "harvestName": "MQL4/MQL5 Expert Advisors",
+  "downloadedAt": "2025-12-11T09:57:18.956Z"
+}

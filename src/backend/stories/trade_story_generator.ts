@@ -16,16 +16,20 @@
 import { EventEmitter } from 'events';
 import { createComponentLogger } from '../utils/logger';
 import { TIMEGovernor } from '../core/time_governor';
-import { TeachingEngine, ExplanationMode } from '../engines/teaching_engine';
-import { RegimeDetector } from '../engines/regime_detector';
-import { AttributionEngine } from '../engines/attribution_engine';
+import { teachingEngine } from '../engines/teaching_engine';
+import { regimeDetector } from '../engines/regime_detector';
+import { attributionEngine } from '../engines/attribution_engine';
 import {
   Trade,
   Signal,
   MarketRegime,
   Bot,
   TIMEComponent,
+  TeachingMode,
 } from '../types';
+
+// Alias for backward compatibility
+type ExplanationMode = TeachingMode;
 
 const logger = createComponentLogger('TradeStoryGenerator');
 
@@ -115,18 +119,13 @@ const STORY_TEMPLATES = {
 export class TradeStoryGenerator extends EventEmitter implements TIMEComponent {
   private static instance: TradeStoryGenerator | null = null;
   private stories: Map<string, TradeStory> = new Map();
-  private teachingEngine: TeachingEngine;
-  private regimeDetector: RegimeDetector;
-  private attributionEngine: AttributionEngine;
 
   public readonly name = 'TradeStoryGenerator';
   public readonly version = '1.0.0';
+  public status: 'online' | 'offline' | 'degraded' | 'building' = 'offline';
 
   private constructor() {
     super();
-    this.teachingEngine = TeachingEngine.getInstance();
-    this.regimeDetector = RegimeDetector.getInstance();
-    this.attributionEngine = AttributionEngine.getInstance();
   }
 
   public static getInstance(): TradeStoryGenerator {
@@ -137,13 +136,29 @@ export class TradeStoryGenerator extends EventEmitter implements TIMEComponent {
   }
 
   public async initialize(): Promise<void> {
+    this.status = 'building';
     logger.info('Initializing Trade Story Generator');
 
     // Register with TIME Governor
     const governor = TIMEGovernor.getInstance();
     governor.registerComponent(this);
 
+    this.status = 'online';
     logger.info('Trade Story Generator initialized');
+  }
+
+  public async shutdown(): Promise<void> {
+    this.status = 'offline';
+    logger.info('Trade Story Generator shut down');
+  }
+
+  public getHealth(): { component: string; status: 'online' | 'offline' | 'degraded'; lastCheck: Date; metrics: Record<string, number> } {
+    return {
+      component: this.name,
+      status: this.status === 'online' ? 'online' : 'offline',
+      lastCheck: new Date(),
+      metrics: { stories: this.stories.size },
+    };
   }
 
   public getStatus(): { storiesGenerated: number; recentStories: number } {
@@ -248,10 +263,10 @@ export class TradeStoryGenerator extends EventEmitter implements TIMEComponent {
       if (context.marketConditions.trend !== 'sideways') {
         return STORY_TEMPLATES.winning_trend;
       }
-      if (context.signals.some((s) => s.metadata?.pattern?.includes('reversal'))) {
+      if (context.signals.some((s) => s.reasoning?.toLowerCase().includes('reversal'))) {
         return STORY_TEMPLATES.winning_reversal;
       }
-      if (context.signals.some((s) => s.metadata?.pattern?.includes('breakout'))) {
+      if (context.signals.some((s) => s.reasoning?.toLowerCase().includes('breakout'))) {
         return STORY_TEMPLATES.winning_breakout;
       }
       return STORY_TEMPLATES.winning_trend;
@@ -284,15 +299,7 @@ export class TradeStoryGenerator extends EventEmitter implements TIMEComponent {
     context: TradeContext,
     mode: ExplanationMode
   ): Promise<string> {
-    const { trade, regime, attribution, marketConditions } = context;
-    const pnl = trade.pnl || 0;
-    const isWinner = pnl > 0;
-
-    // Get explanation from teaching engine
-    const topic = isWinner ? 'successful_trade' : 'losing_trade';
-    const baseExplanation = await this.teachingEngine.explainConcept(topic, mode);
-
-    // Build contextual summary
+    // Build contextual summary based on mode
     if (mode === 'plain_english') {
       return this.generatePlainEnglishSummary(context);
     } else if (mode === 'story') {

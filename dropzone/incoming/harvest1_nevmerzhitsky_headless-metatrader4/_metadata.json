@@ -1,0 +1,12 @@
+{
+  "name": "headless-metatrader4",
+  "fullName": "nevmerzhitsky/headless-metatrader4",
+  "stars": 116,
+  "language": "Dockerfile",
+  "description": "A docker image for running MetaTrader 4 terminal with EA/script",
+  "url": "https://github.com/nevmerzhitsky/headless-metatrader4",
+  "license": "MIT",
+  "harvest": 1,
+  "harvestName": "MQL4/MQL5 Expert Advisors",
+  "downloadedAt": "2025-12-11T09:57:38.935Z"
+}

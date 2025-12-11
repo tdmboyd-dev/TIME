@@ -1,0 +1,59 @@
+{
+  "file": {
+    "id": "ddd20ded-7b61-4471-b121-24571317e269",
+    "filename": "cirosantilli-china-dictatorship_china-dictatorship.py",
+    "filepath": "dropzone\\incoming\\cirosantilli-china-dictatorship_china-dictatorship.py",
+    "fileType": "python",
+    "size": 91,
+    "hash": "a3e071d5fdaafe33da9761231f327127",
+    "droppedAt": "2025-12-11T10:41:37.587Z",
+    "status": "rejected",
+    "error": "Rating too low: 1.7/5.0 (min: 4)"
+  },
+  "report": {
+    "fileId": "ddd20ded-7b61-4471-b121-24571317e269",
+    "filename": "cirosantilli-china-dictatorship_china-dictatorship.py",
+    "safetyScan": {
+      "safe": true,
+      "score": 100,
+      "threats": [],
+      "warnings": [],
+      "scannedAt": "2025-12-11T10:41:37.588Z"
+    },
+    "analysis": {
+      "strategyType": "Unknown",
+      "indicators": [],
+      "timeframes": [
+        "Unknown"
+      ],
+      "assets": [
+        "Multi-Asset"
+      ],
+      "entryLogic": "No clear entry logic found",
+      "exitLogic": "No clear exit logic found",
+      "riskManagement": {
+        "hasStopLoss": false,
+        "hasTakeProfit": false,
+        "hasPositionSizing": false,
+        "maxDrawdownProtection": false
+      },
+      "complexity": "simple",
+      "codeQuality": 50
+    },
+    "rating": {
+      "overall": 1.7,
+      "breakdown": {
+        "codeQuality": 2.5,
+        "strategyClarity": 2.5,
+        "riskManagement": 0,
+        "documentation": 2,
+        "uniqueness": 2.5
+      },
+      "recommendation": "reject",
+      "reasoning": "Quality below threshold. Issues with risk management."
+    },
+    "absorbed": false,
+    "learningsExtracted": []
+  },
+  "rejectedAt": "2025-12-11T10:41:38.770Z"
+}

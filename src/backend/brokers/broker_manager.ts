@@ -13,7 +13,7 @@
 import { EventEmitter } from 'events';
 import { createComponentLogger } from '../utils/logger';
 import { TIMEGovernor } from '../core/time_governor';
-import { TIMEComponent } from '../types';
+import { TIMEComponent, SystemHealth } from '../types';
 import {
   BrokerInterface,
   BrokerConfig,
@@ -28,11 +28,13 @@ import {
 } from './broker_interface';
 import { AlpacaBroker } from './alpaca_broker';
 import { OANDABroker } from './oanda_broker';
+import { SnapTradeBroker, createSnapTradeBroker } from './snaptrade_broker';
+import { IBClient } from './ib_client';
 
 const logger = createComponentLogger('BrokerManager');
 
 // Supported broker types
-export type BrokerType = 'alpaca' | 'oanda' | 'mt4' | 'mt5' | 'interactive_brokers';
+export type BrokerType = 'alpaca' | 'oanda' | 'snaptrade' | 'interactive_brokers' | 'mt4' | 'mt5';
 
 // Broker connection status
 interface BrokerConnection {
@@ -72,6 +74,7 @@ export class BrokerManager extends EventEmitter implements TIMEComponent {
 
   public readonly name = 'BrokerManager';
   public readonly version = '1.0.0';
+  public status: 'online' | 'offline' | 'degraded' | 'building' = 'offline';
 
   private constructor() {
     super();
@@ -95,6 +98,7 @@ export class BrokerManager extends EventEmitter implements TIMEComponent {
   }
 
   public async initialize(): Promise<void> {
+    this.status = 'building';
     logger.info('Initializing Broker Manager');
 
     // Register with TIME Governor
@@ -104,7 +108,35 @@ export class BrokerManager extends EventEmitter implements TIMEComponent {
     // Start heartbeat monitoring
     this.startHeartbeatMonitoring();
 
+    this.status = 'online';
     logger.info('Broker Manager initialized');
+  }
+
+  public async shutdown(): Promise<void> {
+    logger.info('Shutting down Broker Manager');
+    this.status = 'offline';
+    // Disconnect all brokers
+    for (const broker of this.brokers.values()) {
+      if (broker.isConnected) {
+        await this.disconnectBroker(broker.id);
+      }
+    }
+    logger.info('Broker Manager shut down');
+  }
+
+  public getHealth(): SystemHealth {
+    const connectedCount = Array.from(this.brokers.values()).filter(b => b.isConnected).length;
+    const totalCount = this.brokers.size;
+
+    return {
+      component: this.name,
+      status: connectedCount > 0 ? 'online' : totalCount > 0 ? 'degraded' : 'offline',
+      lastCheck: new Date(),
+      metrics: {
+        connectedBrokers: connectedCount,
+        totalBrokers: totalCount,
+      },
+    };
   }
 
   public getStatus(): {
@@ -183,7 +215,7 @@ export class BrokerManager extends EventEmitter implements TIMEComponent {
 
     broker.on('error', (error: Error) => {
       connection.errorCount++;
-      logger.error(`Broker ${id} error:`, error);
+      logger.error(`Broker ${id} error:`, error as object);
       this.emit('brokerError', { brokerId: id, error });
     });
 
@@ -243,7 +275,7 @@ export class BrokerManager extends EventEmitter implements TIMEComponent {
       try {
         await connection.broker.connect();
       } catch (error) {
-        logger.error(`Failed to connect broker ${id}:`, error);
+        logger.error(`Failed to connect broker ${id}:`, error as object);
       }
     });
 
@@ -328,7 +360,7 @@ export class BrokerManager extends EventEmitter implements TIMEComponent {
           portfolio.positions.set(key, position);
         }
       } catch (error) {
-        logger.error(`Failed to get portfolio from ${id}:`, error);
+        logger.error(`Failed to get portfolio from ${id}:`, error as object);
       }
     }
 
@@ -365,7 +397,7 @@ export class BrokerManager extends EventEmitter implements TIMEComponent {
           positions.push({ brokerId: id, position });
         }
       } catch (error) {
-        logger.error(`Failed to get positions from ${id}:`, error);
+        logger.error(`Failed to get positions from ${id}:`, error as object);
       }
     }
 
@@ -454,7 +486,7 @@ export class BrokerManager extends EventEmitter implements TIMEComponent {
           results.push({ brokerId: id, order });
         }
       } catch (error) {
-        logger.error(`Failed to close positions on ${id}:`, error);
+        logger.error(`Failed to close positions on ${id}:`, error as object);
       }
     }
 
@@ -535,7 +567,7 @@ export class BrokerManager extends EventEmitter implements TIMEComponent {
         try {
           await connection.broker.subscribeQuotes(symbols);
         } catch (error) {
-          logger.error(`Failed to subscribe quotes on ${connection.id}:`, error);
+          logger.error(`Failed to subscribe quotes on ${connection.id}:`, error as object);
         }
       }
     }
@@ -559,7 +591,7 @@ export class BrokerManager extends EventEmitter implements TIMEComponent {
           trades.push({ brokerId: id, trade });
         }
       } catch (error) {
-        logger.error(`Failed to get trades from ${id}:`, error);
+        logger.error(`Failed to get trades from ${id}:`, error as object);
       }
     }
 

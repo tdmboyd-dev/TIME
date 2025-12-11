@@ -1,0 +1,12 @@
+{
+  "name": "binance-trading-bot",
+  "fullName": "chrisleekr/binance-trading-bot",
+  "stars": 5446,
+  "language": "JavaScript",
+  "description": "Automated Binance trading bot -  Trade multiple cryptocurrencies. Buy low/sell high with Grid Trading. Integrated with TradingView technical analysis",
+  "url": "https://github.com/chrisleekr/binance-trading-bot",
+  "license": "MIT",
+  "harvest": 3,
+  "harvestName": "Crypto/DeFi Bots",
+  "downloadedAt": "2025-12-11T09:59:15.059Z"
+}

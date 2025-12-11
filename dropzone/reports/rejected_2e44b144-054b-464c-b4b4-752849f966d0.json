@@ -1,0 +1,59 @@
+{
+  "file": {
+    "id": "2e44b144-054b-464c-b4b4-752849f966d0",
+    "filename": "chrisleekr-binance-trading-bot_mongo-state-storage.js",
+    "filepath": "dropzone\\incoming\\chrisleekr-binance-trading-bot_mongo-state-storage.js",
+    "fileType": "javascript",
+    "size": 1696,
+    "hash": "76683dcf3280fad462ec4af6525ef4cc",
+    "droppedAt": "2025-12-11T10:41:37.585Z",
+    "status": "rejected",
+    "error": "Rating too low: 1.9/5.0 (min: 4)"
+  },
+  "report": {
+    "fileId": "2e44b144-054b-464c-b4b4-752849f966d0",
+    "filename": "chrisleekr-binance-trading-bot_mongo-state-storage.js",
+    "safetyScan": {
+      "safe": true,
+      "score": 100,
+      "threats": [],
+      "warnings": [],
+      "scannedAt": "2025-12-11T10:41:37.585Z"
+    },
+    "analysis": {
+      "strategyType": "Unknown",
+      "indicators": [],
+      "timeframes": [
+        "Unknown"
+      ],
+      "assets": [
+        "Multi-Asset"
+      ],
+      "entryLogic": "No clear entry logic found",
+      "exitLogic": "No clear exit logic found",
+      "riskManagement": {
+        "hasStopLoss": false,
+        "hasTakeProfit": false,
+        "hasPositionSizing": false,
+        "maxDrawdownProtection": false
+      },
+      "complexity": "simple",
+      "codeQuality": 80
+    },
+    "rating": {
+      "overall": 1.9,
+      "breakdown": {
+        "codeQuality": 4,
+        "strategyClarity": 2.5,
+        "riskManagement": 0,
+        "documentation": 1,
+        "uniqueness": 2.5
+      },
+      "recommendation": "reject",
+      "reasoning": "Quality below threshold. Issues with risk management."
+    },
+    "absorbed": false,
+    "learningsExtracted": []
+  },
+  "rejectedAt": "2025-12-11T10:41:38.765Z"
+}

@@ -1,0 +1,34 @@
+{
+  "file": {
+    "id": "688b7aa5-1c63-4202-a82e-fdc28dc7d80a",
+    "filename": "shirosaidev-stocksight_stockprice.py",
+    "filepath": "dropzone\\incoming\\shirosaidev-stocksight_stockprice.py",
+    "fileType": "python",
+    "size": 10266,
+    "hash": "bb5965bc00a0165af92a0dec1014a9f0",
+    "droppedAt": "2025-12-11T10:41:37.990Z",
+    "status": "rejected",
+    "error": "Failed safety scan: Found network pattern: requests.get, Found credentials pattern: password"
+  },
+  "report": {
+    "safe": false,
+    "score": 35,
+    "threats": [
+      {
+        "type": "network_call",
+        "severity": "high",
+        "description": "Found network pattern: requests.get",
+        "location": "Line 50"
+      },
+      {
+        "type": "credential_access",
+        "severity": "critical",
+        "description": "Found credentials pattern: password",
+        "location": "Line 23"
+      }
+    ],
+    "warnings": [],
+    "scannedAt": "2025-12-11T10:41:37.991Z"
+  },
+  "rejectedAt": "2025-12-11T10:41:38.560Z"
+}

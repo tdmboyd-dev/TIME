@@ -1,0 +1,59 @@
+{
+  "file": {
+    "id": "03c857c0-31cc-4bd6-b472-96b97ffac47c",
+    "filename": "pskrunner14-trading-bot_eval.py",
+    "filepath": "dropzone\\incoming\\pskrunner14-trading-bot_eval.py",
+    "fileType": "python",
+    "size": 2130,
+    "hash": "e01f09d67c052731a77195029b2c5656",
+    "droppedAt": "2025-12-11T10:41:37.963Z",
+    "status": "rejected",
+    "error": "Rating too low: 1.9/5.0 (min: 4)"
+  },
+  "report": {
+    "fileId": "03c857c0-31cc-4bd6-b472-96b97ffac47c",
+    "filename": "pskrunner14-trading-bot_eval.py",
+    "safetyScan": {
+      "safe": true,
+      "score": 100,
+      "threats": [],
+      "warnings": [],
+      "scannedAt": "2025-12-11T10:41:37.963Z"
+    },
+    "analysis": {
+      "strategyType": "Unknown",
+      "indicators": [],
+      "timeframes": [
+        "Unknown"
+      ],
+      "assets": [
+        "Multi-Asset"
+      ],
+      "entryLogic": "No clear entry logic found",
+      "exitLogic": "No clear exit logic found",
+      "riskManagement": {
+        "hasStopLoss": false,
+        "hasTakeProfit": false,
+        "hasPositionSizing": false,
+        "maxDrawdownProtection": false
+      },
+      "complexity": "simple",
+      "codeQuality": 80
+    },
+    "rating": {
+      "overall": 1.9,
+      "breakdown": {
+        "codeQuality": 4,
+        "strategyClarity": 2.5,
+        "riskManagement": 0,
+        "documentation": 1,
+        "uniqueness": 2.5
+      },
+      "recommendation": "reject",
+      "reasoning": "Quality below threshold. Issues with risk management."
+    },
+    "absorbed": false,
+    "learningsExtracted": []
+  },
+  "rejectedAt": "2025-12-11T10:41:38.900Z"
+}

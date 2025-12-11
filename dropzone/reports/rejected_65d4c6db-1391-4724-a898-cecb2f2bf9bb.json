@@ -1,0 +1,59 @@
+{
+  "file": {
+    "id": "65d4c6db-1391-4724-a898-cecb2f2bf9bb",
+    "filename": "je-suis-tm-quant-trading_Options Straddle backtest.py",
+    "filepath": "dropzone\\incoming\\je-suis-tm-quant-trading_Options Straddle backtest.py",
+    "fileType": "python",
+    "size": 11150,
+    "hash": "a46773d198f94a1ea03eaa49c78c17da",
+    "droppedAt": "2025-12-11T10:41:37.906Z",
+    "status": "rejected",
+    "error": "Rating too low: 2.4/5.0 (min: 4)"
+  },
+  "report": {
+    "fileId": "65d4c6db-1391-4724-a898-cecb2f2bf9bb",
+    "filename": "je-suis-tm-quant-trading_Options Straddle backtest.py",
+    "safetyScan": {
+      "safe": true,
+      "score": 100,
+      "threats": [],
+      "warnings": [],
+      "scannedAt": "2025-12-11T10:41:37.906Z"
+    },
+    "analysis": {
+      "strategyType": "News Trading",
+      "indicators": [],
+      "timeframes": [
+        "Unknown"
+      ],
+      "assets": [
+        "Multi-Asset"
+      ],
+      "entryLogic": "Entry logic detected",
+      "exitLogic": "Exit logic detected",
+      "riskManagement": {
+        "hasStopLoss": false,
+        "hasTakeProfit": false,
+        "hasPositionSizing": false,
+        "maxDrawdownProtection": false
+      },
+      "complexity": "moderate",
+      "codeQuality": 75
+    },
+    "rating": {
+      "overall": 2.4,
+      "breakdown": {
+        "codeQuality": 3.75,
+        "strategyClarity": 4,
+        "riskManagement": 0,
+        "documentation": 3,
+        "uniqueness": 2.5
+      },
+      "recommendation": "reject",
+      "reasoning": "Quality below threshold. Issues with risk management."
+    },
+    "absorbed": false,
+    "learningsExtracted": []
+  },
+  "rejectedAt": "2025-12-11T10:41:38.835Z"
+}

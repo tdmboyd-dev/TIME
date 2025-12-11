@@ -1,0 +1,28 @@
+{
+  "file": {
+    "id": "184c4775-12af-4bfe-84c9-259239a195f3",
+    "filename": "Superalgos-Superalgos_NetworkProfileManager.js",
+    "filepath": "dropzone\\incoming\\Superalgos-Superalgos_NetworkProfileManager.js",
+    "fileType": "javascript",
+    "size": 3117,
+    "hash": "08c906461ccc42b866bc1f32caafc8fb",
+    "droppedAt": "2025-12-11T10:41:38.009Z",
+    "status": "rejected",
+    "error": "Failed safety scan: Found systemCommands pattern: subprocess"
+  },
+  "report": {
+    "safe": false,
+    "score": 60,
+    "threats": [
+      {
+        "type": "suspicious_code",
+        "severity": "critical",
+        "description": "Found systemCommands pattern: subprocess",
+        "location": "Line 2"
+      }
+    ],
+    "warnings": [],
+    "scannedAt": "2025-12-11T10:41:38.009Z"
+  },
+  "rejectedAt": "2025-12-11T10:41:38.571Z"
+}

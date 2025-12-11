@@ -1,0 +1,12 @@
+{
+  "name": "metatrader5",
+  "fullName": "geraked/metatrader5",
+  "stars": 362,
+  "language": "MQL5",
+  "description": "Implementation of Trading Strategies for Backtesting in MetaTrader 5 (MT5) Using MQL5 Programming Language – Free Open-Source Trading Bots (Expert Advisors) for MT5",
+  "url": "https://github.com/geraked/metatrader5",
+  "license": "MIT",
+  "harvest": 1,
+  "harvestName": "MQL4/MQL5 Expert Advisors",
+  "downloadedAt": "2025-12-11T09:57:18.017Z"
+}

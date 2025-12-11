@@ -1,0 +1,59 @@
+{
+  "file": {
+    "id": "be17f23a-839d-4f31-8a3d-76f1f3ab2739",
+    "filename": "yacoubb-stock-trading-ml_trading_algo.py",
+    "filepath": "dropzone\\incoming\\yacoubb-stock-trading-ml_trading_algo.py",
+    "fileType": "python",
+    "size": 2629,
+    "hash": "292a4d60fdf71c0af5e4d15590b9e27c",
+    "droppedAt": "2025-12-11T10:41:38.054Z",
+    "status": "rejected",
+    "error": "Rating too low: 1.7/5.0 (min: 4)"
+  },
+  "report": {
+    "fileId": "be17f23a-839d-4f31-8a3d-76f1f3ab2739",
+    "filename": "yacoubb-stock-trading-ml_trading_algo.py",
+    "safetyScan": {
+      "safe": true,
+      "score": 100,
+      "threats": [],
+      "warnings": [],
+      "scannedAt": "2025-12-11T10:41:38.055Z"
+    },
+    "analysis": {
+      "strategyType": "Unknown",
+      "indicators": [],
+      "timeframes": [
+        "Unknown"
+      ],
+      "assets": [
+        "Multi-Asset"
+      ],
+      "entryLogic": "No clear entry logic found",
+      "exitLogic": "No clear exit logic found",
+      "riskManagement": {
+        "hasStopLoss": false,
+        "hasTakeProfit": false,
+        "hasPositionSizing": false,
+        "maxDrawdownProtection": false
+      },
+      "complexity": "simple",
+      "codeQuality": 60
+    },
+    "rating": {
+      "overall": 1.7,
+      "breakdown": {
+        "codeQuality": 3,
+        "strategyClarity": 2.5,
+        "riskManagement": 0,
+        "documentation": 1,
+        "uniqueness": 2.5
+      },
+      "recommendation": "reject",
+      "reasoning": "Quality below threshold. Issues with risk management."
+    },
+    "absorbed": false,
+    "learningsExtracted": []
+  },
+  "rejectedAt": "2025-12-11T10:41:38.970Z"
+}

@@ -1,0 +1,10 @@
+{
+  "name": "investing-algorithm-framework",
+  "fullName": "coding-kitties/investing-algorithm-framework",
+  "stars": 599,
+  "language": "Python",
+  "description": "Framework for developing, backtesting, and deploying automated trading algorithms and trading bots.",
+  "url": "https://github.com/coding-kitties/investing-algorithm-framework",
+  "license": "Apache-2.0",
+  "downloadedAt": "2025-12-11T09:39:15.270Z"
+}

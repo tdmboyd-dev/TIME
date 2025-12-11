@@ -1,0 +1,67 @@
+{
+  "file": {
+    "id": "dacdb18b-947f-4369-a278-fd8524a112e2",
+    "filename": "TheSnowGuru-PyTrader-python-mt4-mt5-trading-api-connector-drag-n-drop_Python_script_example_PyTrader.py",
+    "filepath": "dropzone\\incoming\\TheSnowGuru-PyTrader-python-mt4-mt5-trading-api-connector-drag-n-drop_Python_script_example_PyTrader.py",
+    "fileType": "python",
+    "size": 9797,
+    "hash": "d6c58b8be087431db1dbb2e1981d0e51",
+    "droppedAt": "2025-12-11T10:41:38.018Z",
+    "status": "rejected",
+    "error": "Rating too low: 3.5/5.0 (min: 4)"
+  },
+  "report": {
+    "fileId": "dacdb18b-947f-4369-a278-fd8524a112e2",
+    "filename": "TheSnowGuru-PyTrader-python-mt4-mt5-trading-api-connector-drag-n-drop_Python_script_example_PyTrader.py",
+    "safetyScan": {
+      "safe": true,
+      "score": 100,
+      "threats": [],
+      "warnings": [],
+      "scannedAt": "2025-12-11T10:41:38.019Z"
+    },
+    "analysis": {
+      "strategyType": "Pattern Recognition",
+      "indicators": [
+        "Volume"
+      ],
+      "timeframes": [
+        "M1",
+        "H1",
+        "H4"
+      ],
+      "assets": [
+        "EURUSD",
+        "GBPJPY",
+        "AUDNZD",
+        "GBPNZD",
+        "GBPUSD"
+      ],
+      "entryLogic": "Entry logic detected",
+      "exitLogic": "Exit logic detected",
+      "riskManagement": {
+        "hasStopLoss": true,
+        "hasTakeProfit": true,
+        "hasPositionSizing": false,
+        "maxDrawdownProtection": false
+      },
+      "complexity": "moderate",
+      "codeQuality": 85
+    },
+    "rating": {
+      "overall": 3.5,
+      "breakdown": {
+        "codeQuality": 4.25,
+        "strategyClarity": 4.5,
+        "riskManagement": 2.5,
+        "documentation": 3,
+        "uniqueness": 3
+      },
+      "recommendation": "review",
+      "reasoning": "Moderate quality. Consider manual review. Weakness in risk management."
+    },
+    "absorbed": false,
+    "learningsExtracted": []
+  },
+  "rejectedAt": "2025-12-11T10:41:38.941Z"
+}

@@ -1,0 +1,11 @@
+{
+  "name": "algorithmic_trading_bot",
+  "fullName": "jimtin/algorithmic_trading_bot",
+  "stars": 133,
+  "language": "Python",
+  "description": "Python Trading Bot for Algorithmic Trading. Integrates with MetaTrader 5, Binance",
+  "url": "https://github.com/jimtin/algorithmic_trading_bot",
+  "harvest": 1,
+  "harvestName": "MQL4/MQL5 Expert Advisors",
+  "downloadedAt": "2025-12-11T09:57:37.044Z"
+}

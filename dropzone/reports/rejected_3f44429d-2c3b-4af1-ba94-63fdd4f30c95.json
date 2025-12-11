@@ -1,0 +1,59 @@
+{
+  "file": {
+    "id": "3f44429d-2c3b-4af1-ba94-63fdd4f30c95",
+    "filename": "sngyai-Sequoia_utils.py",
+    "filepath": "dropzone\\incoming\\sngyai-Sequoia_utils.py",
+    "fileType": "python",
+    "size": 131,
+    "hash": "b906eb23edb1daf69ab3f69bb7b5f415",
+    "droppedAt": "2025-12-11T10:41:37.994Z",
+    "status": "rejected",
+    "error": "Rating too low: 2/5.0 (min: 4)"
+  },
+  "report": {
+    "fileId": "3f44429d-2c3b-4af1-ba94-63fdd4f30c95",
+    "filename": "sngyai-Sequoia_utils.py",
+    "safetyScan": {
+      "safe": true,
+      "score": 100,
+      "threats": [],
+      "warnings": [],
+      "scannedAt": "2025-12-11T10:41:37.994Z"
+    },
+    "analysis": {
+      "strategyType": "Unknown",
+      "indicators": [],
+      "timeframes": [
+        "Unknown"
+      ],
+      "assets": [
+        "Multi-Asset"
+      ],
+      "entryLogic": "No clear entry logic found",
+      "exitLogic": "No clear exit logic found",
+      "riskManagement": {
+        "hasStopLoss": false,
+        "hasTakeProfit": false,
+        "hasPositionSizing": false,
+        "maxDrawdownProtection": false
+      },
+      "complexity": "simple",
+      "codeQuality": 65
+    },
+    "rating": {
+      "overall": 2,
+      "breakdown": {
+        "codeQuality": 3.25,
+        "strategyClarity": 2.5,
+        "riskManagement": 0,
+        "documentation": 3,
+        "uniqueness": 2.5
+      },
+      "recommendation": "reject",
+      "reasoning": "Quality below threshold. Issues with risk management."
+    },
+    "absorbed": false,
+    "learningsExtracted": []
+  },
+  "rejectedAt": "2025-12-11T10:41:38.920Z"
+}

@@ -1,0 +1,46 @@
+{
+  "file": {
+    "id": "630dceb4-7cbd-44bd-9932-b415e2524839",
+    "filename": "alpacahq-alpaca-mcp-server_install.py",
+    "filepath": "dropzone\\incoming\\alpacahq-alpaca-mcp-server_install.py",
+    "fileType": "python",
+    "size": 24894,
+    "hash": "f5120faaa6bf5c19da9e57e1ac82befb",
+    "droppedAt": "2025-12-11T10:41:37.559Z",
+    "status": "rejected",
+    "error": "Failed safety scan: Found fileAccess pattern: shutil.rmtree, Found credentials pattern: credential, Found systemCommands pattern: system(, Found systemCommands pattern: subprocess"
+  },
+  "report": {
+    "safe": false,
+    "score": 0,
+    "threats": [
+      {
+        "type": "file_access",
+        "severity": "high",
+        "description": "Found fileAccess pattern: shutil.rmtree",
+        "location": "Line 220"
+      },
+      {
+        "type": "credential_access",
+        "severity": "critical",
+        "description": "Found credentials pattern: credential",
+        "location": "Line 319"
+      },
+      {
+        "type": "suspicious_code",
+        "severity": "critical",
+        "description": "Found systemCommands pattern: system(",
+        "location": "Line 82"
+      },
+      {
+        "type": "suspicious_code",
+        "severity": "critical",
+        "description": "Found systemCommands pattern: subprocess",
+        "location": "Line 20"
+      }
+    ],
+    "warnings": [],
+    "scannedAt": "2025-12-11T10:41:37.562Z"
+  },
+  "rejectedAt": "2025-12-11T10:41:38.068Z"
+}

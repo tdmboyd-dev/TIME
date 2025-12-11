@@ -1,0 +1,12 @@
+{
+  "name": "finta",
+  "fullName": "peerchemist/finta",
+  "stars": 2233,
+  "language": "Python",
+  "description": "Common financial technical indicators implemented in Pandas.",
+  "url": "https://github.com/peerchemist/finta",
+  "license": "LGPL-3.0",
+  "harvest": 2,
+  "harvestName": "Python Quant/Backtest Frameworks",
+  "downloadedAt": "2025-12-11T09:58:26.089Z"
+}

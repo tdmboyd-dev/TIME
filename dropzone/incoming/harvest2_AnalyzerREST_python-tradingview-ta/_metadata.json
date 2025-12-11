@@ -1,0 +1,12 @@
+{
+  "name": "python-tradingview-ta",
+  "fullName": "AnalyzerREST/python-tradingview-ta",
+  "stars": 1212,
+  "language": "Python",
+  "description": "Unofficial TradingView technical analysis API wrapper.",
+  "url": "https://github.com/AnalyzerREST/python-tradingview-ta",
+  "license": "MIT",
+  "harvest": 2,
+  "harvestName": "Python Quant/Backtest Frameworks",
+  "downloadedAt": "2025-12-11T09:58:34.075Z"
+}

@@ -1,0 +1,12 @@
+{
+  "name": "ta",
+  "fullName": "bukosabino/ta",
+  "stars": 4832,
+  "language": "Jupyter Notebook",
+  "description": "Technical Analysis Library using Pandas and Numpy",
+  "url": "https://github.com/bukosabino/ta",
+  "license": "MIT",
+  "harvest": 2,
+  "harvestName": "Python Quant/Backtest Frameworks",
+  "downloadedAt": "2025-12-11T09:58:17.024Z"
+}

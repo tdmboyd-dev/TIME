@@ -1,0 +1,66 @@
+{
+  "file": {
+    "id": "fb4e7198-ab7b-4442-908d-ed7d6b481a09",
+    "filename": "maxbbraun-trump2cash_analysis_tests.py",
+    "filepath": "dropzone\\incoming\\maxbbraun-trump2cash_analysis_tests.py",
+    "fileType": "python",
+    "size": 32808,
+    "hash": "f4ba0cbbd47d5bcc80ad7e67a05c329e",
+    "droppedAt": "2025-12-11T10:41:37.940Z",
+    "status": "rejected",
+    "error": "Rating too low: 2.2/5.0 (min: 4)"
+  },
+  "report": {
+    "fileId": "fb4e7198-ab7b-4442-908d-ed7d6b481a09",
+    "filename": "maxbbraun-trump2cash_analysis_tests.py",
+    "safetyScan": {
+      "safe": true,
+      "score": 85,
+      "threats": [
+        {
+          "type": "obfuscation",
+          "severity": "medium",
+          "description": "Found obfuscation pattern: eval(",
+          "location": "Line 696"
+        }
+      ],
+      "warnings": [],
+      "scannedAt": "2025-12-11T10:41:37.942Z"
+    },
+    "analysis": {
+      "strategyType": "News Trading",
+      "indicators": [],
+      "timeframes": [
+        "Unknown"
+      ],
+      "assets": [
+        "BTC"
+      ],
+      "entryLogic": "No clear entry logic found",
+      "exitLogic": "No clear exit logic found",
+      "riskManagement": {
+        "hasStopLoss": false,
+        "hasTakeProfit": false,
+        "hasPositionSizing": false,
+        "maxDrawdownProtection": false
+      },
+      "complexity": "advanced",
+      "codeQuality": 75
+    },
+    "rating": {
+      "overall": 2.2,
+      "breakdown": {
+        "codeQuality": 3.75,
+        "strategyClarity": 3.5,
+        "riskManagement": 0,
+        "documentation": 4,
+        "uniqueness": 3.5
+      },
+      "recommendation": "reject",
+      "reasoning": "Quality below threshold. Issues with risk management."
+    },
+    "absorbed": false,
+    "learningsExtracted": []
+  },
+  "rejectedAt": "2025-12-11T10:41:38.871Z"
+}

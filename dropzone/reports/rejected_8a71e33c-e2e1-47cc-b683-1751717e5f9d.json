@@ -1,0 +1,61 @@
+{
+  "file": {
+    "id": "8a71e33c-e2e1-47cc-b683-1751717e5f9d",
+    "filename": "je-suis-tm-quant-trading_Awesome Oscillator backtest.py",
+    "filepath": "dropzone\\incoming\\je-suis-tm-quant-trading_Awesome Oscillator backtest.py",
+    "fileType": "python",
+    "size": 10769,
+    "hash": "0bf5ac345058a7179611878c3eb9c0c6",
+    "droppedAt": "2025-12-11T10:41:37.899Z",
+    "status": "rejected",
+    "error": "Rating too low: 2.7/5.0 (min: 4)"
+  },
+  "report": {
+    "fileId": "8a71e33c-e2e1-47cc-b683-1751717e5f9d",
+    "filename": "je-suis-tm-quant-trading_Awesome Oscillator backtest.py",
+    "safetyScan": {
+      "safe": true,
+      "score": 100,
+      "threats": [],
+      "warnings": [],
+      "scannedAt": "2025-12-11T10:41:37.899Z"
+    },
+    "analysis": {
+      "strategyType": "Trend Following",
+      "indicators": [
+        "MACD"
+      ],
+      "timeframes": [
+        "D1"
+      ],
+      "assets": [
+        "Multi-Asset"
+      ],
+      "entryLogic": "Entry logic detected",
+      "exitLogic": "Exit logic detected",
+      "riskManagement": {
+        "hasStopLoss": false,
+        "hasTakeProfit": false,
+        "hasPositionSizing": false,
+        "maxDrawdownProtection": false
+      },
+      "complexity": "complex",
+      "codeQuality": 85
+    },
+    "rating": {
+      "overall": 2.7,
+      "breakdown": {
+        "codeQuality": 4.25,
+        "strategyClarity": 4.5,
+        "riskManagement": 0,
+        "documentation": 3,
+        "uniqueness": 3
+      },
+      "recommendation": "reject",
+      "reasoning": "Quality below threshold. Issues with risk management."
+    },
+    "absorbed": false,
+    "learningsExtracted": []
+  },
+  "rejectedAt": "2025-12-11T10:41:38.826Z"
+}

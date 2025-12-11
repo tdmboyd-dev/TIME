@@ -1,0 +1,59 @@
+{
+  "file": {
+    "id": "dfcacc53-dce7-4280-a116-fb4fb369d86f",
+    "filename": "jaungiers-LSTM-Neural-Network-for-Time-Series-Prediction_run.py",
+    "filepath": "dropzone\\incoming\\jaungiers-LSTM-Neural-Network-for-Time-Series-Prediction_run.py",
+    "fileType": "python",
+    "size": 2870,
+    "hash": "25f2980a99afc65028942996df0c7f05",
+    "droppedAt": "2025-12-11T10:41:37.897Z",
+    "status": "rejected",
+    "error": "Rating too low: 1.8/5.0 (min: 4)"
+  },
+  "report": {
+    "fileId": "dfcacc53-dce7-4280-a116-fb4fb369d86f",
+    "filename": "jaungiers-LSTM-Neural-Network-for-Time-Series-Prediction_run.py",
+    "safetyScan": {
+      "safe": true,
+      "score": 100,
+      "threats": [],
+      "warnings": [],
+      "scannedAt": "2025-12-11T10:41:37.897Z"
+    },
+    "analysis": {
+      "strategyType": "Unknown",
+      "indicators": [],
+      "timeframes": [
+        "Unknown"
+      ],
+      "assets": [
+        "Multi-Asset"
+      ],
+      "entryLogic": "No clear entry logic found",
+      "exitLogic": "No clear exit logic found",
+      "riskManagement": {
+        "hasStopLoss": false,
+        "hasTakeProfit": false,
+        "hasPositionSizing": false,
+        "maxDrawdownProtection": false
+      },
+      "complexity": "simple",
+      "codeQuality": 60
+    },
+    "rating": {
+      "overall": 1.8,
+      "breakdown": {
+        "codeQuality": 3,
+        "strategyClarity": 2.5,
+        "riskManagement": 0,
+        "documentation": 2,
+        "uniqueness": 2.5
+      },
+      "recommendation": "reject",
+      "reasoning": "Quality below threshold. Issues with risk management."
+    },
+    "absorbed": false,
+    "learningsExtracted": []
+  },
+  "rejectedAt": "2025-12-11T10:41:38.825Z"
+}

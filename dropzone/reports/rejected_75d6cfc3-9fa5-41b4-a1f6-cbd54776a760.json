@@ -1,0 +1,59 @@
+{
+  "file": {
+    "id": "75d6cfc3-9fa5-41b4-a1f6-cbd54776a760",
+    "filename": "je-suis-tm-quant-trading_Pair trading backtest.py",
+    "filepath": "dropzone\\incoming\\je-suis-tm-quant-trading_Pair trading backtest.py",
+    "fileType": "python",
+    "size": 12543,
+    "hash": "55cd1da5614de877b487a2e400780d7b",
+    "droppedAt": "2025-12-11T10:41:37.907Z",
+    "status": "rejected",
+    "error": "Rating too low: 2.4/5.0 (min: 4)"
+  },
+  "report": {
+    "fileId": "75d6cfc3-9fa5-41b4-a1f6-cbd54776a760",
+    "filename": "je-suis-tm-quant-trading_Pair trading backtest.py",
+    "safetyScan": {
+      "safe": true,
+      "score": 100,
+      "threats": [],
+      "warnings": [],
+      "scannedAt": "2025-12-11T10:41:37.908Z"
+    },
+    "analysis": {
+      "strategyType": "Mean Reversion",
+      "indicators": [],
+      "timeframes": [
+        "Unknown"
+      ],
+      "assets": [
+        "Multi-Asset"
+      ],
+      "entryLogic": "No clear entry logic found",
+      "exitLogic": "No clear exit logic found",
+      "riskManagement": {
+        "hasStopLoss": false,
+        "hasTakeProfit": false,
+        "hasPositionSizing": false,
+        "maxDrawdownProtection": false
+      },
+      "complexity": "moderate",
+      "codeQuality": 75
+    },
+    "rating": {
+      "overall": 2.4,
+      "breakdown": {
+        "codeQuality": 3.75,
+        "strategyClarity": 3.5,
+        "riskManagement": 0,
+        "documentation": 4,
+        "uniqueness": 2.5
+      },
+      "recommendation": "reject",
+      "reasoning": "Quality below threshold. Issues with risk management."
+    },
+    "absorbed": false,
+    "learningsExtracted": []
+  },
+  "rejectedAt": "2025-12-11T10:41:38.837Z"
+}

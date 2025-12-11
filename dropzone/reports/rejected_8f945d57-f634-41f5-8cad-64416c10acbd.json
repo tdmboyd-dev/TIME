@@ -1,0 +1,59 @@
+{
+  "file": {
+    "id": "8f945d57-f634-41f5-8cad-64416c10acbd",
+    "filename": "chrisleekr-binance-trading-bot_Gruntfile.js",
+    "filepath": "dropzone\\incoming\\chrisleekr-binance-trading-bot_Gruntfile.js",
+    "fileType": "javascript",
+    "size": 5273,
+    "hash": "7b0d7958cc2b142036d6b788d04cead0",
+    "droppedAt": "2025-12-11T10:41:37.583Z",
+    "status": "rejected",
+    "error": "Rating too low: 2.1/5.0 (min: 4)"
+  },
+  "report": {
+    "fileId": "8f945d57-f634-41f5-8cad-64416c10acbd",
+    "filename": "chrisleekr-binance-trading-bot_Gruntfile.js",
+    "safetyScan": {
+      "safe": true,
+      "score": 100,
+      "threats": [],
+      "warnings": [],
+      "scannedAt": "2025-12-11T10:41:37.583Z"
+    },
+    "analysis": {
+      "strategyType": "Grid Trading",
+      "indicators": [],
+      "timeframes": [
+        "Unknown"
+      ],
+      "assets": [
+        "Multi-Asset"
+      ],
+      "entryLogic": "Entry logic detected",
+      "exitLogic": "No clear exit logic found",
+      "riskManagement": {
+        "hasStopLoss": false,
+        "hasTakeProfit": false,
+        "hasPositionSizing": false,
+        "maxDrawdownProtection": false
+      },
+      "complexity": "simple",
+      "codeQuality": 60
+    },
+    "rating": {
+      "overall": 2.1,
+      "breakdown": {
+        "codeQuality": 3,
+        "strategyClarity": 3.75,
+        "riskManagement": 0,
+        "documentation": 2,
+        "uniqueness": 2.5
+      },
+      "recommendation": "reject",
+      "reasoning": "Quality below threshold. Issues with risk management."
+    },
+    "absorbed": false,
+    "learningsExtracted": []
+  },
+  "rejectedAt": "2025-12-11T10:41:38.761Z"
+}

@@ -1,0 +1,59 @@
+{
+  "file": {
+    "id": "e38b6f99-6bda-4d27-96aa-946632bdfc83",
+    "filename": "deependersingla-deep-trader_prepare_data.py",
+    "filepath": "dropzone\\incoming\\deependersingla-deep-trader_prepare_data.py",
+    "fileType": "python",
+    "size": 580,
+    "hash": "7be20fe41f1215fe334969aaba8466b1",
+    "droppedAt": "2025-12-11T10:41:37.600Z",
+    "status": "rejected",
+    "error": "Rating too low: 2.1/5.0 (min: 4)"
+  },
+  "report": {
+    "fileId": "e38b6f99-6bda-4d27-96aa-946632bdfc83",
+    "filename": "deependersingla-deep-trader_prepare_data.py",
+    "safetyScan": {
+      "safe": true,
+      "score": 100,
+      "threats": [],
+      "warnings": [],
+      "scannedAt": "2025-12-11T10:41:37.600Z"
+    },
+    "analysis": {
+      "strategyType": "Machine Learning",
+      "indicators": [],
+      "timeframes": [
+        "Unknown"
+      ],
+      "assets": [
+        "Multi-Asset"
+      ],
+      "entryLogic": "No clear entry logic found",
+      "exitLogic": "No clear exit logic found",
+      "riskManagement": {
+        "hasStopLoss": false,
+        "hasTakeProfit": false,
+        "hasPositionSizing": false,
+        "maxDrawdownProtection": false
+      },
+      "complexity": "simple",
+      "codeQuality": 65
+    },
+    "rating": {
+      "overall": 2.1,
+      "breakdown": {
+        "codeQuality": 3.25,
+        "strategyClarity": 3.5,
+        "riskManagement": 0,
+        "documentation": 2,
+        "uniqueness": 2.5
+      },
+      "recommendation": "reject",
+      "reasoning": "Quality below threshold. Issues with risk management."
+    },
+    "absorbed": false,
+    "learningsExtracted": []
+  },
+  "rejectedAt": "2025-12-11T10:41:38.781Z"
+}

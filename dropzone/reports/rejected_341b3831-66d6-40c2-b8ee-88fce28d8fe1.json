@@ -1,0 +1,28 @@
+{
+  "file": {
+    "id": "341b3831-66d6-40c2-b8ee-88fce28d8fe1",
+    "filename": "warp-id-solana-trading-bot_index.ts",
+    "filepath": "dropzone\\incoming\\warp-id-solana-trading-bot_index.ts",
+    "fileType": "typescript",
+    "size": 8770,
+    "hash": "f9e25b5076e5562642bebc5e45d84222",
+    "droppedAt": "2025-12-11T10:41:38.040Z",
+    "status": "rejected",
+    "error": "Failed safety scan: Found credentials pattern: wallet = getWallet(PRIVATE"
+  },
+  "report": {
+    "safe": false,
+    "score": 60,
+    "threats": [
+      {
+        "type": "credential_access",
+        "severity": "critical",
+        "description": "Found credentials pattern: wallet = getWallet(PRIVATE",
+        "location": "Line 163"
+      }
+    ],
+    "warnings": [],
+    "scannedAt": "2025-12-11T10:41:38.040Z"
+  },
+  "rejectedAt": "2025-12-11T10:41:38.590Z"
+}

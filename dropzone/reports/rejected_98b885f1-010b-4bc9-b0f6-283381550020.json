@@ -1,0 +1,76 @@
+{
+  "file": {
+    "id": "98b885f1-010b-4bc9-b0f6-283381550020",
+    "filename": "iterativv-NostalgiaForInfinity_NostalgiaForInfinityX5.py",
+    "filepath": "dropzone\\incoming\\iterativv-NostalgiaForInfinity_NostalgiaForInfinityX5.py",
+    "fileType": "python",
+    "size": 2405676,
+    "hash": "bfcf2a8cef3c62917a01d28be0f7eefc",
+    "droppedAt": "2025-12-11T10:41:37.762Z",
+    "status": "rejected",
+    "error": "Rating too low: 3.6/5.0 (min: 4)"
+  },
+  "report": {
+    "fileId": "98b885f1-010b-4bc9-b0f6-283381550020",
+    "filename": "iterativv-NostalgiaForInfinity_NostalgiaForInfinityX5.py",
+    "safetyScan": {
+      "safe": true,
+      "score": 100,
+      "threats": [],
+      "warnings": [],
+      "scannedAt": "2025-12-11T10:41:37.799Z"
+    },
+    "analysis": {
+      "strategyType": "Trend Following",
+      "indicators": [
+        "Moving Average",
+        "RSI",
+        "Bollinger Bands",
+        "Stochastic",
+        "Fibonacci",
+        "Volume",
+        "Pivot Points",
+        "Williams %R"
+      ],
+      "timeframes": [
+        "D1"
+      ],
+      "assets": [
+        "BTC",
+        "ETH",
+        "BNB",
+        "ADA",
+        "BCH",
+        "DOT",
+        "LINK",
+        "LTC",
+        "XRP"
+      ],
+      "entryLogic": "Entry logic detected",
+      "exitLogic": "Exit logic detected",
+      "riskManagement": {
+        "hasStopLoss": true,
+        "hasTakeProfit": true,
+        "hasPositionSizing": false,
+        "maxDrawdownProtection": false
+      },
+      "complexity": "advanced",
+      "codeQuality": 75
+    },
+    "rating": {
+      "overall": 3.6,
+      "breakdown": {
+        "codeQuality": 3.75,
+        "strategyClarity": 5,
+        "riskManagement": 2.5,
+        "documentation": 2,
+        "uniqueness": 4
+      },
+      "recommendation": "review",
+      "reasoning": "Moderate quality. Consider manual review. Weakness in documentation."
+    },
+    "absorbed": false,
+    "learningsExtracted": []
+  },
+  "rejectedAt": "2025-12-11T10:41:38.821Z"
+}

@@ -1,0 +1,59 @@
+{
+  "file": {
+    "id": "4c65ae2b-6c68-46c4-b678-643e6f4cdc4c",
+    "filename": "dcajasn-Riskfolio-Lib_setup.py",
+    "filepath": "dropzone\\incoming\\dcajasn-Riskfolio-Lib_setup.py",
+    "fileType": "python",
+    "size": 4902,
+    "hash": "c3e19af6baad61c30564c5110279fbd4",
+    "droppedAt": "2025-12-11T10:41:37.599Z",
+    "status": "rejected",
+    "error": "Rating too low: 2/5.0 (min: 4)"
+  },
+  "report": {
+    "fileId": "4c65ae2b-6c68-46c4-b678-643e6f4cdc4c",
+    "filename": "dcajasn-Riskfolio-Lib_setup.py",
+    "safetyScan": {
+      "safe": true,
+      "score": 100,
+      "threats": [],
+      "warnings": [],
+      "scannedAt": "2025-12-11T10:41:37.599Z"
+    },
+    "analysis": {
+      "strategyType": "Unknown",
+      "indicators": [],
+      "timeframes": [
+        "Unknown"
+      ],
+      "assets": [
+        "Multi-Asset"
+      ],
+      "entryLogic": "No clear entry logic found",
+      "exitLogic": "No clear exit logic found",
+      "riskManagement": {
+        "hasStopLoss": false,
+        "hasTakeProfit": false,
+        "hasPositionSizing": false,
+        "maxDrawdownProtection": false
+      },
+      "complexity": "simple",
+      "codeQuality": 80
+    },
+    "rating": {
+      "overall": 2,
+      "breakdown": {
+        "codeQuality": 4,
+        "strategyClarity": 2.5,
+        "riskManagement": 0,
+        "documentation": 2,
+        "uniqueness": 2.5
+      },
+      "recommendation": "reject",
+      "reasoning": "Quality below threshold. Issues with risk management."
+    },
+    "absorbed": false,
+    "learningsExtracted": []
+  },
+  "rejectedAt": "2025-12-11T10:41:38.778Z"
+}

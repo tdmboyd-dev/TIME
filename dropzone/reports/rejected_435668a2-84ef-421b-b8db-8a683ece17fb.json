@@ -1,0 +1,46 @@
+{
+  "file": {
+    "id": "435668a2-84ef-421b-b8db-8a683ece17fb",
+    "filename": "whittlem-pycryptobot_telegram_bot.py",
+    "filepath": "dropzone\\incoming\\whittlem-pycryptobot_telegram_bot.py",
+    "fileType": "python",
+    "size": 33288,
+    "hash": "dcea34d60f40a44c9ffa11602a224e18",
+    "droppedAt": "2025-12-11T10:41:38.045Z",
+    "status": "rejected",
+    "error": "Failed safety scan: Found network pattern: urllib, Found obfuscation pattern: compile(, Found obfuscation pattern: \\xe2, Found systemCommands pattern: subprocess"
+  },
+  "report": {
+    "safe": false,
+    "score": 5,
+    "threats": [
+      {
+        "type": "network_call",
+        "severity": "high",
+        "description": "Found network pattern: urllib",
+        "location": "Line 18"
+      },
+      {
+        "type": "obfuscation",
+        "severity": "medium",
+        "description": "Found obfuscation pattern: compile(",
+        "location": "Line 214"
+      },
+      {
+        "type": "obfuscation",
+        "severity": "medium",
+        "description": "Found obfuscation pattern: \\xe2",
+        "location": "Line 478"
+      },
+      {
+        "type": "suspicious_code",
+        "severity": "critical",
+        "description": "Found systemCommands pattern: subprocess",
+        "location": "Line 14"
+      }
+    ],
+    "warnings": [],
+    "scannedAt": "2025-12-11T10:41:38.047Z"
+  },
+  "rejectedAt": "2025-12-11T10:41:38.594Z"
+}

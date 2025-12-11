@@ -1,0 +1,62 @@
+{
+  "file": {
+    "id": "32b98c3f-1748-44b1-9154-dbc70cb5eee6",
+    "filename": "jimtin-algorithmic-trading-bot_helper_functions.py",
+    "filepath": "dropzone\\incoming\\jimtin-algorithmic-trading-bot_helper_functions.py",
+    "fileType": "python",
+    "size": 3900,
+    "hash": "99bd80d6758a5401bc455d7c9947e1f6",
+    "droppedAt": "2025-12-11T10:41:37.919Z",
+    "status": "rejected",
+    "error": "Rating too low: 3.5/5.0 (min: 4)"
+  },
+  "report": {
+    "fileId": "32b98c3f-1748-44b1-9154-dbc70cb5eee6",
+    "filename": "jimtin-algorithmic-trading-bot_helper_functions.py",
+    "safetyScan": {
+      "safe": true,
+      "score": 100,
+      "threats": [],
+      "warnings": [],
+      "scannedAt": "2025-12-11T10:41:37.920Z"
+    },
+    "analysis": {
+      "strategyType": "Pattern Recognition",
+      "indicators": [
+        "Volume"
+      ],
+      "timeframes": [
+        "Unknown"
+      ],
+      "assets": [
+        "USDJPY",
+        "ETHUSD"
+      ],
+      "entryLogic": "No clear entry logic found",
+      "exitLogic": "Exit logic detected",
+      "riskManagement": {
+        "hasStopLoss": true,
+        "hasTakeProfit": false,
+        "hasPositionSizing": true,
+        "maxDrawdownProtection": false
+      },
+      "complexity": "simple",
+      "codeQuality": 85
+    },
+    "rating": {
+      "overall": 3.5,
+      "breakdown": {
+        "codeQuality": 4.25,
+        "strategyClarity": 4.25,
+        "riskManagement": 3,
+        "documentation": 3,
+        "uniqueness": 2.5
+      },
+      "recommendation": "review",
+      "reasoning": "Moderate quality. Consider manual review. Weakness in uniqueness."
+    },
+    "absorbed": false,
+    "learningsExtracted": []
+  },
+  "rejectedAt": "2025-12-11T10:41:38.850Z"
+}

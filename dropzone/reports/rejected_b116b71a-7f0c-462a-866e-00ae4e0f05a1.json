@@ -1,0 +1,61 @@
+{
+  "file": {
+    "id": "b116b71a-7f0c-462a-866e-00ae4e0f05a1",
+    "filename": "je-suis-tm-quant-trading_London Breakout backtest.py",
+    "filepath": "dropzone\\incoming\\je-suis-tm-quant-trading_London Breakout backtest.py",
+    "fileType": "python",
+    "size": 10700,
+    "hash": "18e192bf0a37343559d0844a70e287b8",
+    "droppedAt": "2025-12-11T10:41:37.904Z",
+    "status": "rejected",
+    "error": "Rating too low: 3/5.0 (min: 4)"
+  },
+  "report": {
+    "fileId": "b116b71a-7f0c-462a-866e-00ae4e0f05a1",
+    "filename": "je-suis-tm-quant-trading_London Breakout backtest.py",
+    "safetyScan": {
+      "safe": true,
+      "score": 100,
+      "threats": [],
+      "warnings": [],
+      "scannedAt": "2025-12-11T10:41:37.904Z"
+    },
+    "analysis": {
+      "strategyType": "Trend Following",
+      "indicators": [],
+      "timeframes": [
+        "M1",
+        "M30",
+        "H4"
+      ],
+      "assets": [
+        "Multi-Asset"
+      ],
+      "entryLogic": "Entry logic detected",
+      "exitLogic": "Exit logic detected",
+      "riskManagement": {
+        "hasStopLoss": true,
+        "hasTakeProfit": false,
+        "hasPositionSizing": false,
+        "maxDrawdownProtection": false
+      },
+      "complexity": "moderate",
+      "codeQuality": 80
+    },
+    "rating": {
+      "overall": 3,
+      "breakdown": {
+        "codeQuality": 4,
+        "strategyClarity": 4,
+        "riskManagement": 1.5,
+        "documentation": 3,
+        "uniqueness": 3
+      },
+      "recommendation": "review",
+      "reasoning": "Moderate quality. Consider manual review. Weakness in risk management."
+    },
+    "absorbed": false,
+    "learningsExtracted": []
+  },
+  "rejectedAt": "2025-12-11T10:41:38.833Z"
+}

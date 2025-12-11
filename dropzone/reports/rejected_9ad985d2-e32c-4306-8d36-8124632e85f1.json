@@ -1,0 +1,59 @@
+{
+  "file": {
+    "id": "9ad985d2-e32c-4306-8d36-8124632e85f1",
+    "filename": "suenot-profitmaker_postcss.config.js",
+    "filepath": "dropzone\\incoming\\suenot-profitmaker_postcss.config.js",
+    "fileType": "javascript",
+    "size": 80,
+    "hash": "ef3ba2a81ba19f8ea5ddf625521e96f0",
+    "droppedAt": "2025-12-11T10:41:38.000Z",
+    "status": "rejected",
+    "error": "Rating too low: 1.5/5.0 (min: 4)"
+  },
+  "report": {
+    "fileId": "9ad985d2-e32c-4306-8d36-8124632e85f1",
+    "filename": "suenot-profitmaker_postcss.config.js",
+    "safetyScan": {
+      "safe": true,
+      "score": 100,
+      "threats": [],
+      "warnings": [],
+      "scannedAt": "2025-12-11T10:41:38.001Z"
+    },
+    "analysis": {
+      "strategyType": "Unknown",
+      "indicators": [],
+      "timeframes": [
+        "Unknown"
+      ],
+      "assets": [
+        "Multi-Asset"
+      ],
+      "entryLogic": "No clear entry logic found",
+      "exitLogic": "No clear exit logic found",
+      "riskManagement": {
+        "hasStopLoss": false,
+        "hasTakeProfit": false,
+        "hasPositionSizing": false,
+        "maxDrawdownProtection": false
+      },
+      "complexity": "simple",
+      "codeQuality": 40
+    },
+    "rating": {
+      "overall": 1.5,
+      "breakdown": {
+        "codeQuality": 2,
+        "strategyClarity": 2.5,
+        "riskManagement": 0,
+        "documentation": 1,
+        "uniqueness": 2.5
+      },
+      "recommendation": "reject",
+      "reasoning": "Quality below threshold. Issues with risk management."
+    },
+    "absorbed": false,
+    "learningsExtracted": []
+  },
+  "rejectedAt": "2025-12-11T10:41:38.927Z"
+}

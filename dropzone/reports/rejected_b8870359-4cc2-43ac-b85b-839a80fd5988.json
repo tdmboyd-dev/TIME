@@ -1,0 +1,46 @@
+{
+  "file": {
+    "id": "b8870359-4cc2-43ac-b85b-839a80fd5988",
+    "filename": "suenot-profitmaker_express.ts",
+    "filepath": "dropzone\\incoming\\suenot-profitmaker_express.ts",
+    "fileType": "typescript",
+    "size": 22227,
+    "hash": "22b7a1e34e94316152b09ac37bcf5fbb",
+    "droppedAt": "2025-12-11T10:41:37.999Z",
+    "status": "rejected",
+    "error": "Failed safety scan: Found network pattern: fetch(, Found network pattern: socket., Found credentials pattern: password, Found credentials pattern: credential"
+  },
+  "report": {
+    "safe": false,
+    "score": 0,
+    "threats": [
+      {
+        "type": "network_call",
+        "severity": "high",
+        "description": "Found network pattern: fetch(",
+        "location": "Line 693"
+      },
+      {
+        "type": "network_call",
+        "severity": "high",
+        "description": "Found network pattern: socket.",
+        "location": "Line 5"
+      },
+      {
+        "type": "credential_access",
+        "severity": "critical",
+        "description": "Found credentials pattern: password",
+        "location": "Line 315"
+      },
+      {
+        "type": "credential_access",
+        "severity": "critical",
+        "description": "Found credentials pattern: credential",
+        "location": "Line 30"
+      }
+    ],
+    "warnings": [],
+    "scannedAt": "2025-12-11T10:41:38.000Z"
+  },
+  "rejectedAt": "2025-12-11T10:41:38.566Z"
+}

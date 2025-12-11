@@ -1,0 +1,72 @@
+{
+  "file": {
+    "id": "7b0a4bae-db61-40dd-8863-d66e23279d08",
+    "filename": "mementum-backtrader_setup.py",
+    "filepath": "dropzone\\incoming\\mementum-backtrader_setup.py",
+    "fileType": "python",
+    "size": 5322,
+    "hash": "dc4ba279537cf6a6810f9ce5bf942bcc",
+    "droppedAt": "2025-12-11T10:41:37.953Z",
+    "status": "rejected",
+    "error": "Rating too low: 1.6/5.0 (min: 4)"
+  },
+  "report": {
+    "fileId": "7b0a4bae-db61-40dd-8863-d66e23279d08",
+    "filename": "mementum-backtrader_setup.py",
+    "safetyScan": {
+      "safe": true,
+      "score": 70,
+      "threats": [
+        {
+          "type": "obfuscation",
+          "severity": "medium",
+          "description": "Found obfuscation pattern: exec(",
+          "location": "Line 37"
+        },
+        {
+          "type": "obfuscation",
+          "severity": "medium",
+          "description": "Found obfuscation pattern: compile(",
+          "location": "Line 37"
+        }
+      ],
+      "warnings": [],
+      "scannedAt": "2025-12-11T10:41:37.954Z"
+    },
+    "analysis": {
+      "strategyType": "Machine Learning",
+      "indicators": [],
+      "timeframes": [
+        "Unknown"
+      ],
+      "assets": [
+        "Multi-Asset"
+      ],
+      "entryLogic": "Entry logic detected",
+      "exitLogic": "No clear exit logic found",
+      "riskManagement": {
+        "hasStopLoss": false,
+        "hasTakeProfit": false,
+        "hasPositionSizing": false,
+        "maxDrawdownProtection": false
+      },
+      "complexity": "simple",
+      "codeQuality": 60
+    },
+    "rating": {
+      "overall": 1.6,
+      "breakdown": {
+        "codeQuality": 3,
+        "strategyClarity": 3.75,
+        "riskManagement": 0,
+        "documentation": 4,
+        "uniqueness": 2.5
+      },
+      "recommendation": "reject",
+      "reasoning": "Quality below threshold. Issues with risk management."
+    },
+    "absorbed": false,
+    "learningsExtracted": []
+  },
+  "rejectedAt": "2025-12-11T10:41:38.889Z"
+}

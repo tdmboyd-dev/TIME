@@ -1,0 +1,12 @@
+{
+  "name": "Krypto-trading-bot",
+  "fullName": "ctubio/Krypto-trading-bot",
+  "stars": 3644,
+  "language": "C++",
+  "description": "Self-hosted crypto trading bot (automated high frequency market making) written in C++",
+  "url": "https://github.com/ctubio/Krypto-trading-bot",
+  "license": "NOASSERTION",
+  "harvest": 3,
+  "harvestName": "Crypto/DeFi Bots",
+  "downloadedAt": "2025-12-11T09:59:21.069Z"
+}

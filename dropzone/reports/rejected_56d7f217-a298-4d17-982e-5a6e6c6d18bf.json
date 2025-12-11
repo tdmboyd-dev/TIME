@@ -1,0 +1,67 @@
+{
+  "file": {
+    "id": "56d7f217-a298-4d17-982e-5a6e6c6d18bf",
+    "filename": "jimtin-algorithmic-trading-bot_binance_lib.py",
+    "filepath": "dropzone\\incoming\\jimtin-algorithmic-trading-bot_binance_lib.py",
+    "fileType": "python",
+    "size": 11441,
+    "hash": "2046b7ae1feda5e7e3319f3a35837219",
+    "droppedAt": "2025-12-11T10:41:37.915Z",
+    "status": "rejected",
+    "error": "Rating too low: 3.5/5.0 (min: 4)"
+  },
+  "report": {
+    "fileId": "56d7f217-a298-4d17-982e-5a6e6c6d18bf",
+    "filename": "jimtin-algorithmic-trading-bot_binance_lib.py",
+    "safetyScan": {
+      "safe": true,
+      "score": 100,
+      "threats": [],
+      "warnings": [],
+      "scannedAt": "2025-12-11T10:41:37.916Z"
+    },
+    "analysis": {
+      "strategyType": "Pattern Recognition",
+      "indicators": [
+        "Volume"
+      ],
+      "timeframes": [
+        "M5",
+        "M15",
+        "M30",
+        "H1",
+        "H4",
+        "D1",
+        "W1"
+      ],
+      "assets": [
+        "Multi-Asset"
+      ],
+      "entryLogic": "No clear entry logic found",
+      "exitLogic": "Exit logic detected",
+      "riskManagement": {
+        "hasStopLoss": true,
+        "hasTakeProfit": true,
+        "hasPositionSizing": false,
+        "maxDrawdownProtection": false
+      },
+      "complexity": "moderate",
+      "codeQuality": 85
+    },
+    "rating": {
+      "overall": 3.5,
+      "breakdown": {
+        "codeQuality": 4.25,
+        "strategyClarity": 4.25,
+        "riskManagement": 2.5,
+        "documentation": 4,
+        "uniqueness": 3
+      },
+      "recommendation": "review",
+      "reasoning": "Moderate quality. Consider manual review. Weakness in risk management."
+    },
+    "absorbed": false,
+    "learningsExtracted": []
+  },
+  "rejectedAt": "2025-12-11T10:41:38.844Z"
+}

@@ -1,0 +1,60 @@
+{
+  "file": {
+    "id": "49781a3b-98f1-42da-969d-e93e79a309e1",
+    "filename": "yasinkuyu-binance-trader_trader.py",
+    "filepath": "dropzone\\incoming\\yasinkuyu-binance-trader_trader.py",
+    "fileType": "python",
+    "size": 2419,
+    "hash": "cdd90bb2d725dcb1ce4d8d41629c05af",
+    "droppedAt": "2025-12-11T10:41:38.058Z",
+    "status": "rejected",
+    "error": "Rating too low: 2.2/5.0 (min: 4)"
+  },
+  "report": {
+    "fileId": "49781a3b-98f1-42da-969d-e93e79a309e1",
+    "filename": "yasinkuyu-binance-trader_trader.py",
+    "safetyScan": {
+      "safe": true,
+      "score": 100,
+      "threats": [],
+      "warnings": [],
+      "scannedAt": "2025-12-11T10:41:38.058Z"
+    },
+    "analysis": {
+      "strategyType": "Unknown",
+      "indicators": [],
+      "timeframes": [
+        "Unknown"
+      ],
+      "assets": [
+        "BTC",
+        "BNB"
+      ],
+      "entryLogic": "No clear entry logic found",
+      "exitLogic": "Exit logic detected",
+      "riskManagement": {
+        "hasStopLoss": true,
+        "hasTakeProfit": false,
+        "hasPositionSizing": false,
+        "maxDrawdownProtection": false
+      },
+      "complexity": "simple",
+      "codeQuality": 50
+    },
+    "rating": {
+      "overall": 2.2,
+      "breakdown": {
+        "codeQuality": 2.5,
+        "strategyClarity": 2.75,
+        "riskManagement": 1.5,
+        "documentation": 2,
+        "uniqueness": 2.5
+      },
+      "recommendation": "reject",
+      "reasoning": "Quality below threshold. Issues with risk management."
+    },
+    "absorbed": false,
+    "learningsExtracted": []
+  },
+  "rejectedAt": "2025-12-11T10:41:38.974Z"
+}

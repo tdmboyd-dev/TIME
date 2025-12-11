@@ -1,0 +1,59 @@
+{
+  "file": {
+    "id": "1741a480-8d06-4ad1-93d6-fab3404ba76c",
+    "filename": "notadamking-RLTrader_optimize.py",
+    "filepath": "dropzone\\incoming\\notadamking-RLTrader_optimize.py",
+    "fileType": "python",
+    "size": 809,
+    "hash": "5c5a0a33d8cf8b865bf91e624f2ded53",
+    "droppedAt": "2025-12-11T10:41:37.957Z",
+    "status": "rejected",
+    "error": "Rating too low: 1.8/5.0 (min: 4)"
+  },
+  "report": {
+    "fileId": "1741a480-8d06-4ad1-93d6-fab3404ba76c",
+    "filename": "notadamking-RLTrader_optimize.py",
+    "safetyScan": {
+      "safe": true,
+      "score": 100,
+      "threats": [],
+      "warnings": [],
+      "scannedAt": "2025-12-11T10:41:37.957Z"
+    },
+    "analysis": {
+      "strategyType": "Unknown",
+      "indicators": [],
+      "timeframes": [
+        "Unknown"
+      ],
+      "assets": [
+        "Multi-Asset"
+      ],
+      "entryLogic": "No clear entry logic found",
+      "exitLogic": "No clear exit logic found",
+      "riskManagement": {
+        "hasStopLoss": false,
+        "hasTakeProfit": false,
+        "hasPositionSizing": false,
+        "maxDrawdownProtection": false
+      },
+      "complexity": "simple",
+      "codeQuality": 65
+    },
+    "rating": {
+      "overall": 1.8,
+      "breakdown": {
+        "codeQuality": 3.25,
+        "strategyClarity": 2.5,
+        "riskManagement": 0,
+        "documentation": 1,
+        "uniqueness": 2.5
+      },
+      "recommendation": "reject",
+      "reasoning": "Quality below threshold. Issues with risk management."
+    },
+    "absorbed": false,
+    "learningsExtracted": []
+  },
+  "rejectedAt": "2025-12-11T10:41:38.893Z"
+}

@@ -1,0 +1,66 @@
+{
+  "file": {
+    "id": "597e539b-3327-457d-93cf-45548b367c54",
+    "filename": "whittlem-pycryptobot_websvc.py",
+    "filepath": "dropzone\\incoming\\whittlem-pycryptobot_websvc.py",
+    "fileType": "python",
+    "size": 1395,
+    "hash": "f29936c7da85cf6f1c5033115dd0d09a",
+    "droppedAt": "2025-12-11T10:41:38.050Z",
+    "status": "rejected",
+    "error": "Rating too low: 1.6/5.0 (min: 4)"
+  },
+  "report": {
+    "fileId": "597e539b-3327-457d-93cf-45548b367c54",
+    "filename": "whittlem-pycryptobot_websvc.py",
+    "safetyScan": {
+      "safe": true,
+      "score": 85,
+      "threats": [
+        {
+          "type": "obfuscation",
+          "severity": "medium",
+          "description": "Found obfuscation pattern: compile(",
+          "location": "Line 31"
+        }
+      ],
+      "warnings": [],
+      "scannedAt": "2025-12-11T10:41:38.050Z"
+    },
+    "analysis": {
+      "strategyType": "Unknown",
+      "indicators": [],
+      "timeframes": [
+        "Unknown"
+      ],
+      "assets": [
+        "Multi-Asset"
+      ],
+      "entryLogic": "No clear entry logic found",
+      "exitLogic": "No clear exit logic found",
+      "riskManagement": {
+        "hasStopLoss": false,
+        "hasTakeProfit": false,
+        "hasPositionSizing": false,
+        "maxDrawdownProtection": false
+      },
+      "complexity": "simple",
+      "codeQuality": 70
+    },
+    "rating": {
+      "overall": 1.6,
+      "breakdown": {
+        "codeQuality": 3.5,
+        "strategyClarity": 2.5,
+        "riskManagement": 0,
+        "documentation": 2,
+        "uniqueness": 2.5
+      },
+      "recommendation": "reject",
+      "reasoning": "Quality below threshold. Issues with risk management."
+    },
+    "absorbed": false,
+    "learningsExtracted": []
+  },
+  "rejectedAt": "2025-12-11T10:41:38.965Z"
+}

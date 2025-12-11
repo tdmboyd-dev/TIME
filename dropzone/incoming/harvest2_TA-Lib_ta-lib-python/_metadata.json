@@ -1,0 +1,12 @@
+{
+  "name": "ta-lib-python",
+  "fullName": "TA-Lib/ta-lib-python",
+  "stars": 11504,
+  "language": "Cython",
+  "description": "Python wrapper for TA-Lib (http://ta-lib.org/).",
+  "url": "https://github.com/TA-Lib/ta-lib-python",
+  "license": "BSD-2-Clause",
+  "harvest": 2,
+  "harvestName": "Python Quant/Backtest Frameworks",
+  "downloadedAt": "2025-12-11T09:58:08.504Z"
+}

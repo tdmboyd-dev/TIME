@@ -1,0 +1,12 @@
+{
+  "name": "AutoTrader",
+  "fullName": "kieran-mackle/AutoTrader",
+  "stars": 1217,
+  "language": "Python",
+  "description": "A Python-based development platform for automated trading systems - from backtesting to optimisation to livetrading. ",
+  "url": "https://github.com/kieran-mackle/AutoTrader",
+  "license": "GPL-3.0",
+  "harvest": 2,
+  "harvestName": "Python Quant/Backtest Frameworks",
+  "downloadedAt": "2025-12-11T09:58:32.954Z"
+}

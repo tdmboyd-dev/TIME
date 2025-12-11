@@ -79,7 +79,7 @@ export class OANDABroker extends BrokerInterface {
       this.isConnected = true;
       this.emit('connected');
     } catch (error) {
-      logger.error('Failed to connect to OANDA:', error);
+      logger.error('Failed to connect to OANDA:', error as object);
       this.emit('error', error as Error);
       throw error;
     }
@@ -260,7 +260,7 @@ export class OANDABroker extends BrokerInterface {
       await this.apiRequest('PUT', `/v3/accounts/${this.accountId}/orders/${orderId}/cancel`);
       return true;
     } catch (error) {
-      logger.error(`Failed to cancel order ${orderId}:`, error);
+      logger.error(`Failed to cancel order ${orderId}:`, error as object);
       return false;
     }
   }

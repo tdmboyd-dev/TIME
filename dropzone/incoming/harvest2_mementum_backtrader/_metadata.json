@@ -1,0 +1,12 @@
+{
+  "name": "backtrader",
+  "fullName": "mementum/backtrader",
+  "stars": 19720,
+  "language": "Python",
+  "description": "Python Backtesting library for trading strategies",
+  "url": "https://github.com/mementum/backtrader",
+  "license": "GPL-3.0",
+  "harvest": 2,
+  "harvestName": "Python Quant/Backtest Frameworks",
+  "downloadedAt": "2025-12-11T09:58:05.414Z"
+}

@@ -1,0 +1,12 @@
+{
+  "name": "mt4-mql-framework",
+  "fullName": "rosasurfer/mt4-mql-framework",
+  "stars": 305,
+  "language": "MQL4",
+  "description": "MQL application framework for MetaTrader 4",
+  "url": "https://github.com/rosasurfer/mt4-mql-framework",
+  "license": "Unlicense",
+  "harvest": 1,
+  "harvestName": "MQL4/MQL5 Expert Advisors",
+  "downloadedAt": "2025-12-11T09:57:19.891Z"
+}

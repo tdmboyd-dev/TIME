@@ -1,0 +1,77 @@
+{
+  "file": {
+    "id": "ac493d3d-0aed-470a-8003-627d7b039167",
+    "filename": "iterativv-NostalgiaForInfinity_NostalgiaForInfinityX4.py",
+    "filepath": "dropzone\\incoming\\iterativv-NostalgiaForInfinity_NostalgiaForInfinityX4.py",
+    "fileType": "python",
+    "size": 1959073,
+    "hash": "28226445298f7da2278b79a7f7bcaa66",
+    "droppedAt": "2025-12-11T10:41:37.729Z",
+    "status": "rejected",
+    "error": "Rating too low: 3.6/5.0 (min: 4)"
+  },
+  "report": {
+    "fileId": "ac493d3d-0aed-470a-8003-627d7b039167",
+    "filename": "iterativv-NostalgiaForInfinity_NostalgiaForInfinityX4.py",
+    "safetyScan": {
+      "safe": true,
+      "score": 100,
+      "threats": [],
+      "warnings": [],
+      "scannedAt": "2025-12-11T10:41:37.756Z"
+    },
+    "analysis": {
+      "strategyType": "Trend Following",
+      "indicators": [
+        "Moving Average",
+        "RSI",
+        "Bollinger Bands",
+        "ATR",
+        "Fibonacci",
+        "Volume",
+        "Pivot Points",
+        "CCI",
+        "Williams %R"
+      ],
+      "timeframes": [
+        "H1",
+        "H4"
+      ],
+      "assets": [
+        "BTC",
+        "ETH",
+        "BNB",
+        "ADA",
+        "DOT",
+        "XRP",
+        "LTC",
+        "LINK"
+      ],
+      "entryLogic": "Entry logic detected",
+      "exitLogic": "Exit logic detected",
+      "riskManagement": {
+        "hasStopLoss": true,
+        "hasTakeProfit": true,
+        "hasPositionSizing": false,
+        "maxDrawdownProtection": false
+      },
+      "complexity": "advanced",
+      "codeQuality": 75
+    },
+    "rating": {
+      "overall": 3.6,
+      "breakdown": {
+        "codeQuality": 3.75,
+        "strategyClarity": 5,
+        "riskManagement": 2.5,
+        "documentation": 2,
+        "uniqueness": 4
+      },
+      "recommendation": "review",
+      "reasoning": "Moderate quality. Consider manual review. Weakness in documentation."
+    },
+    "absorbed": false,
+    "learningsExtracted": []
+  },
+  "rejectedAt": "2025-12-11T10:41:38.819Z"
+}

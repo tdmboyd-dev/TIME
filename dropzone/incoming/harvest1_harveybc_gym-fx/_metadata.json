@@ -1,0 +1,11 @@
+{
+  "name": "gym-fx",
+  "fullName": "harveybc/gym-fx",
+  "stars": 208,
+  "language": "Python",
+  "description": "Forex trading simulator environment for OpenAI Gym, observations contain the order status, performance and timeseries loaded from a CSV file containing rates and indicators. Work In Progress",
+  "url": "https://github.com/harveybc/gym-fx",
+  "harvest": 1,
+  "harvestName": "MQL4/MQL5 Expert Advisors",
+  "downloadedAt": "2025-12-11T09:57:25.500Z"
+}

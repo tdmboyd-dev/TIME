@@ -1,0 +1,59 @@
+{
+  "file": {
+    "id": "dcf1e0cd-a3f1-4f8d-bf1a-3b56ade4d420",
+    "filename": "robertmartin8-MachineLearningStocks_backtesting.py",
+    "filepath": "dropzone\\incoming\\robertmartin8-MachineLearningStocks_backtesting.py",
+    "fileType": "python",
+    "size": 3691,
+    "hash": "0e91d79a66215625691fddc8eef81c8e",
+    "droppedAt": "2025-12-11T10:41:37.979Z",
+    "status": "rejected",
+    "error": "Rating too low: 2.3/5.0 (min: 4)"
+  },
+  "report": {
+    "fileId": "dcf1e0cd-a3f1-4f8d-bf1a-3b56ade4d420",
+    "filename": "robertmartin8-MachineLearningStocks_backtesting.py",
+    "safetyScan": {
+      "safe": true,
+      "score": 100,
+      "threats": [],
+      "warnings": [],
+      "scannedAt": "2025-12-11T10:41:37.980Z"
+    },
+    "analysis": {
+      "strategyType": "Machine Learning",
+      "indicators": [],
+      "timeframes": [
+        "Unknown"
+      ],
+      "assets": [
+        "Multi-Asset"
+      ],
+      "entryLogic": "No clear entry logic found",
+      "exitLogic": "No clear exit logic found",
+      "riskManagement": {
+        "hasStopLoss": false,
+        "hasTakeProfit": false,
+        "hasPositionSizing": false,
+        "maxDrawdownProtection": false
+      },
+      "complexity": "simple",
+      "codeQuality": 75
+    },
+    "rating": {
+      "overall": 2.3,
+      "breakdown": {
+        "codeQuality": 3.75,
+        "strategyClarity": 3.5,
+        "riskManagement": 0,
+        "documentation": 3,
+        "uniqueness": 2.5
+      },
+      "recommendation": "reject",
+      "reasoning": "Quality below threshold. Issues with risk management."
+    },
+    "absorbed": false,
+    "learningsExtracted": []
+  },
+  "rejectedAt": "2025-12-11T10:41:38.907Z"
+}

@@ -67,6 +67,10 @@
 - ✅ Broker Interface (`broker_interface.ts`)
 - ✅ Alpaca Broker (`alpaca_broker.ts`)
 - ✅ OANDA Broker (`oanda_broker.ts`)
+- ✅ SnapTrade Broker (`snaptrade_broker.ts`) — 20+ brokerages via unified API
+- ✅ Interactive Brokers Client (`ib_client.ts`)
+- ✅ MT4/MT5 Bridge (`mt_bridge.ts`)
+- ✅ Crypto Futures (`crypto_futures.ts`)
 - ✅ Broker Manager (`broker_manager.ts`)
 
 ---
@@ -178,15 +182,19 @@
 
 ## Additional Systems to Build
 
-### Market Data
-- 🟡 Polygon.io integration
-- 🟡 TwelveData integration
+### Market Data ✅ COMPLETE
+- ✅ Polygon.io integration
+- ✅ TwelveData integration
+- ✅ Finnhub integration
+- ✅ Alpha Vantage integration
 - 🟡 News API integration
 - 🟡 Sentiment feeds
 
 ### Advanced Features
-- 🟡 MT4/MT5 bridge
-- 🟡 Interactive Brokers integration
+- ✅ MT4/MT5 bridge
+- ✅ Interactive Brokers integration
+- ✅ SnapTrade multi-broker integration
+- ✅ TradingView charts integration
 - 🟡 Strategy builder UI
 - 🟡 Backtesting UI
 - 🟡 Mobile app
@@ -233,6 +241,10 @@ src/backend/
 │   ├── broker_interface.ts
 │   ├── alpaca_broker.ts
 │   ├── oanda_broker.ts
+│   ├── snaptrade_broker.ts
+│   ├── ib_client.ts
+│   ├── mt_bridge.ts
+│   ├── crypto_futures.ts
 │   └── broker_manager.ts
 ├── consent/consent_manager.ts
 ├── database/schemas.ts

@@ -1,0 +1,63 @@
+{
+  "file": {
+    "id": "7fc48aaf-743b-4937-91eb-dbf6c79f4a32",
+    "filename": "whittlem-pycryptobot_webgui.py",
+    "filepath": "dropzone\\incoming\\whittlem-pycryptobot_webgui.py",
+    "fileType": "python",
+    "size": 31124,
+    "hash": "0a355064c4389d8e62bab97e9dcf2803",
+    "droppedAt": "2025-12-11T10:41:38.048Z",
+    "status": "rejected",
+    "error": "Rating too low: 3.1/5.0 (min: 4)"
+  },
+  "report": {
+    "fileId": "7fc48aaf-743b-4937-91eb-dbf6c79f4a32",
+    "filename": "whittlem-pycryptobot_webgui.py",
+    "safetyScan": {
+      "safe": true,
+      "score": 100,
+      "threats": [],
+      "warnings": [],
+      "scannedAt": "2025-12-11T10:41:38.049Z"
+    },
+    "analysis": {
+      "strategyType": "Pattern Recognition",
+      "indicators": [
+        "Moving Average",
+        "MACD",
+        "Volume"
+      ],
+      "timeframes": [
+        "H4"
+      ],
+      "assets": [
+        "Multi-Asset"
+      ],
+      "entryLogic": "No clear entry logic found",
+      "exitLogic": "Exit logic detected",
+      "riskManagement": {
+        "hasStopLoss": true,
+        "hasTakeProfit": false,
+        "hasPositionSizing": false,
+        "maxDrawdownProtection": false
+      },
+      "complexity": "complex",
+      "codeQuality": 90
+    },
+    "rating": {
+      "overall": 3.1,
+      "breakdown": {
+        "codeQuality": 4.5,
+        "strategyClarity": 4.75,
+        "riskManagement": 1.5,
+        "documentation": 1,
+        "uniqueness": 3
+      },
+      "recommendation": "review",
+      "reasoning": "Moderate quality. Consider manual review. Weakness in documentation."
+    },
+    "absorbed": false,
+    "learningsExtracted": []
+  },
+  "rejectedAt": "2025-12-11T10:41:38.963Z"
+}

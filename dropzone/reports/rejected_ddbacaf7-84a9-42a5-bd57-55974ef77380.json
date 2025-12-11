@@ -1,0 +1,61 @@
+{
+  "file": {
+    "id": "ddbacaf7-84a9-42a5-bd57-55974ef77380",
+    "filename": "je-suis-tm-quant-trading_Heikin-Ashi backtest.py",
+    "filepath": "dropzone\\incoming\\je-suis-tm-quant-trading_Heikin-Ashi backtest.py",
+    "fileType": "python",
+    "size": 15073,
+    "hash": "9a85b4982a058ed2f7b90a10d697baae",
+    "droppedAt": "2025-12-11T10:41:37.902Z",
+    "status": "rejected",
+    "error": "Rating too low: 3.1/5.0 (min: 4)"
+  },
+  "report": {
+    "fileId": "ddbacaf7-84a9-42a5-bd57-55974ef77380",
+    "filename": "je-suis-tm-quant-trading_Heikin-Ashi backtest.py",
+    "safetyScan": {
+      "safe": true,
+      "score": 100,
+      "threats": [],
+      "warnings": [],
+      "scannedAt": "2025-12-11T10:41:37.903Z"
+    },
+    "analysis": {
+      "strategyType": "Grid Trading",
+      "indicators": [
+        "Volume"
+      ],
+      "timeframes": [
+        "D1"
+      ],
+      "assets": [
+        "LINK"
+      ],
+      "entryLogic": "No clear entry logic found",
+      "exitLogic": "Exit logic detected",
+      "riskManagement": {
+        "hasStopLoss": true,
+        "hasTakeProfit": false,
+        "hasPositionSizing": false,
+        "maxDrawdownProtection": false
+      },
+      "complexity": "complex",
+      "codeQuality": 75
+    },
+    "rating": {
+      "overall": 3.1,
+      "breakdown": {
+        "codeQuality": 3.75,
+        "strategyClarity": 4.25,
+        "riskManagement": 1.5,
+        "documentation": 4,
+        "uniqueness": 3
+      },
+      "recommendation": "review",
+      "reasoning": "Moderate quality. Consider manual review. Weakness in risk management."
+    },
+    "absorbed": false,
+    "learningsExtracted": []
+  },
+  "rejectedAt": "2025-12-11T10:41:38.832Z"
+}

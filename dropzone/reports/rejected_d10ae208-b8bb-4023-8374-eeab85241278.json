@@ -1,0 +1,59 @@
+{
+  "file": {
+    "id": "d10ae208-b8bb-4023-8374-eeab85241278",
+    "filename": "EA31337-EA31337-classes_Config.mqh",
+    "filepath": "dropzone\\incoming\\EA31337-EA31337-classes_Config.mqh",
+    "fileType": "unknown",
+    "size": 7494,
+    "hash": "ce231c9ece338976fa1f00c189041df0",
+    "droppedAt": "2025-12-11T10:41:37.612Z",
+    "status": "rejected",
+    "error": "Rating too low: 2.3/5.0 (min: 4)"
+  },
+  "report": {
+    "fileId": "d10ae208-b8bb-4023-8374-eeab85241278",
+    "filename": "EA31337-EA31337-classes_Config.mqh",
+    "safetyScan": {
+      "safe": true,
+      "score": 100,
+      "threats": [],
+      "warnings": [],
+      "scannedAt": "2025-12-11T10:41:37.612Z"
+    },
+    "analysis": {
+      "strategyType": "Unknown",
+      "indicators": [],
+      "timeframes": [
+        "Unknown"
+      ],
+      "assets": [
+        "Multi-Asset"
+      ],
+      "entryLogic": "Entry logic detected",
+      "exitLogic": "No clear exit logic found",
+      "riskManagement": {
+        "hasStopLoss": false,
+        "hasTakeProfit": false,
+        "hasPositionSizing": false,
+        "maxDrawdownProtection": false
+      },
+      "complexity": "moderate",
+      "codeQuality": 80
+    },
+    "rating": {
+      "overall": 2.3,
+      "breakdown": {
+        "codeQuality": 4,
+        "strategyClarity": 2.75,
+        "riskManagement": 0,
+        "documentation": 4,
+        "uniqueness": 2.5
+      },
+      "recommendation": "reject",
+      "reasoning": "Quality below threshold. Issues with risk management."
+    },
+    "absorbed": false,
+    "learningsExtracted": []
+  },
+  "rejectedAt": "2025-12-11T10:41:38.795Z"
+}

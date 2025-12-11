@@ -1,0 +1,40 @@
+{
+  "file": {
+    "id": "ff1177b3-63e8-4d67-898c-764b9e77364b",
+    "filename": "EarnForex-MarketProfile_MarketProfile.mq5",
+    "filepath": "dropzone\\incoming\\EarnForex-MarketProfile_MarketProfile.mq5",
+    "fileType": "mq5",
+    "size": 212629,
+    "hash": "5607cf894092095944d10e0b628fbc8c",
+    "droppedAt": "2025-12-11T10:41:37.626Z",
+    "status": "rejected",
+    "error": "Failed safety scan: Found fileAccess pattern: FileDelete, Found fileAccess pattern: FileWrite, Found credentials pattern: AccountInfoString"
+  },
+  "report": {
+    "safe": false,
+    "score": 10,
+    "threats": [
+      {
+        "type": "file_access",
+        "severity": "high",
+        "description": "Found fileAccess pattern: FileDelete",
+        "location": "Line 3593"
+      },
+      {
+        "type": "file_access",
+        "severity": "high",
+        "description": "Found fileAccess pattern: FileWrite",
+        "location": "Line 3527"
+      },
+      {
+        "type": "credential_access",
+        "severity": "critical",
+        "description": "Found credentials pattern: AccountInfoString",
+        "location": "Line 3450"
+      }
+    ],
+    "warnings": [],
+    "scannedAt": "2025-12-11T10:41:37.634Z"
+  },
+  "rejectedAt": "2025-12-11T10:41:38.109Z"
+}

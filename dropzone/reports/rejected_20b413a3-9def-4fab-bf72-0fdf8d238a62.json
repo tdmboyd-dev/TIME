@@ -1,0 +1,59 @@
+{
+  "file": {
+    "id": "20b413a3-9def-4fab-bf72-0fdf8d238a62",
+    "filename": "TA-Lib-ta-lib-python_setup.py",
+    "filepath": "dropzone\\incoming\\TA-Lib-ta-lib-python_setup.py",
+    "fileType": "python",
+    "size": 2753,
+    "hash": "5d18e6fda97fd6bb982c1693f3cecb55",
+    "droppedAt": "2025-12-11T10:41:38.015Z",
+    "status": "rejected",
+    "error": "Rating too low: 1.9/5.0 (min: 4)"
+  },
+  "report": {
+    "fileId": "20b413a3-9def-4fab-bf72-0fdf8d238a62",
+    "filename": "TA-Lib-ta-lib-python_setup.py",
+    "safetyScan": {
+      "safe": true,
+      "score": 100,
+      "threats": [],
+      "warnings": [],
+      "scannedAt": "2025-12-11T10:41:38.016Z"
+    },
+    "analysis": {
+      "strategyType": "Unknown",
+      "indicators": [],
+      "timeframes": [
+        "Unknown"
+      ],
+      "assets": [
+        "Multi-Asset"
+      ],
+      "entryLogic": "No clear entry logic found",
+      "exitLogic": "No clear exit logic found",
+      "riskManagement": {
+        "hasStopLoss": false,
+        "hasTakeProfit": false,
+        "hasPositionSizing": false,
+        "maxDrawdownProtection": false
+      },
+      "complexity": "simple",
+      "codeQuality": 80
+    },
+    "rating": {
+      "overall": 1.9,
+      "breakdown": {
+        "codeQuality": 4,
+        "strategyClarity": 2.5,
+        "riskManagement": 0,
+        "documentation": 1,
+        "uniqueness": 2.5
+      },
+      "recommendation": "reject",
+      "reasoning": "Quality below threshold. Issues with risk management."
+    },
+    "absorbed": false,
+    "learningsExtracted": []
+  },
+  "rejectedAt": "2025-12-11T10:41:38.938Z"
+}

@@ -1,0 +1,59 @@
+{
+  "file": {
+    "id": "69a8acb3-d99d-4ef9-a5a8-d5e3ffa10fce",
+    "filename": "kieran-mackle-AutoTrader_setup.py",
+    "filepath": "dropzone\\incoming\\kieran-mackle-AutoTrader_setup.py",
+    "fileType": "python",
+    "size": 3104,
+    "hash": "5ca0b561558e96b41a47b944d1faee05",
+    "droppedAt": "2025-12-11T10:41:37.933Z",
+    "status": "rejected",
+    "error": "Rating too low: 2.3/5.0 (min: 4)"
+  },
+  "report": {
+    "fileId": "69a8acb3-d99d-4ef9-a5a8-d5e3ffa10fce",
+    "filename": "kieran-mackle-AutoTrader_setup.py",
+    "safetyScan": {
+      "safe": true,
+      "score": 100,
+      "threats": [],
+      "warnings": [],
+      "scannedAt": "2025-12-11T10:41:37.934Z"
+    },
+    "analysis": {
+      "strategyType": "Machine Learning",
+      "indicators": [],
+      "timeframes": [
+        "Unknown"
+      ],
+      "assets": [
+        "Multi-Asset"
+      ],
+      "entryLogic": "Entry logic detected",
+      "exitLogic": "No clear exit logic found",
+      "riskManagement": {
+        "hasStopLoss": false,
+        "hasTakeProfit": false,
+        "hasPositionSizing": false,
+        "maxDrawdownProtection": false
+      },
+      "complexity": "simple",
+      "codeQuality": 75
+    },
+    "rating": {
+      "overall": 2.3,
+      "breakdown": {
+        "codeQuality": 3.75,
+        "strategyClarity": 3.75,
+        "riskManagement": 0,
+        "documentation": 2,
+        "uniqueness": 2.5
+      },
+      "recommendation": "reject",
+      "reasoning": "Quality below threshold. Issues with risk management."
+    },
+    "absorbed": false,
+    "learningsExtracted": []
+  },
+  "rejectedAt": "2025-12-11T10:41:38.861Z"
+}

@@ -1,0 +1,11 @@
+{
+  "name": "deep_trader",
+  "fullName": "deependersingla/deep_trader",
+  "stars": 1484,
+  "language": "Python",
+  "description": "This project uses reinforcement learning on stock market and agent tries to learn trading. The goal is to check if the agent can learn to read tape. The project is dedicated to hero in life great Jesse Livermore. ",
+  "url": "https://github.com/deependersingla/deep_trader",
+  "harvest": 4,
+  "harvestName": "Machine Learning Trading",
+  "downloadedAt": "2025-12-11T10:00:34.715Z"
+}

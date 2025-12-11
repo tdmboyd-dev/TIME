@@ -1,0 +1,61 @@
+{
+  "file": {
+    "id": "79933320-2475-4031-a630-52e515147cbe",
+    "filename": "tensortrade-org-tensortrade_setup.py",
+    "filepath": "dropzone\\incoming\\tensortrade-org-tensortrade_setup.py",
+    "fileType": "python",
+    "size": 3464,
+    "hash": "22c8cf0bd864b4b768942e8edb964ca2",
+    "droppedAt": "2025-12-11T10:41:38.017Z",
+    "status": "rejected",
+    "error": "Rating too low: 2.4/5.0 (min: 4)"
+  },
+  "report": {
+    "fileId": "79933320-2475-4031-a630-52e515147cbe",
+    "filename": "tensortrade-org-tensortrade_setup.py",
+    "safetyScan": {
+      "safe": true,
+      "score": 100,
+      "threats": [],
+      "warnings": [],
+      "scannedAt": "2025-12-11T10:41:38.017Z"
+    },
+    "analysis": {
+      "strategyType": "Pattern Recognition",
+      "indicators": [
+        "Stochastic"
+      ],
+      "timeframes": [
+        "Unknown"
+      ],
+      "assets": [
+        "Multi-Asset"
+      ],
+      "entryLogic": "No clear entry logic found",
+      "exitLogic": "No clear exit logic found",
+      "riskManagement": {
+        "hasStopLoss": false,
+        "hasTakeProfit": false,
+        "hasPositionSizing": false,
+        "maxDrawdownProtection": false
+      },
+      "complexity": "simple",
+      "codeQuality": 70
+    },
+    "rating": {
+      "overall": 2.4,
+      "breakdown": {
+        "codeQuality": 3.5,
+        "strategyClarity": 4,
+        "riskManagement": 0,
+        "documentation": 3,
+        "uniqueness": 2.5
+      },
+      "recommendation": "reject",
+      "reasoning": "Quality below threshold. Issues with risk management."
+    },
+    "absorbed": false,
+    "learningsExtracted": []
+  },
+  "rejectedAt": "2025-12-11T10:41:38.939Z"
+}

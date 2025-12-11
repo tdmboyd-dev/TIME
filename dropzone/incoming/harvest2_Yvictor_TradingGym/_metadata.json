@@ -1,0 +1,12 @@
+{
+  "name": "TradingGym",
+  "fullName": "Yvictor/TradingGym",
+  "stars": 1771,
+  "language": "Python",
+  "description": "Trading and Backtesting environment for training reinforcement learning agent or simple rule base algo.",
+  "url": "https://github.com/Yvictor/TradingGym",
+  "license": "MIT",
+  "harvest": 2,
+  "harvestName": "Python Quant/Backtest Frameworks",
+  "downloadedAt": "2025-12-11T09:58:28.969Z"
+}

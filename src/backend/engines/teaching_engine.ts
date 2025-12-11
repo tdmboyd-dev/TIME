@@ -348,6 +348,7 @@ export class TeachingEngine extends EventEmitter implements TIMEComponent {
       tradeId: trade.id,
       title: this.generateLessonTitle(trade),
       content: {
+        plain_english: this.explainTrade(trade, 'plain_english'),
         beginner: this.explainTrade(trade, 'beginner'),
         intermediate: this.explainTrade(trade, 'intermediate'),
         pro: this.explainTrade(trade, 'pro'),

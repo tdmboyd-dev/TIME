@@ -1,0 +1,12 @@
+{
+  "name": "Auto-GPT-MetaTrader-Plugin",
+  "fullName": "isaiahbjork/Auto-GPT-MetaTrader-Plugin",
+  "stars": 534,
+  "language": "Python",
+  "description": "The AutoGPT MetaTrader Plugin is a software tool that enables traders to connect their MetaTrader 4 or 5 trading account to Auto-GPT.",
+  "url": "https://github.com/isaiahbjork/Auto-GPT-MetaTrader-Plugin",
+  "license": "MIT",
+  "harvest": 1,
+  "harvestName": "MQL4/MQL5 Expert Advisors",
+  "downloadedAt": "2025-12-11T09:57:14.266Z"
+}

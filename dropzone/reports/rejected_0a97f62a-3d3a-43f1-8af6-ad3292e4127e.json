@@ -1,0 +1,28 @@
+{
+  "file": {
+    "id": "0a97f62a-3d3a-43f1-8af6-ad3292e4127e",
+    "filename": "TreborNamor-TradingView-Machine-Learning-GUI_TradeViewGUI.py",
+    "filepath": "dropzone\\incoming\\TreborNamor-TradingView-Machine-Learning-GUI_TradeViewGUI.py",
+    "fileType": "python",
+    "size": 21888,
+    "hash": "b391c5c7a819036b5c483d3bd654ed04",
+    "droppedAt": "2025-12-11T10:41:38.033Z",
+    "status": "rejected",
+    "error": "Failed safety scan: Found fileAccess pattern: registry"
+  },
+  "report": {
+    "safe": false,
+    "score": 75,
+    "threats": [
+      {
+        "type": "file_access",
+        "severity": "high",
+        "description": "Found fileAccess pattern: registry",
+        "location": "Line 129"
+      }
+    ],
+    "warnings": [],
+    "scannedAt": "2025-12-11T10:41:38.034Z"
+  },
+  "rejectedAt": "2025-12-11T10:41:38.585Z"
+}

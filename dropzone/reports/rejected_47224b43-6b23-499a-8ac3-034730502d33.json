@@ -1,0 +1,28 @@
+{
+  "file": {
+    "id": "47224b43-6b23-499a-8ac3-034730502d33",
+    "filename": "EA31337-EA31337-classes_BufferFXT.mqh",
+    "filepath": "dropzone\\incoming\\EA31337-EA31337-classes_BufferFXT.mqh",
+    "fileType": "unknown",
+    "size": 12408,
+    "hash": "5dce5755bf2d60f91ac89f8c127f34c8",
+    "droppedAt": "2025-12-11T10:41:37.608Z",
+    "status": "rejected",
+    "error": "Failed safety scan: Found fileAccess pattern: filewrite"
+  },
+  "report": {
+    "safe": false,
+    "score": 75,
+    "threats": [
+      {
+        "type": "file_access",
+        "severity": "high",
+        "description": "Found fileAccess pattern: filewrite",
+        "location": "Line 288"
+      }
+    ],
+    "warnings": [],
+    "scannedAt": "2025-12-11T10:41:37.609Z"
+  },
+  "rejectedAt": "2025-12-11T10:41:38.100Z"
+}

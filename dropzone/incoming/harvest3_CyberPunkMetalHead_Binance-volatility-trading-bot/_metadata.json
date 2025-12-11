@@ -1,0 +1,12 @@
+{
+  "name": "Binance-volatility-trading-bot",
+  "fullName": "CyberPunkMetalHead/Binance-volatility-trading-bot",
+  "stars": 3486,
+  "language": "Python",
+  "description": "This is a fully functioning Binance trading bot that measures the volatility of every coin on Binance and places trades with the highest gaining coins If you like this project consider donating though the Brave browser to allow me to continuously improve the script.",
+  "url": "https://github.com/CyberPunkMetalHead/Binance-volatility-trading-bot",
+  "license": "MIT",
+  "harvest": 3,
+  "harvestName": "Crypto/DeFi Bots",
+  "downloadedAt": "2025-12-11T09:59:22.708Z"
+}

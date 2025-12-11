@@ -1,0 +1,28 @@
+{
+  "file": {
+    "id": "54fc4c8f-0d7f-4c71-be4f-90e7f916355f",
+    "filename": "vobornik-mt4-trade-copy_TradeCopyMaster.mq4",
+    "filepath": "dropzone\\incoming\\vobornik-mt4-trade-copy_TradeCopyMaster.mq4",
+    "fileType": "mq4",
+    "size": 5572,
+    "hash": "e27a7e0a0dd823aa51276bdb224936b9",
+    "droppedAt": "2025-12-11T10:41:38.035Z",
+    "status": "rejected",
+    "error": "Failed safety scan: Found fileAccess pattern: FileWrite"
+  },
+  "report": {
+    "safe": false,
+    "score": 75,
+    "threats": [
+      {
+        "type": "file_access",
+        "severity": "high",
+        "description": "Found fileAccess pattern: FileWrite",
+        "location": "Line 49"
+      }
+    ],
+    "warnings": [],
+    "scannedAt": "2025-12-11T10:41:38.036Z"
+  },
+  "rejectedAt": "2025-12-11T10:41:38.587Z"
+}

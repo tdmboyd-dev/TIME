@@ -1,0 +1,28 @@
+{
+  "file": {
+    "id": "d50f7a79-3103-4000-8df4-476523c4715d",
+    "filename": "Lumiwealth-lumibot_setup.py",
+    "filepath": "dropzone\\incoming\\Lumiwealth-lumibot_setup.py",
+    "fileType": "python",
+    "size": 3120,
+    "hash": "b5a01ff38fa29047d46c699fa5494dd8",
+    "droppedAt": "2025-12-11T10:41:37.936Z",
+    "status": "rejected",
+    "error": "Failed safety scan: Found fileAccess pattern: shutil.rmtree"
+  },
+  "report": {
+    "safe": false,
+    "score": 75,
+    "threats": [
+      {
+        "type": "file_access",
+        "severity": "high",
+        "description": "Found fileAccess pattern: shutil.rmtree",
+        "location": "Line 10"
+      }
+    ],
+    "warnings": [],
+    "scannedAt": "2025-12-11T10:41:37.936Z"
+  },
+  "rejectedAt": "2025-12-11T10:41:38.528Z"
+}

@@ -1,0 +1,59 @@
+{
+  "file": {
+    "id": "8cba6171-819e-45eb-8ce7-ec079cce4b29",
+    "filename": "achillesrasquinha-bulbea_package.py",
+    "filepath": "dropzone\\incoming\\achillesrasquinha-bulbea_package.py",
+    "fileType": "python",
+    "size": 1244,
+    "hash": "53545eb3ce8c27c570c7833861aa176c",
+    "droppedAt": "2025-12-11T10:41:37.554Z",
+    "status": "rejected",
+    "error": "Rating too low: 2/5.0 (min: 4)"
+  },
+  "report": {
+    "fileId": "8cba6171-819e-45eb-8ce7-ec079cce4b29",
+    "filename": "achillesrasquinha-bulbea_package.py",
+    "safetyScan": {
+      "safe": true,
+      "score": 100,
+      "threats": [],
+      "warnings": [],
+      "scannedAt": "2025-12-11T10:41:37.556Z"
+    },
+    "analysis": {
+      "strategyType": "Machine Learning",
+      "indicators": [],
+      "timeframes": [
+        "Unknown"
+      ],
+      "assets": [
+        "Multi-Asset"
+      ],
+      "entryLogic": "No clear entry logic found",
+      "exitLogic": "No clear exit logic found",
+      "riskManagement": {
+        "hasStopLoss": false,
+        "hasTakeProfit": false,
+        "hasPositionSizing": false,
+        "maxDrawdownProtection": false
+      },
+      "complexity": "simple",
+      "codeQuality": 50
+    },
+    "rating": {
+      "overall": 2,
+      "breakdown": {
+        "codeQuality": 2.5,
+        "strategyClarity": 3.5,
+        "riskManagement": 0,
+        "documentation": 2,
+        "uniqueness": 2.5
+      },
+      "recommendation": "reject",
+      "reasoning": "Quality below threshold. Issues with risk management."
+    },
+    "absorbed": false,
+    "learningsExtracted": []
+  },
+  "rejectedAt": "2025-12-11T10:41:38.728Z"
+}

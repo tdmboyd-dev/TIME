@@ -17,10 +17,10 @@
 import { EventEmitter } from 'events';
 import { createComponentLogger } from '../utils/logger';
 import { TIMEGovernor } from '../core/time_governor';
-import { LearningEngine } from '../engines/learning_engine';
-import { RiskEngine } from '../engines/risk_engine';
-import { RegimeDetector } from '../engines/regime_detector';
-import { BotManager } from '../bots/bot_manager';
+import { learningEngine } from '../engines/learning_engine';
+import { riskEngine } from '../engines/risk_engine';
+import { regimeDetector } from '../engines/regime_detector';
+import { botManager } from '../bots/bot_manager';
 import {
   Bot,
   Trade,
@@ -135,6 +135,7 @@ export class TrainingSimulator extends EventEmitter implements TIMEComponent {
 
   public readonly name = 'TrainingSimulator';
   public readonly version = '1.0.0';
+  public status: 'online' | 'offline' | 'degraded' | 'building' = 'offline';
 
   private constructor() {
     super();
@@ -192,13 +193,33 @@ export class TrainingSimulator extends EventEmitter implements TIMEComponent {
   }
 
   public async initialize(): Promise<void> {
+    this.status = 'building';
     logger.info('Initializing Training Simulator');
 
     // Register with TIME Governor
     const governor = TIMEGovernor.getInstance();
     governor.registerComponent(this);
 
+    this.status = 'online';
     logger.info('Training Simulator initialized');
+  }
+
+  public async shutdown(): Promise<void> {
+    this.stop();
+    this.status = 'offline';
+    logger.info('Training Simulator shut down');
+  }
+
+  public getHealth(): { component: string; status: 'online' | 'offline' | 'degraded'; lastCheck: Date; metrics: Record<string, number> } {
+    return {
+      component: this.name,
+      status: this.isRunning ? 'online' : 'offline',
+      lastCheck: new Date(),
+      metrics: {
+        accounts: this.accounts.size,
+        assignments: this.assignments.size,
+      },
+    };
   }
 
   public getStatus(): {
@@ -356,10 +377,13 @@ export class TrainingSimulator extends EventEmitter implements TIMEComponent {
     }
 
     // Check risk limits
-    const riskEngine = RiskEngine.getInstance();
-    const riskDecision = await riskEngine.evaluateSignal(signal);
-    if (riskDecision.action === 'block') {
-      logger.warn(`Trade blocked by risk engine: ${riskDecision.reason}`);
+    const positionsArray = Array.from(account.positions.values());
+    const riskCheckResult = riskEngine.checkSignal(signal, {
+      positions: account.positions.size,
+      exposure: positionsArray.reduce((sum: number, p: SimulatedPosition) => sum + (p.quantity * p.currentPrice), 0),
+    });
+    if (!riskCheckResult.allowed) {
+      logger.warn(`Trade blocked by risk engine: ${riskCheckResult.reason}`);
       return null;
     }
 
@@ -468,29 +492,33 @@ export class TrainingSimulator extends EventEmitter implements TIMEComponent {
     signal: Signal,
     botId: string
   ): Promise<void> {
-    const learningEngine = LearningEngine.getInstance();
-    const regimeDetector = RegimeDetector.getInstance();
+    // Use imported singletons
+    const learningEngineInstance = learningEngine;
+    const regimeDetectorInstance = regimeDetector;
 
     const currentRegime = regimeDetector.getCurrentRegime();
 
-    // Create learning event
+    // Record learning event with separate parameters
+    const eventData = {
+      trade,
+      signal,
+      botId,
+      regime: currentRegime,
+      success: trade.pnl > 0,
+      holdingPeriod: trade.exitTime.getTime() - trade.entryTime.getTime(),
+    };
+
+    const eventId = learningEngine.recordEvent('trade_outcome', 'paper_trading', eventData);
+
+    // Create event for emission
     const learningEvent = {
-      id: `learn-${Date.now()}`,
-      source: 'demo_trading' as LearningSource,
+      id: eventId,
+      source: 'paper_trading' as LearningSource,
       timestamp: new Date(),
-      data: {
-        trade,
-        signal,
-        botId,
-        regime: currentRegime,
-        success: trade.pnl > 0,
-        holdingPeriod: trade.exitTime.getTime() - trade.entryTime.getTime(),
-      },
+      data: eventData,
       processed: false,
       insights: [],
     };
-
-    learningEngine.recordLearningEvent(learningEvent);
 
     // Emit for TIME to learn
     this.emit('learningEvent', learningEvent);
@@ -728,7 +756,7 @@ export class TrainingSimulator extends EventEmitter implements TIMEComponent {
         try {
           await this.runBotIteration(botId, assignment.accountId);
         } catch (error) {
-          logger.error(`Error in bot ${botId} iteration:`, error);
+          logger.error(`Error in bot ${botId} iteration:`, error as object);
         }
       }
     }, interval);
@@ -737,7 +765,7 @@ export class TrainingSimulator extends EventEmitter implements TIMEComponent {
   }
 
   private async runBotIteration(botId: string, accountId: string): Promise<void> {
-    const botManager = BotManager.getInstance();
+    const botManagerInstance = botManager;
     const bot = botManager.getBot(botId);
 
     if (!bot) {
@@ -773,10 +801,9 @@ export class TrainingSimulator extends EventEmitter implements TIMEComponent {
       symbol,
       direction,
       strength,
+      confidence: strength,
+      reasoning: 'Simulated signal for training',
       timestamp: new Date(),
-      metadata: {
-        source: 'simulation',
-      },
     };
   }
 }

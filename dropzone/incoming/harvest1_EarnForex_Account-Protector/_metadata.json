@@ -1,0 +1,12 @@
+{
+  "name": "Account-Protector",
+  "fullName": "EarnForex/Account-Protector",
+  "stars": 107,
+  "language": "MQL5",
+  "description": "Automate emergency position closing and autotrading termination using a multi-setting expert advisor.",
+  "url": "https://github.com/EarnForex/Account-Protector",
+  "license": "Apache-2.0",
+  "harvest": 1,
+  "harvestName": "MQL4/MQL5 Expert Advisors",
+  "downloadedAt": "2025-12-11T09:57:39.885Z"
+}

@@ -1,0 +1,12 @@
+{
+  "name": "alpaca-trade-api-python",
+  "fullName": "alpacahq/alpaca-trade-api-python",
+  "stars": 1847,
+  "language": "Python",
+  "description": "Python client for Alpaca's trade API",
+  "url": "https://github.com/alpacahq/alpaca-trade-api-python",
+  "license": "Apache-2.0",
+  "harvest": 5,
+  "harvestName": "Forex & Stock Specific",
+  "downloadedAt": "2025-12-11T10:01:11.260Z"
+}

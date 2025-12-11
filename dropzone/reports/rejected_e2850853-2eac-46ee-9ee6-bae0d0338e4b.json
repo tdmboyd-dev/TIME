@@ -1,0 +1,66 @@
+{
+  "file": {
+    "id": "e2850853-2eac-46ee-9ee6-bae0d0338e4b",
+    "filename": "cirosantilli-china-dictatorship_images.js",
+    "filepath": "dropzone\\incoming\\cirosantilli-china-dictatorship_images.js",
+    "fileType": "javascript",
+    "size": 1415,
+    "hash": "74c39ca35bd4d6be030d6509026a77c4",
+    "droppedAt": "2025-12-11T10:41:37.588Z",
+    "status": "rejected",
+    "error": "Rating too low: 1.6/5.0 (min: 4)"
+  },
+  "report": {
+    "fileId": "e2850853-2eac-46ee-9ee6-bae0d0338e4b",
+    "filename": "cirosantilli-china-dictatorship_images.js",
+    "safetyScan": {
+      "safe": true,
+      "score": 85,
+      "threats": [
+        {
+          "type": "obfuscation",
+          "severity": "medium",
+          "description": "Found obfuscation pattern: exec(",
+          "location": "Line 32"
+        }
+      ],
+      "warnings": [],
+      "scannedAt": "2025-12-11T10:41:37.589Z"
+    },
+    "analysis": {
+      "strategyType": "Unknown",
+      "indicators": [],
+      "timeframes": [
+        "Unknown"
+      ],
+      "assets": [
+        "Multi-Asset"
+      ],
+      "entryLogic": "No clear entry logic found",
+      "exitLogic": "No clear exit logic found",
+      "riskManagement": {
+        "hasStopLoss": false,
+        "hasTakeProfit": false,
+        "hasPositionSizing": false,
+        "maxDrawdownProtection": false
+      },
+      "complexity": "simple",
+      "codeQuality": 80
+    },
+    "rating": {
+      "overall": 1.6,
+      "breakdown": {
+        "codeQuality": 4,
+        "strategyClarity": 2.5,
+        "riskManagement": 0,
+        "documentation": 1,
+        "uniqueness": 2.5
+      },
+      "recommendation": "reject",
+      "reasoning": "Quality below threshold. Issues with risk management."
+    },
+    "absorbed": false,
+    "learningsExtracted": []
+  },
+  "rejectedAt": "2025-12-11T10:41:38.771Z"
+}

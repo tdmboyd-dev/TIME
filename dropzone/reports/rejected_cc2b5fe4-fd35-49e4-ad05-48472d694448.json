@@ -1,0 +1,59 @@
+{
+  "file": {
+    "id": "cc2b5fe4-fd35-49e4-ad05-48472d694448",
+    "filename": "jesse-ai-jesse_setup.py",
+    "filepath": "dropzone\\incoming\\jesse-ai-jesse_setup.py",
+    "fileType": "python",
+    "size": 1317,
+    "hash": "9bb743a6f0e8dce912e54f4f36a56244",
+    "droppedAt": "2025-12-11T10:41:37.911Z",
+    "status": "rejected",
+    "error": "Rating too low: 1.9/5.0 (min: 4)"
+  },
+  "report": {
+    "fileId": "cc2b5fe4-fd35-49e4-ad05-48472d694448",
+    "filename": "jesse-ai-jesse_setup.py",
+    "safetyScan": {
+      "safe": true,
+      "score": 100,
+      "threats": [],
+      "warnings": [],
+      "scannedAt": "2025-12-11T10:41:37.912Z"
+    },
+    "analysis": {
+      "strategyType": "Unknown",
+      "indicators": [],
+      "timeframes": [
+        "Unknown"
+      ],
+      "assets": [
+        "Multi-Asset"
+      ],
+      "entryLogic": "Entry logic detected",
+      "exitLogic": "No clear exit logic found",
+      "riskManagement": {
+        "hasStopLoss": false,
+        "hasTakeProfit": false,
+        "hasPositionSizing": false,
+        "maxDrawdownProtection": false
+      },
+      "complexity": "simple",
+      "codeQuality": 60
+    },
+    "rating": {
+      "overall": 1.9,
+      "breakdown": {
+        "codeQuality": 3,
+        "strategyClarity": 2.75,
+        "riskManagement": 0,
+        "documentation": 2,
+        "uniqueness": 2.5
+      },
+      "recommendation": "reject",
+      "reasoning": "Quality below threshold. Issues with risk management."
+    },
+    "absorbed": false,
+    "learningsExtracted": []
+  },
+  "rejectedAt": "2025-12-11T10:41:38.841Z"
+}

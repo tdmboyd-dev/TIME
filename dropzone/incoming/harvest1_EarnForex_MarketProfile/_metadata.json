@@ -1,0 +1,12 @@
+{
+  "name": "MarketProfile",
+  "fullName": "EarnForex/MarketProfile",
+  "stars": 177,
+  "language": "MQL5",
+  "description": "Market Profile indicator for MT4, MT5, and cTrader by EarnForex.com",
+  "url": "https://github.com/EarnForex/MarketProfile",
+  "license": "Apache-2.0",
+  "harvest": 1,
+  "harvestName": "MQL4/MQL5 Expert Advisors",
+  "downloadedAt": "2025-12-11T09:57:31.611Z"
+}

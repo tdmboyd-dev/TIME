@@ -1,0 +1,12 @@
+{
+  "name": "RLTrader",
+  "fullName": "notadamking/RLTrader",
+  "stars": 1835,
+  "language": "Python",
+  "description": "A cryptocurrency trading environment using deep reinforcement learning and OpenAI's gym",
+  "url": "https://github.com/notadamking/RLTrader",
+  "license": "GPL-3.0",
+  "harvest": 4,
+  "harvestName": "Machine Learning Trading",
+  "downloadedAt": "2025-12-11T10:00:25.614Z"
+}

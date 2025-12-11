@@ -1,0 +1,28 @@
+{
+  "file": {
+    "id": "4c419f64-bd56-4a92-b2da-846671c94f3d",
+    "filename": "yacoubb-stock-trading-ml_save_data_to_csv.py",
+    "filepath": "dropzone\\incoming\\yacoubb-stock-trading-ml_save_data_to_csv.py",
+    "fileType": "python",
+    "size": 1169,
+    "hash": "0ec338b0a986660d44a7213ba2c7567d",
+    "droppedAt": "2025-12-11T10:41:38.052Z",
+    "status": "rejected",
+    "error": "Failed safety scan: Found credentials pattern: credential"
+  },
+  "report": {
+    "safe": false,
+    "score": 60,
+    "threats": [
+      {
+        "type": "credential_access",
+        "severity": "critical",
+        "description": "Found credentials pattern: credential",
+        "location": "Line 8"
+      }
+    ],
+    "warnings": [],
+    "scannedAt": "2025-12-11T10:41:38.052Z"
+  },
+  "rejectedAt": "2025-12-11T10:41:38.599Z"
+}

@@ -1,0 +1,12 @@
+{
+  "name": "alphalens",
+  "fullName": "quantopian/alphalens",
+  "stars": 4028,
+  "language": "Jupyter Notebook",
+  "description": "Performance analysis of predictive (alpha) stock factors",
+  "url": "https://github.com/quantopian/alphalens",
+  "license": "Apache-2.0",
+  "harvest": 2,
+  "harvestName": "Python Quant/Backtest Frameworks",
+  "downloadedAt": "2025-12-11T09:58:18.191Z"
+}

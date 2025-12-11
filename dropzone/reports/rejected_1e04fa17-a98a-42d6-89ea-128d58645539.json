@@ -1,0 +1,34 @@
+{
+  "file": {
+    "id": "1e04fa17-a98a-42d6-89ea-128d58645539",
+    "filename": "ccxt-ccxt_run-tests.js",
+    "filepath": "dropzone\\incoming\\ccxt-ccxt_run-tests.js",
+    "fileType": "javascript",
+    "size": 18031,
+    "hash": "5265d4f52d0fe82672a503836f90c6bf",
+    "droppedAt": "2025-12-11T10:41:37.580Z",
+    "status": "rejected",
+    "error": "Failed safety scan: Found obfuscation pattern: exec (, Found systemCommands pattern: child_process"
+  },
+  "report": {
+    "safe": false,
+    "score": 45,
+    "threats": [
+      {
+        "type": "obfuscation",
+        "severity": "medium",
+        "description": "Found obfuscation pattern: exec (",
+        "location": "Line 151"
+      },
+      {
+        "type": "suspicious_code",
+        "severity": "critical",
+        "description": "Found systemCommands pattern: child_process",
+        "location": "Line 13"
+      }
+    ],
+    "warnings": [],
+    "scannedAt": "2025-12-11T10:41:37.581Z"
+  },
+  "rejectedAt": "2025-12-11T10:41:38.080Z"
+}

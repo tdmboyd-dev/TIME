@@ -1,0 +1,12 @@
+{
+  "name": "hftbacktest",
+  "fullName": "nkaz001/hftbacktest",
+  "stars": 3356,
+  "language": "Rust",
+  "description": "Free, open source, a high frequency trading and market making backtesting and trading bot, which accounts for limit orders, queue positions, and latencies, utilizing full tick data for trades and order books(Level-2 and Level-3), with real-world crypto trading examples for Binance and Bybit",
+  "url": "https://github.com/nkaz001/hftbacktest",
+  "license": "MIT",
+  "harvest": 3,
+  "harvestName": "Crypto/DeFi Bots",
+  "downloadedAt": "2025-12-11T09:59:25.338Z"
+}

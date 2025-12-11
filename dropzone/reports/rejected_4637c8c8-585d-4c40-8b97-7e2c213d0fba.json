@@ -1,0 +1,62 @@
+{
+  "file": {
+    "id": "4637c8c8-585d-4c40-8b97-7e2c213d0fba",
+    "filename": "yeahrb-CEX-Option-Futures-Crypto-Quant-Algorithm-Trading-Bot_balance.py",
+    "filepath": "dropzone\\incoming\\yeahrb-CEX-Option-Futures-Crypto-Quant-Algorithm-Trading-Bot_balance.py",
+    "fileType": "python",
+    "size": 5518,
+    "hash": "53ea056fa59ee152c08bea870bb8f196",
+    "droppedAt": "2025-12-11T10:41:42.567Z",
+    "status": "rejected",
+    "error": "Rating too low: 1.9/5.0 (min: 4)"
+  },
+  "report": {
+    "fileId": "4637c8c8-585d-4c40-8b97-7e2c213d0fba",
+    "filename": "yeahrb-CEX-Option-Futures-Crypto-Quant-Algorithm-Trading-Bot_balance.py",
+    "safetyScan": {
+      "safe": true,
+      "score": 100,
+      "threats": [],
+      "warnings": [],
+      "scannedAt": "2025-12-11T10:41:42.567Z"
+    },
+    "analysis": {
+      "strategyType": "Unknown",
+      "indicators": [],
+      "timeframes": [
+        "Unknown"
+      ],
+      "assets": [
+        "BTC",
+        "ETH",
+        "BNB",
+        "BTCUSDT"
+      ],
+      "entryLogic": "No clear entry logic found",
+      "exitLogic": "Exit logic detected",
+      "riskManagement": {
+        "hasStopLoss": false,
+        "hasTakeProfit": false,
+        "hasPositionSizing": false,
+        "maxDrawdownProtection": false
+      },
+      "complexity": "moderate",
+      "codeQuality": 75
+    },
+    "rating": {
+      "overall": 1.9,
+      "breakdown": {
+        "codeQuality": 3.75,
+        "strategyClarity": 2.75,
+        "riskManagement": 0,
+        "documentation": 1,
+        "uniqueness": 2.5
+      },
+      "recommendation": "reject",
+      "reasoning": "Quality below threshold. Issues with risk management."
+    },
+    "absorbed": false,
+    "learningsExtracted": []
+  },
+  "rejectedAt": "2025-12-11T10:41:42.570Z"
+}

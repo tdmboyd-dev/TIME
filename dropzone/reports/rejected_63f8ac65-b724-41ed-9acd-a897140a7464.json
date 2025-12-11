@@ -1,0 +1,28 @@
+{
+  "file": {
+    "id": "63f8ac65-b724-41ed-9acd-a897140a7464",
+    "filename": "TheSnowGuru-PyTrader-python-mt4-mt5-trading-api-connector-drag-n-drop_Pytrader_API_V4_01.py",
+    "filepath": "dropzone\\incoming\\TheSnowGuru-PyTrader-python-mt4-mt5-trading-api-connector-drag-n-drop_Pytrader_API_V4_01.py",
+    "fileType": "python",
+    "size": 111888,
+    "hash": "8a53bfd659f794b4da2f7d5b33a43770",
+    "droppedAt": "2025-12-11T10:41:38.022Z",
+    "status": "rejected",
+    "error": "Failed safety scan: Found network pattern: socket."
+  },
+  "report": {
+    "safe": false,
+    "score": 75,
+    "threats": [
+      {
+        "type": "network_call",
+        "severity": "high",
+        "description": "Found network pattern: socket.",
+        "location": "Line 266"
+      }
+    ],
+    "warnings": [],
+    "scannedAt": "2025-12-11T10:41:38.024Z"
+  },
+  "rejectedAt": "2025-12-11T10:41:38.581Z"
+}

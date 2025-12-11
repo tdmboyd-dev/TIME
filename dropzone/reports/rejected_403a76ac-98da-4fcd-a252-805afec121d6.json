@@ -1,0 +1,79 @@
+{
+  "file": {
+    "id": "403a76ac-98da-4fcd-a252-805afec121d6",
+    "filename": "iterativv-NostalgiaForInfinity_NostalgiaForInfinityX6.py",
+    "filepath": "dropzone\\incoming\\iterativv-NostalgiaForInfinity_NostalgiaForInfinityX6.py",
+    "fileType": "python",
+    "size": 2846356,
+    "hash": "21f3432c254bb38f3eb21ac9d8fb7022",
+    "droppedAt": "2025-12-11T10:41:37.806Z",
+    "status": "rejected",
+    "error": "Rating too low: 3.7/5.0 (min: 4)"
+  },
+  "report": {
+    "fileId": "403a76ac-98da-4fcd-a252-805afec121d6",
+    "filename": "iterativv-NostalgiaForInfinity_NostalgiaForInfinityX6.py",
+    "safetyScan": {
+      "safe": true,
+      "score": 100,
+      "threats": [],
+      "warnings": [],
+      "scannedAt": "2025-12-11T10:41:37.847Z"
+    },
+    "analysis": {
+      "strategyType": "Trend Following",
+      "indicators": [
+        "Moving Average",
+        "RSI",
+        "Bollinger Bands",
+        "Stochastic",
+        "Fibonacci",
+        "Volume",
+        "Pivot Points",
+        "CCI",
+        "Williams %R"
+      ],
+      "timeframes": [
+        "H1",
+        "H4",
+        "D1"
+      ],
+      "assets": [
+        "BTC",
+        "ETH",
+        "BNB",
+        "ADA",
+        "BCH",
+        "DOT",
+        "LINK",
+        "LTC",
+        "XRP"
+      ],
+      "entryLogic": "Entry logic detected",
+      "exitLogic": "Exit logic detected",
+      "riskManagement": {
+        "hasStopLoss": true,
+        "hasTakeProfit": true,
+        "hasPositionSizing": false,
+        "maxDrawdownProtection": false
+      },
+      "complexity": "advanced",
+      "codeQuality": 75
+    },
+    "rating": {
+      "overall": 3.7,
+      "breakdown": {
+        "codeQuality": 3.75,
+        "strategyClarity": 5,
+        "riskManagement": 2.5,
+        "documentation": 3,
+        "uniqueness": 4.5
+      },
+      "recommendation": "review",
+      "reasoning": "Moderate quality. Consider manual review. Weakness in risk management."
+    },
+    "absorbed": false,
+    "learningsExtracted": []
+  },
+  "rejectedAt": "2025-12-11T10:41:38.822Z"
+}

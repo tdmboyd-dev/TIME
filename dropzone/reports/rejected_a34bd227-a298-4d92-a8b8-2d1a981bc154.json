@@ -1,0 +1,59 @@
+{
+  "file": {
+    "id": "a34bd227-a298-4d92-a8b8-2d1a981bc154",
+    "filename": "kkyon-botflow_setup.py",
+    "filepath": "dropzone\\incoming\\kkyon-botflow_setup.py",
+    "fileType": "python",
+    "size": 919,
+    "hash": "c9824cf1caeca60bd8425ce4ddbb4da5",
+    "droppedAt": "2025-12-11T10:41:37.935Z",
+    "status": "rejected",
+    "error": "Rating too low: 2/5.0 (min: 4)"
+  },
+  "report": {
+    "fileId": "a34bd227-a298-4d92-a8b8-2d1a981bc154",
+    "filename": "kkyon-botflow_setup.py",
+    "safetyScan": {
+      "safe": true,
+      "score": 100,
+      "threats": [],
+      "warnings": [],
+      "scannedAt": "2025-12-11T10:41:37.935Z"
+    },
+    "analysis": {
+      "strategyType": "Unknown",
+      "indicators": [],
+      "timeframes": [
+        "Unknown"
+      ],
+      "assets": [
+        "Multi-Asset"
+      ],
+      "entryLogic": "No clear entry logic found",
+      "exitLogic": "No clear exit logic found",
+      "riskManagement": {
+        "hasStopLoss": false,
+        "hasTakeProfit": false,
+        "hasPositionSizing": false,
+        "maxDrawdownProtection": false
+      },
+      "complexity": "simple",
+      "codeQuality": 75
+    },
+    "rating": {
+      "overall": 2,
+      "breakdown": {
+        "codeQuality": 3.75,
+        "strategyClarity": 2.5,
+        "riskManagement": 0,
+        "documentation": 2,
+        "uniqueness": 2.5
+      },
+      "recommendation": "reject",
+      "reasoning": "Quality below threshold. Issues with risk management."
+    },
+    "absorbed": false,
+    "learningsExtracted": []
+  },
+  "rejectedAt": "2025-12-11T10:41:38.863Z"
+}

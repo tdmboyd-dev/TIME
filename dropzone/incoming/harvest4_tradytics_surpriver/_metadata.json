@@ -1,0 +1,12 @@
+{
+  "name": "surpriver",
+  "fullName": "tradytics/surpriver",
+  "stars": 1836,
+  "language": "Python",
+  "description": "Find big moving stocks before they move using machine learning and anomaly detection",
+  "url": "https://github.com/tradytics/surpriver",
+  "license": "GPL-3.0",
+  "harvest": 4,
+  "harvestName": "Machine Learning Trading",
+  "downloadedAt": "2025-12-11T10:00:24.468Z"
+}

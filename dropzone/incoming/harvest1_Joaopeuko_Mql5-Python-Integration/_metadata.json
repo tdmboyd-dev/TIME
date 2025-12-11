@@ -1,0 +1,12 @@
+{
+  "name": "Mql5-Python-Integration",
+  "fullName": "Joaopeuko/Mql5-Python-Integration",
+  "stars": 192,
+  "language": "Python",
+  "description": "I created this library to streamline the process of developing an Expert Advisor in MQL5. While MQL5 development can be complex, the same task is more straightforward in Python.",
+  "url": "https://github.com/Joaopeuko/Mql5-Python-Integration",
+  "license": "MIT",
+  "harvest": 1,
+  "harvestName": "MQL4/MQL5 Expert Advisors",
+  "downloadedAt": "2025-12-11T09:57:27.620Z"
+}

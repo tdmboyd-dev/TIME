@@ -10,6 +10,11 @@ import userRoutes from './users';
 import botRoutes from './bots';
 import strategyRoutes from './strategies';
 import adminRoutes from './admin';
+import socialRoutes from './social';
+import assetsRoutes from './assets';
+import marketDataRoutes from './market_data';
+import defiMasteryRoutes from './defi_mastery';
+import riskProfileRoutes from './risk_profile';
 
 const router = Router();
 
@@ -19,6 +24,11 @@ router.use('/users', userRoutes);
 router.use('/bots', botRoutes);
 router.use('/strategies', strategyRoutes);
 router.use('/admin', adminRoutes);
+router.use('/social', socialRoutes);
+router.use('/assets', assetsRoutes);
+router.use('/market', marketDataRoutes);
+router.use('/defi', defiMasteryRoutes);
+router.use('/risk', riskProfileRoutes);
 
 export default router;
 

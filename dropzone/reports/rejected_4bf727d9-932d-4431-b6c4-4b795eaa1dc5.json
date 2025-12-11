@@ -1,0 +1,59 @@
+{
+  "file": {
+    "id": "4bf727d9-932d-4431-b6c4-4b795eaa1dc5",
+    "filename": "ccxt-binance-trade-bot_backtest.py",
+    "filepath": "dropzone\\incoming\\ccxt-binance-trade-bot_backtest.py",
+    "fileType": "python",
+    "size": 802,
+    "hash": "d51225627ea634b3494aaae34b384f91",
+    "droppedAt": "2025-12-11T10:41:37.573Z",
+    "status": "rejected",
+    "error": "Rating too low: 1.6/5.0 (min: 4)"
+  },
+  "report": {
+    "fileId": "4bf727d9-932d-4431-b6c4-4b795eaa1dc5",
+    "filename": "ccxt-binance-trade-bot_backtest.py",
+    "safetyScan": {
+      "safe": true,
+      "score": 100,
+      "threats": [],
+      "warnings": [],
+      "scannedAt": "2025-12-11T10:41:37.574Z"
+    },
+    "analysis": {
+      "strategyType": "Unknown",
+      "indicators": [],
+      "timeframes": [
+        "Unknown"
+      ],
+      "assets": [
+        "BTC"
+      ],
+      "entryLogic": "No clear entry logic found",
+      "exitLogic": "No clear exit logic found",
+      "riskManagement": {
+        "hasStopLoss": false,
+        "hasTakeProfit": false,
+        "hasPositionSizing": false,
+        "maxDrawdownProtection": false
+      },
+      "complexity": "simple",
+      "codeQuality": 50
+    },
+    "rating": {
+      "overall": 1.6,
+      "breakdown": {
+        "codeQuality": 2.5,
+        "strategyClarity": 2.5,
+        "riskManagement": 0,
+        "documentation": 1,
+        "uniqueness": 2.5
+      },
+      "recommendation": "reject",
+      "reasoning": "Quality below threshold. Issues with risk management."
+    },
+    "absorbed": false,
+    "learningsExtracted": []
+  },
+  "rejectedAt": "2025-12-11T10:41:38.755Z"
+}

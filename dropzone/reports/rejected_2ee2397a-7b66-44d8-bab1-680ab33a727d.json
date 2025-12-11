@@ -1,0 +1,66 @@
+{
+  "file": {
+    "id": "2ee2397a-7b66-44d8-bab1-680ab33a727d",
+    "filename": "quantopian-zipline_setup.py",
+    "filepath": "dropzone\\incoming\\quantopian-zipline_setup.py",
+    "fileType": "python",
+    "size": 9962,
+    "hash": "afdee356f874fff91f26db96066bd102",
+    "droppedAt": "2025-12-11T10:41:37.970Z",
+    "status": "rejected",
+    "error": "Rating too low: 2.1/5.0 (min: 4)"
+  },
+  "report": {
+    "fileId": "2ee2397a-7b66-44d8-bab1-680ab33a727d",
+    "filename": "quantopian-zipline_setup.py",
+    "safetyScan": {
+      "safe": true,
+      "score": 85,
+      "threats": [
+        {
+          "type": "obfuscation",
+          "severity": "medium",
+          "description": "Found obfuscation pattern: compile(",
+          "location": "Line 167"
+        }
+      ],
+      "warnings": [],
+      "scannedAt": "2025-12-11T10:41:37.971Z"
+    },
+    "analysis": {
+      "strategyType": "Pattern Recognition",
+      "indicators": [],
+      "timeframes": [
+        "Unknown"
+      ],
+      "assets": [
+        "Multi-Asset"
+      ],
+      "entryLogic": "Entry logic detected",
+      "exitLogic": "No clear exit logic found",
+      "riskManagement": {
+        "hasStopLoss": false,
+        "hasTakeProfit": false,
+        "hasPositionSizing": false,
+        "maxDrawdownProtection": false
+      },
+      "complexity": "complex",
+      "codeQuality": 85
+    },
+    "rating": {
+      "overall": 2.1,
+      "breakdown": {
+        "codeQuality": 4.25,
+        "strategyClarity": 3.75,
+        "riskManagement": 0,
+        "documentation": 2,
+        "uniqueness": 3
+      },
+      "recommendation": "reject",
+      "reasoning": "Quality below threshold. Issues with risk management."
+    },
+    "absorbed": false,
+    "learningsExtracted": []
+  },
+  "rejectedAt": "2025-12-11T10:41:38.905Z"
+}

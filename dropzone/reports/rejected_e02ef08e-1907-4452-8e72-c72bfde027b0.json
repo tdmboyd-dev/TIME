@@ -1,0 +1,59 @@
+{
+  "file": {
+    "id": "e02ef08e-1907-4452-8e72-c72bfde027b0",
+    "filename": "alpacahq-example-hftish_tick_taker.py",
+    "filepath": "dropzone\\incoming\\alpacahq-example-hftish_tick_taker.py",
+    "fileType": "python",
+    "size": 9434,
+    "hash": "2214f726e2862c80a0033cb74597003b",
+    "droppedAt": "2025-12-11T10:41:37.564Z",
+    "status": "rejected",
+    "error": "Rating too low: 2.8/5.0 (min: 4)"
+  },
+  "report": {
+    "fileId": "e02ef08e-1907-4452-8e72-c72bfde027b0",
+    "filename": "alpacahq-example-hftish_tick_taker.py",
+    "safetyScan": {
+      "safe": true,
+      "score": 100,
+      "threats": [],
+      "warnings": [],
+      "scannedAt": "2025-12-11T10:41:37.565Z"
+    },
+    "analysis": {
+      "strategyType": "News Trading",
+      "indicators": [],
+      "timeframes": [
+        "Unknown"
+      ],
+      "assets": [
+        "Multi-Asset"
+      ],
+      "entryLogic": "No clear entry logic found",
+      "exitLogic": "No clear exit logic found",
+      "riskManagement": {
+        "hasStopLoss": false,
+        "hasTakeProfit": false,
+        "hasPositionSizing": true,
+        "maxDrawdownProtection": false
+      },
+      "complexity": "complex",
+      "codeQuality": 80
+    },
+    "rating": {
+      "overall": 2.8,
+      "breakdown": {
+        "codeQuality": 4,
+        "strategyClarity": 3.5,
+        "riskManagement": 1.5,
+        "documentation": 2,
+        "uniqueness": 3
+      },
+      "recommendation": "reject",
+      "reasoning": "Quality below threshold. Issues with risk management."
+    },
+    "absorbed": false,
+    "learningsExtracted": []
+  },
+  "rejectedAt": "2025-12-11T10:41:38.733Z"
+}

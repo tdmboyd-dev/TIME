@@ -1,0 +1,59 @@
+{
+  "file": {
+    "id": "21038e7f-ca86-4ae6-84eb-6886152ec8fb",
+    "filename": "Superalgos-Superalgos_AppSchemas.js",
+    "filepath": "dropzone\\incoming\\Superalgos-Superalgos_AppSchemas.js",
+    "fileType": "javascript",
+    "size": 2043,
+    "hash": "8c0c9e38b4a62d477320658ac0e88b15",
+    "droppedAt": "2025-12-11T10:41:38.004Z",
+    "status": "rejected",
+    "error": "Rating too low: 2/5.0 (min: 4)"
+  },
+  "report": {
+    "fileId": "21038e7f-ca86-4ae6-84eb-6886152ec8fb",
+    "filename": "Superalgos-Superalgos_AppSchemas.js",
+    "safetyScan": {
+      "safe": true,
+      "score": 100,
+      "threats": [],
+      "warnings": [],
+      "scannedAt": "2025-12-11T10:41:38.004Z"
+    },
+    "analysis": {
+      "strategyType": "Unknown",
+      "indicators": [],
+      "timeframes": [
+        "Unknown"
+      ],
+      "assets": [
+        "Multi-Asset"
+      ],
+      "entryLogic": "No clear entry logic found",
+      "exitLogic": "No clear exit logic found",
+      "riskManagement": {
+        "hasStopLoss": false,
+        "hasTakeProfit": false,
+        "hasPositionSizing": false,
+        "maxDrawdownProtection": false
+      },
+      "complexity": "simple",
+      "codeQuality": 90
+    },
+    "rating": {
+      "overall": 2,
+      "breakdown": {
+        "codeQuality": 4.5,
+        "strategyClarity": 2.5,
+        "riskManagement": 0,
+        "documentation": 1,
+        "uniqueness": 2.5
+      },
+      "recommendation": "reject",
+      "reasoning": "Quality below threshold. Issues with risk management."
+    },
+    "absorbed": false,
+    "learningsExtracted": []
+  },
+  "rejectedAt": "2025-12-11T10:41:38.933Z"
+}

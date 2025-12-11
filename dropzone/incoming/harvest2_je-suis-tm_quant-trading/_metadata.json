@@ -1,0 +1,12 @@
+{
+  "name": "quant-trading",
+  "fullName": "je-suis-tm/quant-trading",
+  "stars": 8754,
+  "language": "Python",
+  "description": "Python quantitative trading strategies including VIX Calculator, Pattern Recognition, Commodity Trading Advisor, Monte Carlo, Options Straddle, Shooting Star, London Breakout, Heikin-Ashi, Pair Trading, RSI, Bollinger Bands, Parabolic SAR, Dual Thrust, Awesome, MACD",
+  "url": "https://github.com/je-suis-tm/quant-trading",
+  "license": "Apache-2.0",
+  "harvest": 2,
+  "harvestName": "Python Quant/Backtest Frameworks",
+  "downloadedAt": "2025-12-11T09:58:10.582Z"
+}

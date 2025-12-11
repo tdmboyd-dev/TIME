@@ -82,7 +82,7 @@ export class AlpacaBroker extends BrokerInterface {
       // Start WebSocket connection for real-time data
       await this.connectWebSocket();
     } catch (error) {
-      logger.error('Failed to connect to Alpaca:', error);
+      logger.error('Failed to connect to Alpaca:', error as object);
       this.emit('error', error as Error);
       throw error;
     }
@@ -229,7 +229,7 @@ export class AlpacaBroker extends BrokerInterface {
       await this.apiRequest('DELETE', `/v2/orders/${orderId}`);
       return true;
     } catch (error) {
-      logger.error(`Failed to cancel order ${orderId}:`, error);
+      logger.error(`Failed to cancel order ${orderId}:`, error as object);
       return false;
     }
   }

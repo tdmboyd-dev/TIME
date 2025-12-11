@@ -1,0 +1,28 @@
+{
+  "file": {
+    "id": "e6c6403c-7d4d-49d4-8b72-a242c7daa81e",
+    "filename": "CyberPunkMetalHead-Binance-volatility-trading-bot_pausebotmod.py",
+    "filepath": "dropzone\\incoming\\CyberPunkMetalHead-Binance-volatility-trading-bot_pausebotmod.py",
+    "fileType": "python",
+    "size": 1845,
+    "hash": "08a14789f1edc1ee48eeedd839b21977",
+    "droppedAt": "2025-12-11T10:41:37.595Z",
+    "status": "rejected",
+    "error": "Failed safety scan: Found fileAccess pattern: os.remove"
+  },
+  "report": {
+    "safe": false,
+    "score": 75,
+    "threats": [
+      {
+        "type": "file_access",
+        "severity": "high",
+        "description": "Found fileAccess pattern: os.remove",
+        "location": "Line 54"
+      }
+    ],
+    "warnings": [],
+    "scannedAt": "2025-12-11T10:41:37.596Z"
+  },
+  "rejectedAt": "2025-12-11T10:41:38.090Z"
+}

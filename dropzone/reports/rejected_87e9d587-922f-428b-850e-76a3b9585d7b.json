@@ -1,0 +1,59 @@
+{
+  "file": {
+    "id": "87e9d587-922f-428b-850e-76a3b9585d7b",
+    "filename": "Mathieu2301-TradingView-API_vite.config.js",
+    "filepath": "dropzone\\incoming\\Mathieu2301-TradingView-API_vite.config.js",
+    "fileType": "javascript",
+    "size": 108,
+    "hash": "c292d2ee2b09b694d72e77751453a03c",
+    "droppedAt": "2025-12-11T10:41:37.938Z",
+    "status": "rejected",
+    "error": "Rating too low: 1.6/5.0 (min: 4)"
+  },
+  "report": {
+    "fileId": "87e9d587-922f-428b-850e-76a3b9585d7b",
+    "filename": "Mathieu2301-TradingView-API_vite.config.js",
+    "safetyScan": {
+      "safe": true,
+      "score": 100,
+      "threats": [],
+      "warnings": [],
+      "scannedAt": "2025-12-11T10:41:37.938Z"
+    },
+    "analysis": {
+      "strategyType": "Unknown",
+      "indicators": [],
+      "timeframes": [
+        "Unknown"
+      ],
+      "assets": [
+        "Multi-Asset"
+      ],
+      "entryLogic": "No clear entry logic found",
+      "exitLogic": "No clear exit logic found",
+      "riskManagement": {
+        "hasStopLoss": false,
+        "hasTakeProfit": false,
+        "hasPositionSizing": false,
+        "maxDrawdownProtection": false
+      },
+      "complexity": "simple",
+      "codeQuality": 50
+    },
+    "rating": {
+      "overall": 1.6,
+      "breakdown": {
+        "codeQuality": 2.5,
+        "strategyClarity": 2.5,
+        "riskManagement": 0,
+        "documentation": 1,
+        "uniqueness": 2.5
+      },
+      "recommendation": "reject",
+      "reasoning": "Quality below threshold. Issues with risk management."
+    },
+    "absorbed": false,
+    "learningsExtracted": []
+  },
+  "rejectedAt": "2025-12-11T10:41:38.870Z"
+}

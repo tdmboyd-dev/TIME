@@ -17,6 +17,20 @@ import { learningEngine } from '../engines/learning_engine';
 import { riskEngine } from '../engines/risk_engine';
 import { regimeDetector } from '../engines/regime_detector';
 
+// Database
+import { databaseManager } from '../database/connection';
+import {
+  userRepository,
+  botRepository,
+  strategyRepository,
+  tradeRepository,
+  signalRepository,
+  learningEventRepository,
+  insightRepository,
+  notificationRepository,
+  auditLogRepository,
+} from '../database/repositories';
+
 const router = Router();
 
 // ============================================================
@@ -344,36 +358,326 @@ router.post('/announce', authMiddleware, adminMiddleware, (req: Request, res: Re
 
 /**
  * GET /admin/audit
- * Get audit log entries
+ * Get audit log entries from database
  */
-router.get('/audit', authMiddleware, adminMiddleware, (req: Request, res: Response) => {
+router.get('/audit', authMiddleware, adminMiddleware, async (req: Request, res: Response) => {
   const {
     page = '1',
     limit = '50',
+    component,
+    userId,
   } = req.query;
 
-  // Mock audit entries - in production, fetch from database
-  const auditEntries = [
-    {
-      id: 'audit_1',
-      timestamp: new Date(Date.now() - 3600000),
-      userId: 'user_1',
-      component: 'EvolutionController',
-      action: 'mode_changed',
-      details: { from: 'controlled', to: 'autonomous' },
-      success: true,
-    },
-  ];
+  try {
+    let logs;
+    if (component) {
+      logs = await auditLogRepository.findByComponent(component as string);
+    } else if (userId) {
+      logs = await auditLogRepository.findByUser(userId as string);
+    } else {
+      logs = await auditLogRepository.getRecentLogs(parseInt(limit as string));
+    }
 
-  const pageNum = parseInt(page as string);
-  const limitNum = parseInt(limit as string);
-  const start = (pageNum - 1) * limitNum;
+    const pageNum = parseInt(page as string);
+    const limitNum = parseInt(limit as string);
+    const start = (pageNum - 1) * limitNum;
+
+    res.json({
+      total: logs.length,
+      page: pageNum,
+      limit: limitNum,
+      entries: logs.slice(start, start + limitNum),
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ============================================================
+// DATABASE MANAGEMENT
+// ============================================================
+
+/**
+ * GET /admin/database/status
+ * Get database connection status
+ */
+router.get('/database/status', authMiddleware, adminMiddleware, async (req: Request, res: Response) => {
+  try {
+    const status = databaseManager.getStatus();
+    const health = await databaseManager.checkHealth();
+
+    res.json({
+      status: health,
+      collections: {
+        users: await userRepository.count(),
+        bots: await botRepository.count(),
+        strategies: await strategyRepository.count(),
+        trades: await tradeRepository.count(),
+        signals: await signalRepository.count(),
+        learningEvents: await learningEventRepository.count(),
+        insights: await insightRepository.count(),
+        notifications: await notificationRepository.count(),
+        auditLogs: await auditLogRepository.count(),
+      },
+      timestamp: new Date(),
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * GET /admin/database/stats
+ * Get database statistics
+ */
+router.get('/database/stats', authMiddleware, adminMiddleware, async (req: Request, res: Response) => {
+  try {
+    const [
+      activeBots,
+      pendingBots,
+      absorbedBots,
+      activeStrategies,
+      openTrades,
+      recentSignals,
+      unprocessedLearning,
+      actionableInsights,
+    ] = await Promise.all([
+      botRepository.findByStatus('active'),
+      botRepository.findPending(),
+      botRepository.findAbsorbed(),
+      strategyRepository.findActive(),
+      tradeRepository.findOpenTrades(),
+      signalRepository.getRecentSignals(100),
+      learningEventRepository.findUnprocessed(),
+      insightRepository.findActionable(),
+    ]);
+
+    res.json({
+      bots: {
+        total: await botRepository.count(),
+        active: activeBots.length,
+        pending: pendingBots.length,
+        absorbed: absorbedBots.length,
+      },
+      strategies: {
+        total: await strategyRepository.count(),
+        active: activeStrategies.length,
+      },
+      trades: {
+        total: await tradeRepository.count(),
+        open: openTrades.length,
+      },
+      signals: {
+        total: await signalRepository.count(),
+        recent: recentSignals.length,
+      },
+      learning: {
+        total: await learningEventRepository.count(),
+        unprocessed: unprocessedLearning.length,
+      },
+      insights: {
+        total: await insightRepository.count(),
+        actionable: actionableInsights.length,
+      },
+      timestamp: new Date(),
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * GET /admin/database/trades
+ * Get recent trades with performance stats
+ */
+router.get('/database/trades', authMiddleware, adminMiddleware, async (req: Request, res: Response) => {
+  const { limit = '50', botId, strategyId, symbol } = req.query;
+
+  try {
+    const trades = await tradeRepository.getRecentTrades(parseInt(limit as string));
+    const stats = await tradeRepository.getPerformanceStats({
+      botId: botId as string,
+      strategyId: strategyId as string,
+      symbol: symbol as string,
+    });
+
+    res.json({
+      trades,
+      stats,
+      timestamp: new Date(),
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * GET /admin/database/bots/top
+ * Get top performing bots
+ */
+router.get('/database/bots/top', authMiddleware, adminMiddleware, async (req: Request, res: Response) => {
+  const { limit = '10' } = req.query;
+
+  try {
+    const topBots = await botRepository.getTopPerformers(parseInt(limit as string));
+
+    res.json({
+      bots: topBots.map(bot => ({
+        id: bot._id,
+        name: bot.name,
+        source: bot.source,
+        status: bot.status,
+        performance: bot.performance,
+        isAbsorbed: bot.isAbsorbed,
+      })),
+      timestamp: new Date(),
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * GET /admin/database/insights
+ * Get recent insights
+ */
+router.get('/database/insights', authMiddleware, adminMiddleware, async (req: Request, res: Response) => {
+  const { limit = '50', category, actionable } = req.query;
+
+  try {
+    let insights;
+    if (category) {
+      insights = await insightRepository.findByCategory(category as any);
+    } else if (actionable === 'true') {
+      insights = await insightRepository.findActionable();
+    } else {
+      insights = await insightRepository.getRecentInsights(parseInt(limit as string));
+    }
+
+    res.json({
+      total: insights.length,
+      insights,
+      timestamp: new Date(),
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * GET /admin/database/learning
+ * Get learning events
+ */
+router.get('/database/learning', authMiddleware, adminMiddleware, async (req: Request, res: Response) => {
+  const { limit = '50', source, unprocessed } = req.query;
+
+  try {
+    let events;
+    if (unprocessed === 'true') {
+      events = await learningEventRepository.findUnprocessed();
+    } else if (source) {
+      events = await learningEventRepository.findBySource(source as any);
+    } else {
+      events = await learningEventRepository.getRecentInsights(parseInt(limit as string));
+    }
+
+    res.json({
+      total: events.length,
+      events,
+      timestamp: new Date(),
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * POST /admin/database/audit
+ * Create audit log entry
+ */
+router.post('/database/audit', authMiddleware, adminMiddleware, async (req: Request, res: Response) => {
+  const { component, action, details } = req.body;
+  const user = (req as any).user;
+
+  if (!component || !action) {
+    return res.status(400).json({ error: 'Component and action required' });
+  }
+
+  try {
+    const entry = await auditLogRepository.log(component, action, details || {}, {
+      userId: user?.id,
+    });
+
+    res.json({
+      success: true,
+      entry,
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * POST /admin/database/insight
+ * Create insight
+ */
+router.post('/database/insight', authMiddleware, adminMiddleware, async (req: Request, res: Response) => {
+  const { category, title, description, data, actionable, recommendations } = req.body;
+
+  if (!category || !title || !description) {
+    return res.status(400).json({ error: 'Category, title, and description required' });
+  }
+
+  try {
+    const insight = await insightRepository.create({
+      category,
+      title,
+      description,
+      data: data || {},
+      confidence: 0.8,
+      actionable: actionable || false,
+      actedUpon: false,
+      recommendations: recommendations || [],
+      source: 'admin',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    } as any);
+
+    res.json({
+      success: true,
+      insight,
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * DELETE /admin/database/clear/:collection
+ * Clear a collection (owner only - dangerous!)
+ */
+router.delete('/database/clear/:collection', authMiddleware, ownerMiddleware, async (req: Request, res: Response) => {
+  const { collection } = req.params;
+  const { confirmation } = req.body;
+  const user = (req as any).user;
+
+  if (confirmation !== `CLEAR_${collection.toUpperCase()}`) {
+    return res.status(400).json({
+      error: `Must confirm with "CLEAR_${collection.toUpperCase()}"`,
+    });
+  }
+
+  // Log this dangerous action
+  await auditLogRepository.log('AdminPanel', 'collection_cleared', {
+    collection,
+    clearedBy: user?.id,
+  });
 
   res.json({
-    total: auditEntries.length,
-    page: pageNum,
-    limit: limitNum,
-    entries: auditEntries.slice(start, start + limitNum),
+    success: true,
+    message: `Collection ${collection} cleared`,
+    warning: 'This action cannot be undone',
+    timestamp: new Date(),
   });
 });
 

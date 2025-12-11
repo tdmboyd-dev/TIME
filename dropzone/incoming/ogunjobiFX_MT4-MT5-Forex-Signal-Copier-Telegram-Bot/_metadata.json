@@ -1,0 +1,10 @@
+{
+  "name": "MT4-MT5-Forex-Signal-Copier-Telegram-Bot",
+  "fullName": "ogunjobiFX/MT4-MT5-Forex-Signal-Copier-Telegram-Bot",
+  "stars": 206,
+  "language": "Python",
+  "description": "Telegram bot used for copying and entering signals from signal provider directly to MT4 and MT5 trading accounts with calculated lot sizes and profit/loss display",
+  "url": "https://github.com/ogunjobiFX/MT4-MT5-Forex-Signal-Copier-Telegram-Bot",
+  "license": "MIT",
+  "downloadedAt": "2025-12-11T09:39:30.046Z"
+}

@@ -1,0 +1,66 @@
+{
+  "file": {
+    "id": "8c86cb32-7b01-445b-8d87-d9bd400a0ff3",
+    "filename": "iterativv-NostalgiaForInfinity_NostalgiaForInfinityX2.py",
+    "filepath": "dropzone\\incoming\\iterativv-NostalgiaForInfinity_NostalgiaForInfinityX2.py",
+    "fileType": "python",
+    "size": 624245,
+    "hash": "8bfea1369b8d4495c685a779141f67b9",
+    "droppedAt": "2025-12-11T10:41:37.682Z",
+    "status": "rejected",
+    "error": "Rating too low: 3.3/5.0 (min: 4)"
+  },
+  "report": {
+    "fileId": "8c86cb32-7b01-445b-8d87-d9bd400a0ff3",
+    "filename": "iterativv-NostalgiaForInfinity_NostalgiaForInfinityX2.py",
+    "safetyScan": {
+      "safe": true,
+      "score": 100,
+      "threats": [],
+      "warnings": [],
+      "scannedAt": "2025-12-11T10:41:37.691Z"
+    },
+    "analysis": {
+      "strategyType": "Trend Following",
+      "indicators": [
+        "Bollinger Bands",
+        "Fibonacci",
+        "Volume",
+        "Pivot Points"
+      ],
+      "timeframes": [
+        "D1"
+      ],
+      "assets": [
+        "BTC",
+        "ETH",
+        "BNB"
+      ],
+      "entryLogic": "Entry logic detected",
+      "exitLogic": "Exit logic detected",
+      "riskManagement": {
+        "hasStopLoss": true,
+        "hasTakeProfit": false,
+        "hasPositionSizing": false,
+        "maxDrawdownProtection": false
+      },
+      "complexity": "advanced",
+      "codeQuality": 75
+    },
+    "rating": {
+      "overall": 3.3,
+      "breakdown": {
+        "codeQuality": 3.75,
+        "strategyClarity": 5,
+        "riskManagement": 1.5,
+        "documentation": 2,
+        "uniqueness": 4
+      },
+      "recommendation": "review",
+      "reasoning": "Moderate quality. Consider manual review. Weakness in risk management."
+    },
+    "absorbed": false,
+    "learningsExtracted": []
+  },
+  "rejectedAt": "2025-12-11T10:41:38.817Z"
+}

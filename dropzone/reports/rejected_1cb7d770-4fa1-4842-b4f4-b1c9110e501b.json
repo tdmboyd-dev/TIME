@@ -1,0 +1,62 @@
+{
+  "file": {
+    "id": "1cb7d770-4fa1-4842-b4f4-b1c9110e501b",
+    "filename": "Haehnchen-crypto-trading-bot_instance.js.dist_trade_bybit.js",
+    "filepath": "dropzone\\incoming\\Haehnchen-crypto-trading-bot_instance.js.dist_trade_bybit.js",
+    "fileType": "javascript",
+    "size": 383,
+    "hash": "7bba75dfac037497c8ee5ef178ec11b3",
+    "droppedAt": "2025-12-11T10:41:37.641Z",
+    "status": "rejected",
+    "error": "Rating too low: 1.7/5.0 (min: 4)"
+  },
+  "report": {
+    "fileId": "1cb7d770-4fa1-4842-b4f4-b1c9110e501b",
+    "filename": "Haehnchen-crypto-trading-bot_instance.js.dist_trade_bybit.js",
+    "safetyScan": {
+      "safe": true,
+      "score": 100,
+      "threats": [],
+      "warnings": [],
+      "scannedAt": "2025-12-11T10:41:37.641Z"
+    },
+    "analysis": {
+      "strategyType": "Unknown",
+      "indicators": [],
+      "timeframes": [
+        "Unknown"
+      ],
+      "assets": [
+        "BTC",
+        "ETH",
+        "LTC",
+        "XRP"
+      ],
+      "entryLogic": "No clear entry logic found",
+      "exitLogic": "No clear exit logic found",
+      "riskManagement": {
+        "hasStopLoss": false,
+        "hasTakeProfit": false,
+        "hasPositionSizing": false,
+        "maxDrawdownProtection": false
+      },
+      "complexity": "simple",
+      "codeQuality": 55
+    },
+    "rating": {
+      "overall": 1.7,
+      "breakdown": {
+        "codeQuality": 2.75,
+        "strategyClarity": 2.5,
+        "riskManagement": 0,
+        "documentation": 1,
+        "uniqueness": 2.5
+      },
+      "recommendation": "reject",
+      "reasoning": "Quality below threshold. Issues with risk management."
+    },
+    "absorbed": false,
+    "learningsExtracted": []
+  },
+  "rejectedAt": "2025-12-11T10:41:38.808Z"
+}

@@ -1,0 +1,12 @@
+{
+  "name": "zipline",
+  "fullName": "quantopian/zipline",
+  "stars": 19224,
+  "language": "Python",
+  "description": "Zipline, a Pythonic Algorithmic Trading Library",
+  "url": "https://github.com/quantopian/zipline",
+  "license": "Apache-2.0",
+  "harvest": 2,
+  "harvestName": "Python Quant/Backtest Frameworks",
+  "downloadedAt": "2025-12-11T09:58:06.569Z"
+}

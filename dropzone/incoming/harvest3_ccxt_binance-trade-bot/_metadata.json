@@ -1,0 +1,12 @@
+{
+  "name": "binance-trade-bot",
+  "fullName": "ccxt/binance-trade-bot",
+  "stars": 8577,
+  "language": "Python",
+  "description": "Automated cryptocurrency trading bot",
+  "url": "https://github.com/ccxt/binance-trade-bot",
+  "license": "GPL-3.0",
+  "harvest": 3,
+  "harvestName": "Crypto/DeFi Bots",
+  "downloadedAt": "2025-12-11T09:59:12.468Z"
+}

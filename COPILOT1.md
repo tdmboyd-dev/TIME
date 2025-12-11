@@ -4,6 +4,83 @@ All changes, additions, patches, inventions, and evolution steps are logged here
 
 ---
 
+## [2025-12-11] Real Broker & Market Data Integration
+
+### Created
+
+**SnapTrade Broker Integration:**
+- `src/backend/brokers/snaptrade_broker.ts` — Universal brokerage API connection
+  - Supports 20+ brokerages (TD Ameritrade, Schwab, Fidelity, etc.)
+  - Account aggregation across multiple brokers
+  - Trade execution through unified API
+  - User registration and authorization flow
+  - Connected brokerages management
+
+### Modified
+
+**Broker Manager:**
+- `src/backend/brokers/broker_manager.ts` — Added SnapTrade and IBKR support
+  - New broker type: `snaptrade`
+  - Imports for SnapTrade and IBClient
+
+**Configuration:**
+- `src/backend/config/index.ts` — Added comprehensive broker & market data config
+  - Alpaca: API key, secret, paper mode, data feed type
+  - OANDA: API key, account ID, practice mode
+  - SnapTrade: Client ID, consumer key
+  - Interactive Brokers: Host, port, client ID
+  - Market Data: Polygon, TwelveData, Finnhub, Alpha Vantage keys
+
+**Database Integration:**
+- `src/backend/database/connection.ts` — Real MongoDB + Redis clients
+  - Automatic fallback to in-memory when databases unavailable
+  - Redis connection with retry disabled (prevents spam)
+  - Graceful shutdown for both databases
+
+**CSP Headers:**
+- `src/backend/index.ts` — TradingView widget support
+  - Added TradingView domains to Content Security Policy
+  - Iframe embed method for reliable chart loading
+
+**TradingView Charts:**
+- Updated `/charts` page with iframe embed approach
+  - Symbol mappings (FX:EURUSD, COINBASE:BTCUSD, NASDAQ:AAPL)
+  - Timeframe selection (1m to 1W)
+  - More symbols added (GBP/USD, ETH/USD, TSLA)
+
+### TypeScript Fixes
+
+- Fixed `TeachingMode` to include `'plain_english'`
+- Fixed `Signal.metadata` → `Signal.reasoning` usage
+- Fixed `inferStrategyType` to return proper `StrategyType`
+- Added `inferRiskProfile` method for bot fingerprinting
+- Fixed `DetailedFingerprint` interface with all required fields
+- Fixed `riskEngine.checkSignal` parameters
+- Fixed `learningEngine.recordEvent` signature
+- Fixed Map operations in training simulator
+
+### Broker Support Summary
+
+| Broker | Asset Classes | Status |
+|--------|--------------|--------|
+| Alpaca | Stocks, Crypto | Ready |
+| OANDA | Forex (70+ pairs) | Ready |
+| SnapTrade | Multi-broker (20+) | Ready |
+| Interactive Brokers | All asset classes | Ready |
+| MT4/MT5 Bridge | Forex, CFDs | Ready |
+| Crypto Futures | Binance, Bybit | Ready |
+
+### Market Data Providers
+
+| Provider | Data Types | Config Key |
+|----------|-----------|------------|
+| Polygon.io | Stocks, Options, Forex, Crypto | POLYGON_API_KEY |
+| TwelveData | Global stocks, Forex, Crypto, Indicators | TWELVE_DATA_API_KEY |
+| Finnhub | Real-time quotes, News | FINNHUB_API_KEY |
+| Alpha Vantage | Fundamentals, Historical | ALPHA_VANTAGE_API_KEY |
+
+---
+
 ## [2025-12-11] TIME SERVER IS LIVE!
 
 ### Server Successfully Started

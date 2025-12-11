@@ -1,0 +1,72 @@
+{
+  "file": {
+    "id": "fb44a14f-161d-4ae2-9f2a-fc3aa1db4473",
+    "filename": "alpacahq-alpaca-trade-api-python_setup.py",
+    "filepath": "dropzone\\incoming\\alpacahq-alpaca-trade-api-python_setup.py",
+    "fileType": "python",
+    "size": 1110,
+    "hash": "a9cfd4365ff0b15c9ac70f5824fab0d7",
+    "droppedAt": "2025-12-11T10:41:37.563Z",
+    "status": "rejected",
+    "error": "Rating too low: 1.3/5.0 (min: 4)"
+  },
+  "report": {
+    "fileId": "fb44a14f-161d-4ae2-9f2a-fc3aa1db4473",
+    "filename": "alpacahq-alpaca-trade-api-python_setup.py",
+    "safetyScan": {
+      "safe": true,
+      "score": 70,
+      "threats": [
+        {
+          "type": "obfuscation",
+          "severity": "medium",
+          "description": "Found obfuscation pattern: eval(",
+          "location": "Line 11"
+        },
+        {
+          "type": "obfuscation",
+          "severity": "medium",
+          "description": "Found obfuscation pattern: compile(",
+          "location": "Line 8"
+        }
+      ],
+      "warnings": [],
+      "scannedAt": "2025-12-11T10:41:37.563Z"
+    },
+    "analysis": {
+      "strategyType": "Unknown",
+      "indicators": [],
+      "timeframes": [
+        "Unknown"
+      ],
+      "assets": [
+        "Multi-Asset"
+      ],
+      "entryLogic": "No clear entry logic found",
+      "exitLogic": "No clear exit logic found",
+      "riskManagement": {
+        "hasStopLoss": false,
+        "hasTakeProfit": false,
+        "hasPositionSizing": false,
+        "maxDrawdownProtection": false
+      },
+      "complexity": "simple",
+      "codeQuality": 60
+    },
+    "rating": {
+      "overall": 1.3,
+      "breakdown": {
+        "codeQuality": 3,
+        "strategyClarity": 2.5,
+        "riskManagement": 0,
+        "documentation": 2,
+        "uniqueness": 2.5
+      },
+      "recommendation": "reject",
+      "reasoning": "Quality below threshold. Issues with risk management."
+    },
+    "absorbed": false,
+    "learningsExtracted": []
+  },
+  "rejectedAt": "2025-12-11T10:41:38.732Z"
+}

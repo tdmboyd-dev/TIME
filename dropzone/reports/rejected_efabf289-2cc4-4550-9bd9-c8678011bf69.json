@@ -1,0 +1,59 @@
+{
+  "file": {
+    "id": "efabf289-2cc4-4550-9bd9-c8678011bf69",
+    "filename": "Superalgos-Superalgos_Secrets.js",
+    "filepath": "dropzone\\incoming\\Superalgos-Superalgos_Secrets.js",
+    "fileType": "javascript",
+    "size": 1251,
+    "hash": "d7e4a97558d53d47a77d8831ae3079a8",
+    "droppedAt": "2025-12-11T10:41:38.012Z",
+    "status": "rejected",
+    "error": "Rating too low: 2.3/5.0 (min: 4)"
+  },
+  "report": {
+    "fileId": "efabf289-2cc4-4550-9bd9-c8678011bf69",
+    "filename": "Superalgos-Superalgos_Secrets.js",
+    "safetyScan": {
+      "safe": true,
+      "score": 100,
+      "threats": [],
+      "warnings": [],
+      "scannedAt": "2025-12-11T10:41:38.012Z"
+    },
+    "analysis": {
+      "strategyType": "News Trading",
+      "indicators": [],
+      "timeframes": [
+        "Unknown"
+      ],
+      "assets": [
+        "Multi-Asset"
+      ],
+      "entryLogic": "No clear entry logic found",
+      "exitLogic": "No clear exit logic found",
+      "riskManagement": {
+        "hasStopLoss": false,
+        "hasTakeProfit": false,
+        "hasPositionSizing": false,
+        "maxDrawdownProtection": false
+      },
+      "complexity": "simple",
+      "codeQuality": 90
+    },
+    "rating": {
+      "overall": 2.3,
+      "breakdown": {
+        "codeQuality": 4.5,
+        "strategyClarity": 3.5,
+        "riskManagement": 0,
+        "documentation": 1,
+        "uniqueness": 2.5
+      },
+      "recommendation": "reject",
+      "reasoning": "Quality below threshold. Issues with risk management."
+    },
+    "absorbed": false,
+    "learningsExtracted": []
+  },
+  "rejectedAt": "2025-12-11T10:41:38.937Z"
+}

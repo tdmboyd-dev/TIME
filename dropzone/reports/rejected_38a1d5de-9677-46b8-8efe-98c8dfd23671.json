@@ -1,0 +1,62 @@
+{
+  "file": {
+    "id": "38a1d5de-9677-46b8-8efe-98c8dfd23671",
+    "filename": "je-suis-tm-quant-trading_Dual Thrust backtest.py",
+    "filepath": "dropzone\\incoming\\je-suis-tm-quant-trading_Dual Thrust backtest.py",
+    "fileType": "python",
+    "size": 9565,
+    "hash": "b9270d0f82c446dd60af420a5aafac99",
+    "droppedAt": "2025-12-11T10:41:37.901Z",
+    "status": "rejected",
+    "error": "Rating too low: 2.9/5.0 (min: 4)"
+  },
+  "report": {
+    "fileId": "38a1d5de-9677-46b8-8efe-98c8dfd23671",
+    "filename": "je-suis-tm-quant-trading_Dual Thrust backtest.py",
+    "safetyScan": {
+      "safe": true,
+      "score": 100,
+      "threats": [],
+      "warnings": [],
+      "scannedAt": "2025-12-11T10:41:37.902Z"
+    },
+    "analysis": {
+      "strategyType": "Trend Following",
+      "indicators": [
+        "Volume"
+      ],
+      "timeframes": [
+        "M1",
+        "D1"
+      ],
+      "assets": [
+        "LINK"
+      ],
+      "entryLogic": "Entry logic detected",
+      "exitLogic": "Exit logic detected",
+      "riskManagement": {
+        "hasStopLoss": false,
+        "hasTakeProfit": false,
+        "hasPositionSizing": false,
+        "maxDrawdownProtection": false
+      },
+      "complexity": "moderate",
+      "codeQuality": 85
+    },
+    "rating": {
+      "overall": 2.9,
+      "breakdown": {
+        "codeQuality": 4.25,
+        "strategyClarity": 4.5,
+        "riskManagement": 0,
+        "documentation": 5,
+        "uniqueness": 2.5
+      },
+      "recommendation": "reject",
+      "reasoning": "Quality below threshold. Issues with risk management."
+    },
+    "absorbed": false,
+    "learningsExtracted": []
+  },
+  "rejectedAt": "2025-12-11T10:41:38.829Z"
+}

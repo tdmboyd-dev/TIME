@@ -1,0 +1,59 @@
+{
+  "file": {
+    "id": "ef0f0ceb-49bd-454d-acc0-fd341ae4f209",
+    "filename": "maxbbraun-trump2cash_benchmark.py",
+    "filepath": "dropzone\\incoming\\maxbbraun-trump2cash_benchmark.py",
+    "fileType": "python",
+    "size": 10466,
+    "hash": "5e2b8471ed49e434e64e45388c5aea71",
+    "droppedAt": "2025-12-11T10:41:37.942Z",
+    "status": "rejected",
+    "error": "Rating too low: 1.9/5.0 (min: 4)"
+  },
+  "report": {
+    "fileId": "ef0f0ceb-49bd-454d-acc0-fd341ae4f209",
+    "filename": "maxbbraun-trump2cash_benchmark.py",
+    "safetyScan": {
+      "safe": true,
+      "score": 100,
+      "threats": [],
+      "warnings": [],
+      "scannedAt": "2025-12-11T10:41:37.943Z"
+    },
+    "analysis": {
+      "strategyType": "Unknown",
+      "indicators": [],
+      "timeframes": [
+        "Unknown"
+      ],
+      "assets": [
+        "LINK"
+      ],
+      "entryLogic": "No clear entry logic found",
+      "exitLogic": "No clear exit logic found",
+      "riskManagement": {
+        "hasStopLoss": false,
+        "hasTakeProfit": false,
+        "hasPositionSizing": false,
+        "maxDrawdownProtection": false
+      },
+      "complexity": "moderate",
+      "codeQuality": 75
+    },
+    "rating": {
+      "overall": 1.9,
+      "breakdown": {
+        "codeQuality": 3.75,
+        "strategyClarity": 2.5,
+        "riskManagement": 0,
+        "documentation": 1,
+        "uniqueness": 2.5
+      },
+      "recommendation": "reject",
+      "reasoning": "Quality below threshold. Issues with risk management."
+    },
+    "absorbed": false,
+    "learningsExtracted": []
+  },
+  "rejectedAt": "2025-12-11T10:41:38.873Z"
+}

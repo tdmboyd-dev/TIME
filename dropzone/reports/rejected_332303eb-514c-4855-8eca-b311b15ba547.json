@@ -1,0 +1,28 @@
+{
+  "file": {
+    "id": "332303eb-514c-4855-8eca-b311b15ba547",
+    "filename": "Superalgos-Superalgos_NetworkRoot.js",
+    "filepath": "dropzone\\incoming\\Superalgos-Superalgos_NetworkRoot.js",
+    "fileType": "javascript",
+    "size": 3389,
+    "hash": "a63f177da3b5ac18f734828d9f51be49",
+    "droppedAt": "2025-12-11T10:41:38.010Z",
+    "status": "rejected",
+    "error": "Failed safety scan: Found systemCommands pattern: child_process"
+  },
+  "report": {
+    "safe": false,
+    "score": 60,
+    "threats": [
+      {
+        "type": "suspicious_code",
+        "severity": "critical",
+        "description": "Found systemCommands pattern: child_process",
+        "location": "Line 59"
+      }
+    ],
+    "warnings": [],
+    "scannedAt": "2025-12-11T10:41:38.010Z"
+  },
+  "rejectedAt": "2025-12-11T10:41:38.572Z"
+}

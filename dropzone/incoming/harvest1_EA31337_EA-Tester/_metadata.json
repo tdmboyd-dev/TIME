@@ -1,0 +1,12 @@
+{
+  "name": "EA-Tester",
+  "fullName": "EA31337/EA-Tester",
+  "stars": 122,
+  "language": "Shell",
+  "description": "🐳📈 Headless Forex backtesting for MetaTrader platform using Docker",
+  "url": "https://github.com/EA31337/EA-Tester",
+  "license": "MIT",
+  "harvest": 1,
+  "harvestName": "MQL4/MQL5 Expert Advisors",
+  "downloadedAt": "2025-12-11T09:57:38.016Z"
+}

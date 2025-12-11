@@ -1,0 +1,28 @@
+{
+  "file": {
+    "id": "6c009301-47f6-4b5f-a1e1-1c07c615b22f",
+    "filename": "ccxt-ccxt_examples2md.js",
+    "filepath": "dropzone\\incoming\\ccxt-ccxt_examples2md.js",
+    "fileType": "javascript",
+    "size": 3369,
+    "hash": "26117f51b6b7110ba6b9b8b7e2466662",
+    "droppedAt": "2025-12-11T10:41:37.574Z",
+    "status": "rejected",
+    "error": "Failed safety scan: Found fileAccess pattern: fs.writeFile"
+  },
+  "report": {
+    "safe": false,
+    "score": 75,
+    "threats": [
+      {
+        "type": "file_access",
+        "severity": "high",
+        "description": "Found fileAccess pattern: fs.writeFile",
+        "location": "Line 21"
+      }
+    ],
+    "warnings": [],
+    "scannedAt": "2025-12-11T10:41:37.575Z"
+  },
+  "rejectedAt": "2025-12-11T10:41:38.075Z"
+}
