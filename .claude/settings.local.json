@@ -3,7 +3,11 @@
     "allow": [
       "WebFetch(domain:copilot.microsoft.com)",
       "Bash(git init:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nInitial TIME Meta-Intelligence Trading Governor implementation\n\nCore Systems:\n- TIME Governor: Central governing system with component registration\n- Evolution Controller: Dual mode (Controlled/Autonomous) management\n- Inactivity Monitor: Legacy Continuity Protocol (3/4/5 day failsafe)\n\nEngines:\n- Learning Engine: 24/7 learning from all sources\n- Risk Engine: Central risk control with emergency brake\n- Regime Detector: Market regime detection (7+ types)\n- Recursive Synthesis Engine: Evolutionary strategy creation\n- Market Vision Engine: Multi-perspective market analysis\n- Teaching Engine: Plain English + Pro mode explanations\n- Attribution Engine: Trade attribution to bots/signals\n\nBot Systems:\n- Bot Manager: Lifecycle management\n- Bot Ingestion: Intake from all sources with analysis\n\nServices:\n- Consent Manager: Mandatory consent at signup\n- Notification Service: Email/SMS/In-app notifications\n\nFeatures:\n- Express API with health endpoints\n- Socket.IO for real-time updates\n- Complete TypeScript type definitions\n- Configuration management\n- Winston logging\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(gh:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
     ]
   }
 }
