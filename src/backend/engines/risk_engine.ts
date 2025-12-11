@@ -466,10 +466,11 @@ export class RiskEngine extends EventEmitter implements TIMEComponent {
   /**
    * Get risk state
    */
-  public getState(): RiskState & { haltedBots: string[] } {
+  public getState(): Omit<RiskState, 'haltedBots'> & { haltedBots: string[] } {
+    const { haltedBots, ...rest } = this.state;
     return {
-      ...this.state,
-      haltedBots: Array.from(this.state.haltedBots),
+      ...rest,
+      haltedBots: Array.from(haltedBots),
     };
   }
 

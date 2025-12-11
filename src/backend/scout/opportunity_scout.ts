@@ -697,7 +697,7 @@ export class OpportunityScout extends EventEmitter {
 
       // Check reinvestment rules
       const config = this.config.get(userId);
-      if (config?.reinvestmentRules.length > 0) {
+      if (config && config.reinvestmentRules && config.reinvestmentRules.length > 0) {
         await this.processReinvestment(userId, opportunity, earnings, config);
       }
 

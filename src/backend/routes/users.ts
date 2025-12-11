@@ -157,29 +157,30 @@ router.put('/settings', authMiddleware, (req: Request, res: Response) => {
  */
 router.get('/consent', authMiddleware, async (req: Request, res: Response) => {
   const user = (req as any).user;
-  const status = await consentManager.getConsentStatus(user.id);
+  const consent = consentManager.getConsent(user.id);
+  const hasValid = consentManager.hasValidConsent(user.id);
+  const missing = consentManager.getMissingConsent(user.id);
 
-  res.json({ consent: status });
+  res.json({ consent, hasValidConsent: hasValid, missingFields: missing });
 });
 
 /**
  * PUT /users/consent
- * Update consent preferences (can only add, not remove required consents)
+ * Update consent preferences
  */
 router.put('/consent', authMiddleware, async (req: Request, res: Response) => {
   const user = (req as any).user;
-  const { marketingConsent } = req.body;
+  const consentData = req.body;
 
-  // Only allow updating optional consents
-  if (marketingConsent !== undefined) {
-    await consentManager.updateConsent(user.id, { marketingConsent });
-  }
+  // Update consent using grantConsent
+  consentManager.grantConsent(user.id, consentData);
 
-  const status = await consentManager.getConsentStatus(user.id);
+  const consent = consentManager.getConsent(user.id);
 
   res.json({
     success: true,
-    consent: status,
+    consent,
+    hasValidConsent: consentManager.hasValidConsent(user.id),
   });
 });
 

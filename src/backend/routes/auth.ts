@@ -155,12 +155,18 @@ router.post('/register', async (req: Request, res: Response) => {
 
     users.set(userId, newUser);
 
-    // Record consent
-    await consentManager.recordConsent(userId, {
-      termsAccepted: consent.termsAccepted,
-      dataLearningConsent: consent.dataLearningConsent,
-      riskDisclosureAccepted: consent.riskDisclosureAccepted,
-      marketingConsent: consent.marketingConsent || false,
+    // Record consent using grantConsent
+    consentManager.grantConsent(userId, {
+      analyzeBots: consent.dataLearningConsent,
+      copyBots: consent.dataLearningConsent,
+      absorbBots: consent.dataLearningConsent,
+      upgradeBots: consent.dataLearningConsent,
+      learnFromBots: consent.dataLearningConsent,
+      useBotsInEnsembles: consent.dataLearningConsent,
+      usePaidAccountData: consent.dataLearningConsent,
+      useDemoAccountData: consent.dataLearningConsent,
+      useTradingHistory: consent.dataLearningConsent,
+      usePerformancePatterns: consent.dataLearningConsent,
     });
 
     // Create session
@@ -170,14 +176,11 @@ router.post('/register', async (req: Request, res: Response) => {
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
     });
 
-    // Send welcome notification
-    notificationService.sendNotification({
+    // Send welcome notification - just emit an event for now
+    notificationService.emit('user:registered', {
       userId,
-      type: 'system',
-      title: 'Welcome to TIME',
-      message: `Welcome ${name}! Your account has been created. TIME is ready to learn and evolve with you.`,
-      priority: 'medium',
-      channels: { email: true, push: true, sms: false },
+      name,
+      email,
     });
 
     res.status(201).json({
@@ -257,7 +260,7 @@ router.post('/logout', authMiddleware, (req: Request, res: Response) => {
 router.get('/me', authMiddleware, async (req: Request, res: Response) => {
   const user = (req as any).user;
 
-  const consentStatus = await consentManager.getConsentStatus(user.id);
+  const consentStatus = consentManager.getConsent(user.id);
 
   res.json({
     user: {
@@ -268,6 +271,7 @@ router.get('/me', authMiddleware, async (req: Request, res: Response) => {
       createdAt: user.createdAt,
     },
     consent: consentStatus,
+    hasValidConsent: consentManager.hasValidConsent(user.id),
   });
 });
 

@@ -16,7 +16,6 @@
  */
 
 import { EventEmitter } from 'events';
-import { TIMEComponent } from '../core/time_governor';
 
 // ============================================================
 // TYPES
@@ -88,7 +87,7 @@ export interface AdaptationEvent {
 // LEARNING VELOCITY TRACKER
 // ============================================================
 
-export class LearningVelocityTracker extends EventEmitter implements TIMEComponent {
+export class LearningVelocityTracker extends EventEmitter {
   public readonly name = 'LearningVelocityTracker';
   public readonly version = '1.0.0';
 

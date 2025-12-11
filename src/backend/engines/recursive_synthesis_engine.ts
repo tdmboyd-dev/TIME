@@ -298,7 +298,7 @@ export class RecursiveSynthesisEngine extends EventEmitter implements TIMECompon
 
       const weights: Record<string, number> = {};
       for (const bot of botsWithPF) {
-        weights[bot.id] = b.performance.profitFactor / totalPF;
+        weights[bot.id] = bot.performance.profitFactor / totalPF;
       }
 
       candidates.push({

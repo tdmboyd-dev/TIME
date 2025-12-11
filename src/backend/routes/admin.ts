@@ -5,7 +5,6 @@
  * - Evolution mode control
  * - System health monitoring
  * - Proposal management
- * - User management
  * - System configuration
  */
 
@@ -30,25 +29,14 @@ const router = Router();
  */
 router.get('/evolution', authMiddleware, adminMiddleware, (req: Request, res: Response) => {
   const state = timeGovernor.getEvolutionState();
-  const inactivityState = inactivityMonitor.getInactivityState();
+  const inactivityState = inactivityMonitor.getState();
 
   res.json({
     mode: state.mode,
-    changedAt: state.changedAt,
+    lastModeChange: state.lastModeChange,
     changedBy: state.changedBy,
     reason: state.reason,
-    inactivity: {
-      lastActivity: inactivityState.lastActivity,
-      daysSinceActivity: inactivityState.daysSinceActivity,
-      warningsSent: inactivityState.warningsSent,
-      autoSwitchScheduled: inactivityState.autoSwitchScheduled,
-    },
-    stats: {
-      proposalsGenerated: state.proposalsGenerated || 0,
-      proposalsApproved: state.proposalsApproved || 0,
-      proposalsRejected: state.proposalsRejected || 0,
-      autoEvolutions: state.autoEvolutions || 0,
-    },
+    inactivity: inactivityState,
   });
 });
 
@@ -95,9 +83,7 @@ router.get('/evolution/proposals', authMiddleware, adminMiddleware, (req: Reques
       type: p.type,
       description: p.description,
       impact: p.impact,
-      confidence: p.confidence,
       createdAt: p.createdAt,
-      autoApproveAt: p.autoApproveAt,
     })),
   });
 });
@@ -155,8 +141,8 @@ router.get('/health', authMiddleware, adminMiddleware, (req: Request, res: Respo
   const health = timeGovernor.getSystemHealth();
 
   res.json({
-    overall: health.every(h => h.status === 'healthy') ? 'healthy' :
-             health.some(h => h.status === 'unhealthy') ? 'unhealthy' : 'degraded',
+    overall: health.every(h => h.status === 'online') ? 'healthy' :
+             health.some(h => h.status === 'offline') ? 'unhealthy' : 'degraded',
     components: health,
     timestamp: new Date(),
   });
@@ -169,26 +155,27 @@ router.get('/health', authMiddleware, adminMiddleware, (req: Request, res: Respo
 router.get('/metrics', authMiddleware, adminMiddleware, (req: Request, res: Response) => {
   const metrics = timeGovernor.getMetrics();
   const health = timeGovernor.getSystemHealth();
+  const riskState = riskEngine.getState();
+  const regimeState = regimeDetector.getRegimeState();
+  const insights = learningEngine.getRecentInsights(10);
 
   res.json({
     governor: metrics,
     learning: {
-      totalEventsProcessed: learningEngine.getStats().totalEventsProcessed,
-      patternsIdentified: learningEngine.getStats().patternsIdentified,
-      insightsGenerated: learningEngine.getStats().insightsGenerated,
+      recentInsightsCount: insights.length,
     },
     risk: {
-      currentRiskLevel: riskEngine.getCurrentRiskLevel(),
-      emergencyBrakeTriggered: riskEngine.isEmergencyBrakeActive(),
-      alertsToday: riskEngine.getAlertsCount(),
+      emergencyBrakeActive: riskState.emergencyBrakeActive,
+      dailyPnL: riskState.dailyPnL,
+      openPositions: riskState.openPositions,
     },
     regime: {
-      current: regimeDetector.getRegimeState().current,
-      confidence: regimeDetector.getRegimeState().confidence,
-      duration: regimeDetector.getRegimeState().duration,
+      current: regimeState.current,
+      confidence: regimeState.confidence,
+      duration: regimeState.duration,
     },
     components: health.length,
-    healthyComponents: health.filter(h => h.status === 'healthy').length,
+    healthyComponents: health.filter(h => h.status === 'online').length,
     timestamp: new Date(),
   });
 });
@@ -200,7 +187,7 @@ router.get('/metrics', authMiddleware, adminMiddleware, (req: Request, res: Resp
 router.get('/activity', authMiddleware, adminMiddleware, (req: Request, res: Response) => {
   const { limit = '100' } = req.query;
 
-  // Mock activity log
+  // Mock activity log - in production, fetch from database
   const activity = [
     {
       id: 'act_1',
@@ -215,20 +202,6 @@ router.get('/activity', authMiddleware, adminMiddleware, (req: Request, res: Res
       action: 'pattern_discovered',
       description: 'New market pattern identified in EURUSD',
       timestamp: new Date(Date.now() - 7200000),
-    },
-    {
-      id: 'act_3',
-      type: 'risk',
-      action: 'alert_triggered',
-      description: 'Drawdown warning on Strategy Alpha',
-      timestamp: new Date(Date.now() - 10800000),
-    },
-    {
-      id: 'act_4',
-      type: 'bot',
-      action: 'bot_absorbed',
-      description: 'TrendMaster v2.0 absorbed into TIME core',
-      timestamp: new Date(Date.now() - 14400000),
     },
   ].slice(0, parseInt(limit as string));
 
@@ -253,17 +226,7 @@ router.get('/config', authMiddleware, adminMiddleware, (req: Request, res: Respo
       autoApproveThreshold: 0.95,
       proposalRetentionDays: 30,
     },
-    risk: {
-      maxDailyLossPercent: 5,
-      maxDrawdownPercent: 15,
-      emergencyBrakeThreshold: 10,
-      positionSizeLimit: 10,
-    },
-    learning: {
-      learningRate: 0.01,
-      minConfidenceThreshold: 0.7,
-      patternMinOccurrences: 5,
-    },
+    risk: riskEngine.getLimits(),
     notifications: {
       inactivityWarningDays: [3, 4, 5],
       criticalAlertChannels: ['email', 'sms'],
@@ -325,7 +288,7 @@ router.post('/emergency/release', authMiddleware, ownerMiddleware, (req: Request
     });
   }
 
-  riskEngine.releaseEmergencyBrake();
+  riskEngine.releaseEmergencyBrake('Manual release by owner');
 
   res.json({
     success: true,
@@ -341,8 +304,6 @@ router.post('/emergency/release', authMiddleware, ownerMiddleware, (req: Request
  */
 router.post('/emergency/pause-all', authMiddleware, adminMiddleware, (req: Request, res: Response) => {
   const user = (req as any).user;
-
-  // In production, pause all bots and strategies
 
   res.json({
     success: true,
@@ -368,9 +329,6 @@ router.post('/announce', authMiddleware, adminMiddleware, (req: Request, res: Re
     return res.status(400).json({ error: 'Title and message required' });
   }
 
-  // Broadcast via WebSocket
-  // In production, also store in database and send notifications
-
   res.json({
     success: true,
     announcement: {
@@ -384,26 +342,17 @@ router.post('/announce', authMiddleware, adminMiddleware, (req: Request, res: Re
   });
 });
 
-// ============================================================
-// AUDIT LOG
-// ============================================================
-
 /**
  * GET /admin/audit
  * Get audit log entries
  */
 router.get('/audit', authMiddleware, adminMiddleware, (req: Request, res: Response) => {
   const {
-    component,
-    action,
-    userId,
-    startDate,
-    endDate,
     page = '1',
     limit = '50',
   } = req.query;
 
-  // Mock audit entries
+  // Mock audit entries - in production, fetch from database
   const auditEntries = [
     {
       id: 'audit_1',
@@ -412,15 +361,6 @@ router.get('/audit', authMiddleware, adminMiddleware, (req: Request, res: Respon
       component: 'EvolutionController',
       action: 'mode_changed',
       details: { from: 'controlled', to: 'autonomous' },
-      success: true,
-    },
-    {
-      id: 'audit_2',
-      timestamp: new Date(Date.now() - 7200000),
-      userId: 'user_1',
-      component: 'RiskEngine',
-      action: 'config_updated',
-      details: { maxDailyLoss: 1000 },
       success: true,
     },
   ];

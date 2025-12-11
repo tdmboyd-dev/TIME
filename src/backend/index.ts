@@ -55,7 +55,7 @@ import { githubBotFetcher } from './fetcher/github_bot_fetcher';
 import { opportunityScout } from './scout/opportunity_scout';
 
 // API Routes
-import { createRouter } from './routes';
+import router from './routes';
 
 const log = loggers.api;
 
@@ -93,11 +93,9 @@ async function initializeTIME(): Promise<void> {
   timeGovernor.registerComponent(consentManager);
   timeGovernor.registerComponent(notificationService);
 
-  // Register Never-Before-Seen Inventions
-  timeGovernor.registerComponent(ensembleHarmonyDetector);
-  timeGovernor.registerComponent(signalConflictResolver);
-  timeGovernor.registerComponent(learningVelocityTracker);
-  timeGovernor.registerComponent(stockWatchers);
+  // Never-Before-Seen Inventions are standalone systems (not TIMEComponents)
+  // They operate independently and integrate via events
+  log.info('Never-Before-Seen Inventions loaded: Harmony Detector, Conflict Resolver, Velocity Tracker, Stock Watchers');
 
   // Initialize Bot Absorption Systems
   await botDropZone.initialize({
@@ -112,8 +110,14 @@ async function initializeTIME(): Promise<void> {
   // Connect Bot Drop Zone to Bot Ingestion
   botDropZone.on('bot_absorbed', async (data) => {
     log.info(`Bot absorbed from drop zone: ${data.botId}`);
-    // Record learning velocity
-    learningVelocityTracker.recordBotAbsorption(data.botId, true, data.learnings?.length || 0);
+    // Record learning event
+    learningVelocityTracker.recordLearning({
+      type: 'bot_absorbed',
+      source: 'BotDropZone',
+      description: `Absorbed bot ${data.botId}`,
+      impact: 0.8,
+      metadata: { botId: data.botId, learnings: data.learnings?.length || 0 },
+    });
     // Emit to real-time clients
     if (eventHub) {
       eventHub.broadcastAnnouncement(
@@ -169,8 +173,7 @@ function createApp(): express.Application {
   app.use(express.urlencoded({ extended: true }));
 
   // Mount API Routes
-  const apiRouter = createRouter();
-  app.use('/api/v1', apiRouter);
+  app.use('/api/v1', router);
 
   // Health check endpoint
   app.get('/health', (req, res) => {
@@ -601,7 +604,7 @@ async function main(): Promise<void> {
     // ========================================================================
 
     app.get('/api/v1/velocity/metrics', (req, res) => {
-      res.json(learningVelocityTracker.getVelocityMetrics());
+      res.json(learningVelocityTracker.getVelocity());
     });
 
     app.get('/api/v1/velocity/milestones', (req, res) => {
@@ -609,7 +612,12 @@ async function main(): Promise<void> {
     });
 
     app.get('/api/v1/velocity/wisdom', (req, res) => {
-      res.json({ wisdomScore: learningVelocityTracker.getWisdomScore() });
+      const velocity = learningVelocityTracker.getVelocity();
+      res.json({ wisdomScore: velocity.wisdomScore });
+    });
+
+    app.get('/api/v1/velocity/dashboard', (req, res) => {
+      res.json(learningVelocityTracker.getDashboardSummary());
     });
 
     // ========================================================================
@@ -617,13 +625,36 @@ async function main(): Promise<void> {
     // ========================================================================
 
     app.get('/api/v1/harmony/pulse', (req, res) => {
-      res.json(ensembleHarmonyDetector.getEnsemblePulse());
+      res.json(ensembleHarmonyDetector.getAllPulses());
     });
 
-    app.post('/api/v1/harmony/analyze', (req, res) => {
-      const { symbol, signals } = req.body;
-      const harmony = ensembleHarmonyDetector.analyzeHarmony(symbol, signals);
-      res.json(harmony);
+    app.get('/api/v1/harmony/health', (req, res) => {
+      res.json(ensembleHarmonyDetector.getEnsembleHealth());
+    });
+
+    app.get('/api/v1/harmony/states', (req, res) => {
+      res.json(ensembleHarmonyDetector.getAllHarmonyStates());
+    });
+
+    app.get('/api/v1/harmony/dissonance', (req, res) => {
+      const limit = parseInt(req.query.limit as string) || 50;
+      res.json(ensembleHarmonyDetector.getDissonanceHistory(limit));
+    });
+
+    app.get('/api/v1/harmony/resonance', (req, res) => {
+      const limit = parseInt(req.query.limit as string) || 50;
+      res.json(ensembleHarmonyDetector.getResonancePatterns(limit));
+    });
+
+    app.post('/api/v1/harmony/ingest', (req, res) => {
+      const { signals } = req.body;
+      if (Array.isArray(signals)) {
+        ensembleHarmonyDetector.ingestSignals(signals);
+        res.json({ success: true, ingested: signals.length });
+      } else {
+        ensembleHarmonyDetector.ingestSignal(signals);
+        res.json({ success: true, ingested: 1 });
+      }
     });
 
     // Start server

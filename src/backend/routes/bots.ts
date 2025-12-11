@@ -24,7 +24,6 @@ const router = Router();
  * List all available bots (public library + user's bots)
  */
 router.get('/', authMiddleware, (req: Request, res: Response) => {
-  const user = (req as any).user;
   const {
     source,
     status,
@@ -52,8 +51,7 @@ router.get('/', authMiddleware, (req: Request, res: Response) => {
     const searchLower = (search as string).toLowerCase();
     filtered = filtered.filter(b =>
       b.name.toLowerCase().includes(searchLower) ||
-      b.description?.toLowerCase().includes(searchLower) ||
-      b.tags?.some(t => t.toLowerCase().includes(searchLower))
+      b.description?.toLowerCase().includes(searchLower)
     );
   }
 
@@ -111,7 +109,6 @@ router.get('/', authMiddleware, (req: Request, res: Response) => {
       source: b.source,
       status: b.status,
       rating: b.rating,
-      tags: b.tags,
       performance: {
         winRate: b.performance?.winRate,
         profitFactor: b.performance?.profitFactor,
@@ -120,7 +117,7 @@ router.get('/', authMiddleware, (req: Request, res: Response) => {
       },
       fingerprint: b.fingerprint ? {
         strategyType: b.fingerprint.strategyType,
-        tradingStyle: b.fingerprint.tradingStyle,
+        riskProfile: b.fingerprint.riskProfile,
       } : null,
     })),
   });
@@ -154,24 +151,14 @@ router.get('/:botId', authMiddleware, (req: Request, res: Response) => {
       description: bot.description,
       source: bot.source,
       sourceUrl: bot.sourceUrl,
-      author: bot.author,
-      version: bot.version,
       status: bot.status,
       rating: bot.rating,
-      downloads: bot.downloads,
       createdAt: bot.createdAt,
       updatedAt: bot.updatedAt,
-      lastActiveAt: bot.lastActiveAt,
-      license: bot.license,
-      safetyScore: bot.safetyScore,
-      isAbsorbed: bot.isAbsorbed,
-      tags: bot.tags,
-      category: bot.category,
-      assetClasses: bot.assetClasses,
-      symbols: bot.symbols,
-      parameters: bot.parameters,
+      absorbedAt: bot.absorbedAt,
       performance: bot.performance,
       fingerprint: bot.fingerprint,
+      config: bot.config,
     },
   });
 });
@@ -211,26 +198,10 @@ router.get('/:botId/performance', authMiddleware, (req: Request, res: Response) 
     return res.status(404).json({ error: 'Bot not found' });
   }
 
-  // In production, filter by period
   res.json({
     botId,
     period,
     performance: bot.performance,
-    regimePerformance: [
-      { regime: 'trending', winRate: 72, profitFactor: 2.1, trades: 45 },
-      { regime: 'ranging', winRate: 58, profitFactor: 1.4, trades: 32 },
-      { regime: 'volatile', winRate: 65, profitFactor: 1.8, trades: 28 },
-    ],
-    monthlyReturns: [
-      { month: '2025-01', return: 5.2 },
-      { month: '2025-02', return: 3.8 },
-      { month: '2025-03', return: -1.2 },
-    ],
-    drawdownHistory: [
-      { date: '2025-01-15', drawdown: 3.2 },
-      { date: '2025-02-10', drawdown: 5.1 },
-      { date: '2025-03-05', drawdown: 2.8 },
-    ],
   });
 });
 
@@ -242,7 +213,7 @@ router.get('/:botId/signals', authMiddleware, (req: Request, res: Response) => {
   const { botId } = req.params;
   const { limit = '50' } = req.query;
 
-  // Mock signals
+  // Mock signals - in production, fetch from database
   const signals = [
     {
       id: 'sig_1',
@@ -281,21 +252,20 @@ router.get('/:botId/signals', authMiddleware, (req: Request, res: Response) => {
  */
 router.post('/upload', authMiddleware, async (req: Request, res: Response) => {
   const user = (req as any).user;
-  const { name, description, code, config, source = 'user_uploaded' } = req.body;
+  const { name, description, code, config, source = 'user_upload' } = req.body;
 
   if (!name || !code) {
     return res.status(400).json({ error: 'Name and code are required' });
   }
 
   try {
-    const result = await botIngestion.ingestBot({
+    const result = await botIngestion.ingest({
       name,
       description,
       code,
       config,
-      source,
+      source: source as any,
       sourceUrl: undefined,
-      author: user.name,
     });
 
     res.status(201).json({
@@ -303,7 +273,7 @@ router.post('/upload', authMiddleware, async (req: Request, res: Response) => {
       message: 'Bot uploaded and queued for analysis',
       bot: {
         id: result.botId,
-        status: 'analyzing',
+        status: 'pending_review',
       },
     });
   } catch (error) {
@@ -326,7 +296,7 @@ router.put('/:botId', authMiddleware, (req: Request, res: Response) => {
   }
 
   // Only allow certain fields to be updated
-  const allowedFields = ['name', 'description', 'parameters', 'tags'];
+  const allowedFields = ['name', 'description'];
   const filteredUpdates: any = {};
 
   for (const field of allowedFields) {
@@ -376,7 +346,7 @@ router.post('/:botId/deactivate', authMiddleware, async (req: Request, res: Resp
   const { botId } = req.params;
 
   try {
-    await botManager.deactivateBot(botId);
+    await botManager.pauseBot(botId);
 
     res.json({
       success: true,
@@ -393,7 +363,6 @@ router.post('/:botId/deactivate', authMiddleware, async (req: Request, res: Resp
  */
 router.delete('/:botId', authMiddleware, (req: Request, res: Response) => {
   const { botId } = req.params;
-  const user = (req as any).user;
   const bot = botManager.getBot(botId);
 
   if (!bot) {
@@ -401,13 +370,13 @@ router.delete('/:botId', authMiddleware, (req: Request, res: Response) => {
   }
 
   // Only allow deletion of user-uploaded bots
-  if (bot.source !== 'user_uploaded') {
+  if (bot.source !== 'user_upload') {
     return res.status(403).json({
       error: 'Cannot delete platform bots',
     });
   }
 
-  // In production, check ownership and delete from database
+  // In production, delete from database
   res.json({
     success: true,
     message: 'Bot deleted',
@@ -426,8 +395,6 @@ router.post('/admin/absorb/:botId', authMiddleware, adminMiddleware, async (req:
   const { botId } = req.params;
 
   try {
-    // Mark bot as absorbed
-    // In production, this triggers deep analysis and integration
     res.json({
       success: true,
       message: `Bot ${botId} absorbed into TIME core`,
@@ -445,7 +412,6 @@ router.post('/admin/absorb/:botId', authMiddleware, adminMiddleware, async (req:
 router.post('/admin/research', authMiddleware, adminMiddleware, async (req: Request, res: Response) => {
   const { sources, minRating = 4.0, maxResults = 100 } = req.body;
 
-  // This would trigger the Bot Research Pipeline
   res.json({
     success: true,
     message: 'Bot research initiated',
@@ -464,7 +430,7 @@ router.post('/admin/research', authMiddleware, adminMiddleware, async (req: Requ
  */
 router.get('/admin/pending', authMiddleware, adminMiddleware, (req: Request, res: Response) => {
   const allBots = botManager.getAllBots();
-  const pending = allBots.filter(b => b.status === 'pending' || b.status === 'analyzing');
+  const pending = allBots.filter(b => b.status === 'pending_review' || b.status === 'testing');
 
   res.json({
     total: pending.length,

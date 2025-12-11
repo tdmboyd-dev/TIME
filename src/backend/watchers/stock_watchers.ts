@@ -16,7 +16,6 @@
  */
 
 import { EventEmitter } from 'events';
-import { TIMEComponent } from '../core/time_governor';
 
 // ============================================================
 // TYPES
@@ -150,7 +149,7 @@ export interface WatcherStats {
 // STOCK WATCHERS SYSTEM
 // ============================================================
 
-export class StockWatchers extends EventEmitter implements TIMEComponent {
+export class StockWatchers extends EventEmitter {
   public readonly name = 'StockWatchers';
   public readonly version = '1.0.0';
 

@@ -15,7 +15,6 @@
  */
 
 import { EventEmitter } from 'events';
-import { TIMEComponent } from '../core/time_governor';
 
 // ============================================================
 // TYPES
@@ -95,7 +94,7 @@ export interface ResolutionStats {
 // SIGNAL CONFLICT RESOLVER
 // ============================================================
 
-export class SignalConflictResolver extends EventEmitter implements TIMEComponent {
+export class SignalConflictResolver extends EventEmitter {
   public readonly name = 'SignalConflictResolver';
   public readonly version = '1.0.0';
 

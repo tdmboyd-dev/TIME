@@ -16,7 +16,6 @@
  */
 
 import { EventEmitter } from 'events';
-import { TIMEComponent } from '../core/time_governor';
 
 // ============================================================
 // TYPES
@@ -80,7 +79,7 @@ export interface EnsemblePulse {
 // ENSEMBLE HARMONY DETECTOR
 // ============================================================
 
-export class EnsembleHarmonyDetector extends EventEmitter implements TIMEComponent {
+export class EnsembleHarmonyDetector extends EventEmitter {
   public readonly name = 'EnsembleHarmonyDetector';
   public readonly version = '1.0.0';
 

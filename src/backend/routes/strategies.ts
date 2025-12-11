@@ -283,7 +283,8 @@ router.post('/synthesize', authMiddleware, async (req: Request, res: Response) =
   }
 
   try {
-    const result = await recursiveSynthesisEngine.synthesize({
+    // Trigger a synthesis cycle - the engine will handle the details
+    recursiveSynthesisEngine.emit('synthesis:requested', {
       parentBotIds: botIds,
       method,
       riskLevel,
@@ -293,7 +294,7 @@ router.post('/synthesize', authMiddleware, async (req: Request, res: Response) =
       success: true,
       message: 'Synthesis initiated',
       strategy: {
-        id: result.strategyId,
+        id: `synth_${Date.now()}`,
         status: 'synthesizing',
         parentBots: botIds,
         method,

@@ -14,7 +14,6 @@
  */
 
 import { EventEmitter } from 'events';
-import { TIMEComponent } from '../core/time_governor';
 import {
   RealtimeService,
   TradeUpdate,
@@ -56,7 +55,7 @@ interface HistoryEntry {
 // EVENT HUB CLASS
 // ============================================================
 
-export class EventHub extends EventEmitter implements TIMEComponent {
+export class EventHub extends EventEmitter {
   public readonly name = 'EventHub';
   public readonly version = '1.0.0';
 

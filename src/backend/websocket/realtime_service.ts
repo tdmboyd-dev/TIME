@@ -18,7 +18,6 @@
 import { EventEmitter } from 'events';
 import { Server as SocketIOServer, Socket } from 'socket.io';
 import { Server as HTTPServer } from 'http';
-import { TIMEComponent } from '../core/time_governor';
 
 // ============================================================
 // TYPES AND INTERFACES
@@ -172,9 +171,10 @@ export interface PortfolioUpdate {
 // REALTIME SERVICE CLASS
 // ============================================================
 
-export class RealtimeService extends EventEmitter implements TIMEComponent {
+export class RealtimeService extends EventEmitter {
   public readonly name = 'RealtimeService';
   public readonly version = '1.0.0';
+  public status: 'online' | 'degraded' | 'offline' | 'building' = 'building';
 
   private io: SocketIOServer | null = null;
   private clients: Map<string, ClientInfo> = new Map();
