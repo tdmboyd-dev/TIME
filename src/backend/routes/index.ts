@@ -15,6 +15,7 @@ import assetsRoutes from './assets';
 import marketDataRoutes from './market_data';
 import defiMasteryRoutes from './defi_mastery';
 import riskProfileRoutes from './risk_profile';
+import fetcherRoutes from './fetcher';
 
 const router = Router();
 
@@ -29,6 +30,7 @@ router.use('/assets', assetsRoutes);
 router.use('/market', marketDataRoutes);
 router.use('/defi', defiMasteryRoutes);
 router.use('/risk', riskProfileRoutes);
+router.use('/fetcher', fetcherRoutes);
 
 export default router;
 

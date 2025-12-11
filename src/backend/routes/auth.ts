@@ -46,6 +46,25 @@ const users: Map<string, {
 // Mock sessions (replace with Redis in production)
 const sessions: Map<string, { userId: string; expiresAt: Date }> = new Map();
 
+// Create default owner account for development
+const defaultOwner = {
+  id: 'owner_timebeunus',
+  email: 'admin@time.local',
+  passwordHash: 'hash_admin123',
+  name: 'Timebeunus Boyd',
+  role: 'owner' as const,
+  createdAt: new Date(),
+  consentComplete: true,
+};
+users.set(defaultOwner.id, defaultOwner);
+
+// Create permanent dev token for default owner
+const devToken = 'dev_token_time_admin_2024';
+sessions.set(devToken, {
+  userId: defaultOwner.id,
+  expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year
+});
+
 // ============================================================
 // MIDDLEWARE
 // ============================================================

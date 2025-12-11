@@ -34,7 +34,47 @@ import {
 const router = Router();
 
 // ============================================================
-// EVOLUTION CONTROL
+// PUBLIC STATUS ENDPOINTS (No auth required for dashboard)
+// ============================================================
+
+/**
+ * GET /admin/status
+ * Get basic system status (public endpoint for dashboard)
+ */
+router.get('/status', (req: Request, res: Response) => {
+  const state = timeGovernor.getEvolutionState();
+  const health = timeGovernor.getSystemHealth();
+
+  res.json({
+    evolution: {
+      mode: state.mode,
+      lastModeChange: state.lastModeChange,
+    },
+    health: health.every(h => h.status === 'online') ? 'healthy' :
+            health.some(h => h.status === 'offline') ? 'unhealthy' : 'degraded',
+    components: health.length,
+    activeComponents: health.filter(h => h.status === 'online').length,
+    timestamp: new Date(),
+  });
+});
+
+/**
+ * GET /admin/evolution/status
+ * Get evolution mode status (public endpoint for dashboard)
+ */
+router.get('/evolution/status', (req: Request, res: Response) => {
+  const state = timeGovernor.getEvolutionState();
+
+  res.json({
+    mode: state.mode,
+    lastModeChange: state.lastModeChange,
+    changedBy: state.changedBy,
+    reason: state.reason,
+  });
+});
+
+// ============================================================
+// EVOLUTION CONTROL (Requires Auth)
 // ============================================================
 
 /**
