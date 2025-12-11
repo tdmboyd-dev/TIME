@@ -41,6 +41,22 @@ import { notificationService } from './notifications/notification_service';
 import { realtimeService, RealtimeService } from './websocket/realtime_service';
 import { EventHub, createEventHub } from './websocket/event_hub';
 
+// Never-Before-Seen Inventions
+import { ensembleHarmonyDetector } from './engines/ensemble_harmony_detector';
+import { signalConflictResolver } from './engines/signal_conflict_resolver';
+import { learningVelocityTracker } from './engines/learning_velocity_tracker';
+import { stockWatchers } from './watchers/stock_watchers';
+
+// Bot Absorption Systems
+import { botDropZone } from './dropzone/bot_dropzone';
+import { githubBotFetcher } from './fetcher/github_bot_fetcher';
+
+// Opportunity Scout (Legitimate Earnings System)
+import { opportunityScout } from './scout/opportunity_scout';
+
+// API Routes
+import { createRouter } from './routes';
+
 const log = loggers.api;
 
 // Global event hub instance
@@ -77,6 +93,51 @@ async function initializeTIME(): Promise<void> {
   timeGovernor.registerComponent(consentManager);
   timeGovernor.registerComponent(notificationService);
 
+  // Register Never-Before-Seen Inventions
+  timeGovernor.registerComponent(ensembleHarmonyDetector);
+  timeGovernor.registerComponent(signalConflictResolver);
+  timeGovernor.registerComponent(learningVelocityTracker);
+  timeGovernor.registerComponent(stockWatchers);
+
+  // Initialize Bot Absorption Systems
+  await botDropZone.initialize({
+    watchFolder: './dropzone/incoming',
+    processedFolder: './dropzone/processed',
+    rejectedFolder: './dropzone/rejected',
+    reportsFolder: './dropzone/reports',
+    minRating: 4.0,
+    autoAbsorb: false, // Require manual approval
+  });
+
+  // Connect Bot Drop Zone to Bot Ingestion
+  botDropZone.on('bot_absorbed', async (data) => {
+    log.info(`Bot absorbed from drop zone: ${data.botId}`);
+    // Record learning velocity
+    learningVelocityTracker.recordBotAbsorption(data.botId, true, data.learnings?.length || 0);
+    // Emit to real-time clients
+    if (eventHub) {
+      eventHub.broadcastAnnouncement(
+        'New Bot Absorbed',
+        `TIME has absorbed a new bot with rating ${data.rating.overall}/5.0`,
+        'medium'
+      );
+    }
+  });
+
+  botDropZone.on('approval_required', (data) => {
+    log.info(`Bot pending approval: ${data.file.filename} (${data.report.rating.overall}/5.0)`);
+    notificationService.emit('notification', {
+      type: 'bot_approval_required',
+      title: 'Bot Pending Approval',
+      message: `${data.file.filename} rated ${data.report.rating.overall}/5.0 - awaiting your approval`,
+      priority: 'high',
+    });
+  });
+
+  // Start watching the drop zone
+  botDropZone.startWatching();
+  log.info('Bot Drop Zone watching for new bots...');
+
   // Initialize TIME Governor (this initializes all components)
   await timeGovernor.initialize();
 
@@ -106,6 +167,10 @@ function createApp(): express.Application {
   // Body parsing
   app.use(express.json({ limit: '10mb' }));
   app.use(express.urlencoded({ extended: true }));
+
+  // Mount API Routes
+  const apiRouter = createRouter();
+  app.use('/api/v1', apiRouter);
 
   // Health check endpoint
   app.get('/health', (req, res) => {
@@ -323,6 +388,242 @@ async function main(): Promise<void> {
       eventHub?.broadcastAnnouncement(title, message, priority || 'medium');
 
       res.json({ success: true, message: 'Announcement broadcast' });
+    });
+
+    // ========================================================================
+    // Bot Drop Zone Endpoints
+    // ========================================================================
+
+    app.get('/api/v1/dropzone/status', (req, res) => {
+      res.json(botDropZone.getStatus());
+    });
+
+    app.get('/api/v1/dropzone/pending', (req, res) => {
+      res.json({
+        files: botDropZone.getPendingFiles(),
+      });
+    });
+
+    app.get('/api/v1/dropzone/processed', (req, res) => {
+      res.json({
+        reports: botDropZone.getProcessedReports(),
+      });
+    });
+
+    app.post('/api/v1/dropzone/approve/:fileId', async (req, res) => {
+      try {
+        const report = await botDropZone.approveAbsorption(req.params.fileId);
+        if (report) {
+          res.json({ success: true, report });
+        } else {
+          res.status(404).json({ error: 'File not found or already processed' });
+        }
+      } catch (error) {
+        res.status(500).json({ error: 'Approval failed' });
+      }
+    });
+
+    app.post('/api/v1/dropzone/reject/:fileId', async (req, res) => {
+      try {
+        await botDropZone.rejectAbsorption(req.params.fileId, req.body.reason || 'Manual rejection');
+        res.json({ success: true });
+      } catch (error) {
+        res.status(500).json({ error: 'Rejection failed' });
+      }
+    });
+
+    // ========================================================================
+    // GitHub Bot Fetcher Endpoints
+    // ========================================================================
+
+    app.post('/api/v1/fetcher/configure', (req, res) => {
+      const { githubToken, minRating, autoAbsorb } = req.body;
+
+      githubBotFetcher.configure({
+        githubToken,
+        minRating: minRating || 4.0,
+        autoAbsorb: autoAbsorb || false,
+        downloadPath: './dropzone/incoming', // Downloads go to drop zone
+      });
+
+      res.json({ success: true, message: 'GitHub Bot Fetcher configured' });
+    });
+
+    app.post('/api/v1/fetcher/search', async (req, res) => {
+      try {
+        const candidates = await githubBotFetcher.searchForBots(req.body.query);
+        res.json({
+          success: true,
+          total: candidates.length,
+          candidates: candidates.map(c => ({
+            id: c.id,
+            name: c.repo.name,
+            fullName: c.repo.fullName,
+            stars: c.repo.stars,
+            rating: c.rating,
+            botType: c.botType,
+            status: c.status,
+            url: c.repo.url,
+          })),
+        });
+      } catch (error: any) {
+        res.status(500).json({ error: error.message });
+      }
+    });
+
+    app.get('/api/v1/fetcher/candidates', (req, res) => {
+      const status = req.query.status as string | undefined;
+      const candidates = githubBotFetcher.getCandidates(status as any);
+      res.json({
+        total: candidates.length,
+        candidates: candidates.map(c => ({
+          id: c.id,
+          name: c.repo.name,
+          fullName: c.repo.fullName,
+          stars: c.repo.stars,
+          rating: c.rating,
+          botType: c.botType,
+          status: c.status,
+          url: c.repo.url,
+        })),
+      });
+    });
+
+    app.post('/api/v1/fetcher/download/:candidateId', async (req, res) => {
+      try {
+        const files = await githubBotFetcher.downloadBot(req.params.candidateId);
+        res.json({ success: true, files });
+      } catch (error: any) {
+        res.status(500).json({ error: error.message });
+      }
+    });
+
+    app.post('/api/v1/fetcher/download-all', async (req, res) => {
+      try {
+        const results = await githubBotFetcher.downloadAllQualified();
+        res.json({
+          success: true,
+          downloaded: results.size,
+          results: Object.fromEntries(results),
+        });
+      } catch (error: any) {
+        res.status(500).json({ error: error.message });
+      }
+    });
+
+    app.get('/api/v1/fetcher/stats', (req, res) => {
+      res.json(githubBotFetcher.getStats());
+    });
+
+    // ========================================================================
+    // Opportunity Scout Endpoints
+    // ========================================================================
+
+    app.post('/api/v1/scout/setup', async (req, res) => {
+      try {
+        const config = await opportunityScout.setupUser(req.body.userId, req.body.config || {});
+        res.json({ success: true, config });
+      } catch (error: any) {
+        res.status(500).json({ error: error.message });
+      }
+    });
+
+    app.get('/api/v1/scout/platforms', (req, res) => {
+      res.json(opportunityScout.getSupportedPlatforms());
+    });
+
+    app.post('/api/v1/scout/connect', async (req, res) => {
+      try {
+        const { userId, platform, credentials } = req.body;
+        const account = await opportunityScout.connectAccount(userId, platform, credentials);
+        res.json({ success: true, account });
+      } catch (error: any) {
+        res.status(500).json({ error: error.message });
+      }
+    });
+
+    app.get('/api/v1/scout/accounts/:userId', (req, res) => {
+      const accounts = opportunityScout.getConnectedAccounts(req.params.userId);
+      res.json({ accounts });
+    });
+
+    app.post('/api/v1/scout/start/:userId', (req, res) => {
+      try {
+        opportunityScout.startScanning(req.params.userId);
+        res.json({ success: true, message: 'Scanning started' });
+      } catch (error: any) {
+        res.status(500).json({ error: error.message });
+      }
+    });
+
+    app.post('/api/v1/scout/stop/:userId', (req, res) => {
+      opportunityScout.stopScanning(req.params.userId);
+      res.json({ success: true, message: 'Scanning stopped' });
+    });
+
+    app.get('/api/v1/scout/opportunities/:userId', (req, res) => {
+      const opportunities = opportunityScout.getOpportunities(req.params.userId);
+      res.json({ total: opportunities.length, opportunities });
+    });
+
+    app.post('/api/v1/scout/authorize', async (req, res) => {
+      try {
+        const { userId, opportunityId, scopes } = req.body;
+        const auth = await opportunityScout.authorizeOpportunity(userId, opportunityId, scopes);
+        res.json({ success: true, authorization: auth });
+      } catch (error: any) {
+        res.status(500).json({ error: error.message });
+      }
+    });
+
+    app.post('/api/v1/scout/collect', async (req, res) => {
+      try {
+        const { userId, opportunityId } = req.body;
+        const earnings = await opportunityScout.collectOpportunity(userId, opportunityId);
+        res.json({ success: true, earnings });
+      } catch (error: any) {
+        res.status(500).json({ error: error.message });
+      }
+    });
+
+    app.get('/api/v1/scout/report/:userId', (req, res) => {
+      const period = (req.query.period as string) || 'monthly';
+      const report = opportunityScout.getEarningsReport(req.params.userId, period as any);
+      res.json(report);
+    });
+
+    app.get('/api/v1/scout/stats/:userId', (req, res) => {
+      res.json(opportunityScout.getStats(req.params.userId));
+    });
+
+    // ========================================================================
+    // Learning Velocity Endpoints
+    // ========================================================================
+
+    app.get('/api/v1/velocity/metrics', (req, res) => {
+      res.json(learningVelocityTracker.getVelocityMetrics());
+    });
+
+    app.get('/api/v1/velocity/milestones', (req, res) => {
+      res.json(learningVelocityTracker.getMilestones());
+    });
+
+    app.get('/api/v1/velocity/wisdom', (req, res) => {
+      res.json({ wisdomScore: learningVelocityTracker.getWisdomScore() });
+    });
+
+    // ========================================================================
+    // Ensemble Harmony Endpoints
+    // ========================================================================
+
+    app.get('/api/v1/harmony/pulse', (req, res) => {
+      res.json(ensembleHarmonyDetector.getEnsemblePulse());
+    });
+
+    app.post('/api/v1/harmony/analyze', (req, res) => {
+      const { symbol, signals } = req.body;
+      const harmony = ensembleHarmonyDetector.analyzeHarmony(symbol, signals);
+      res.json(harmony);
     });
 
     // Start server

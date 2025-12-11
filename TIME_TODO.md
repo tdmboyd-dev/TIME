@@ -127,6 +127,35 @@
 
 ---
 
+## Phase 8.5: Bot Absorption & Opportunity Systems ✅ COMPLETE
+
+### Bot Drop Zone
+- ✅ `src/backend/dropzone/bot_dropzone.ts` — File-based bot absorption system
+- ✅ Automatic file detection and scanning
+- ✅ Safety scanning (malware, suspicious code detection)
+- ✅ Bot analysis (strategy type, indicators, risk management)
+- ✅ Quality rating system (4.0+ required for absorption)
+- ✅ Manual approval workflow
+- ✅ Automatic absorption pipeline
+
+### GitHub Bot Fetcher
+- ✅ `src/backend/fetcher/github_bot_fetcher.ts` — GitHub API-based bot discovery
+- ✅ Search for trading bots with 4.0+ rating (50+ stars)
+- ✅ Support for MQL4, MQL5, Python, JavaScript, PineScript
+- ✅ License compatibility checking
+- ✅ Automatic download to Drop Zone
+- ✅ Rate limit handling
+
+### Opportunity Scout (Legitimate Earnings System)
+- ✅ `src/backend/scout/opportunity_scout.ts` — User-authorized earnings automation
+- ✅ Support for dividends, cashback, staking, affiliate, freelance alerts
+- ✅ API-based integration (not scraping)
+- ✅ User authorization workflow
+- ✅ Earnings reports and tracking
+- ✅ Reinvestment rules
+
+---
+
 ## Phase 9: Integration & Testing 🚧 IN PROGRESS
 
 - 🟡 Unit tests for all engines
@@ -175,7 +204,7 @@
 
 ## Current File Count
 
-### Backend (28 files)
+### Backend (35+ files)
 ```
 src/backend/
 ├── index.ts
@@ -220,6 +249,12 @@ src/backend/
 ├── simulator/training_simulator.ts
 ├── stories/trade_story_generator.ts
 ├── watchers/stock_watchers.ts
+├── dropzone/
+│   └── bot_dropzone.ts
+├── fetcher/
+│   └── github_bot_fetcher.ts
+├── scout/
+│   └── opportunity_scout.ts
 └── websocket/
     ├── index.ts
     ├── realtime_service.ts

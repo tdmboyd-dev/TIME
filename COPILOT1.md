@@ -99,6 +99,140 @@ All changes, additions, patches, inventions, and evolution steps are logged here
 
 ---
 
+## [2025-12-11] Bot Absorption & Opportunity Systems
+
+### Created
+
+**Bot Drop Zone:**
+- `src/backend/dropzone/bot_dropzone.ts` — File-based bot absorption system
+
+**GitHub Bot Fetcher:**
+- `src/backend/fetcher/github_bot_fetcher.ts` — GitHub API-based bot discovery
+
+**Opportunity Scout:**
+- `src/backend/scout/opportunity_scout.ts` — Legitimate automated earnings system
+
+---
+
+### Bot Drop Zone 📥
+
+**Purpose:** Drop bot files into a folder and TIME automatically analyzes, rates, and absorbs them.
+
+**How It Works:**
+1. Drop any bot file (.mq4, .mq5, .py, .js, .ts, .pine) into `./dropzone/incoming`
+2. TIME automatically detects the file
+3. Safety scan runs (detects malware, suspicious code, obfuscation)
+4. Bot is analyzed (strategy type, indicators, risk management)
+5. Rating is calculated (0-5 stars)
+6. If rating >= 4.0, bot is queued for approval (or auto-absorbed if enabled)
+7. Absorbed bots become part of TIME's intelligence
+
+**Supported File Types:**
+- MQL4 (.mq4)
+- MQL5 (.mq5)
+- Python (.py)
+- JavaScript (.js)
+- TypeScript (.ts)
+- PineScript (.pine)
+- JSON configs (.json)
+
+**Safety Scanning:**
+- Network call detection
+- File system access detection
+- Credential access detection
+- Code obfuscation detection
+- System command detection
+
+**API Endpoints:**
+- `GET /dropzone/status` — Get drop zone status
+- `GET /dropzone/pending` — List pending files
+- `GET /dropzone/processed` — List processed reports
+- `POST /dropzone/approve/:fileId` — Approve absorption
+- `POST /dropzone/reject/:fileId` — Reject file
+
+---
+
+### GitHub Bot Fetcher 🔍
+
+**Purpose:** Search GitHub for high-quality trading bots using the official GitHub API, then download them for absorption.
+
+**How It Works:**
+1. Configure with your GitHub API token
+2. TIME searches for trading bots with 50+ stars (equivalent to 4.0+ rating)
+3. Analyzes each repo (license, documentation, code quality)
+4. Downloads qualified bots directly to the Drop Zone
+5. Drop Zone processes and absorbs them
+
+**Default Search Queries:**
+- MQL4/MQL5 Expert Advisors
+- Python trading bots
+- JavaScript/TypeScript bots
+- PineScript strategies
+- Quantitative trading repos
+
+**Scoring Criteria:**
+- Stars (30 points)
+- Documentation (15 points)
+- License compatibility (15 points)
+- Code quality (20 points)
+- Activity (10 points)
+- Community (10 points)
+
+**Compatible Licenses:**
+- MIT, Apache-2.0, BSD-2/3-Clause
+- Unlicense, WTFPL, ISC, CC0-1.0
+- MPL-2.0, 0BSD
+
+**API Endpoints:**
+- `POST /fetcher/configure` — Set GitHub token and options
+- `POST /fetcher/search` — Search for bots
+- `GET /fetcher/candidates` — List discovered bots
+- `POST /fetcher/download/:id` — Download specific bot
+- `POST /fetcher/download-all` — Download all qualified bots
+- `GET /fetcher/stats` — Fetcher statistics
+
+---
+
+### Opportunity Scout 💰
+
+**Purpose:** Help users discover and manage legitimate income opportunities through official APIs.
+
+**Key Principles:**
+1. **User Authorization** — All actions require explicit consent
+2. **API-Based** — Uses official APIs, never scraping
+3. **Transparent** — All activity logged and visible
+4. **Legal** — Only legitimate income sources
+5. **Your Accounts** — Works with accounts YOU own
+
+**Supported Opportunity Types:**
+- Dividend tracking & alerts
+- Cashback aggregation
+- Staking rewards monitoring
+- Referral program management
+- Freelance job alerts
+- Affiliate earnings monitoring
+- Passive income tracking
+
+**Supported Platforms:**
+- **Investment:** Alpaca, Robinhood
+- **Crypto:** Coinbase, Binance, Kraken
+- **Cashback:** Rakuten, Honey
+- **Freelance:** Upwork, Fiverr
+- **Affiliate:** Amazon Associates, ShareASale
+- **Surveys:** Prolific
+
+**API Endpoints:**
+- `POST /scout/setup` — Configure user preferences
+- `GET /scout/platforms` — List supported platforms
+- `POST /scout/connect` — Connect account
+- `POST /scout/start/:userId` — Start scanning
+- `GET /scout/opportunities/:userId` — List opportunities
+- `POST /scout/authorize` — Authorize collection
+- `POST /scout/collect` — Collect earnings
+- `GET /scout/report/:userId` — Earnings report
+
+---
+
 ## [2025-12-11] Complete API Routes Layer
 
 ### Created
@@ -752,6 +886,9 @@ Current Mode: **CONTROLLED**
 | Signal Conflict Resolver | 🟢 Ready | 2025-12-11 |
 | Learning Velocity Tracker | 🟢 Ready | 2025-12-11 |
 | Stock Watchers | 🟢 Ready | 2025-12-11 |
+| Bot Drop Zone | 🟢 Ready | 2025-12-11 |
+| GitHub Bot Fetcher | 🟢 Ready | 2025-12-11 |
+| Opportunity Scout | 🟢 Ready | 2025-12-11 |
 
 Legend: 🟢 Ready | 🟡 Building | 🔴 Offline | ⚪ Not Started
 
@@ -844,6 +981,12 @@ TIME/
         │   └── admin.ts
         ├── watchers/
         │   └── stock_watchers.ts
+        ├── dropzone/
+        │   └── bot_dropzone.ts
+        ├── fetcher/
+        │   └── github_bot_fetcher.ts
+        ├── scout/
+        │   └── opportunity_scout.ts
         └── websocket/
             ├── index.ts
             ├── realtime_service.ts
@@ -852,7 +995,7 @@ TIME/
 
 ---
 
-## Total File Count: 32+ Backend Files, 20+ Frontend Files
+## Total File Count: 38+ Backend Files, 20+ Frontend Files
 
 ### Backend Summary
 - **Core:** 3 files (TIME Governor, Evolution Controller, Inactivity Monitor)
@@ -861,6 +1004,7 @@ TIME/
 - **Brokers:** 4 files (Interface, Alpaca, OANDA, Manager)
 - **Routes:** 6 files (Index, Auth, Users, Bots, Strategies, Admin)
 - **Services:** 8 files (Consent, Database, Fingerprint, Notifications, Research, Simulator, Stories, Watchers)
+- **Absorption:** 3 files (Bot Drop Zone, GitHub Bot Fetcher, Opportunity Scout)
 - **WebSocket:** 3 files (Index, Realtime, Event Hub)
 
 ---
