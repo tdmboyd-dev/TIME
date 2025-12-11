@@ -87,8 +87,269 @@ All changes, additions, patches, inventions, and evolution steps are logged here
 - [x] Create Training Simulator for 24/7 demo trading ✅ DONE
 - [x] Build Trade Story Generator ✅ DONE
 - [x] Implement WebSocket Real-Time Updates ✅ DONE
-- [ ] Add more API endpoints
+- [x] Build Complete API Routes Layer ✅ DONE
+- [x] Create Ensemble Harmony Detector ✅ DONE
+- [x] Create Signal Conflict Resolver ✅ DONE
+- [x] Create Learning Velocity Tracker ✅ DONE
+- [x] Build Stock Watchers System ✅ DONE
 - [ ] Write unit tests
+- [ ] Integration tests
+- [ ] Docker configuration
+- [ ] CI/CD pipeline
+
+---
+
+## [2025-12-11] Complete API Routes Layer
+
+### Created
+
+**API Routes:**
+- `src/backend/routes/index.ts` — Route aggregation and middleware setup
+- `src/backend/routes/auth.ts` — Authentication routes (register, login, logout, refresh)
+- `src/backend/routes/users.ts` — User profile, settings, consent management
+- `src/backend/routes/bots.ts` — Full bot CRUD with upload and fingerprinting
+- `src/backend/routes/strategies.ts` — Strategy management with synthesis and evolution
+- `src/backend/routes/admin.ts` — Admin panel controls and system management
+
+### Key Features
+
+**Auth Routes (`/api/v1/auth`):**
+- `POST /register` — Register with MANDATORY consent requirement
+- `POST /login` — Login with JWT token response
+- `POST /logout` — Logout (invalidates session)
+- `POST /refresh` — Refresh authentication token
+- `POST /change-password` — Password change with verification
+
+**User Routes (`/api/v1/users`):**
+- `GET /profile` — Get user profile
+- `PUT /profile` — Update profile
+- `GET /settings` — Get user settings
+- `PUT /settings` — Update settings
+- `GET /consent` — View consent details
+- `PUT /consent` — Update consent preferences
+- `GET /activity` — User activity log
+- `GET /risk-profile` — User's risk profile
+- `PUT /risk-profile` — Update risk tolerance
+
+**Bot Routes (`/api/v1/bots`):**
+- `GET /` — List all bots with filtering
+- `GET /:id` — Get bot details
+- `POST /` — Create new bot
+- `POST /upload` — Upload bot files
+- `PUT /:id` — Update bot
+- `DELETE /:id` — Delete bot
+- `POST /:id/activate` — Activate bot
+- `POST /:id/deactivate` — Deactivate bot
+- `GET /:id/fingerprint` — Get bot fingerprint
+- `POST /:id/absorb` — Admin: Absorb bot into TIME
+
+**Strategy Routes (`/api/v1/strategies`):**
+- `GET /` — List strategies
+- `GET /:id` — Get strategy details
+- `POST /` — Create strategy
+- `PUT /:id` — Update strategy
+- `DELETE /:id` — Delete strategy
+- `POST /:id/synthesize` — Synthesize from bots
+- `POST /:id/evolve` — Evolve strategy
+- `POST /:id/backtest` — Run backtest
+
+**Admin Routes (`/api/v1/admin`):**
+- `GET /evolution-mode` — Get current evolution mode
+- `PUT /evolution-mode` — Set evolution mode (Controlled/Autonomous)
+- `GET /system-health` — Full system health report
+- `GET /metrics` — System metrics
+- `POST /emergency-brake` — Trigger emergency brake
+- `POST /release-brake` — Release emergency brake
+- `GET /pending-approvals` — List pending evolution proposals
+- `POST /approve/:id` — Approve evolution proposal
+- `POST /reject/:id` — Reject evolution proposal
+
+### Middleware
+
+- `authMiddleware` — JWT token verification
+- `adminMiddleware` — Admin role check
+- `ownerMiddleware` — Bot owner verification
+
+---
+
+## [2025-12-11] Never-Before-Seen Inventions 🚀
+
+### Created
+
+**Ensemble Harmony Detector:**
+- `src/backend/engines/ensemble_harmony_detector.ts` — Detects bot agreement vs conflict
+
+**Signal Conflict Resolver:**
+- `src/backend/engines/signal_conflict_resolver.ts` — Resolves conflicting signals intelligently
+
+**Learning Velocity Tracker:**
+- `src/backend/engines/learning_velocity_tracker.ts` — Tracks how fast TIME is learning
+
+**Stock Watchers System:**
+- `src/backend/watchers/stock_watchers.ts` — Comprehensive watchlist and monitoring
+
+---
+
+### Ensemble Harmony Detector 🎵
+
+**Purpose:** Detects when multiple bots agree (harmony) or conflict (dissonance) on trade signals.
+
+**Key Concepts:**
+- **Harmony Score (0-100):** Measures bot agreement level
+- **Dissonance Level:** Severity of conflicting signals (none, mild, moderate, severe, critical)
+- **Resonance Multiplier:** Amplifies position sizing when bots strongly agree
+- **Ensemble Pulse:** Real-time heartbeat of the bot ensemble
+
+**Resonance Patterns Detected:**
+1. `convergence` — Multiple bots suddenly agreeing
+2. `cascade` — Sequential bot agreement chain
+3. `amplification` — Increasing confidence levels
+4. `confirmation` — Cross-timeframe agreement
+
+**Key Methods:**
+```typescript
+analyzeHarmony(symbol: string, signals: BotSignal[]): HarmonyState
+detectDissonance(harmonyState: HarmonyState): DissonanceAlert | null
+findResonancePatterns(symbol: string): ResonancePattern[]
+getEnsemblePulse(): EnsemblePulse
+getSynthesizedSignal(symbol: string): SynthesizedSignal | null
+```
+
+---
+
+### Signal Conflict Resolver ⚖️
+
+**Purpose:** When bots disagree, this engine decides which signal to follow using multiple resolution methods.
+
+**Resolution Methods:**
+1. `historical_accuracy` — Trust bots with best track record
+2. `regime_specialist` — Trust bots that excel in current regime
+3. `confidence_weighted` — Weight by signal confidence
+4. `conviction_voting` — Democratic vote by conviction level
+5. `meta_pattern` — What worked in similar past conflicts
+6. `indicator_consensus` — Which indicators agree most
+7. `risk_adjusted` — Prioritize risk-adjusted performance
+
+**Bot Trust Profiles:**
+- Tracks accuracy per market regime
+- Records conflict history and outcomes
+- Calculates regime-specific trust scores
+
+**Key Methods:**
+```typescript
+resolveConflict(symbol: string, signals: BotSignal[], regime: string): ConflictResolution
+recordOutcome(conflictId: string, outcome: ConflictOutcome): void
+getBotTrustProfile(botId: string): BotTrustProfile
+learnFromPastConflicts(symbol: string): void
+```
+
+**Output:**
+```typescript
+interface ConflictResolution {
+  decision: 'long' | 'short' | 'neutral' | 'abstain';
+  confidence: number;
+  method: ResolutionMethod;
+  trustedBots: string[];
+  overriddenBots: string[];
+  reasoning: string;
+  positionSizeMultiplier: number;
+  stopLossAdjustment: number;
+}
+```
+
+---
+
+### Learning Velocity Tracker 📈
+
+**Purpose:** Measures and tracks how fast TIME is learning and evolving.
+
+**Velocity Metrics:**
+- `learningRate` — New patterns per hour
+- `learningAcceleration` — Rate of change in learning
+- `absorptionRate` — Bot absorption efficiency
+- `evolutionVelocity` — Strategy evolution speed
+- `knowledgeDensity` — Knowledge per category
+- `adaptationSpeed` — Time to adapt to regime changes
+- `wisdomScore` — Overall intelligence rating
+
+**Momentum States:**
+- `accelerating` — Learning faster over time
+- `steady` — Consistent learning rate
+- `decelerating` — Slowing down
+- `stalled` — No new learning
+
+**Knowledge Categories:**
+- `patterns`, `regimes`, `bots`, `correlations`, `anomalies`
+- `sentiment`, `volume`, `momentum`, `reversals`, `breakouts`
+
+**Milestones System:**
+```typescript
+Pattern Seeker → Pattern Hunter → Pattern Master → Pattern Oracle
+Bot Collector → Bot Curator → Bot Synthesizer → Bot Emperor
+Risk Aware → Risk Manager → Risk Master → Risk Guardian
+Adaptation Novice → Adaptation Adept → Adaptation Expert → Adaptation Sage
+```
+
+**Key Methods:**
+```typescript
+recordLearning(category: string, item: any, quality: number): void
+recordBotAbsorption(botId: string, success: boolean, learningsExtracted: number): void
+recordEvolution(strategyId: string, improvement: number): void
+getVelocityMetrics(): VelocityMetrics
+getMilestones(): Milestone[]
+getWisdomScore(): number
+```
+
+---
+
+### Stock Watchers System 👁️
+
+**Purpose:** Comprehensive watchlist management with smart alerts and pattern monitoring.
+
+**Watch Condition Types (17):**
+```typescript
+'price_above' | 'price_below' | 'breakout' | 'breakdown' |
+'volume_spike' | 'volatility_spike' | 'pattern_detected' |
+'regime_change' | 'bot_signal' | 'correlation_break' |
+'support_test' | 'resistance_test' | 'trend_change' |
+'momentum_shift' | 'divergence' | 'squeeze' | 'custom'
+```
+
+**Smart Suggestions:**
+- Based on TIME's learning and market analysis
+- Confidence-scored recommendations
+- Auto-suggest correlated assets
+- Pattern-based additions
+
+**Correlation Watching:**
+- Track asset correlations in real-time
+- Alert on correlation breaks
+- Identify new correlations forming
+
+**Pattern Watching:**
+- Monitor for specific chart patterns
+- Track pattern completion percentage
+- Alert on pattern confirmation
+
+**Key Methods:**
+```typescript
+createWatchlist(userId: string, name: string): Watchlist
+addAsset(watchlistId: string, symbol: string, conditions: WatchCondition[]): void
+removeAsset(watchlistId: string, symbol: string): void
+checkConditions(watchlistId: string): TriggeredAlert[]
+getSmartSuggestions(watchlistId: string): WatchSuggestion[]
+watchCorrelation(symbols: string[], threshold: number): void
+watchPattern(symbol: string, pattern: string): void
+```
+
+**Watchlist Performance Tracking:**
+```typescript
+interface WatchlistPerformance {
+  alertsTriggered: number;
+  profitableAlerts: number;
+  avgReturnPerAlert: number;
+}
+```
 
 ---
 
@@ -486,6 +747,11 @@ Current Mode: **CONTROLLED**
 | Trade Story Generator | 🟢 Ready | 2025-12-11 |
 | Realtime Service | 🟢 Ready | 2025-12-11 |
 | Event Hub | 🟢 Ready | 2025-12-11 |
+| API Routes | 🟢 Ready | 2025-12-11 |
+| Ensemble Harmony Detector | 🟢 Ready | 2025-12-11 |
+| Signal Conflict Resolver | 🟢 Ready | 2025-12-11 |
+| Learning Velocity Tracker | 🟢 Ready | 2025-12-11 |
+| Stock Watchers | 🟢 Ready | 2025-12-11 |
 
 Legend: 🟢 Ready | 🟡 Building | 🔴 Offline | ⚪ Not Started
 
@@ -543,7 +809,10 @@ TIME/
         │   ├── recursive_synthesis_engine.ts
         │   ├── market_vision_engine.ts
         │   ├── teaching_engine.ts
-        │   └── attribution_engine.ts
+        │   ├── attribution_engine.ts
+        │   ├── ensemble_harmony_detector.ts
+        │   ├── signal_conflict_resolver.ts
+        │   └── learning_velocity_tracker.ts
         ├── bots/
         │   ├── bot_manager.ts
         │   └── bot_ingestion.ts
@@ -566,6 +835,15 @@ TIME/
         │   └── training_simulator.ts
         ├── stories/
         │   └── trade_story_generator.ts
+        ├── routes/
+        │   ├── index.ts
+        │   ├── auth.ts
+        │   ├── users.ts
+        │   ├── bots.ts
+        │   ├── strategies.ts
+        │   └── admin.ts
+        ├── watchers/
+        │   └── stock_watchers.ts
         └── websocket/
             ├── index.ts
             ├── realtime_service.ts
@@ -574,14 +852,28 @@ TIME/
 
 ---
 
+## Total File Count: 32+ Backend Files, 20+ Frontend Files
+
+### Backend Summary
+- **Core:** 3 files (TIME Governor, Evolution Controller, Inactivity Monitor)
+- **Engines:** 10 files (Learning, Risk, Regime, Synthesis, Vision, Teaching, Attribution, Harmony, Conflict, Velocity)
+- **Bots:** 2 files (Manager, Ingestion)
+- **Brokers:** 4 files (Interface, Alpaca, OANDA, Manager)
+- **Routes:** 6 files (Index, Auth, Users, Bots, Strategies, Admin)
+- **Services:** 8 files (Consent, Database, Fingerprint, Notifications, Research, Simulator, Stories, Watchers)
+- **WebSocket:** 3 files (Index, Realtime, Event Hub)
+
+---
+
 ## For Copilot
 
 Questions for next session:
-1. Should we prioritize frontend or broker integrations next?
-2. Any specific exchanges/brokers to prioritize?
-3. Should we build the Bot Research Pipeline for automatic bot discovery?
-4. Any additional features to invent?
+1. Ready to start unit tests?
+2. Want to add more broker integrations (Interactive Brokers, MT4/MT5)?
+3. Should we build the Strategy Builder UI?
+4. Want to implement more invented systems from the queue?
 
 ---
 
 *Built by Timebeunus Boyd with Claude*
+*Last updated: 2025-12-11*
