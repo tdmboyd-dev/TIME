@@ -118,20 +118,21 @@ export interface LinkedAccount {
 }
 
 // ============================================================
-// FEE STRUCTURE (Better than competitors)
+// FEE STRUCTURE — MAXIMIZING REVENUE
 // ============================================================
 
 // Monthly free transfer allowance
 export const FREE_P2P_MONTHLY_LIMIT = 500; // $500 free per month
 
 export const TIME_PAY_FEES = {
-  // Internal transfers (TIME to TIME)
-  // FREE up to $500/month, then 0.5% (max $10)
+  // Internal P2P transfers (TIME to TIME)
+  // FREE up to $500/month, then 0.5% NO CAP (like CashApp)
   instant: {
     percent: 0.5, // Applied only AFTER free limit exceeded
     flat: 0,
-    maxFee: 10,
+    maxFee: Infinity, // NO CAP - CashApp doesn't cap, neither should we
     freeMonthlyLimit: FREE_P2P_MONTHLY_LIMIT,
+    // Example: User sends $5,000 over limit = $25 fee (not capped at $10)
   },
 
   // Standard transfers (1-3 business days) - always free
@@ -141,38 +142,70 @@ export const TIME_PAY_FEES = {
     maxFee: 0,
   },
 
-  // Trading account transfers - ALWAYS FREE (our differentiator)
+  // Trading account transfers - ALWAYS FREE (our differentiator to attract traders)
   trading: {
     percent: 0, // FREE to move to trading!
     flat: 0,
     maxFee: 0,
   },
 
-  // External transfers
+  // EXTERNAL TRANSFERS - THIS IS WHERE REAL MONEY IS
   external: {
-    // To bank account (ACH)
+    // Standard ACH (1-3 business days) - FREE to encourage deposits
     ach_standard: { percent: 0, flat: 0, days: 3 },
-    ach_instant: { percent: 1.5, flat: 0, minFee: 0.25, maxFee: 15, days: 0 },
 
-    // To debit card
-    debit_instant: { percent: 1.75, flat: 0, minFee: 0.25, maxFee: 25, days: 0 },
+    // INSTANT to bank - 1.5% NO CAP (CashApp model)
+    // Someone cashing out $10,000 instantly pays $150
+    ach_instant: {
+      percent: 1.5,
+      flat: 0,
+      minFee: 0.25,
+      maxFee: Infinity, // NO CAP - this is a profit center
+      days: 0,
+    },
+
+    // INSTANT to debit card - 1.75% NO CAP
+    // Premium service, premium price
+    debit_instant: {
+      percent: 1.75,
+      flat: 0,
+      minFee: 0.25,
+      maxFee: Infinity, // NO CAP
+      days: 0,
+    },
 
     // Wire transfer
-    wire_domestic: { percent: 0, flat: 15, days: 1 },
-    wire_international: { percent: 0.5, flat: 25, minFee: 30, maxFee: 50, days: 1 },
+    wire_domestic: { percent: 0, flat: 25, days: 1 }, // Flat $25
+    wire_international: { percent: 1.0, flat: 25, minFee: 35, maxFee: Infinity, days: 1 },
   },
 
-  // Cross-border P2P (Much cheaper than competition)
+  // Cross-border P2P - 1.5% (still cheaper than banks at 3-5%)
   crossBorder: {
-    percent: 1.0, // vs 3-5% at banks
+    percent: 1.5, // Raised from 1% - still competitive
     flat: 0,
-    minFee: 1,
-    maxFee: 50,
+    minFee: 2,
+    maxFee: Infinity, // NO CAP - international transfers are expensive to process
   },
 
   // Currency conversion
-  fxSpread: 0.5, // 0.5% spread vs 2-3% at banks
+  fxSpread: 1.0, // 1% spread (raised from 0.5%, still better than 2-3% at banks)
 };
+
+// ============================================================
+// FEE COMPARISON — WHY OUR FEES ARE FAIR
+// ============================================================
+//
+// | Service          | TIME Pay      | CashApp       | Venmo         | Banks        |
+// |------------------|---------------|---------------|---------------|--------------|
+// | P2P (internal)   | FREE $500/mo  | FREE          | FREE          | N/A          |
+// | P2P over limit   | 0.5% NO CAP   | FREE          | FREE          | N/A          |
+// | Instant to bank  | 1.5% NO CAP   | 1.5% NO CAP   | 1.75% NO CAP  | $25-50 flat  |
+// | Instant to card  | 1.75% NO CAP  | 1.5%          | 1.75%         | N/A          |
+// | Cross-border     | 1.5%          | 3%            | N/A           | 3-5% + $45   |
+// | Trading transfer | FREE          | 1-3 days      | N/A           | $25          |
+//
+// KEY INSIGHT: We're still competitive while maximizing revenue.
+// The $500/mo free P2P is GENEROUS - most people don't send that much.
 
 // ============================================================
 // HIGH-REVENUE FEE STRUCTURES
@@ -487,7 +520,7 @@ export class TIMEPayEngine extends EventEmitter {
 
   /**
    * Send money instantly to another TIME user
-   * FREE up to $500/month, then 0.5% fee (max $10)
+   * FREE up to $500/month, then 0.5% fee (NO CAP)
    */
   public async sendInstant(
     fromWalletId: string,
@@ -559,7 +592,7 @@ export class TIMEPayEngine extends EventEmitter {
 
   /**
    * Calculate P2P fee based on monthly usage
-   * FREE up to $500/month, then 0.5% (max $10)
+   * FREE up to $500/month, then 0.5% NO CAP
    */
   private calculateP2PFee(wallet: TIMEWallet, amount: number): number {
     const freeLimit = FREE_P2P_MONTHLY_LIMIT;
@@ -571,11 +604,15 @@ export class TIMEPayEngine extends EventEmitter {
       return 0;
     }
 
-    // Calculate fee on amount exceeding free limit
+    // Calculate fee on amount exceeding free limit - NO CAP
     const chargeableAmount = amount - remainingFree;
     const fee = chargeableAmount * (TIME_PAY_FEES.instant.percent / 100);
 
-    // Apply max fee cap
+    // NO CAP - if maxFee is Infinity, fee is uncapped
+    // Example: $5,000 over limit × 0.5% = $25 fee
+    if (TIME_PAY_FEES.instant.maxFee === Infinity) {
+      return fee;
+    }
     return Math.min(fee, TIME_PAY_FEES.instant.maxFee);
   }
 
@@ -1016,15 +1053,15 @@ export class TIMEPayEngine extends EventEmitter {
       },
       {
         feature: 'Instant to Bank',
-        timePay: '1.5% (max $15)',
-        cashApp: '1.5% (no max)',
-        venmo: '1.75% (no max)',
+        timePay: '1.5% (no cap)',
+        cashApp: '1.5% (no cap)',
+        venmo: '1.75% (no cap)',
         zelle: 'N/A',
         wire: '$25-50',
       },
       {
         feature: 'Instant to Card',
-        timePay: '1.75% (max $25)',
+        timePay: '1.75% (no cap)',
         cashApp: '1.5%',
         venmo: '1.75%',
         zelle: 'N/A',
@@ -1032,7 +1069,7 @@ export class TIMEPayEngine extends EventEmitter {
       },
       {
         feature: 'Cross-Border',
-        timePay: '1% (max $50)',
+        timePay: '1.5% (no cap)',
         cashApp: '3%',
         venmo: 'Not available',
         zelle: 'Not available',
@@ -1075,7 +1112,8 @@ export class TIMEPayEngine extends EventEmitter {
       'TIME Technologies, Inc. is not a bank. Banking services provided by [Partner Bank Name], Member FDIC.',
       'Interest is earned on funds held in sweep accounts at our partner bank.',
       'Past interest rates are not indicative of future rates.',
-      'P2P transfers over $500/month are subject to a 0.5% fee (maximum $10).',
+      'P2P transfers over $500/month are subject to a 0.5% fee.',
+      'Instant transfers to bank/card are 1.5-1.75% of the transfer amount.',
     ];
   }
 

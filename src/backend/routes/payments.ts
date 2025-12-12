@@ -150,7 +150,7 @@ router.get('/wallet/:walletId', authMiddleware, (req: Request, res: Response) =>
       remainingFree: freeP2PInfo.remaining,
       monthlyLimit: FREE_P2P_MONTHLY_LIMIT,
       resetsOn: freeP2PInfo.resetDate,
-      feeAfterLimit: '0.5% (max $10)',
+      feeAfterLimit: '0.5% (no cap)',
     },
   });
 });
@@ -173,8 +173,9 @@ router.get('/wallet/:walletId/free-limit', authMiddleware, (req: Request, res: R
       resetsOn: freeP2PInfo.resetDate,
       feeAfterLimit: {
         percent: 0.5,
-        maxFee: 10,
-        description: '0.5% fee (max $10) on transfers exceeding monthly free limit',
+        noCap: true,
+        description: '0.5% fee (no cap) on transfers exceeding monthly free limit',
+        example: '$5,000 over limit = $25 fee',
       },
     });
   } catch (error: any) {
@@ -526,10 +527,16 @@ router.get('/admin/all-fees', authMiddleware, adminMiddleware, (req: Request, re
       cardInterchange: '1.75% from Visa/MC, 1% to user, 0.75% kept',
       merchantProcessing: '2.5% + $0.10 per transaction',
       subscriptions: 'Pro $9.99, Business $29.99, Enterprise custom',
-      instantCashout: '1.5% (max $15)',
-      crossBorder: '1% (max $50)',
-      p2pOverLimit: '0.5% after $500/month free (max $10)',
+      instantCashout: '1.5% NO CAP (like CashApp)',
+      crossBorder: '1.5% NO CAP',
+      p2pOverLimit: '0.5% after $500/month free - NO CAP',
       interestSpread: '0.75% on deposits',
+    },
+    examples: {
+      p2p: '$5,000 over limit × 0.5% = $25 fee',
+      instantBank: '$10,000 instant cashout × 1.5% = $150 fee',
+      instantCard: '$5,000 to debit card × 1.75% = $87.50 fee',
+      crossBorder: '$10,000 international × 1.5% = $150 fee',
     },
   });
 });
