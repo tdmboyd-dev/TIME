@@ -1,24 +1,35 @@
 /**
- * TIME Pay — Revolutionary Instant Payment & Transfer System
+ * TIME Pay — Instant Payment & Transfer System for Traders
  *
- * A never-before-seen payment system for traders that combines:
- * - Tokenized deposits (earn interest while funds sit)
+ * Features:
+ * - FREE P2P transfers up to $500/month, then 0.5% (max $10)
+ * - Earn UP TO 4-5% APY via partner bank sweep accounts
  * - Instant P2P transfers 24/7/365
  * - Direct trading account integration
- * - Cross-border capability at 99% lower cost
- * - No banking delays or holds
+ * - Cross-border at 1% (vs 3-5% industry)
  *
- * Legal Framework:
- * - BaaS partnership model (no direct MTL needed)
- * - GENIUS Act compliant tokenized deposits
- * - FDIC insured through partner bank
+ * LEGAL FRAMEWORK (Important!):
+ * - BaaS partnership model — Partner bank holds deposits, pays interest
+ * - We are the INTERFACE, not the bank
+ * - Interest is paid BY the partner bank (they lend out deposits)
+ * - FDIC insured through partner bank (not us directly)
  * - Agent of payee exemption for trading facilitation
+ * - TIME earns revenue from: P2P fees over threshold, spread on interest,
+ *   instant cashout fees, cross-border fees
+ *
+ * HOW INTEREST WORKS:
+ * - User deposits $1000 into TIME Pay wallet
+ * - Money is "swept" to partner bank's high-yield savings
+ * - Partner bank lends out the money at 7-8% (mortgages, loans)
+ * - Partner bank pays us 5% APY
+ * - We pass "UP TO" 4-5% APY to user, keep 0.5-1% spread
+ * - This is how CashApp, Wealthfront, Betterment all work
  *
  * Revenue Model:
- * - 0.5% on instant transfers (vs 1.5% industry)
- * - 1% on cross-border (vs 3-5% industry)
- * - Interest spread on deposits
- * - Premium features subscription
+ * - P2P over $500/month: 0.5% fee (max $10)
+ * - Interest spread: 0.5-1% of deposits
+ * - Instant cashout: 1.5% (max $15)
+ * - Cross-border: 1% (max $50)
  */
 
 import { EventEmitter } from 'events';
@@ -39,12 +50,15 @@ export interface TIMEWallet {
   id: string;
   odUserId: string;
   type: WalletType;
-  balance: number; // TIME Tokens (1:1 with USD)
+  balance: number; // USD equivalent (swept to partner bank)
   interestEarned: number;
-  interestRate: number; // APY
+  interestRate: number; // Current APY (variable!)
+  maxInterestRate: number; // "UP TO" APY for display
   isVerified: boolean;
   dailyLimit: number;
   monthlyLimit: number;
+  monthlyP2PSent: number; // Track for free tier
+  monthlyP2PResetDate: Date; // When to reset monthly counter
   createdAt: Date;
   updatedAt: Date;
 }
@@ -94,22 +108,27 @@ export interface LinkedAccount {
 // FEE STRUCTURE (Better than competitors)
 // ============================================================
 
+// Monthly free transfer allowance
+export const FREE_P2P_MONTHLY_LIMIT = 500; // $500 free per month
+
 export const TIME_PAY_FEES = {
   // Internal transfers (TIME to TIME)
+  // FREE up to $500/month, then 0.5% (max $10)
   instant: {
-    percent: 0, // FREE for internal instant!
+    percent: 0.5, // Applied only AFTER free limit exceeded
     flat: 0,
-    maxFee: 0,
+    maxFee: 10,
+    freeMonthlyLimit: FREE_P2P_MONTHLY_LIMIT,
   },
 
-  // Standard transfers (1-3 business days)
+  // Standard transfers (1-3 business days) - always free
   standard: {
     percent: 0,
     flat: 0,
     maxFee: 0,
   },
 
-  // Trading account transfers
+  // Trading account transfers - ALWAYS FREE (our differentiator)
   trading: {
     percent: 0, // FREE to move to trading!
     flat: 0,
@@ -143,26 +162,45 @@ export const TIME_PAY_FEES = {
 };
 
 // ============================================================
-// INTEREST RATES (Tokenized deposits can earn interest!)
+// INTEREST RATES — "UP TO" APY (via partner bank sweep accounts)
+//
+// IMPORTANT: These are MAXIMUM rates. Actual rates depend on:
+// - Federal Reserve rates
+// - Partner bank rates
+// - Market conditions
+// User sees: "Earn UP TO X% APY" — never guaranteed!
 // ============================================================
 
 export const INTEREST_RATES = {
+  // Current maximum APY (variable, subject to change)
+  // Partner bank pays us ~5%, we pass up to 4-4.5% to users
   personal: {
-    base: 4.0, // 4% APY base
-    premium: 4.5, // Premium members
+    upTo: 4.0, // "UP TO 4% APY"
+    current: 3.75, // Actual current rate
+    minimum: 2.0, // Floor rate
   },
   savings: {
-    base: 4.5, // Higher for savings wallet
-    premium: 5.0,
+    upTo: 4.5, // "UP TO 4.5% APY"
+    current: 4.0,
+    minimum: 2.5,
   },
   trading: {
-    base: 2.0, // Lower for trading (needs liquidity)
-    premium: 2.5,
+    upTo: 2.0, // Lower for trading (needs instant liquidity)
+    current: 1.5,
+    minimum: 0.5,
   },
   business: {
-    base: 3.5,
-    premium: 4.0,
+    upTo: 4.0,
+    current: 3.5,
+    minimum: 2.0,
   },
+
+  // How we make money: spread between what partner pays us vs what we pay users
+  // Partner pays us: ~5% APY
+  // We pay users: up to 4.5% APY
+  // Our spread: 0.5-1% (our revenue)
+  partnerBankRate: 5.0, // What partner bank pays TIME
+  ourSpread: 0.75, // Average spread we keep (0.5-1%)
 };
 
 // ============================================================
@@ -222,7 +260,11 @@ export class TIMEPayEngine extends EventEmitter {
     isVerified: boolean = false
   ): TIMEWallet {
     const limits = isVerified ? TRANSFER_LIMITS.verified : TRANSFER_LIMITS.unverified;
-    const interestRate = INTEREST_RATES[type]?.base || 4.0;
+    const rateConfig = INTEREST_RATES[type] || INTEREST_RATES.personal;
+
+    // Calculate next month reset date
+    const now = new Date();
+    const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
 
     const wallet: TIMEWallet = {
       id: `wallet_${uuidv4()}`,
@@ -230,10 +272,13 @@ export class TIMEPayEngine extends EventEmitter {
       type,
       balance: 0,
       interestEarned: 0,
-      interestRate,
+      interestRate: rateConfig.current, // Actual current rate
+      maxInterestRate: rateConfig.upTo, // "UP TO" rate for display
       isVerified,
       dailyLimit: limits.daily,
       monthlyLimit: limits.monthly,
+      monthlyP2PSent: 0, // Track for free tier
+      monthlyP2PResetDate: nextMonth,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -279,6 +324,7 @@ export class TIMEPayEngine extends EventEmitter {
 
   /**
    * Send money instantly to another TIME user
+   * FREE up to $500/month, then 0.5% fee (max $10)
    */
   public async sendInstant(
     fromWalletId: string,
@@ -296,8 +342,15 @@ export class TIMEPayEngine extends EventEmitter {
     // Check limits
     this.validateLimits(fromWallet, amount);
 
-    // Calculate fee (FREE for internal!)
-    const fee = this.calculateFee('instant', amount);
+    // Reset monthly counter if needed
+    this.checkMonthlyReset(fromWallet);
+
+    // Calculate fee based on monthly usage
+    const fee = this.calculateP2PFee(fromWallet, amount);
+
+    if (fromWallet.balance < amount + fee) {
+      throw new Error(`Insufficient balance. Need ${amount + fee} (including $${fee.toFixed(2)} fee)`);
+    }
 
     const transfer: TIMETransfer = {
       id: `txn_${uuidv4()}`,
@@ -315,16 +368,67 @@ export class TIMEPayEngine extends EventEmitter {
 
     // Execute transfer
     fromWallet.balance -= (amount + fee);
+    fromWallet.monthlyP2PSent += amount; // Track monthly total
     toWallet.balance += amount;
     fromWallet.updatedAt = new Date();
     toWallet.updatedAt = new Date();
 
     this.transfers.set(transfer.id, transfer);
 
-    logger.info(`Instant transfer completed: ${amount} TIME from ${fromWalletId} to ${toWalletId}`);
+    const feeMsg = fee > 0 ? ` (fee: $${fee.toFixed(2)})` : ' (FREE!)';
+    logger.info(`Instant transfer completed: $${amount}${feeMsg} from ${fromWalletId} to ${toWalletId}`);
     this.emit('transfer:completed', transfer);
 
     return transfer;
+  }
+
+  /**
+   * Check and reset monthly P2P counter if new month
+   */
+  private checkMonthlyReset(wallet: TIMEWallet): void {
+    const now = new Date();
+    if (now >= wallet.monthlyP2PResetDate) {
+      wallet.monthlyP2PSent = 0;
+      wallet.monthlyP2PResetDate = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+      logger.info(`Monthly P2P counter reset for wallet ${wallet.id}`);
+    }
+  }
+
+  /**
+   * Calculate P2P fee based on monthly usage
+   * FREE up to $500/month, then 0.5% (max $10)
+   */
+  private calculateP2PFee(wallet: TIMEWallet, amount: number): number {
+    const freeLimit = FREE_P2P_MONTHLY_LIMIT;
+    const alreadySent = wallet.monthlyP2PSent;
+    const remainingFree = Math.max(0, freeLimit - alreadySent);
+
+    if (remainingFree >= amount) {
+      // Entire amount is free
+      return 0;
+    }
+
+    // Calculate fee on amount exceeding free limit
+    const chargeableAmount = amount - remainingFree;
+    const fee = chargeableAmount * (TIME_PAY_FEES.instant.percent / 100);
+
+    // Apply max fee cap
+    return Math.min(fee, TIME_PAY_FEES.instant.maxFee);
+  }
+
+  /**
+   * Get remaining free P2P transfer amount for the month
+   */
+  public getRemainingFreeP2P(walletId: string): { remaining: number; resetDate: Date } {
+    const wallet = this.wallets.get(walletId);
+    if (!wallet) throw new Error('Wallet not found');
+
+    this.checkMonthlyReset(wallet);
+
+    return {
+      remaining: Math.max(0, FREE_P2P_MONTHLY_LIMIT - wallet.monthlyP2PSent),
+      resetDate: wallet.monthlyP2PResetDate,
+    };
   }
 
   /**
@@ -728,7 +832,7 @@ export class TIMEPayEngine extends EventEmitter {
   }
 
   /**
-   * Compare fees with competitors
+   * Compare fees with competitors (honest comparison)
    */
   public getFeeComparison(): Array<{
     feature: string;
@@ -741,7 +845,7 @@ export class TIMEPayEngine extends EventEmitter {
     return [
       {
         feature: 'Instant P2P Transfer',
-        timePay: 'FREE',
+        timePay: 'FREE up to $500/mo, then 0.5% (max $10)',
         cashApp: 'FREE',
         venmo: 'FREE',
         zelle: 'FREE',
@@ -781,7 +885,7 @@ export class TIMEPayEngine extends EventEmitter {
       },
       {
         feature: 'Earn Interest',
-        timePay: '4-5% APY',
+        timePay: 'UP TO 4.5% APY*',
         cashApp: '4.5% (savings only)',
         venmo: 'No',
         zelle: 'No',
@@ -795,6 +899,20 @@ export class TIMEPayEngine extends EventEmitter {
         zelle: 'Bank hours only',
         wire: 'No',
       },
+    ];
+  }
+
+  /**
+   * Get legal disclaimers (IMPORTANT for compliance)
+   */
+  public getDisclaimers(): string[] {
+    return [
+      '*APY is variable and subject to change. Rates depend on Federal Reserve rates and partner bank policies.',
+      'Funds held in TIME Pay wallets are swept to our partner bank and are FDIC insured up to $250,000.',
+      'TIME Technologies, Inc. is not a bank. Banking services provided by [Partner Bank Name], Member FDIC.',
+      'Interest is earned on funds held in sweep accounts at our partner bank.',
+      'Past interest rates are not indicative of future rates.',
+      'P2P transfers over $500/month are subject to a 0.5% fee (maximum $10).',
     ];
   }
 }

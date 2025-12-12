@@ -11,7 +11,7 @@
 
 import { Router, Request, Response } from 'express';
 import { authMiddleware } from './auth';
-import { timePayEngine, TIME_PAY_FEES, INTEREST_RATES, TRANSFER_LIMITS } from '../payments/time_pay';
+import { timePayEngine, TIME_PAY_FEES, INTEREST_RATES, TRANSFER_LIMITS, FREE_P2P_MONTHLY_LIMIT } from '../payments/time_pay';
 
 const router = Router();
 
@@ -26,19 +26,26 @@ const router = Router();
 router.get('/info', (req: Request, res: Response) => {
   res.json({
     name: 'TIME Pay',
-    description: 'Revolutionary instant payment system for traders',
+    description: 'Instant payment system for traders',
     features: [
-      'Instant P2P transfers - FREE',
-      'Earn 4-5% APY on balances',
+      `FREE P2P transfers up to $${FREE_P2P_MONTHLY_LIMIT}/month, then 0.5% (max $10)`,
+      'Earn UP TO 4.5% APY on balances*',
       '24/7/365 availability',
-      'Instant trading account funding',
+      'FREE instant trading account funding',
       'Cross-border at 1% (vs 3-5% at banks)',
       'FDIC insured through partner bank',
     ],
     fees: TIME_PAY_FEES,
-    interestRates: INTEREST_RATES,
+    interestRates: {
+      personal: { upTo: INTEREST_RATES.personal.upTo, current: INTEREST_RATES.personal.current },
+      savings: { upTo: INTEREST_RATES.savings.upTo, current: INTEREST_RATES.savings.current },
+      trading: { upTo: INTEREST_RATES.trading.upTo, current: INTEREST_RATES.trading.current },
+      business: { upTo: INTEREST_RATES.business.upTo, current: INTEREST_RATES.business.current },
+    },
     limits: TRANSFER_LIMITS,
+    freeP2PMonthlyLimit: FREE_P2P_MONTHLY_LIMIT,
     comparison: timePayEngine.getFeeComparison(),
+    disclaimers: timePayEngine.getDisclaimers(),
   });
 });
 
@@ -120,7 +127,49 @@ router.get('/wallet/:walletId', authMiddleware, (req: Request, res: Response) =>
     return res.status(404).json({ error: 'Wallet not found' });
   }
 
-  res.json({ wallet });
+  // Include remaining free P2P info
+  const freeP2PInfo = timePayEngine.getRemainingFreeP2P(walletId);
+
+  res.json({
+    wallet: {
+      ...wallet,
+      displayInterestRate: `UP TO ${wallet.maxInterestRate}% APY`,
+      currentInterestRate: `${wallet.interestRate}% APY`,
+    },
+    freeP2P: {
+      remainingFree: freeP2PInfo.remaining,
+      monthlyLimit: FREE_P2P_MONTHLY_LIMIT,
+      resetsOn: freeP2PInfo.resetDate,
+      feeAfterLimit: '0.5% (max $10)',
+    },
+  });
+});
+
+/**
+ * GET /payments/wallet/:walletId/free-limit
+ * Check remaining free P2P transfer amount
+ */
+router.get('/wallet/:walletId/free-limit', authMiddleware, (req: Request, res: Response) => {
+  const { walletId } = req.params;
+
+  try {
+    const freeP2PInfo = timePayEngine.getRemainingFreeP2P(walletId);
+
+    res.json({
+      walletId,
+      monthlyLimit: FREE_P2P_MONTHLY_LIMIT,
+      used: FREE_P2P_MONTHLY_LIMIT - freeP2PInfo.remaining,
+      remaining: freeP2PInfo.remaining,
+      resetsOn: freeP2PInfo.resetDate,
+      feeAfterLimit: {
+        percent: 0.5,
+        maxFee: 10,
+        description: '0.5% fee (max $10) on transfers exceeding monthly free limit',
+      },
+    });
+  } catch (error: any) {
+    res.status(404).json({ error: error.message });
+  }
 });
 
 // ============================================================

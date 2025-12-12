@@ -4,15 +4,27 @@ All changes, additions, patches, inventions, and evolution steps are logged here
 
 ---
 
-## [2025-12-11] TIME Pay & Universal Bot Engine — REVOLUTIONARY SYSTEMS
+## [2025-12-11] TIME Pay Legal Compliance Update
 
-### TIME Pay — Instant Payment System (Never Before Seen for Traders!)
+Updated TIME Pay to be legally defensible and honest:
 
-Created `src/backend/payments/time_pay.ts` — A revolutionary payment system that combines the best of CashApp/Zelle with trading-specific features:
+**Changes Made:**
+1. **P2P Fees**: FREE up to $500/month, then 0.5% (max $10) — prevents abuse, generates revenue
+2. **APY Display**: Changed to "UP TO X% APY" — rates are variable, not guaranteed
+3. **Interest Model**: Clarified that partner bank pays interest via sweep accounts
+4. **Disclaimers**: Added legal disclaimers for compliance
+
+---
+
+## [2025-12-11] TIME Pay & Universal Bot Engine
+
+### TIME Pay — Instant Payment System for Traders
+
+Created `src/backend/payments/time_pay.ts` — A payment system for traders with competitive fees:
 
 **Key Features:**
-- **Instant P2P transfers — FREE!** (no fees for internal transfers)
-- **Earn 4-5% APY** on wallet balances (tokenized deposits)
+- **P2P transfers: FREE up to $500/month**, then 0.5% (max $10)
+- **Earn UP TO 4.5% APY*** on wallet balances (via partner bank sweep)
 - **24/7/365 availability** — weekends, holidays, anytime
 - **Trading account funding — FREE & instant!**
 - **Cross-border at 1%** (vs 3-5% at banks)
@@ -21,22 +33,44 @@ Created `src/backend/payments/time_pay.ts` — A revolutionary payment system th
 **Fee Comparison with Competitors:**
 | Feature | TIME Pay | CashApp | Venmo | Banks |
 |---------|----------|---------|-------|-------|
-| Instant P2P | FREE | FREE | FREE | N/A |
+| Instant P2P | FREE up to $500/mo | FREE | FREE | N/A |
 | Instant to Bank | 1.5% (max $15) | 1.5% (no max) | 1.75% | $25-50 |
 | Cross-Border | 1% (max $50) | 3% | N/A | 3-5% + $45 |
 | Trading Transfer | FREE + Instant | 1-3 days | N/A | $25 + 1 day |
-| Earn Interest | 4-5% APY | 4.5% savings only | No | No |
+| Earn Interest | UP TO 4.5% APY* | 4.5% savings only | No | No |
+
+**How Interest Works (Legal Model):**
+1. User deposits money into TIME Pay wallet
+2. Money is "swept" to partner bank's high-yield savings account
+3. Partner bank lends out the money at 7-8% (mortgages, loans)
+4. Partner bank pays TIME ~5% APY
+5. TIME passes UP TO 4.5% APY to user, keeps 0.5-1% spread
+6. This is exactly how CashApp, Wealthfront, and Betterment work
 
 **Legal Framework:**
 - Banking-as-a-Service (BaaS) partnership model
-- GENIUS Act compliant tokenized deposits
+- TIME is the INTERFACE, partner bank holds the money
+- FDIC insurance through partner bank (not TIME directly)
 - Agent of payee exemption for trading facilitation
-- No direct Money Transmitter License required
+- No Money Transmitter License required (BaaS handles this)
+
+**Revenue Model:**
+- P2P over $500/month: 0.5% fee (max $10)
+- Interest spread: 0.5-1% of deposits
+- Instant cashout: 1.5% (max $15)
+- Cross-border: 1% (max $50)
+
+**Disclaimers (Important!):**
+- *APY is variable and subject to change based on Federal Reserve rates
+- Funds are FDIC insured up to $250,000 through partner bank
+- TIME is not a bank; banking services provided by partner bank
 
 **API Endpoints:**
+- `GET /payments/info` — Get fees, rates, and disclaimers
 - `POST /payments/wallet` — Create wallet
 - `GET /payments/wallets` — Get user wallets
-- `POST /payments/send` — Instant P2P transfer (FREE!)
+- `GET /payments/wallet/:id/free-limit` — Check remaining free P2P
+- `POST /payments/send` — P2P transfer (FREE up to limit)
 - `POST /payments/to-trading` — Move to trading (FREE!)
 - `POST /payments/send-international` — Cross-border (1%)
 - `POST /payments/request` — Request payment
