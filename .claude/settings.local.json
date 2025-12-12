@@ -29,7 +29,8 @@
       "Bash(curl:*)",
       "Bash(taskkill //F //PID 25368)",
       "Bash(taskkill //F //PID 27132)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(find:*)"
     ]
   }
 }
