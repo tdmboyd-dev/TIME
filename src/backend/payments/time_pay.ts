@@ -1,35 +1,48 @@
 /**
  * TIME Pay — Instant Payment & Transfer System for Traders
  *
- * Features:
- * - FREE P2P transfers up to $500/month, then 0.5% (max $10)
- * - Earn UP TO 4-5% APY via partner bank sweep accounts
- * - Instant P2P transfers 24/7/365
- * - Direct trading account integration
- * - Cross-border at 1% (vs 3-5% industry)
+ * ============================================================
+ * REVENUE MODEL — WHERE THE REAL MONEY IS
+ * ============================================================
  *
- * LEGAL FRAMEWORK (Important!):
- * - BaaS partnership model — Partner bank holds deposits, pays interest
- * - We are the INTERFACE, not the bank
- * - Interest is paid BY the partner bank (they lend out deposits)
- * - FDIC insured through partner bank (not us directly)
- * - Agent of payee exemption for trading facilitation
- * - TIME earns revenue from: P2P fees over threshold, spread on interest,
- *   instant cashout fees, cross-border fees
+ * PRIMARY REVENUE STREAMS (High Volume):
  *
- * HOW INTEREST WORKS:
- * - User deposits $1000 into TIME Pay wallet
- * - Money is "swept" to partner bank's high-yield savings
- * - Partner bank lends out the money at 7-8% (mortgages, loans)
- * - Partner bank pays us 5% APY
- * - We pass "UP TO" 4-5% APY to user, keep 0.5-1% spread
- * - This is how CashApp, Wealthfront, Betterment all work
+ * 1. TRADING SPREAD (75% of revenue - like CashApp Bitcoin)
+ *    - Crypto buy/sell: 1.5-2% spread (hidden in price)
+ *    - Stock trades: $0 commission but payment for order flow
+ *    - Options: $0.65 per contract
+ *    - Example: 10,000 users × $500 crypto/month × 1.75% = $87,500/month
  *
- * Revenue Model:
+ * 2. TIME CARD INTERCHANGE (15% of revenue)
+ *    - Visa/Mastercard pays us 1.5-2% on every purchase
+ *    - User gets 1% cashback, we keep 0.5-1%
+ *    - Example: 10,000 users × $1,000 spend/month × 0.75% = $75,000/month
+ *
+ * 3. MERCHANT/BUSINESS FEES (5% of revenue)
+ *    - Accept TIME Pay: 2.5% + $0.10 (vs 2.9% + $0.30 Stripe)
+ *    - Business accounts: $15-50/month
+ *    - Invoice financing: 2-3% fee
+ *
+ * 4. PREMIUM SUBSCRIPTIONS (5% of revenue)
+ *    - TIME Pay Pro: $9.99/month (higher limits, priority support)
+ *    - TIME Pay Business: $29.99/month (invoicing, payroll)
+ *    - TIME Pay Enterprise: Custom pricing
+ *
+ * SECONDARY REVENUE (Lower margin but steady):
  * - P2P over $500/month: 0.5% fee (max $10)
  * - Interest spread: 0.5-1% of deposits
  * - Instant cashout: 1.5% (max $15)
  * - Cross-border: 1% (max $50)
+ *
+ * PROJECTED REVENUE AT SCALE:
+ * | Users    | Monthly Revenue | Annual Revenue |
+ * |----------|-----------------|----------------|
+ * | 10,000   | $200,000        | $2.4M          |
+ * | 50,000   | $1,000,000      | $12M           |
+ * | 250,000  | $5,000,000      | $60M           |
+ * | 1,000,000| $20,000,000     | $240M          |
+ *
+ * ============================================================
  */
 
 import { EventEmitter } from 'events';
@@ -159,6 +172,156 @@ export const TIME_PAY_FEES = {
 
   // Currency conversion
   fxSpread: 0.5, // 0.5% spread vs 2-3% at banks
+};
+
+// ============================================================
+// HIGH-REVENUE FEE STRUCTURES
+// ============================================================
+
+export const TRADING_FEES = {
+  // Crypto trading (BIG MONEY - hidden in spread)
+  crypto: {
+    spread: 1.75, // 1.75% spread on buy/sell (user sees "no fees!")
+    description: 'Commission-free crypto trading',
+    // Example: User buys $1000 BTC, we show price $1017.50, pocket $17.50
+  },
+
+  // Stock trading (Payment for order flow)
+  stocks: {
+    commission: 0, // "Free" trading
+    paymentForOrderFlow: 0.003, // We get $0.003 per share from market makers
+    description: 'Commission-free stock trading',
+  },
+
+  // Options trading
+  options: {
+    perContract: 0.65,
+    description: '$0.65 per options contract',
+  },
+
+  // Margin interest (if we offer margin)
+  marginInterest: {
+    rate: 11.5, // 11.5% APR on borrowed funds
+    description: 'Competitive margin rates',
+  },
+};
+
+export const CARD_FEES = {
+  // TIME Card - Visa/Mastercard debit card
+  interchange: {
+    rate: 1.75, // Visa pays us 1.5-2% on purchases
+    userCashback: 1.0, // We give user 1% back
+    ourCut: 0.75, // We keep 0.75%
+  },
+
+  // ATM fees
+  atm: {
+    inNetwork: 0,
+    outOfNetwork: 2.50,
+    international: 3.00,
+  },
+
+  // Card replacement
+  replacement: {
+    standard: 0,
+    expedited: 25,
+  },
+};
+
+export const MERCHANT_FEES = {
+  // Accept TIME Pay as payment
+  processing: {
+    percent: 2.5,
+    flat: 0.10,
+    description: '2.5% + $0.10 (cheaper than Stripe 2.9% + $0.30)',
+  },
+
+  // Chargebacks
+  chargeback: {
+    fee: 15, // Per chargeback
+  },
+
+  // Invoice features
+  invoicing: {
+    free: true,
+    financing: 2.5, // 2.5% to get paid immediately
+  },
+};
+
+export const SUBSCRIPTION_TIERS = {
+  free: {
+    name: 'TIME Pay Free',
+    price: 0,
+    features: [
+      'P2P transfers (free up to $500/mo)',
+      'Basic TIME Card',
+      'UP TO 3.5% APY on savings',
+      'Standard support',
+    ],
+    limits: {
+      p2pFree: 500,
+      dailyLimit: 2500,
+      monthlyLimit: 10000,
+      cryptoLimit: 1000,
+    },
+  },
+
+  pro: {
+    name: 'TIME Pay Pro',
+    price: 9.99,
+    features: [
+      'UNLIMITED free P2P transfers',
+      'Premium TIME Card (2% cashback)',
+      'UP TO 4.5% APY on savings',
+      'Priority support',
+      'No ATM fees worldwide',
+      'Higher limits',
+    ],
+    limits: {
+      p2pFree: Infinity,
+      dailyLimit: 10000,
+      monthlyLimit: 50000,
+      cryptoLimit: 25000,
+    },
+  },
+
+  business: {
+    name: 'TIME Pay Business',
+    price: 29.99,
+    features: [
+      'Everything in Pro',
+      'Invoicing & billing',
+      'Payroll (up to 10 employees)',
+      'Expense management',
+      'QuickBooks integration',
+      'Dedicated account manager',
+    ],
+    limits: {
+      p2pFree: Infinity,
+      dailyLimit: 50000,
+      monthlyLimit: 250000,
+      cryptoLimit: 100000,
+    },
+  },
+
+  enterprise: {
+    name: 'TIME Pay Enterprise',
+    price: 'custom', // Contact sales
+    features: [
+      'Everything in Business',
+      'Unlimited employees',
+      'Custom integrations',
+      'White-label options',
+      'Volume discounts',
+      'SLA guarantee',
+    ],
+    limits: {
+      p2pFree: Infinity,
+      dailyLimit: 500000,
+      monthlyLimit: 2500000,
+      cryptoLimit: 1000000,
+    },
+  },
 };
 
 // ============================================================
@@ -914,6 +1077,188 @@ export class TIMEPayEngine extends EventEmitter {
       'Past interest rates are not indicative of future rates.',
       'P2P transfers over $500/month are subject to a 0.5% fee (maximum $10).',
     ];
+  }
+
+  // ============================================================
+  // REVENUE PROJECTIONS & ANALYTICS
+  // ============================================================
+
+  /**
+   * Calculate projected monthly revenue based on user count
+   */
+  public getRevenueProjection(userCount: number): {
+    users: number;
+    breakdown: {
+      source: string;
+      calculation: string;
+      monthly: number;
+      annual: number;
+    }[];
+    totalMonthly: number;
+    totalAnnual: number;
+  } {
+    // Assumptions based on industry data
+    const avgCryptoVolumePerUser = 500; // $500 crypto traded/month
+    const cryptoActiveRate = 0.3; // 30% of users trade crypto
+    const avgCardSpendPerUser = 1000; // $1000 card spend/month
+    const cardActiveRate = 0.4; // 40% of users have TIME Card
+    const merchantCount = userCount * 0.02; // 2% are merchants
+    const avgMerchantVolume = 5000; // $5000/month per merchant
+    const proSubscriptionRate = 0.08; // 8% pay for Pro
+    const businessSubscriptionRate = 0.02; // 2% pay for Business
+    const avgP2POverLimit = 200; // $200 over free limit
+    const p2POverLimitRate = 0.25; // 25% exceed free limit
+    const avgDeposits = 2000; // $2000 avg balance
+    const instantCashoutRate = 0.15; // 15% use instant cashout
+    const avgCashoutAmount = 500;
+    const crossBorderRate = 0.05; // 5% send cross-border
+    const avgCrossBorderAmount = 1000;
+
+    const breakdown = [
+      {
+        source: 'Crypto Trading Spread (1.75%)',
+        calculation: `${userCount} users × ${cryptoActiveRate * 100}% active × $${avgCryptoVolumePerUser} × 1.75%`,
+        monthly: userCount * cryptoActiveRate * avgCryptoVolumePerUser * 0.0175,
+        annual: 0,
+      },
+      {
+        source: 'TIME Card Interchange (0.75%)',
+        calculation: `${userCount} users × ${cardActiveRate * 100}% active × $${avgCardSpendPerUser} × 0.75%`,
+        monthly: userCount * cardActiveRate * avgCardSpendPerUser * 0.0075,
+        annual: 0,
+      },
+      {
+        source: 'Merchant Processing (2.5%)',
+        calculation: `${Math.round(merchantCount)} merchants × $${avgMerchantVolume} × 2.5%`,
+        monthly: merchantCount * avgMerchantVolume * 0.025,
+        annual: 0,
+      },
+      {
+        source: 'Pro Subscriptions ($9.99)',
+        calculation: `${userCount} users × ${proSubscriptionRate * 100}% × $9.99`,
+        monthly: userCount * proSubscriptionRate * 9.99,
+        annual: 0,
+      },
+      {
+        source: 'Business Subscriptions ($29.99)',
+        calculation: `${userCount} users × ${businessSubscriptionRate * 100}% × $29.99`,
+        monthly: userCount * businessSubscriptionRate * 29.99,
+        annual: 0,
+      },
+      {
+        source: 'Interest Spread (0.75%)',
+        calculation: `${userCount} users × $${avgDeposits} avg × 0.75% ÷ 12`,
+        monthly: (userCount * avgDeposits * 0.0075) / 12,
+        annual: 0,
+      },
+      {
+        source: 'P2P Fees (over $500 limit)',
+        calculation: `${userCount} users × ${p2POverLimitRate * 100}% × $${avgP2POverLimit} × 0.5%`,
+        monthly: userCount * p2POverLimitRate * avgP2POverLimit * 0.005,
+        annual: 0,
+      },
+      {
+        source: 'Instant Cashout (1.5%)',
+        calculation: `${userCount} users × ${instantCashoutRate * 100}% × $${avgCashoutAmount} × 1.5%`,
+        monthly: userCount * instantCashoutRate * avgCashoutAmount * 0.015,
+        annual: 0,
+      },
+      {
+        source: 'Cross-Border (1%)',
+        calculation: `${userCount} users × ${crossBorderRate * 100}% × $${avgCrossBorderAmount} × 1%`,
+        monthly: userCount * crossBorderRate * avgCrossBorderAmount * 0.01,
+        annual: 0,
+      },
+    ];
+
+    // Calculate annual for each
+    breakdown.forEach(item => {
+      item.annual = item.monthly * 12;
+      item.monthly = Math.round(item.monthly * 100) / 100;
+      item.annual = Math.round(item.annual * 100) / 100;
+    });
+
+    const totalMonthly = breakdown.reduce((sum, item) => sum + item.monthly, 0);
+
+    return {
+      users: userCount,
+      breakdown,
+      totalMonthly: Math.round(totalMonthly * 100) / 100,
+      totalAnnual: Math.round(totalMonthly * 12 * 100) / 100,
+    };
+  }
+
+  /**
+   * Get revenue breakdown by category
+   */
+  public getRevenueBreakdown(): {
+    category: string;
+    percentOfRevenue: number;
+    description: string;
+    example: string;
+  }[] {
+    return [
+      {
+        category: 'Trading & Crypto',
+        percentOfRevenue: 50,
+        description: 'Spread on crypto trades, payment for order flow on stocks, options fees',
+        example: '10,000 users × $500 crypto × 1.75% spread = $87,500/month',
+      },
+      {
+        category: 'TIME Card Interchange',
+        percentOfRevenue: 20,
+        description: 'Visa/MC pays us 1.75% on purchases, we give 1% back, keep 0.75%',
+        example: '10,000 users × $1,000 spend × 0.75% = $75,000/month',
+      },
+      {
+        category: 'Merchant Services',
+        percentOfRevenue: 12,
+        description: '2.5% + $0.10 per transaction for businesses accepting TIME Pay',
+        example: '200 merchants × $5,000/month × 2.5% = $25,000/month',
+      },
+      {
+        category: 'Subscriptions',
+        percentOfRevenue: 10,
+        description: 'Pro ($9.99) and Business ($29.99) monthly subscriptions',
+        example: '800 Pro + 200 Business = $14,000/month',
+      },
+      {
+        category: 'Transfer Fees',
+        percentOfRevenue: 5,
+        description: 'Instant cashout, cross-border, P2P over limit',
+        example: 'Instant cashouts + cross-border = $15,000/month',
+      },
+      {
+        category: 'Interest Spread',
+        percentOfRevenue: 3,
+        description: 'Difference between what partner bank pays us vs what we pay users',
+        example: '$20M deposits × 0.75% spread = $12,500/month',
+      },
+    ];
+  }
+
+  /**
+   * Get subscription tier info
+   */
+  public getSubscriptionTiers(): typeof SUBSCRIPTION_TIERS {
+    return SUBSCRIPTION_TIERS;
+  }
+
+  /**
+   * Get all fee structures for admin/transparency
+   */
+  public getAllFees(): {
+    p2p: typeof TIME_PAY_FEES;
+    trading: typeof TRADING_FEES;
+    card: typeof CARD_FEES;
+    merchant: typeof MERCHANT_FEES;
+  } {
+    return {
+      p2p: TIME_PAY_FEES,
+      trading: TRADING_FEES,
+      card: CARD_FEES,
+      merchant: MERCHANT_FEES,
+    };
   }
 }
 

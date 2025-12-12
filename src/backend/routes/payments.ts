@@ -10,8 +10,18 @@
  */
 
 import { Router, Request, Response } from 'express';
-import { authMiddleware } from './auth';
-import { timePayEngine, TIME_PAY_FEES, INTEREST_RATES, TRANSFER_LIMITS, FREE_P2P_MONTHLY_LIMIT } from '../payments/time_pay';
+import { authMiddleware, adminMiddleware } from './auth';
+import {
+  timePayEngine,
+  TIME_PAY_FEES,
+  INTEREST_RATES,
+  TRANSFER_LIMITS,
+  FREE_P2P_MONTHLY_LIMIT,
+  TRADING_FEES,
+  CARD_FEES,
+  MERCHANT_FEES,
+  SUBSCRIPTION_TIERS
+} from '../payments/time_pay';
 
 const router = Router();
 
@@ -445,6 +455,149 @@ router.get('/history', authMiddleware, (req: Request, res: Response) => {
       createdAt: t.createdAt,
       completedAt: t.completedAt,
     })),
+  });
+});
+
+// ============================================================
+// SUBSCRIPTION TIERS
+// ============================================================
+
+/**
+ * GET /payments/subscriptions
+ * Get available subscription tiers
+ */
+router.get('/subscriptions', (req: Request, res: Response) => {
+  res.json({
+    tiers: SUBSCRIPTION_TIERS,
+    comparison: [
+      { feature: 'Monthly Price', free: '$0', pro: '$9.99', business: '$29.99' },
+      { feature: 'Free P2P Limit', free: '$500/mo', pro: 'Unlimited', business: 'Unlimited' },
+      { feature: 'APY on Savings', free: 'UP TO 3.5%', pro: 'UP TO 4.5%', business: 'UP TO 4.5%' },
+      { feature: 'Card Cashback', free: '1%', pro: '2%', business: '2%' },
+      { feature: 'ATM Fees', free: '$2.50 out-of-network', pro: 'FREE worldwide', business: 'FREE worldwide' },
+      { feature: 'Daily Limit', free: '$2,500', pro: '$10,000', business: '$50,000' },
+      { feature: 'Invoicing', free: 'No', pro: 'No', business: 'Yes' },
+      { feature: 'Payroll', free: 'No', pro: 'No', business: 'Up to 10 employees' },
+    ],
+  });
+});
+
+// ============================================================
+// ADMIN REVENUE ANALYTICS (Owner only)
+// ============================================================
+
+/**
+ * GET /payments/admin/revenue-projection/:userCount
+ * Get revenue projections for given user count
+ */
+router.get('/admin/revenue-projection/:userCount', authMiddleware, adminMiddleware, (req: Request, res: Response) => {
+  const userCount = parseInt(req.params.userCount) || 10000;
+
+  const projection = timePayEngine.getRevenueProjection(userCount);
+
+  res.json(projection);
+});
+
+/**
+ * GET /payments/admin/revenue-breakdown
+ * Get revenue breakdown by category
+ */
+router.get('/admin/revenue-breakdown', authMiddleware, adminMiddleware, (req: Request, res: Response) => {
+  res.json({
+    breakdown: timePayEngine.getRevenueBreakdown(),
+    projections: {
+      '10,000 users': timePayEngine.getRevenueProjection(10000),
+      '50,000 users': timePayEngine.getRevenueProjection(50000),
+      '100,000 users': timePayEngine.getRevenueProjection(100000),
+      '500,000 users': timePayEngine.getRevenueProjection(500000),
+    },
+  });
+});
+
+/**
+ * GET /payments/admin/all-fees
+ * Get complete fee structure (for transparency)
+ */
+router.get('/admin/all-fees', authMiddleware, adminMiddleware, (req: Request, res: Response) => {
+  res.json({
+    fees: timePayEngine.getAllFees(),
+    summary: {
+      tradingSpread: '1.75% on crypto (hidden in price)',
+      cardInterchange: '1.75% from Visa/MC, 1% to user, 0.75% kept',
+      merchantProcessing: '2.5% + $0.10 per transaction',
+      subscriptions: 'Pro $9.99, Business $29.99, Enterprise custom',
+      instantCashout: '1.5% (max $15)',
+      crossBorder: '1% (max $50)',
+      p2pOverLimit: '0.5% after $500/month free (max $10)',
+      interestSpread: '0.75% on deposits',
+    },
+  });
+});
+
+/**
+ * GET /payments/fees/trading
+ * Public trading fees info
+ */
+router.get('/fees/trading', (req: Request, res: Response) => {
+  res.json({
+    crypto: {
+      commission: 'FREE',
+      spread: '~1.5-2% (included in price)',
+      note: 'No separate commission charged. Price includes our spread.',
+    },
+    stocks: {
+      commission: 'FREE',
+      note: 'Commission-free stock trading',
+    },
+    options: {
+      perContract: '$0.65',
+      note: '$0.65 per options contract',
+    },
+  });
+});
+
+/**
+ * GET /payments/fees/card
+ * TIME Card fees
+ */
+router.get('/fees/card', (req: Request, res: Response) => {
+  res.json({
+    cardFees: {
+      annualFee: '$0',
+      cashback: '1-2% on all purchases',
+      atmInNetwork: 'FREE',
+      atmOutOfNetwork: '$2.50 (FREE with Pro)',
+      atmInternational: '$3.00 (FREE with Pro)',
+      foreignTransaction: '0%',
+      replacement: 'FREE (expedited $25)',
+    },
+    tiers: {
+      free: '1% cashback',
+      pro: '2% cashback + free ATM worldwide',
+    },
+  });
+});
+
+/**
+ * GET /payments/fees/merchant
+ * Merchant processing fees
+ */
+router.get('/fees/merchant', (req: Request, res: Response) => {
+  res.json({
+    processing: {
+      rate: '2.5% + $0.10',
+      comparison: 'vs Stripe 2.9% + $0.30, PayPal 2.9% + $0.30',
+      savings: 'Save ~$0.20 per transaction',
+    },
+    features: {
+      invoicing: 'FREE',
+      invoiceFinancing: '2.5% to get paid immediately',
+      chargebackFee: '$15 per dispute',
+    },
+    businessAccount: {
+      price: '$29.99/month',
+      includes: ['Invoicing', 'Payroll (up to 10)', 'Expense tracking', 'QuickBooks sync'],
+    },
   });
 });
 
