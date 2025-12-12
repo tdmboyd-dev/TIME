@@ -21,6 +21,9 @@ import universalBotsRoutes from './universal_bots';
 import advancedBrokerRoutes from './advanced_broker';
 import realMarketRoutes from './real_market_api';
 import revolutionaryRoutes from './revolutionary';
+import fmpRoutes from './fmp';
+import fredRoutes from './fred';
+import twelveDataRoutes from './twelvedata';
 
 const router = Router();
 
@@ -41,6 +44,11 @@ router.use('/universal-bots', universalBotsRoutes);
 router.use('/advanced-broker', advancedBrokerRoutes);
 router.use('/real-market', realMarketRoutes);
 router.use('/revolutionary', revolutionaryRoutes);
+
+// NEW! Premium Data APIs
+router.use('/fmp', fmpRoutes);           // Financial Modeling Prep - Fundamentals, Congress trades
+router.use('/fred', fredRoutes);         // Federal Reserve - Economic data
+router.use('/twelvedata', twelveDataRoutes); // TwelveData - Technical indicators
 
 export default router;
 
