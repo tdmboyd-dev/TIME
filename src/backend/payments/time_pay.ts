@@ -121,18 +121,19 @@ export interface LinkedAccount {
 // FEE STRUCTURE — MAXIMIZING REVENUE
 // ============================================================
 
-// Monthly free transfer allowance
-export const FREE_P2P_MONTHLY_LIMIT = 500; // $500 free per month
+// Monthly free transfer allowance - $250 is fair and competitive
+// CashApp/Venmo are unlimited but we offer: trading transfers FREE, lower cross-border, interest on all wallets
+export const FREE_P2P_MONTHLY_LIMIT = 250; // $250 free per month
 
 export const TIME_PAY_FEES = {
   // Internal P2P transfers (TIME to TIME)
-  // FREE up to $500/month, then 0.5% NO CAP (like CashApp)
+  // FREE up to $250/month, then 0.5% NO CAP
   instant: {
     percent: 0.5, // Applied only AFTER free limit exceeded
     flat: 0,
-    maxFee: Infinity, // NO CAP - CashApp doesn't cap, neither should we
+    maxFee: Infinity, // NO CAP
     freeMonthlyLimit: FREE_P2P_MONTHLY_LIMIT,
-    // Example: User sends $5,000 over limit = $25 fee (not capped at $10)
+    // Example: User sends $5,000 over limit = $25 fee
   },
 
   // Standard transfers (1-3 business days) - always free
@@ -286,16 +287,20 @@ export const SUBSCRIPTION_TIERS = {
     name: 'TIME Pay Free',
     price: 0,
     features: [
-      'P2P transfers (free up to $500/mo)',
-      'Basic TIME Card',
-      'UP TO 3.5% APY on savings',
+      'P2P transfers (free up to $250/mo)',
+      'Basic TIME Card (1% cashback)',
+      'UP TO 3.5% APY on all wallets',
+      'FREE trading account transfers',
       'Standard support',
+      'TIME Invoice (FREE)',
+      'TIME Payroll (up to 2 employees FREE)',
     ],
     limits: {
-      p2pFree: 500,
+      p2pFree: 250,
       dailyLimit: 2500,
       monthlyLimit: 10000,
       cryptoLimit: 1000,
+      payrollEmployees: 2,
     },
   },
 
@@ -305,16 +310,19 @@ export const SUBSCRIPTION_TIERS = {
     features: [
       'UNLIMITED free P2P transfers',
       'Premium TIME Card (2% cashback)',
-      'UP TO 4.5% APY on savings',
+      'UP TO 3.5% APY on all wallets',
       'Priority support',
       'No ATM fees worldwide',
       'Higher limits',
+      'TIME Invoice Pro (recurring, automation)',
+      'TIME Payroll (up to 10 employees)',
     ],
     limits: {
       p2pFree: Infinity,
       dailyLimit: 10000,
       monthlyLimit: 50000,
       cryptoLimit: 25000,
+      payrollEmployees: 10,
     },
   },
 
@@ -323,17 +331,19 @@ export const SUBSCRIPTION_TIERS = {
     price: 29.99,
     features: [
       'Everything in Pro',
-      'Invoicing & billing',
-      'Payroll (up to 10 employees)',
+      'TIME Invoice Business (bot-powered)',
+      'TIME Payroll (up to 50 employees)',
       'Expense management',
-      'QuickBooks integration',
+      'QuickBooks/Xero integration',
       'Dedicated account manager',
+      'Bot-governed automation',
     ],
     limits: {
       p2pFree: Infinity,
       dailyLimit: 50000,
       monthlyLimit: 250000,
       cryptoLimit: 100000,
+      payrollEmployees: 50,
     },
   },
 
@@ -347,12 +357,14 @@ export const SUBSCRIPTION_TIERS = {
       'White-label options',
       'Volume discounts',
       'SLA guarantee',
+      'Full bot autonomy',
     ],
     limits: {
       p2pFree: Infinity,
       dailyLimit: 500000,
       monthlyLimit: 2500000,
       cryptoLimit: 1000000,
+      payrollEmployees: Infinity,
     },
   },
 };
@@ -369,34 +381,34 @@ export const SUBSCRIPTION_TIERS = {
 
 export const INTEREST_RATES = {
   // Current maximum APY (variable, subject to change)
-  // Partner bank pays us ~5%, we pass up to 4-4.5% to users
+  // Partner bank pays us ~5%, we pass up to 3.5% to users, keep 1.5% spread
   personal: {
-    upTo: 4.0, // "UP TO 4% APY"
-    current: 3.75, // Actual current rate
-    minimum: 2.0, // Floor rate
+    upTo: 3.5, // "UP TO 3.5% APY"
+    current: 3.25, // Actual current rate
+    minimum: 1.5, // Floor rate
   },
   savings: {
-    upTo: 4.5, // "UP TO 4.5% APY"
-    current: 4.0,
-    minimum: 2.5,
+    upTo: 3.5, // "UP TO 3.5% APY" - same as personal, simpler messaging
+    current: 3.25,
+    minimum: 1.5,
   },
   trading: {
-    upTo: 2.0, // Lower for trading (needs instant liquidity)
-    current: 1.5,
-    minimum: 0.5,
+    upTo: 1.5, // Lower for trading (needs instant liquidity)
+    current: 1.0,
+    minimum: 0.25,
   },
   business: {
-    upTo: 4.0,
-    current: 3.5,
-    minimum: 2.0,
+    upTo: 3.5,
+    current: 3.25,
+    minimum: 1.5,
   },
 
   // How we make money: spread between what partner pays us vs what we pay users
   // Partner pays us: ~5% APY
-  // We pay users: up to 4.5% APY
-  // Our spread: 0.5-1% (our revenue)
+  // We pay users: up to 3.5% APY
+  // Our spread: 1.5% (MORE revenue than before!)
   partnerBankRate: 5.0, // What partner bank pays TIME
-  ourSpread: 0.75, // Average spread we keep (0.5-1%)
+  ourSpread: 1.5, // We keep 1.5% spread (was 0.75%)
 };
 
 // ============================================================
