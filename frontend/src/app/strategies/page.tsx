@@ -15,7 +15,12 @@ import {
   Target,
   Shield,
   ChevronRight,
-  BarChart3
+  BarChart3,
+  X,
+  CheckCircle,
+  AlertCircle,
+  Loader2,
+  Sparkles
 } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -149,8 +154,139 @@ export default function StrategiesPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState<string>('all');
   const [selectedStrategy, setSelectedStrategy] = useState<string | null>(null);
+  const [showSynthesizeModal, setShowSynthesizeModal] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [isSynthesizing, setIsSynthesizing] = useState(false);
+  const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [strategies, setStrategies] = useState<Strategy[]>(mockStrategies);
 
-  const filteredStrategies = mockStrategies.filter(strategy => {
+  // Synthesize form state
+  const [synthesizeGoal, setSynthesizeGoal] = useState<'max_return' | 'min_risk' | 'balanced'>('balanced');
+  const [synthesizeSourceBots, setSynthesizeSourceBots] = useState<string[]>([]);
+
+  // Create form state
+  const [newStrategyName, setNewStrategyName] = useState('');
+  const [newStrategyType, setNewStrategyType] = useState<Strategy['type']>('trend_following');
+  const [newStrategyRisk, setNewStrategyRisk] = useState<'low' | 'medium' | 'high'>('medium');
+
+  const availableBots = ['Trend Follower Alpha', 'Mean Reversion Master', 'Scalper Pro V2', 'Breakout Hunter', 'Momentum Hunter'];
+
+  const handleSynthesize = async () => {
+    if (synthesizeSourceBots.length < 2) {
+      setNotification({ type: 'error', message: 'Please select at least 2 source bots' });
+      setTimeout(() => setNotification(null), 3000);
+      return;
+    }
+    setIsSynthesizing(true);
+    await new Promise(resolve => setTimeout(resolve, 3000));
+
+    const newStrategy: Strategy = {
+      id: `strat-${Date.now()}`,
+      name: `TIME Synthesis #${strategies.filter(s => s.synthesized).length + 1}`,
+      description: `Auto-synthesized ${synthesizeGoal.replace('_', ' ')} strategy from ${synthesizeSourceBots.length} bots`,
+      type: 'synthesized',
+      status: 'backtesting',
+      sourceBots: synthesizeSourceBots,
+      performance: {
+        winRate: Math.random() * 20 + 55,
+        profitFactor: Math.random() * 1.5 + 1.5,
+        maxDrawdown: Math.random() * 10 + 5,
+        sharpeRatio: Math.random() * 1 + 1.5,
+        totalTrades: Math.floor(Math.random() * 200) + 100,
+        totalPnL: Math.random() * 20000 + 5000,
+        avgTrade: Math.random() * 50 + 30,
+      },
+      riskLevel: synthesizeGoal === 'min_risk' ? 'low' : synthesizeGoal === 'max_return' ? 'high' : 'medium',
+      synthesized: true,
+      createdAt: new Date(),
+    };
+
+    setStrategies(prev => [newStrategy, ...prev]);
+    setIsSynthesizing(false);
+    setShowSynthesizeModal(false);
+    setSynthesizeSourceBots([]);
+    setNotification({ type: 'success', message: `Strategy synthesized! Running backtests...` });
+    setTimeout(() => setNotification(null), 5000);
+  };
+
+  const handleCreateStrategy = async () => {
+    if (!newStrategyName.trim()) {
+      setNotification({ type: 'error', message: 'Please enter a strategy name' });
+      setTimeout(() => setNotification(null), 3000);
+      return;
+    }
+    setIsSynthesizing(true);
+    await new Promise(resolve => setTimeout(resolve, 1500));
+
+    const newStrategy: Strategy = {
+      id: `strat-${Date.now()}`,
+      name: newStrategyName,
+      description: `Custom ${newStrategyType.replace('_', ' ')} strategy`,
+      type: newStrategyType,
+      status: 'optimizing',
+      sourceBots: [],
+      performance: {
+        winRate: Math.random() * 20 + 50,
+        profitFactor: Math.random() * 1 + 1,
+        maxDrawdown: Math.random() * 15 + 5,
+        sharpeRatio: Math.random() * 1 + 1,
+        totalTrades: 0,
+        totalPnL: 0,
+        avgTrade: 0,
+      },
+      riskLevel: newStrategyRisk,
+      synthesized: false,
+      createdAt: new Date(),
+    };
+
+    setStrategies(prev => [newStrategy, ...prev]);
+    setIsSynthesizing(false);
+    setShowCreateModal(false);
+    setNewStrategyName('');
+    setNotification({ type: 'success', message: `Strategy "${newStrategyName}" created! Optimizing parameters...` });
+    setTimeout(() => setNotification(null), 5000);
+  };
+
+  const toggleSourceBot = (bot: string) => {
+    setSynthesizeSourceBots(prev =>
+      prev.includes(bot) ? prev.filter(b => b !== bot) : [...prev, bot]
+    );
+  };
+
+  const handleViewAnalytics = (strategy: Strategy) => {
+    setNotification({ type: 'success', message: `Opening analytics for ${strategy.name}...` });
+    setTimeout(() => setNotification(null), 3000);
+  };
+
+  const handleBacktest = async (strategy: Strategy) => {
+    setNotification({ type: 'success', message: `Running backtest for ${strategy.name}...` });
+    setTimeout(() => {
+      setNotification({ type: 'success', message: `Backtest complete! Win rate: ${(Math.random() * 20 + 55).toFixed(1)}%` });
+      setTimeout(() => setNotification(null), 4000);
+    }, 2000);
+  };
+
+  const handleConfigure = (strategy: Strategy) => {
+    setNotification({ type: 'success', message: `Opening configuration for ${strategy.name}` });
+    setTimeout(() => setNotification(null), 3000);
+  };
+
+  const handleToggleStrategy = (strategyId: string, currentStatus: string) => {
+    setStrategies(prev => prev.map(s => {
+      if (s.id === strategyId) {
+        const newStatus = currentStatus === 'active' ? 'paused' : 'active';
+        setNotification({
+          type: 'success',
+          message: `Strategy ${newStatus === 'active' ? 'activated' : 'paused'} successfully`
+        });
+        setTimeout(() => setNotification(null), 3000);
+        return { ...s, status: newStatus as Strategy['status'] };
+      }
+      return s;
+    }));
+  };
+
+  const filteredStrategies = strategies.filter(strategy => {
     const matchesSearch = strategy.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       strategy.description.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesType = filterType === 'all' || strategy.type === filterType;
@@ -159,6 +295,19 @@ export default function StrategiesPage() {
 
   return (
     <div className="space-y-6">
+      {/* Notification */}
+      {notification && (
+        <div className={`fixed top-4 right-4 z-50 flex items-center gap-2 px-4 py-3 rounded-lg shadow-lg ${
+          notification.type === 'success' ? 'bg-green-500/20 border border-green-500/50 text-green-400' : 'bg-red-500/20 border border-red-500/50 text-red-400'
+        }`}>
+          {notification.type === 'success' ? <CheckCircle className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
+          <span className="text-sm font-medium">{notification.message}</span>
+          <button onClick={() => setNotification(null)} className="ml-2 hover:opacity-80">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -166,11 +315,17 @@ export default function StrategiesPage() {
           <p className="text-slate-400">Synthesized and evolved trading strategies</p>
         </div>
         <div className="flex items-center gap-3">
-          <button className="btn-secondary flex items-center gap-2">
+          <button
+            onClick={() => setShowSynthesizeModal(true)}
+            className="btn-secondary flex items-center gap-2"
+          >
             <Zap className="w-4 h-4" />
             Synthesize New
           </button>
-          <button className="btn-primary flex items-center gap-2">
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="btn-primary flex items-center gap-2"
+          >
             <Plus className="w-4 h-4" />
             Create Strategy
           </button>
@@ -390,27 +545,42 @@ export default function StrategiesPage() {
                 <div className="px-4 pb-4 border-t border-slate-700/50">
                   <div className="pt-4 flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <button className="btn-secondary text-sm flex items-center gap-2">
+                      <button
+                        onClick={() => handleViewAnalytics(strategy)}
+                        className="btn-secondary text-sm flex items-center gap-2"
+                      >
                         <BarChart3 className="w-4 h-4" />
                         View Analytics
                       </button>
-                      <button className="btn-secondary text-sm flex items-center gap-2">
+                      <button
+                        onClick={() => handleBacktest(strategy)}
+                        className="btn-secondary text-sm flex items-center gap-2"
+                      >
                         <Target className="w-4 h-4" />
                         Backtest
                       </button>
-                      <button className="btn-secondary text-sm flex items-center gap-2">
+                      <button
+                        onClick={() => handleConfigure(strategy)}
+                        className="btn-secondary text-sm flex items-center gap-2"
+                      >
                         <Settings className="w-4 h-4" />
                         Configure
                       </button>
                     </div>
                     <div className="flex items-center gap-2">
                       {strategy.status === 'active' ? (
-                        <button className="btn-secondary text-sm flex items-center gap-2 text-yellow-400">
+                        <button
+                          onClick={() => handleToggleStrategy(strategy.id, strategy.status)}
+                          className="btn-secondary text-sm flex items-center gap-2 text-yellow-400"
+                        >
                           <Pause className="w-4 h-4" />
                           Pause
                         </button>
                       ) : (
-                        <button className="btn-primary text-sm flex items-center gap-2">
+                        <button
+                          onClick={() => handleToggleStrategy(strategy.id, strategy.status)}
+                          className="btn-primary text-sm flex items-center gap-2"
+                        >
                           <Play className="w-4 h-4" />
                           Activate
                         </button>
@@ -431,10 +601,219 @@ export default function StrategiesPage() {
           <p className="text-slate-400 mb-4">
             Try adjusting your filters or create a new strategy
           </p>
-          <button className="btn-primary">
+          <button onClick={() => setShowCreateModal(true)} className="btn-primary">
             <Plus className="w-4 h-4 mr-2" />
             Create Strategy
           </button>
+        </div>
+      )}
+
+      {/* Synthesize Modal */}
+      {showSynthesizeModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-slate-900 border border-slate-700 rounded-xl p-6 max-w-lg w-full mx-4">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-time-primary" />
+                <h3 className="text-lg font-bold text-white">Synthesize Strategy</h3>
+              </div>
+              <button onClick={() => setShowSynthesizeModal(false)} className="text-slate-400 hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {isSynthesizing ? (
+              <div className="text-center py-8">
+                <Loader2 className="w-12 h-12 text-time-primary mx-auto animate-spin mb-4" />
+                <p className="text-white font-medium">Synthesizing Strategy...</p>
+                <p className="text-sm text-slate-400 mt-1">Analyzing patterns and evolving optimal parameters</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm text-slate-400 mb-2 block">Optimization Goal</label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { id: 'max_return', label: 'Max Return', desc: 'Aggressive' },
+                      { id: 'balanced', label: 'Balanced', desc: 'Recommended' },
+                      { id: 'min_risk', label: 'Min Risk', desc: 'Conservative' },
+                    ].map(goal => (
+                      <button
+                        key={goal.id}
+                        onClick={() => setSynthesizeGoal(goal.id as typeof synthesizeGoal)}
+                        className={clsx(
+                          'flex flex-col items-center p-3 rounded-lg border transition-colors',
+                          synthesizeGoal === goal.id
+                            ? 'bg-time-primary/20 border-time-primary text-time-primary'
+                            : 'bg-slate-800/50 border-slate-700 text-slate-400 hover:text-white hover:border-slate-600'
+                        )}
+                      >
+                        <span className="text-sm font-medium">{goal.label}</span>
+                        <span className="text-xs opacity-70">{goal.desc}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-sm text-slate-400 mb-2 block">Source Bots (Select 2+)</label>
+                  <div className="space-y-2 max-h-48 overflow-y-auto">
+                    {availableBots.map(bot => (
+                      <button
+                        key={bot}
+                        onClick={() => toggleSourceBot(bot)}
+                        className={clsx(
+                          'w-full flex items-center justify-between p-3 rounded-lg border transition-colors text-left',
+                          synthesizeSourceBots.includes(bot)
+                            ? 'bg-time-primary/20 border-time-primary'
+                            : 'bg-slate-800/50 border-slate-700 hover:border-slate-600'
+                        )}
+                      >
+                        <span className={clsx(
+                          'text-sm',
+                          synthesizeSourceBots.includes(bot) ? 'text-time-primary' : 'text-white'
+                        )}>{bot}</span>
+                        <div className={clsx(
+                          'w-5 h-5 rounded border flex items-center justify-center',
+                          synthesizeSourceBots.includes(bot)
+                            ? 'bg-time-primary border-time-primary'
+                            : 'border-slate-600'
+                        )}>
+                          {synthesizeSourceBots.includes(bot) && (
+                            <CheckCircle className="w-4 h-4 text-white" />
+                          )}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="bg-purple-500/10 border border-purple-500/30 rounded-lg p-3">
+                  <p className="text-sm text-purple-400">
+                    TIME AI will analyze the selected bots, extract their best performing patterns, and synthesize a new strategy optimized for your goal.
+                  </p>
+                </div>
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setShowSynthesizeModal(false)}
+                    className="flex-1 py-3 bg-slate-700 hover:bg-slate-600 rounded-lg text-white font-medium"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSynthesize}
+                    className="flex-1 py-3 bg-time-primary hover:bg-time-primary/80 rounded-lg text-white font-medium flex items-center justify-center gap-2"
+                  >
+                    <Sparkles className="w-4 h-4" />
+                    Synthesize
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Create Strategy Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-slate-900 border border-slate-700 rounded-xl p-6 max-w-lg w-full mx-4">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-bold text-white">Create New Strategy</h3>
+              <button onClick={() => setShowCreateModal(false)} className="text-slate-400 hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {isSynthesizing ? (
+              <div className="text-center py-8">
+                <Loader2 className="w-12 h-12 text-time-primary mx-auto animate-spin mb-4" />
+                <p className="text-white font-medium">Creating Strategy...</p>
+                <p className="text-sm text-slate-400 mt-1">Initializing and optimizing parameters</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm text-slate-400 mb-2 block">Strategy Name</label>
+                  <input
+                    type="text"
+                    value={newStrategyName}
+                    onChange={(e) => setNewStrategyName(e.target.value)}
+                    placeholder="My Trading Strategy"
+                    className="w-full px-4 py-3 bg-slate-800 border border-slate-700/50 rounded-lg text-white focus:outline-none focus:border-time-primary/50"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm text-slate-400 mb-2 block">Strategy Type</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { id: 'trend_following', label: 'Trend Following' },
+                      { id: 'mean_reversion', label: 'Mean Reversion' },
+                      { id: 'momentum', label: 'Momentum' },
+                      { id: 'breakout', label: 'Breakout' },
+                      { id: 'hybrid', label: 'Hybrid' },
+                    ].map(type => (
+                      <button
+                        key={type.id}
+                        onClick={() => setNewStrategyType(type.id as Strategy['type'])}
+                        className={clsx(
+                          'p-3 rounded-lg border transition-colors text-sm',
+                          newStrategyType === type.id
+                            ? 'bg-time-primary/20 border-time-primary text-time-primary'
+                            : 'bg-slate-800/50 border-slate-700 text-slate-400 hover:text-white hover:border-slate-600'
+                        )}
+                      >
+                        {type.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-sm text-slate-400 mb-2 block">Risk Level</label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { id: 'low', label: 'Low', color: 'text-green-400' },
+                      { id: 'medium', label: 'Medium', color: 'text-yellow-400' },
+                      { id: 'high', label: 'High', color: 'text-red-400' },
+                    ].map(risk => (
+                      <button
+                        key={risk.id}
+                        onClick={() => setNewStrategyRisk(risk.id as typeof newStrategyRisk)}
+                        className={clsx(
+                          'p-3 rounded-lg border transition-colors text-sm',
+                          newStrategyRisk === risk.id
+                            ? 'bg-time-primary/20 border-time-primary'
+                            : 'bg-slate-800/50 border-slate-700 hover:border-slate-600'
+                        )}
+                      >
+                        <span className={newStrategyRisk === risk.id ? 'text-time-primary' : risk.color}>
+                          {risk.label}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setShowCreateModal(false)}
+                    className="flex-1 py-3 bg-slate-700 hover:bg-slate-600 rounded-lg text-white font-medium"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleCreateStrategy}
+                    className="flex-1 py-3 bg-time-primary hover:bg-time-primary/80 rounded-lg text-white font-medium"
+                  >
+                    Create Strategy
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>

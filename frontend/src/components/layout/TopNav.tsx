@@ -1,15 +1,19 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Bell, Search, User, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { Bell, User, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { useTimeStore } from '@/store/timeStore';
+import { GlobalSearchBar } from '@/components/search/GlobalSearchBar';
 
 export function TopNav() {
   const { regime, evolutionMode, isConnected } = useTimeStore();
-  const [currentTime, setCurrentTime] = useState(new Date());
+  const [currentTime, setCurrentTime] = useState<string>('');
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    setMounted(true);
+    setCurrentTime(new Date().toLocaleTimeString());
+    const timer = setInterval(() => setCurrentTime(new Date().toLocaleTimeString()), 1000);
     return () => clearInterval(timer);
   }, []);
 
@@ -30,15 +34,8 @@ export function TopNav() {
     <header className="h-16 bg-slate-900/50 backdrop-blur-sm border-b border-slate-700/50 flex items-center justify-between px-6">
       {/* Left Section */}
       <div className="flex items-center gap-6">
-        {/* Search */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-          <input
-            type="text"
-            placeholder="Search bots, strategies, trades..."
-            className="w-80 pl-10 pr-4 py-2 bg-slate-800/50 border border-slate-700/50 rounded-lg text-sm text-white placeholder-slate-500 focus:outline-none focus:border-time-primary/50"
-          />
-        </div>
+        {/* Global Search Bar - Real Market Data */}
+        <GlobalSearchBar />
 
         {/* Market Regime Badge */}
         <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full ${getRegimeColor()}`}>
@@ -60,8 +57,8 @@ export function TopNav() {
         </div>
 
         {/* Time */}
-        <div className="text-sm text-slate-400">
-          {currentTime.toLocaleTimeString()}
+        <div className="text-sm text-slate-400" suppressHydrationWarning>
+          {mounted ? currentTime : '--:--:--'}
         </div>
 
         {/* Notifications */}

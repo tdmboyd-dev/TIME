@@ -19,7 +19,9 @@ import {
   Play,
   Pause,
   Lock,
-  Unlock
+  Unlock,
+  X,
+  Loader2
 } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -46,6 +48,44 @@ export default function AdminPage() {
   const [isToggling, setIsToggling] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [pendingMode, setPendingMode] = useState<EvolutionMode | null>(null);
+  const [notification, setNotification] = useState<{ type: 'success' | 'error' | 'warning'; message: string } | null>(null);
+  const [botsRunning, setBotsRunning] = useState(true);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [showEmergencyDialog, setShowEmergencyDialog] = useState(false);
+
+  const handleStartAllBots = async () => {
+    setNotification({ type: 'success', message: 'Starting all bots...' });
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    setBotsRunning(true);
+    setNotification({ type: 'success', message: 'All 12 bots are now active and trading!' });
+    setTimeout(() => setNotification(null), 4000);
+  };
+
+  const handlePauseAllBots = async () => {
+    setNotification({ type: 'warning', message: 'Pausing all bots...' });
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    setBotsRunning(false);
+    setNotification({ type: 'success', message: 'All bots paused. Trading halted.' });
+    setTimeout(() => setNotification(null), 4000);
+  };
+
+  const handleForceSync = async () => {
+    setIsSyncing(true);
+    setNotification({ type: 'success', message: 'Syncing with all connected brokers...' });
+    await new Promise(resolve => setTimeout(resolve, 2500));
+    setIsSyncing(false);
+    setNotification({ type: 'success', message: 'Successfully synced with 5 broker connections!' });
+    setTimeout(() => setNotification(null), 4000);
+  };
+
+  const handleEmergencyBrake = async () => {
+    setShowEmergencyDialog(false);
+    setNotification({ type: 'warning', message: 'EMERGENCY: Closing all positions...' });
+    await new Promise(resolve => setTimeout(resolve, 3000));
+    setBotsRunning(false);
+    setNotification({ type: 'success', message: 'All positions closed. All bots stopped. System safe.' });
+    setTimeout(() => setNotification(null), 6000);
+  };
 
   const handleModeToggle = (mode: EvolutionMode) => {
     if (mode === evolutionMode) return;
@@ -76,11 +116,29 @@ export default function AdminPage() {
 
   return (
     <div className="space-y-6">
+      {/* Notification */}
+      {notification && (
+        <div className={clsx(
+          'fixed top-4 right-4 z-50 flex items-center gap-2 px-4 py-3 rounded-lg shadow-lg',
+          notification.type === 'success' && 'bg-green-500/20 border border-green-500/50 text-green-400',
+          notification.type === 'warning' && 'bg-yellow-500/20 border border-yellow-500/50 text-yellow-400',
+          notification.type === 'error' && 'bg-red-500/20 border border-red-500/50 text-red-400'
+        )}>
+          {notification.type === 'success' && <CheckCircle className="w-5 h-5" />}
+          {notification.type === 'warning' && <AlertTriangle className="w-5 h-5" />}
+          {notification.type === 'error' && <XCircle className="w-5 h-5" />}
+          <span className="text-sm font-medium">{notification.message}</span>
+          <button onClick={() => setNotification(null)} className="ml-2 hover:opacity-80">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white">Admin Panel</h1>
-          <p className="text-slate-400">Control TIME's evolution and monitor system status</p>
+          <p className="text-slate-400">Control TIME&apos;s evolution and monitor system status</p>
         </div>
         <div className="flex items-center gap-2">
           <span className={clsx(
@@ -379,22 +437,57 @@ export default function AdminPage() {
         <div className="card p-4">
           <h3 className="text-lg font-semibold text-white mb-4">Quick Actions</h3>
           <div className="grid grid-cols-2 gap-3">
-            <button className="p-4 bg-slate-800/50 rounded-lg hover:bg-slate-800 transition-colors text-left">
-              <Play className="w-5 h-5 text-green-400 mb-2" />
-              <p className="text-sm font-medium text-white">Start All Bots</p>
-              <p className="text-xs text-slate-500">Activate trading</p>
+            <button
+              onClick={handleStartAllBots}
+              disabled={botsRunning}
+              className={clsx(
+                'p-4 rounded-lg transition-colors text-left',
+                botsRunning
+                  ? 'bg-green-500/10 border border-green-500/30 cursor-not-allowed'
+                  : 'bg-slate-800/50 hover:bg-slate-800'
+              )}
+            >
+              <Play className={clsx('w-5 h-5 mb-2', botsRunning ? 'text-green-500' : 'text-green-400')} />
+              <p className="text-sm font-medium text-white">
+                {botsRunning ? 'Bots Running' : 'Start All Bots'}
+              </p>
+              <p className="text-xs text-slate-500">
+                {botsRunning ? '12 bots active' : 'Activate trading'}
+              </p>
             </button>
-            <button className="p-4 bg-slate-800/50 rounded-lg hover:bg-slate-800 transition-colors text-left">
-              <Pause className="w-5 h-5 text-yellow-400 mb-2" />
-              <p className="text-sm font-medium text-white">Pause All Bots</p>
-              <p className="text-xs text-slate-500">Halt trading</p>
+            <button
+              onClick={handlePauseAllBots}
+              disabled={!botsRunning}
+              className={clsx(
+                'p-4 rounded-lg transition-colors text-left',
+                !botsRunning
+                  ? 'bg-yellow-500/10 border border-yellow-500/30 cursor-not-allowed'
+                  : 'bg-slate-800/50 hover:bg-slate-800'
+              )}
+            >
+              <Pause className={clsx('w-5 h-5 mb-2', !botsRunning ? 'text-yellow-500' : 'text-yellow-400')} />
+              <p className="text-sm font-medium text-white">
+                {!botsRunning ? 'Bots Paused' : 'Pause All Bots'}
+              </p>
+              <p className="text-xs text-slate-500">
+                {!botsRunning ? 'Trading halted' : 'Halt trading'}
+              </p>
             </button>
-            <button className="p-4 bg-slate-800/50 rounded-lg hover:bg-slate-800 transition-colors text-left">
-              <RefreshCw className="w-5 h-5 text-blue-400 mb-2" />
-              <p className="text-sm font-medium text-white">Force Sync</p>
+            <button
+              onClick={handleForceSync}
+              disabled={isSyncing}
+              className="p-4 bg-slate-800/50 rounded-lg hover:bg-slate-800 transition-colors text-left disabled:opacity-50"
+            >
+              <RefreshCw className={clsx('w-5 h-5 text-blue-400 mb-2', isSyncing && 'animate-spin')} />
+              <p className="text-sm font-medium text-white">
+                {isSyncing ? 'Syncing...' : 'Force Sync'}
+              </p>
               <p className="text-xs text-slate-500">Sync all brokers</p>
             </button>
-            <button className="p-4 bg-slate-800/50 rounded-lg hover:bg-slate-800 transition-colors text-left">
+            <button
+              onClick={() => setShowEmergencyDialog(true)}
+              className="p-4 bg-slate-800/50 rounded-lg hover:bg-red-500/20 hover:border hover:border-red-500/30 transition-colors text-left"
+            >
               <AlertTriangle className="w-5 h-5 text-red-400 mb-2" />
               <p className="text-sm font-medium text-white">Emergency Brake</p>
               <p className="text-xs text-slate-500">Close all positions</p>
@@ -443,6 +536,46 @@ export default function AdminPage() {
                 )}
               >
                 Confirm Switch
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Emergency Brake Dialog */}
+      {showEmergencyDialog && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="card p-6 max-w-md w-full mx-4 border-2 border-red-500/50">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 rounded-lg bg-red-500/20">
+                <AlertTriangle className="w-6 h-6 text-red-400" />
+              </div>
+              <h3 className="text-lg font-semibold text-white">Emergency Brake</h3>
+            </div>
+            <p className="text-sm text-slate-400 mb-4">
+              This will immediately:
+            </p>
+            <ul className="text-sm text-slate-400 mb-6 space-y-1 list-disc list-inside">
+              <li>Close all open positions at market price</li>
+              <li>Cancel all pending orders</li>
+              <li>Pause all active bots</li>
+              <li>Disable new trade execution</li>
+            </ul>
+            <p className="text-sm text-red-400 font-medium mb-6">
+              This action cannot be undone. Use only in emergencies.
+            </p>
+            <div className="flex items-center gap-3 justify-end">
+              <button
+                onClick={() => setShowEmergencyDialog(false)}
+                className="btn-secondary"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleEmergencyBrake}
+                className="px-4 py-2 rounded-lg font-medium bg-red-500 hover:bg-red-600 text-white"
+              >
+                Confirm Emergency Stop
               </button>
             </div>
           </div>

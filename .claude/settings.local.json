@@ -30,7 +30,8 @@
       "Bash(taskkill //F //PID 25368)",
       "Bash(taskkill //F //PID 27132)",
       "Bash(cat:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(ls -la \"C:\\Users\\Timeb\\OneDrive\\TIME\\src\\backend\\brokers\"\" 2>&1 || echo \"Directory not found \")"
     ]
   }
 }

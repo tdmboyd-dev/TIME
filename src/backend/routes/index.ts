@@ -18,6 +18,9 @@ import riskProfileRoutes from './risk_profile';
 import fetcherRoutes from './fetcher';
 import paymentsRoutes from './payments';
 import universalBotsRoutes from './universal_bots';
+import advancedBrokerRoutes from './advanced_broker';
+import realMarketRoutes from './real_market_api';
+import revolutionaryRoutes from './revolutionary';
 
 const router = Router();
 
@@ -35,6 +38,9 @@ router.use('/risk', riskProfileRoutes);
 router.use('/fetcher', fetcherRoutes);
 router.use('/payments', paymentsRoutes);
 router.use('/universal-bots', universalBotsRoutes);
+router.use('/advanced-broker', advancedBrokerRoutes);
+router.use('/real-market', realMarketRoutes);
+router.use('/revolutionary', revolutionaryRoutes);
 
 export default router;
 

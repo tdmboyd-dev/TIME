@@ -17,7 +17,13 @@ import {
   Activity,
   ExternalLink,
   Github,
-  Globe
+  Globe,
+  X,
+  CheckCircle,
+  AlertCircle,
+  Loader2,
+  Link as LinkIcon,
+  FileCode
 } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -160,8 +166,95 @@ export default function BotsPage() {
   const [filterSource, setFilterSource] = useState<string>('all');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [selectedBots, setSelectedBots] = useState<string[]>([]);
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [showAddBotModal, setShowAddBotModal] = useState(false);
+  const [importSource, setImportSource] = useState<'github' | 'mql5' | 'ctrader' | 'file'>('github');
+  const [importUrl, setImportUrl] = useState('');
+  const [isImporting, setIsImporting] = useState(false);
+  const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [bots, setBots] = useState<BotData[]>(mockBots);
 
-  const filteredBots = mockBots.filter(bot => {
+  // Add Bot form state
+  const [newBotName, setNewBotName] = useState('');
+  const [newBotDescription, setNewBotDescription] = useState('');
+  const [newBotStrategy, setNewBotStrategy] = useState<'trend_following' | 'mean_reversion' | 'scalping' | 'arbitrage'>('trend_following');
+
+  const handleImport = async () => {
+    if (!importUrl.trim()) {
+      setNotification({ type: 'error', message: 'Please enter a valid URL or path' });
+      setTimeout(() => setNotification(null), 3000);
+      return;
+    }
+    setIsImporting(true);
+    await new Promise(resolve => setTimeout(resolve, 2500));
+
+    const newBot: BotData = {
+      id: `bot-${Date.now()}`,
+      name: `Imported Bot ${bots.length + 1}`,
+      description: `Bot imported from ${importSource}`,
+      source: importSource === 'file' ? 'user_uploaded' : importSource,
+      status: 'analyzing',
+      rating: 0,
+      performance: {
+        winRate: 0,
+        profitFactor: 0,
+        maxDrawdown: 0,
+        sharpeRatio: 0,
+        totalTrades: 0,
+        totalPnL: 0,
+      },
+      absorbed: false,
+      createdAt: new Date(),
+      lastActive: new Date(),
+    };
+
+    setBots(prev => [newBot, ...prev]);
+    setIsImporting(false);
+    setShowImportModal(false);
+    setImportUrl('');
+    setNotification({ type: 'success', message: `Bot imported successfully! Analyzing performance...` });
+    setTimeout(() => setNotification(null), 5000);
+  };
+
+  const handleAddBot = async () => {
+    if (!newBotName.trim()) {
+      setNotification({ type: 'error', message: 'Please enter a bot name' });
+      setTimeout(() => setNotification(null), 3000);
+      return;
+    }
+    setIsImporting(true);
+    await new Promise(resolve => setTimeout(resolve, 1500));
+
+    const newBot: BotData = {
+      id: `bot-${Date.now()}`,
+      name: newBotName,
+      description: newBotDescription || `Custom ${newBotStrategy.replace('_', ' ')} bot`,
+      source: 'synthesized',
+      status: 'training',
+      rating: 0,
+      performance: {
+        winRate: Math.random() * 30 + 50,
+        profitFactor: Math.random() * 1.5 + 1,
+        maxDrawdown: Math.random() * 15 + 5,
+        sharpeRatio: Math.random() * 1.5 + 0.5,
+        totalTrades: 0,
+        totalPnL: 0,
+      },
+      absorbed: false,
+      createdAt: new Date(),
+      lastActive: new Date(),
+    };
+
+    setBots(prev => [newBot, ...prev]);
+    setIsImporting(false);
+    setShowAddBotModal(false);
+    setNewBotName('');
+    setNewBotDescription('');
+    setNotification({ type: 'success', message: `Bot "${newBotName}" created! Training in progress...` });
+    setTimeout(() => setNotification(null), 5000);
+  };
+
+  const filteredBots = bots.filter(bot => {
     const matchesSearch = bot.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       bot.description.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesSource = filterSource === 'all' || bot.source === filterSource;
@@ -179,6 +272,19 @@ export default function BotsPage() {
 
   return (
     <div className="space-y-6">
+      {/* Notification */}
+      {notification && (
+        <div className={`fixed top-4 right-4 z-50 flex items-center gap-2 px-4 py-3 rounded-lg shadow-lg ${
+          notification.type === 'success' ? 'bg-green-500/20 border border-green-500/50 text-green-400' : 'bg-red-500/20 border border-red-500/50 text-red-400'
+        }`}>
+          {notification.type === 'success' ? <CheckCircle className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
+          <span className="text-sm font-medium">{notification.message}</span>
+          <button onClick={() => setNotification(null)} className="ml-2 hover:opacity-80">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -186,11 +292,17 @@ export default function BotsPage() {
           <p className="text-slate-400">Manage, analyze, and absorb trading bots</p>
         </div>
         <div className="flex items-center gap-3">
-          <button className="btn-secondary flex items-center gap-2">
+          <button
+            onClick={() => setShowImportModal(true)}
+            className="btn-secondary flex items-center gap-2"
+          >
             <Download className="w-4 h-4" />
             Import
           </button>
-          <button className="btn-primary flex items-center gap-2">
+          <button
+            onClick={() => setShowAddBotModal(true)}
+            className="btn-primary flex items-center gap-2"
+          >
             <Plus className="w-4 h-4" />
             Add Bot
           </button>
@@ -418,10 +530,192 @@ export default function BotsPage() {
           <p className="text-slate-400 mb-4">
             Try adjusting your filters or add a new bot
           </p>
-          <button className="btn-primary">
+          <button onClick={() => setShowAddBotModal(true)} className="btn-primary">
             <Plus className="w-4 h-4 mr-2" />
             Add Bot
           </button>
+        </div>
+      )}
+
+      {/* Import Bot Modal */}
+      {showImportModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-slate-900 border border-slate-700 rounded-xl p-6 max-w-lg w-full mx-4">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-bold text-white">Import Bot</h3>
+              <button onClick={() => setShowImportModal(false)} className="text-slate-400 hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {isImporting ? (
+              <div className="text-center py-8">
+                <Loader2 className="w-12 h-12 text-time-primary mx-auto animate-spin mb-4" />
+                <p className="text-white font-medium">Importing Bot...</p>
+                <p className="text-sm text-slate-400 mt-1">Analyzing strategy and performance metrics</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm text-slate-400 mb-2 block">Import Source</label>
+                  <div className="grid grid-cols-4 gap-2">
+                    {[
+                      { id: 'github', label: 'GitHub', icon: Github },
+                      { id: 'mql5', label: 'MQL5', icon: Globe },
+                      { id: 'ctrader', label: 'cTrader', icon: TrendingUp },
+                      { id: 'file', label: 'File', icon: FileCode },
+                    ].map(source => (
+                      <button
+                        key={source.id}
+                        onClick={() => setImportSource(source.id as typeof importSource)}
+                        className={clsx(
+                          'flex flex-col items-center gap-1 p-3 rounded-lg border transition-colors',
+                          importSource === source.id
+                            ? 'bg-time-primary/20 border-time-primary text-time-primary'
+                            : 'bg-slate-800/50 border-slate-700 text-slate-400 hover:text-white hover:border-slate-600'
+                        )}
+                      >
+                        <source.icon className="w-5 h-5" />
+                        <span className="text-xs">{source.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-sm text-slate-400 mb-2 block">
+                    {importSource === 'file' ? 'File Path' : `${importSource === 'github' ? 'GitHub' : importSource === 'mql5' ? 'MQL5' : 'cTrader'} URL`}
+                  </label>
+                  <div className="relative">
+                    <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <input
+                      type="text"
+                      value={importUrl}
+                      onChange={(e) => setImportUrl(e.target.value)}
+                      placeholder={
+                        importSource === 'github' ? 'https://github.com/user/trading-bot' :
+                        importSource === 'mql5' ? 'https://www.mql5.com/en/market/product/...' :
+                        importSource === 'ctrader' ? 'ctrader://algo/...' :
+                        'C:\\path\\to\\bot.mq5'
+                      }
+                      className="w-full pl-10 pr-4 py-3 bg-slate-800 border border-slate-700/50 rounded-lg text-white focus:outline-none focus:border-time-primary/50"
+                    />
+                  </div>
+                </div>
+
+                <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3">
+                  <p className="text-sm text-blue-400">
+                    TIME will automatically analyze the bot&apos;s strategy, backtest it, and provide performance metrics before absorbing it into the system.
+                  </p>
+                </div>
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setShowImportModal(false)}
+                    className="flex-1 py-3 bg-slate-700 hover:bg-slate-600 rounded-lg text-white font-medium"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleImport}
+                    className="flex-1 py-3 bg-time-primary hover:bg-time-primary/80 rounded-lg text-white font-medium"
+                  >
+                    Import Bot
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Add Bot Modal */}
+      {showAddBotModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-slate-900 border border-slate-700 rounded-xl p-6 max-w-lg w-full mx-4">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-bold text-white">Create New Bot</h3>
+              <button onClick={() => setShowAddBotModal(false)} className="text-slate-400 hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {isImporting ? (
+              <div className="text-center py-8">
+                <Loader2 className="w-12 h-12 text-time-primary mx-auto animate-spin mb-4" />
+                <p className="text-white font-medium">Creating Bot...</p>
+                <p className="text-sm text-slate-400 mt-1">Initializing strategy and training model</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm text-slate-400 mb-2 block">Bot Name</label>
+                  <input
+                    type="text"
+                    value={newBotName}
+                    onChange={(e) => setNewBotName(e.target.value)}
+                    placeholder="My Trading Bot"
+                    className="w-full px-4 py-3 bg-slate-800 border border-slate-700/50 rounded-lg text-white focus:outline-none focus:border-time-primary/50"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm text-slate-400 mb-2 block">Description (Optional)</label>
+                  <textarea
+                    value={newBotDescription}
+                    onChange={(e) => setNewBotDescription(e.target.value)}
+                    placeholder="Describe what your bot does..."
+                    rows={3}
+                    className="w-full px-4 py-3 bg-slate-800 border border-slate-700/50 rounded-lg text-white focus:outline-none focus:border-time-primary/50 resize-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm text-slate-400 mb-2 block">Strategy Type</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { id: 'trend_following', label: 'Trend Following', desc: 'Follow market trends' },
+                      { id: 'mean_reversion', label: 'Mean Reversion', desc: 'Trade price reversals' },
+                      { id: 'scalping', label: 'Scalping', desc: 'Quick small profits' },
+                      { id: 'arbitrage', label: 'Arbitrage', desc: 'Price discrepancies' },
+                    ].map(strategy => (
+                      <button
+                        key={strategy.id}
+                        onClick={() => setNewBotStrategy(strategy.id as typeof newBotStrategy)}
+                        className={clsx(
+                          'flex flex-col items-start p-3 rounded-lg border transition-colors text-left',
+                          newBotStrategy === strategy.id
+                            ? 'bg-time-primary/20 border-time-primary'
+                            : 'bg-slate-800/50 border-slate-700 hover:border-slate-600'
+                        )}
+                      >
+                        <span className={clsx(
+                          'text-sm font-medium',
+                          newBotStrategy === strategy.id ? 'text-time-primary' : 'text-white'
+                        )}>{strategy.label}</span>
+                        <span className="text-xs text-slate-500">{strategy.desc}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setShowAddBotModal(false)}
+                    className="flex-1 py-3 bg-slate-700 hover:bg-slate-600 rounded-lg text-white font-medium"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleAddBot}
+                    className="flex-1 py-3 bg-time-primary hover:bg-time-primary/80 rounded-lg text-white font-medium"
+                  >
+                    Create Bot
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>
