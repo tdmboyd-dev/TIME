@@ -39,7 +39,8 @@
       "Bash(npm run build:*)",
       "Bash(dir \"C:\\Users\\Timeb\\OneDrive\\TIME\\frontend\\src\\components\" /b)",
       "Bash(npx kill-port 3001)",
-      "Bash(npm start)"
+      "Bash(npm start)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nTIME v3.1.0 - Multi-Source Bot Absorption & AI Trade God\n\nNEW FEATURES:\n- Big Moves Alert System with real-time notifications\n- AI Trade God Bot - FREE & open source trading engine\n- Multi-source bot fetcher (11 sources: GitHub, MQL5, TradingView, npm, PyPI, Discord, Telegram, RapidAPI, cTrader, NinjaTrader)\n- 16 FREE APIs integrated (Alpha Vantage, Finnhub, CoinGecko, FRED, FMP, TwelveData, etc.)\n- 36+ pre-qualified 4.0+ rated bots ready for absorption\n\nFIXES:\n- Fixed all TypeScript compilation errors\n- Fixed response.json() type annotations\n- Fixed alpha_engine severity type handling\n- Fixed autonomous_capital_agent MarketObservation types\n- Fixed sentiment_velocity_engine VelocityReading properties\n- Fixed yield_orchestrator return type\n\nUI UPDATES:\n- Added Big Moves Alerts page (/alerts)\n- Added AI Trade God page (/ai-trade-god)\n- Updated sidebar navigation with new features\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n)\")"
     ]
   }
 }
