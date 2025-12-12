@@ -5,10 +5,26 @@
  */
 
 import { Router, Request, Response } from 'express';
-import { authMiddleware, adminMiddleware } from './auth';
+import { authMiddleware, adminMiddleware, ownerMiddleware } from './auth';
 import { consentManager } from '../consent/consent_manager';
+import { revenueEngine, SubscriptionTier } from '../monetization/revenue_engine';
 
 const router = Router();
+
+// ============================================================
+// SUBSCRIPTION STORAGE (In-memory for now, use DB in production)
+// ============================================================
+
+interface UserSubscription {
+  tier: SubscriptionTier;
+  grantedBy?: string;
+  grantedAt?: Date;
+  expiresAt?: Date;
+  isFree: boolean;
+  reason?: string;
+}
+
+const userSubscriptions: Map<string, UserSubscription> = new Map();
 
 // ============================================================
 // TYPES
@@ -441,6 +457,273 @@ router.put('/admin/:userId/status', authMiddleware, adminMiddleware, (req: Reque
   res.json({
     success: true,
     message: `User ${userId} status updated to ${status}`,
+    reason,
+  });
+});
+
+// ============================================================
+// SUBSCRIPTION MANAGEMENT
+// ============================================================
+
+/**
+ * GET /users/subscription
+ * Get current user's subscription
+ */
+router.get('/subscription', authMiddleware, (req: Request, res: Response) => {
+  const user = (req as any).user;
+  const subscription = userSubscriptions.get(user.id);
+  const tier = subscription?.tier || 'free';
+  const plan = revenueEngine.getPlan(tier);
+
+  res.json({
+    subscription: {
+      tier,
+      plan: plan.name,
+      isFree: subscription?.isFree || tier === 'free',
+      grantedBy: subscription?.grantedBy,
+      grantedAt: subscription?.grantedAt,
+      expiresAt: subscription?.expiresAt,
+      reason: subscription?.reason,
+    },
+    features: plan.features,
+    limits: plan.limits,
+    price: plan.price,
+  });
+});
+
+/**
+ * GET /users/subscription/plans
+ * Get all available subscription plans
+ */
+router.get('/subscription/plans', (req: Request, res: Response) => {
+  const plans = revenueEngine.getSubscriptionPlans();
+
+  res.json({
+    plans: plans.map(plan => ({
+      tier: plan.tier,
+      name: plan.name,
+      price: plan.price,
+      features: plan.features,
+      limits: plan.limits,
+    })),
+  });
+});
+
+/**
+ * POST /users/subscription/upgrade
+ * Upgrade subscription (would integrate with payment in production)
+ */
+router.post('/subscription/upgrade', authMiddleware, async (req: Request, res: Response) => {
+  const user = (req as any).user;
+  const { tier, billingCycle = 'monthly' } = req.body;
+
+  const validTiers: SubscriptionTier[] = ['free', 'starter', 'trader', 'professional', 'enterprise'];
+  if (!validTiers.includes(tier)) {
+    return res.status(400).json({
+      error: 'Invalid tier',
+      validTiers,
+    });
+  }
+
+  try {
+    // In production, this would process payment first
+    const result = await revenueEngine.subscribeUser(user.id, tier, billingCycle);
+
+    // Store subscription
+    userSubscriptions.set(user.id, {
+      tier,
+      isFree: false,
+      grantedAt: new Date(),
+    });
+
+    const plan = revenueEngine.getPlan(tier);
+
+    res.json({
+      success: true,
+      message: `Upgraded to ${plan.name}`,
+      subscription: {
+        tier,
+        plan: plan.name,
+        subscriptionId: result.subscriptionId,
+      },
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ============================================================
+// OWNER-ONLY: FREE TIER GRANTS
+// ============================================================
+
+/**
+ * POST /users/admin/:userId/grant-tier
+ * Grant free access to any tier (owner only)
+ */
+router.post('/admin/:userId/grant-tier', authMiddleware, ownerMiddleware, (req: Request, res: Response) => {
+  const { userId } = req.params;
+  const { tier, reason, durationDays } = req.body;
+  const owner = (req as any).user;
+
+  const validTiers: SubscriptionTier[] = ['free', 'starter', 'trader', 'professional', 'enterprise'];
+  if (!validTiers.includes(tier)) {
+    return res.status(400).json({
+      error: 'Invalid tier',
+      validTiers,
+    });
+  }
+
+  // Calculate expiration if duration provided
+  let expiresAt: Date | undefined;
+  if (durationDays) {
+    expiresAt = new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000);
+  }
+
+  // Grant free access
+  userSubscriptions.set(userId, {
+    tier,
+    grantedBy: owner.id,
+    grantedAt: new Date(),
+    expiresAt,
+    isFree: true,
+    reason: reason || `Free ${tier} access granted by owner`,
+  });
+
+  const plan = revenueEngine.getPlan(tier);
+
+  res.json({
+    success: true,
+    message: `Granted FREE ${plan.name} access to user ${userId}`,
+    grant: {
+      userId,
+      tier,
+      planName: plan.name,
+      grantedBy: owner.name || owner.email,
+      grantedAt: new Date(),
+      expiresAt,
+      reason,
+      features: plan.features,
+      limits: plan.limits,
+      normalPrice: plan.price,
+      userPays: '$0.00 (FREE)',
+    },
+  });
+});
+
+/**
+ * DELETE /users/admin/:userId/revoke-tier
+ * Revoke free tier access (owner only)
+ */
+router.delete('/admin/:userId/revoke-tier', authMiddleware, ownerMiddleware, (req: Request, res: Response) => {
+  const { userId } = req.params;
+  const { reason } = req.body;
+
+  const currentSub = userSubscriptions.get(userId);
+  if (!currentSub) {
+    return res.status(404).json({
+      error: 'User has no subscription to revoke',
+    });
+  }
+
+  // Downgrade to free
+  userSubscriptions.set(userId, {
+    tier: 'free',
+    isFree: true,
+    grantedAt: new Date(),
+    reason: reason || 'Free tier access revoked',
+  });
+
+  res.json({
+    success: true,
+    message: `Revoked ${currentSub.tier} access for user ${userId}. Downgraded to free.`,
+    previousTier: currentSub.tier,
+    newTier: 'free',
+    reason,
+  });
+});
+
+/**
+ * GET /users/admin/grants
+ * List all free tier grants (owner only)
+ */
+router.get('/admin/grants', authMiddleware, ownerMiddleware, (req: Request, res: Response) => {
+  const grants: Array<{
+    userId: string;
+    tier: SubscriptionTier;
+    grantedBy?: string;
+    grantedAt?: Date;
+    expiresAt?: Date;
+    reason?: string;
+  }> = [];
+
+  userSubscriptions.forEach((sub, odUserId) => {
+    if (sub.isFree && sub.tier !== 'free') {
+      grants.push({
+        userId: odUserId,
+        tier: sub.tier,
+        grantedBy: sub.grantedBy,
+        grantedAt: sub.grantedAt,
+        expiresAt: sub.expiresAt,
+        reason: sub.reason,
+      });
+    }
+  });
+
+  res.json({
+    total: grants.length,
+    grants,
+  });
+});
+
+/**
+ * POST /users/admin/bulk-grant
+ * Grant free tier to multiple users at once (owner only)
+ */
+router.post('/admin/bulk-grant', authMiddleware, ownerMiddleware, (req: Request, res: Response) => {
+  const { userIds, tier, reason, durationDays } = req.body;
+  const owner = (req as any).user;
+
+  if (!userIds || !Array.isArray(userIds) || userIds.length === 0) {
+    return res.status(400).json({
+      error: 'userIds must be a non-empty array',
+    });
+  }
+
+  const validTiers: SubscriptionTier[] = ['free', 'starter', 'trader', 'professional', 'enterprise'];
+  if (!validTiers.includes(tier)) {
+    return res.status(400).json({
+      error: 'Invalid tier',
+      validTiers,
+    });
+  }
+
+  let expiresAt: Date | undefined;
+  if (durationDays) {
+    expiresAt = new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000);
+  }
+
+  const results: string[] = [];
+  for (const odUserId of userIds) {
+    userSubscriptions.set(odUserId, {
+      tier,
+      grantedBy: owner.id,
+      grantedAt: new Date(),
+      expiresAt,
+      isFree: true,
+      reason: reason || `Bulk grant: Free ${tier} access`,
+    });
+    results.push(odUserId);
+  }
+
+  const plan = revenueEngine.getPlan(tier);
+
+  res.json({
+    success: true,
+    message: `Granted FREE ${plan.name} access to ${results.length} users`,
+    tier,
+    planName: plan.name,
+    usersGranted: results,
+    expiresAt,
     reason,
   });
 });
