@@ -2152,18 +2152,19 @@ Professional options volatility trading:
 
 # UPDATED VERSION
 
-**Version:** 5.1.0
+**Version:** 5.2.0
 **Last Updated:** 2025-12-12
-**Total Backend Files:** 120+
-**Total Revolutionary Systems:** 7
-**Total API Endpoints:** 420+
+**Total Backend Files:** 125+
+**Total Revolutionary Systems:** 8
+**Total API Endpoints:** 430+
 **Real Market Integrations:** 16+ providers
 **Economic Data Series:** 800,000+ (FRED)
 **Technical Indicators:** 50+
 **FREE Bots Absorbed:** 36+ (11 sources!)
 **FREE APIs Integrated:** 16+
-**Lines of Code:** 90,000+
+**Lines of Code:** 95,000+
 **Bot Absorption Sources:** 11 (GitHub, MQL5, TradingView, npm, PyPI, Discord, Telegram, RapidAPI, cTrader, NinjaTrader, Custom)
+**NEW: Trading Mode Toggle** (Practice/Live with safety locks)
 
 > **"Never get left out again. The big boys' playbook is now YOUR playbook."**
 > — TIMEBEUNUS
@@ -2281,6 +2282,55 @@ Each alert includes executable actions with risk levels:
 - Full audit trail
 
 **API:** `/api/v1/alerts/bots/*`
+
+---
+
+# NEW! TRADING MODE TOGGLE SYSTEM
+
+## Practice/Live Mode Toggle
+**Backend:** `src/backend/services/TradingModeService.ts`
+**Routes:** `src/backend/routes/tradingMode.ts`
+**Frontend:** `frontend/src/components/trading/TradingModeToggle.tsx`
+
+### What It Does
+- ONE CLICK to switch between paper trading and live trading
+- Global mode toggle affects ALL connected brokers
+- Per-broker mode control for granular management
+- Safety locks prevent accidental live trading
+
+### Supported Brokers
+| Broker | Mode Support | Paper Endpoint | Live Endpoint |
+|--------|-------------|----------------|---------------|
+| **Alpaca** | Yes | paper-api.alpaca.markets | api.alpaca.markets |
+| **OANDA** | Yes | api-fxpractice.oanda.com | api-fxtrade.oanda.com |
+| **Binance** | Yes | testnet.binance.vision | api.binance.com |
+| **Bybit** | Yes | api-testnet.bybit.com | api.bybit.com |
+| **Interactive Brokers** | Yes | Paper mode | Live mode |
+| **Coinbase** | No | N/A (Live only) | api.coinbase.com |
+
+### Safety Features
+- **Live trading LOCKED by default** — Must explicitly unlock
+- **Acknowledgement required:** "I_ACCEPT_ALL_TRADING_RISKS_AND_RESPONSIBILITY"
+- **Confirmation required:** "I_UNDERSTAND_LIVE_TRADING_RISKS"
+- **Visual indicators:** Blue = Practice, Red = LIVE
+
+### API Endpoints
+```
+GET  /api/v1/trading-mode/status      - Get all broker modes
+GET  /api/v1/trading-mode/global      - Get global mode
+POST /api/v1/trading-mode/global      - Set global mode
+POST /api/v1/trading-mode/toggle      - Quick toggle
+GET  /api/v1/trading-mode/broker/:id  - Get specific broker mode
+POST /api/v1/trading-mode/broker/:id  - Set specific broker mode
+POST /api/v1/trading-mode/unlock-live - Unlock live trading
+POST /api/v1/trading-mode/lock-live   - Lock live trading
+GET  /api/v1/trading-mode/brokers     - Get all broker configurations
+```
+
+### UI Components
+- **TradingModeToggle** — Full settings page component with modals
+- **TradingModeIndicator** — Compact sidebar indicator
+- Click sidebar indicator to go to Settings > Trading Mode
 
 ---
 
