@@ -134,7 +134,7 @@ export interface AgentDecision {
 export interface AgentMemory {
   // Short-term memory (current session)
   shortTerm: {
-    recentObservations: { time: Date; type: string; data: any }[];
+    recentObservations: MarketObservation[];
     recentDecisions: string[];  // Decision IDs
     currentContext: Map<string, any>;
     activeAlerts: { id: string; message: string; severity: string }[];

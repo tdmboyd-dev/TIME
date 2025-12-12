@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   TrendingUp,
@@ -15,9 +15,13 @@ import {
   ArrowDownRight,
   Clock,
   Search,
-  Filter,
-  RefreshCw
+  RefreshCw,
+  Loader2,
+  Wifi,
+  WifiOff
 } from 'lucide-react';
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
 
 interface MarketData {
   symbol: string;
@@ -32,66 +36,210 @@ interface MarketData {
   category: 'stock' | 'crypto' | 'forex' | 'commodity' | 'index';
 }
 
-const mockMarketData: MarketData[] = [
-  // Stocks
-  { symbol: 'AAPL', name: 'Apple Inc.', price: 178.52, change: 2.34, changePercent: 1.33, volume: 45678900, high24h: 179.80, low24h: 175.20, marketCap: 2800000000000, category: 'stock' },
-  { symbol: 'MSFT', name: 'Microsoft Corp.', price: 378.91, change: -1.23, changePercent: -0.32, volume: 23456789, high24h: 382.00, low24h: 376.50, marketCap: 2810000000000, category: 'stock' },
-  { symbol: 'GOOGL', name: 'Alphabet Inc.', price: 141.80, change: 3.45, changePercent: 2.49, volume: 18765432, high24h: 142.50, low24h: 138.00, marketCap: 1780000000000, category: 'stock' },
-  { symbol: 'AMZN', name: 'Amazon.com Inc.', price: 178.25, change: 1.89, changePercent: 1.07, volume: 34567890, high24h: 179.00, low24h: 175.80, marketCap: 1850000000000, category: 'stock' },
-  { symbol: 'TSLA', name: 'Tesla Inc.', price: 248.50, change: -5.67, changePercent: -2.23, volume: 67890123, high24h: 255.00, low24h: 245.00, marketCap: 789000000000, category: 'stock' },
-  { symbol: 'NVDA', name: 'NVIDIA Corp.', price: 495.22, change: 12.34, changePercent: 2.56, volume: 45678901, high24h: 498.00, low24h: 480.00, marketCap: 1220000000000, category: 'stock' },
-
-  // Crypto
-  { symbol: 'BTC', name: 'Bitcoin', price: 43567.89, change: 1234.56, changePercent: 2.92, volume: 28900000000, high24h: 44000.00, low24h: 42000.00, marketCap: 852000000000, category: 'crypto' },
-  { symbol: 'ETH', name: 'Ethereum', price: 2345.67, change: 78.90, changePercent: 3.48, volume: 15600000000, high24h: 2380.00, low24h: 2250.00, marketCap: 282000000000, category: 'crypto' },
-  { symbol: 'SOL', name: 'Solana', price: 98.45, change: -3.21, changePercent: -3.16, volume: 2340000000, high24h: 102.00, low24h: 95.00, marketCap: 42000000000, category: 'crypto' },
-  { symbol: 'XRP', name: 'Ripple', price: 0.6234, change: 0.0234, changePercent: 3.90, volume: 1890000000, high24h: 0.6400, low24h: 0.5900, marketCap: 34000000000, category: 'crypto' },
-
-  // Forex
-  { symbol: 'EUR/USD', name: 'Euro/US Dollar', price: 1.0892, change: 0.0023, changePercent: 0.21, volume: 0, high24h: 1.0915, low24h: 1.0865, category: 'forex' },
-  { symbol: 'GBP/USD', name: 'British Pound/USD', price: 1.2734, change: -0.0045, changePercent: -0.35, volume: 0, high24h: 1.2780, low24h: 1.2700, category: 'forex' },
-  { symbol: 'USD/JPY', name: 'US Dollar/Yen', price: 149.23, change: 0.67, changePercent: 0.45, volume: 0, high24h: 149.80, low24h: 148.50, category: 'forex' },
-
-  // Commodities
-  { symbol: 'GOLD', name: 'Gold', price: 2024.50, change: 12.30, changePercent: 0.61, volume: 0, high24h: 2030.00, low24h: 2010.00, category: 'commodity' },
-  { symbol: 'SILVER', name: 'Silver', price: 23.45, change: -0.23, changePercent: -0.97, volume: 0, high24h: 23.80, low24h: 23.20, category: 'commodity' },
-  { symbol: 'OIL', name: 'Crude Oil WTI', price: 78.34, change: 1.23, changePercent: 1.60, volume: 0, high24h: 79.00, low24h: 76.50, category: 'commodity' },
-
-  // Indices
-  { symbol: 'SPX', name: 'S&P 500', price: 4783.45, change: 23.67, changePercent: 0.50, volume: 0, high24h: 4790.00, low24h: 4755.00, category: 'index' },
-  { symbol: 'DJI', name: 'Dow Jones', price: 37562.34, change: 145.23, changePercent: 0.39, volume: 0, high24h: 37600.00, low24h: 37400.00, category: 'index' },
-  { symbol: 'IXIC', name: 'NASDAQ Composite', price: 15003.22, change: 78.45, changePercent: 0.53, volume: 0, high24h: 15050.00, low24h: 14920.00, category: 'index' },
-];
+// Symbols to fetch from real APIs
+const STOCK_SYMBOLS = ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'TSLA', 'NVDA', 'META', 'AMD'];
+const CRYPTO_SYMBOLS = ['BTC', 'ETH', 'SOL', 'XRP', 'ADA', 'DOGE', 'DOT', 'MATIC'];
 
 export default function MarketsPage() {
   const router = useRouter();
   const [filter, setFilter] = useState<'all' | 'stock' | 'crypto' | 'forex' | 'commodity' | 'index'>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState<'symbol' | 'change' | 'volume'>('symbol');
+  const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [marketData, setMarketData] = useState(mockMarketData);
+  const [marketData, setMarketData] = useState<MarketData[]>([]);
+  const [currentTime, setCurrentTime] = useState<string>('');
+  const [mounted, setMounted] = useState(false);
+  const [isConnected, setIsConnected] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleTrade = (symbol: string) => {
-    // Navigate to trade page with the selected asset
     router.push(`/trade?symbol=${symbol}`);
   };
 
-  // Simulate real-time updates
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setMarketData(prev => prev.map(item => ({
-        ...item,
-        price: item.price * (1 + (Math.random() - 0.5) * 0.002),
-        change: item.change + (Math.random() - 0.5) * 0.5,
-        changePercent: item.changePercent + (Math.random() - 0.5) * 0.1,
-      })));
-    }, 3000);
-    return () => clearInterval(interval);
+  // Fetch real stock data
+  const fetchStockData = useCallback(async (): Promise<MarketData[]> => {
+    const results: MarketData[] = [];
+
+    for (const symbol of STOCK_SYMBOLS) {
+      try {
+        const response = await fetch(`${API_BASE}/real-market/stock/${symbol}`);
+        const data = await response.json();
+
+        if (data.success && data.data) {
+          const d = data.data;
+          results.push({
+            symbol: d.symbol || symbol,
+            name: d.name || `${symbol} Inc.`,
+            price: d.price || 0,
+            change: d.change || 0,
+            changePercent: d.changePercent || 0,
+            volume: d.volume || 0,
+            high24h: d.high || d.price * 1.02,
+            low24h: d.low || d.price * 0.98,
+            marketCap: d.marketCap,
+            category: 'stock'
+          });
+        }
+      } catch (err) {
+        console.error(`Failed to fetch ${symbol}:`, err);
+      }
+    }
+
+    return results;
   }, []);
+
+  // Fetch real crypto data
+  const fetchCryptoData = useCallback(async (): Promise<MarketData[]> => {
+    const results: MarketData[] = [];
+
+    for (const symbol of CRYPTO_SYMBOLS) {
+      try {
+        const response = await fetch(`${API_BASE}/real-market/crypto/${symbol}`);
+        const data = await response.json();
+
+        if (data.success && data.data) {
+          const d = data.data;
+          results.push({
+            symbol: d.symbol || symbol,
+            name: d.name || symbol,
+            price: d.price || 0,
+            change: d.change24h || 0,
+            changePercent: d.changePercent24h || 0,
+            volume: d.volume24h || 0,
+            high24h: d.high24h || d.price * 1.05,
+            low24h: d.low24h || d.price * 0.95,
+            marketCap: d.marketCap,
+            category: 'crypto'
+          });
+        }
+      } catch (err) {
+        console.error(`Failed to fetch ${symbol}:`, err);
+      }
+    }
+
+    return results;
+  }, []);
+
+  // Fetch FMP market movers (gainers/losers)
+  const fetchMarketMovers = useCallback(async (): Promise<MarketData[]> => {
+    const results: MarketData[] = [];
+
+    try {
+      const [gainersRes, losersRes] = await Promise.all([
+        fetch(`${API_BASE}/fmp/gainers`),
+        fetch(`${API_BASE}/fmp/losers`)
+      ]);
+
+      const gainers = await gainersRes.json();
+      const losers = await losersRes.json();
+
+      // Add top gainers
+      if (gainers.success && gainers.data) {
+        gainers.data.slice(0, 3).forEach((g: any) => {
+          if (!results.find(r => r.symbol === g.symbol)) {
+            results.push({
+              symbol: g.symbol,
+              name: g.name || g.symbol,
+              price: g.price || 0,
+              change: g.change || 0,
+              changePercent: g.changesPercentage || g.changePercent || 0,
+              volume: g.volume || 0,
+              high24h: g.dayHigh || g.price * 1.02,
+              low24h: g.dayLow || g.price * 0.98,
+              marketCap: g.marketCap,
+              category: 'stock'
+            });
+          }
+        });
+      }
+
+      // Add top losers
+      if (losers.success && losers.data) {
+        losers.data.slice(0, 3).forEach((l: any) => {
+          if (!results.find(r => r.symbol === l.symbol)) {
+            results.push({
+              symbol: l.symbol,
+              name: l.name || l.symbol,
+              price: l.price || 0,
+              change: l.change || 0,
+              changePercent: l.changesPercentage || l.changePercent || 0,
+              volume: l.volume || 0,
+              high24h: l.dayHigh || l.price * 1.02,
+              low24h: l.dayLow || l.price * 0.98,
+              marketCap: l.marketCap,
+              category: 'stock'
+            });
+          }
+        });
+      }
+    } catch (err) {
+      console.error('Failed to fetch market movers:', err);
+    }
+
+    return results;
+  }, []);
+
+  // Main data fetching function
+  const fetchAllData = useCallback(async () => {
+    setError(null);
+
+    try {
+      // Fetch all data in parallel
+      const [stocks, cryptos, movers] = await Promise.all([
+        fetchStockData(),
+        fetchCryptoData(),
+        fetchMarketMovers()
+      ]);
+
+      // Combine and deduplicate
+      const allData: MarketData[] = [];
+      const seen = new Set<string>();
+
+      [...stocks, ...cryptos, ...movers].forEach(item => {
+        if (!seen.has(item.symbol) && item.price > 0) {
+          seen.add(item.symbol);
+          allData.push(item);
+        }
+      });
+
+      if (allData.length > 0) {
+        setMarketData(allData);
+        setIsConnected(true);
+      } else {
+        setError('No market data available');
+        setIsConnected(false);
+      }
+    } catch (err) {
+      console.error('Failed to fetch market data:', err);
+      setError('Failed to connect to market data');
+      setIsConnected(false);
+    } finally {
+      setIsLoading(false);
+      setIsRefreshing(false);
+    }
+  }, [fetchStockData, fetchCryptoData, fetchMarketMovers]);
+
+  // Handle hydration and time display
+  useEffect(() => {
+    setMounted(true);
+    setCurrentTime(new Date().toLocaleTimeString());
+    const timeInterval = setInterval(() => setCurrentTime(new Date().toLocaleTimeString()), 1000);
+    return () => clearInterval(timeInterval);
+  }, []);
+
+  // Initial data fetch
+  useEffect(() => {
+    fetchAllData();
+
+    // Refresh every 30 seconds
+    const refreshInterval = setInterval(fetchAllData, 30000);
+    return () => clearInterval(refreshInterval);
+  }, [fetchAllData]);
 
   const handleRefresh = () => {
     setIsRefreshing(true);
-    setTimeout(() => setIsRefreshing(false), 1000);
+    fetchAllData();
   };
 
   const filteredData = marketData
@@ -118,6 +266,7 @@ export default function MarketsPage() {
   };
 
   const formatNumber = (num: number, decimals: number = 2) => {
+    if (!num || isNaN(num)) return '$0.00';
     if (num >= 1e12) return `$${(num / 1e12).toFixed(2)}T`;
     if (num >= 1e9) return `$${(num / 1e9).toFixed(2)}B`;
     if (num >= 1e6) return `$${(num / 1e6).toFixed(2)}M`;
@@ -127,11 +276,25 @@ export default function MarketsPage() {
 
   // Calculate market summary
   const summary = {
-    totalUp: filteredData.filter(d => d.change > 0).length,
-    totalDown: filteredData.filter(d => d.change < 0).length,
-    totalFlat: filteredData.filter(d => d.change === 0).length,
-    avgChange: filteredData.reduce((acc, d) => acc + d.changePercent, 0) / filteredData.length,
+    totalUp: filteredData.filter(d => d.changePercent > 0).length,
+    totalDown: filteredData.filter(d => d.changePercent < 0).length,
+    totalFlat: filteredData.filter(d => d.changePercent === 0).length,
+    avgChange: filteredData.length > 0
+      ? filteredData.reduce((acc, d) => acc + d.changePercent, 0) / filteredData.length
+      : 0,
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-full min-h-[400px]">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 mx-auto mb-4 text-time-primary animate-spin" />
+          <p className="text-slate-400">Loading real market data...</p>
+          <p className="text-xs text-slate-500 mt-2">Fetching from Finnhub, CoinGecko, FMP...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -139,22 +302,38 @@ export default function MarketsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white">Markets</h1>
-          <p className="text-slate-400">Real-time market data across all asset classes</p>
+          <p className="text-slate-400">Real-time market data from live APIs</p>
         </div>
         <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-800/50">
+            {isConnected ? (
+              <Wifi className="w-4 h-4 text-green-400" />
+            ) : (
+              <WifiOff className="w-4 h-4 text-red-400" />
+            )}
+            <span className="text-xs text-slate-400">{isConnected ? 'Live' : 'Offline'}</span>
+          </div>
           <div className="flex items-center gap-2 text-sm">
             <Clock className="w-4 h-4 text-slate-400" />
-            <span className="text-slate-400">Last updated:</span>
-            <span className="text-white">{new Date().toLocaleTimeString()}</span>
+            <span className="text-slate-400">Updated:</span>
+            <span className="text-white" suppressHydrationWarning>{mounted ? currentTime : '--:--:--'}</span>
           </div>
           <button
             onClick={handleRefresh}
-            className={`p-2 rounded-lg bg-slate-800 hover:bg-slate-700 transition-colors ${isRefreshing ? 'animate-spin' : ''}`}
+            disabled={isRefreshing}
+            className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 transition-colors disabled:opacity-50"
           >
-            <RefreshCw className="w-5 h-5 text-slate-400" />
+            <RefreshCw className={`w-5 h-5 text-slate-400 ${isRefreshing ? 'animate-spin' : ''}`} />
           </button>
         </div>
       </div>
+
+      {/* Error Banner */}
+      {error && (
+        <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 text-red-400 text-sm">
+          {error}. Using cached data if available.
+        </div>
+      )}
 
       {/* Market Summary */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -186,8 +365,8 @@ export default function MarketsPage() {
               <Minus className="w-5 h-5 text-blue-400" />
             </div>
             <div>
-              <p className="text-sm text-slate-400">Unchanged</p>
-              <p className="text-xl font-bold text-blue-400">{summary.totalFlat}</p>
+              <p className="text-sm text-slate-400">Total Assets</p>
+              <p className="text-xl font-bold text-blue-400">{filteredData.length}</p>
             </div>
           </div>
         </div>
@@ -218,12 +397,13 @@ export default function MarketsPage() {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-2 bg-slate-800/50 border border-slate-700/50 rounded-lg text-sm text-white placeholder-slate-500 focus:outline-none focus:border-time-primary/50"
+              suppressHydrationWarning
             />
           </div>
 
           {/* Category Filters */}
           <div className="flex items-center gap-2">
-            {(['all', 'stock', 'crypto', 'forex', 'commodity', 'index'] as const).map((cat) => (
+            {(['all', 'stock', 'crypto'] as const).map((cat) => (
               <button
                 key={cat}
                 onClick={() => setFilter(cat)}
@@ -268,63 +448,76 @@ export default function MarketsPage() {
               </tr>
             </thead>
             <tbody>
-              {filteredData.map((item) => (
-                <tr key={item.symbol} className="border-b border-slate-700/30 hover:bg-slate-800/50 transition-colors">
-                  <td className="py-4 px-6">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                        item.category === 'stock' ? 'bg-blue-500/20 text-blue-400' :
-                        item.category === 'crypto' ? 'bg-orange-500/20 text-orange-400' :
-                        item.category === 'forex' ? 'bg-green-500/20 text-green-400' :
-                        item.category === 'commodity' ? 'bg-yellow-500/20 text-yellow-400' :
-                        'bg-purple-500/20 text-purple-400'
-                      }`}>
-                        {getCategoryIcon(item.category)}
-                      </div>
-                      <div>
-                        <p className="font-medium text-white">{item.symbol}</p>
-                        <p className="text-xs text-slate-400">{item.name}</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="py-4 px-6 text-right">
-                    <span className="font-medium text-white">
-                      {item.category === 'forex' ? item.price.toFixed(4) : formatNumber(item.price)}
-                    </span>
-                  </td>
-                  <td className="py-4 px-6 text-right">
-                    <div className={`flex items-center justify-end gap-1 ${item.change >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                      {item.change >= 0 ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownRight className="w-4 h-4" />}
-                      <span className="font-medium">
-                        {item.change >= 0 ? '+' : ''}{item.changePercent.toFixed(2)}%
-                      </span>
-                    </div>
-                  </td>
-                  <td className="py-4 px-6 text-right text-slate-300">
-                    {item.category === 'forex' ? item.high24h.toFixed(4) : formatNumber(item.high24h)}
-                  </td>
-                  <td className="py-4 px-6 text-right text-slate-300">
-                    {item.category === 'forex' ? item.low24h.toFixed(4) : formatNumber(item.low24h)}
-                  </td>
-                  <td className="py-4 px-6 text-right text-slate-300">
-                    {item.volume > 0 ? formatNumber(item.volume) : '-'}
-                  </td>
-                  <td className="py-4 px-6 text-right text-slate-300">
-                    {item.marketCap ? formatNumber(item.marketCap) : '-'}
-                  </td>
-                  <td className="py-4 px-6 text-center">
-                    <button
-                      onClick={() => handleTrade(item.symbol)}
-                      className="px-3 py-1.5 bg-time-primary/20 text-time-primary border border-time-primary/30 rounded-lg text-sm font-medium hover:bg-time-primary/30 transition-colors"
-                    >
-                      Trade
-                    </button>
+              {filteredData.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="py-12 text-center text-slate-500">
+                    No market data available. Check your API connections.
                   </td>
                 </tr>
-              ))}
+              ) : (
+                filteredData.map((item) => (
+                  <tr key={item.symbol} className="border-b border-slate-700/30 hover:bg-slate-800/50 transition-colors">
+                    <td className="py-4 px-6">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                          item.category === 'stock' ? 'bg-blue-500/20 text-blue-400' :
+                          item.category === 'crypto' ? 'bg-orange-500/20 text-orange-400' :
+                          item.category === 'forex' ? 'bg-green-500/20 text-green-400' :
+                          item.category === 'commodity' ? 'bg-yellow-500/20 text-yellow-400' :
+                          'bg-purple-500/20 text-purple-400'
+                        }`}>
+                          {getCategoryIcon(item.category)}
+                        </div>
+                        <div>
+                          <p className="font-medium text-white">{item.symbol}</p>
+                          <p className="text-xs text-slate-400 max-w-[150px] truncate">{item.name}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="py-4 px-6 text-right">
+                      <span className="font-medium text-white">
+                        {item.category === 'forex' ? item.price.toFixed(4) : formatNumber(item.price)}
+                      </span>
+                    </td>
+                    <td className="py-4 px-6 text-right">
+                      <div className={`flex items-center justify-end gap-1 ${item.changePercent >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                        {item.changePercent >= 0 ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownRight className="w-4 h-4" />}
+                        <span className="font-medium">
+                          {item.changePercent >= 0 ? '+' : ''}{item.changePercent.toFixed(2)}%
+                        </span>
+                      </div>
+                    </td>
+                    <td className="py-4 px-6 text-right text-slate-300">
+                      {item.category === 'forex' ? item.high24h.toFixed(4) : formatNumber(item.high24h)}
+                    </td>
+                    <td className="py-4 px-6 text-right text-slate-300">
+                      {item.category === 'forex' ? item.low24h.toFixed(4) : formatNumber(item.low24h)}
+                    </td>
+                    <td className="py-4 px-6 text-right text-slate-300">
+                      {item.volume > 0 ? formatNumber(item.volume) : '-'}
+                    </td>
+                    <td className="py-4 px-6 text-right text-slate-300">
+                      {item.marketCap ? formatNumber(item.marketCap) : '-'}
+                    </td>
+                    <td className="py-4 px-6 text-center">
+                      <button
+                        onClick={() => handleTrade(item.symbol)}
+                        className="px-3 py-1.5 bg-time-primary/20 text-time-primary border border-time-primary/30 rounded-lg text-sm font-medium hover:bg-time-primary/30 transition-colors"
+                      >
+                        Trade
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* Data Sources */}
+      <div className="text-center text-xs text-slate-500">
+        Data from Finnhub, CoinGecko, Binance, Alpha Vantage, and FMP APIs
       </div>
     </div>
   );

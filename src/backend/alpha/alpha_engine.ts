@@ -1017,7 +1017,7 @@ class AlphaEngineCore extends EventEmitter {
         severity = 'critical';
       } else if (overfit?.riskLevel === 'high') {
         issues.push('High overfitting risk');
-        severity = this.upgradeRisk(severity as any, 'warning') as any;
+        severity = severity === 'suggestion' ? 'warning' : severity;
       }
 
       // Recent poor performance
@@ -1028,7 +1028,7 @@ class AlphaEngineCore extends EventEmitter {
           severity = 'critical';
         } else if (recentSharpe < 0) {
           issues.push('Negative recent Sharpe ratio');
-          severity = this.upgradeRisk(severity as any, 'warning') as any;
+          severity = severity === 'suggestion' ? 'warning' : severity;
         }
       }
 
@@ -1040,7 +1040,7 @@ class AlphaEngineCore extends EventEmitter {
           severity = 'critical';
         } else if (recentDD > 0.2) {
           issues.push('High recent drawdown (>20%)');
-          severity = this.upgradeRisk(severity as any, 'warning') as any;
+          severity = severity === 'suggestion' ? 'warning' : severity;
         }
       }
 

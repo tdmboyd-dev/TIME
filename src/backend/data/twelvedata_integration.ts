@@ -171,7 +171,7 @@ export class TwelveDataAPI extends EventEmitter {
         return null;
       }
 
-      const data = await response.json();
+      const data: any = await response.json();
 
       // Check for API errors
       if (data.status === 'error') {
@@ -179,7 +179,7 @@ export class TwelveDataAPI extends EventEmitter {
         return null;
       }
 
-      return data;
+      return data as T;
     } catch (error) {
       console.error('[TwelveData] Error:', error);
       return null;

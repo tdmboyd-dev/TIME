@@ -24,6 +24,7 @@ import revolutionaryRoutes from './revolutionary';
 import fmpRoutes from './fmp';
 import fredRoutes from './fred';
 import twelveDataRoutes from './twelvedata';
+import alertsRoutes from './alertsRoutes';
 
 const router = Router();
 
@@ -49,6 +50,9 @@ router.use('/revolutionary', revolutionaryRoutes);
 router.use('/fmp', fmpRoutes);           // Financial Modeling Prep - Fundamentals, Congress trades
 router.use('/fred', fredRoutes);         // Federal Reserve - Economic data
 router.use('/twelvedata', twelveDataRoutes); // TwelveData - Technical indicators
+
+// BIG MOVES ALERT SYSTEM & AI TRADE GOD BOT
+router.use('/alerts', alertsRoutes);     // Whale alerts, government policy, institutional moves, AI bot trading
 
 export default router;
 

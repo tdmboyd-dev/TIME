@@ -239,7 +239,7 @@ export class SentimentVelocityEngine extends EventEmitter {
     const momentum = recentVelocities.reduce((sum, v) => sum + v.value, 0) / 24;
 
     // Calculate exhaustion level
-    const exhaustionLevel = this.calculateExhaustion(currentSentiment, latest.velocity, latest.acceleration);
+    const exhaustionLevel = this.calculateExhaustion(currentSentiment, latest.value, latest.acceleration);
 
     // Calculate source velocities
     const sourceVelocities = this.calculateSourceVelocities(symbol);
@@ -247,7 +247,7 @@ export class SentimentVelocityEngine extends EventEmitter {
     // Determine signal
     const signal = this.determineSignal(
       currentSentiment,
-      latest.velocity,
+      latest.value,
       latest.acceleration,
       exhaustionLevel
     );
@@ -259,7 +259,7 @@ export class SentimentVelocityEngine extends EventEmitter {
     const alerts = this.generateAlerts(
       symbol,
       currentSentiment,
-      latest.velocity,
+      latest.value,
       latest.acceleration,
       exhaustionLevel,
       signal
@@ -268,7 +268,7 @@ export class SentimentVelocityEngine extends EventEmitter {
     const state: SentimentVelocityState = {
       symbol,
       currentSentiment,
-      velocity: latest.velocity,
+      velocity: latest.value,
       acceleration: latest.acceleration,
       momentum,
       exhaustionLevel,
@@ -614,7 +614,7 @@ export class SentimentVelocityEngine extends EventEmitter {
       .map(([symbol, state]) => ({
         symbol,
         level: state.exhaustionLevel,
-        type: state.currentSentiment > 0 ? 'top' : 'bottom',
+        type: (state.currentSentiment > 0 ? 'top' : 'bottom') as 'top' | 'bottom',
       }))
       .sort((a, b) => b.level - a.level);
   }

@@ -1106,7 +1106,11 @@ class YieldOrchestratorEngine extends EventEmitter {
     optimizations: YieldOptimization[];
     attribution: YieldAttribution;
     projection: YieldProjection;
-    regimeRecommendations: ReturnType<typeof this.getRegimeRecommendations>;
+    regimeRecommendations: {
+      currentAllocation: Map<YieldSourceType, number>;
+      targetAllocation: Map<YieldSourceType, number>;
+      rebalanceActions: { type: YieldSourceType; action: 'increase' | 'decrease'; amount: number }[];
+    };
   } {
     return {
       sources: this.getSources(),

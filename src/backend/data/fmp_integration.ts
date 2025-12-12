@@ -435,7 +435,7 @@ export class FMPAPI extends EventEmitter {
         return null;
       }
 
-      return response.json();
+      return response.json() as Promise<T>;
     } catch (error) {
       console.error('[FMP] Error:', error);
       return null;

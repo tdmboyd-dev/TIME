@@ -182,7 +182,7 @@ export class FREDAPI extends EventEmitter {
         return null;
       }
 
-      return response.json();
+      return response.json() as Promise<T>;
     } catch (error) {
       console.error('[FRED] Error:', error);
       return null;

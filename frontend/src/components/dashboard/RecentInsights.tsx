@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { Lightbulb, TrendingUp, AlertTriangle, Info, CheckCircle } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -24,7 +25,8 @@ const categoryConfig: Record<string, { icon: typeof Lightbulb; color: string }> 
   default: { icon: Info, color: 'text-slate-400' },
 };
 
-function formatTimeAgo(date: Date): string {
+function formatTimeAgo(date: Date, mounted: boolean): string {
+  if (!mounted) return '...';
   const now = new Date();
   const diffMs = now.getTime() - new Date(date).getTime();
   const diffMins = Math.floor(diffMs / 60000);
@@ -39,33 +41,42 @@ function formatTimeAgo(date: Date): string {
   return `${diffDays}d ago`;
 }
 
+// Use fixed timestamps to avoid hydration mismatch
+const MOCK_INSIGHTS = [
+  {
+    id: '1',
+    category: 'pattern',
+    insight: 'Detected bullish divergence on BTC/USD 4H timeframe',
+    confidence: 85,
+    actionable: true,
+    createdAt: new Date('2025-01-01T00:00:00Z'),
+  },
+  {
+    id: '2',
+    category: 'opportunity',
+    insight: 'High probability setup forming on ETH/USD',
+    confidence: 72,
+    actionable: true,
+    createdAt: new Date('2025-01-01T00:00:00Z'),
+  },
+  {
+    id: '3',
+    category: 'anomaly',
+    insight: 'Unusual volume spike detected in SPY options',
+    confidence: 68,
+    actionable: false,
+    createdAt: new Date('2025-01-01T00:00:00Z'),
+  },
+];
+
 export function RecentInsights({ insights }: RecentInsightsProps) {
-  const displayInsights = insights.length > 0 ? insights.slice(0, 5) : [
-    {
-      id: '1',
-      category: 'pattern',
-      insight: 'Detected bullish divergence on BTC/USD 4H timeframe',
-      confidence: 85,
-      actionable: true,
-      createdAt: new Date(Date.now() - 300000),
-    },
-    {
-      id: '2',
-      category: 'opportunity',
-      insight: 'High probability setup forming on ETH/USD',
-      confidence: 72,
-      actionable: true,
-      createdAt: new Date(Date.now() - 900000),
-    },
-    {
-      id: '3',
-      category: 'anomaly',
-      insight: 'Unusual volume spike detected in SPY options',
-      confidence: 68,
-      actionable: false,
-      createdAt: new Date(Date.now() - 1800000),
-    },
-  ];
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const displayInsights = insights.length > 0 ? insights.slice(0, 5) : MOCK_INSIGHTS;
 
   return (
     <div className="card p-4">
@@ -91,8 +102,8 @@ export function RecentInsights({ insights }: RecentInsightsProps) {
                 <div className="flex-1 min-w-0">
                   <p className="text-sm text-slate-200 line-clamp-2">{insight.insight}</p>
                   <div className="flex items-center gap-3 mt-2">
-                    <span className="text-xs text-slate-500">
-                      {formatTimeAgo(insight.createdAt)}
+                    <span className="text-xs text-slate-500" suppressHydrationWarning>
+                      {formatTimeAgo(insight.createdAt, mounted)}
                     </span>
                     <span className="text-xs text-slate-500">
                       {insight.confidence}% confidence

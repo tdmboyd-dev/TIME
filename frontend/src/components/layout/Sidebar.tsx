@@ -17,11 +17,15 @@ import {
   Cpu,
   Network,
   Link2,
+  Bell,
+  Zap,
 } from 'lucide-react';
 import clsx from 'clsx';
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
+  { name: 'Big Moves Alerts', href: '/alerts', icon: Bell, highlight: true },
+  { name: 'AI Trade God', href: '/ai-trade-god', icon: Zap, highlight: true },
   { name: 'Markets', href: '/markets', icon: TrendingUp },
   { name: 'Charts', href: '/charts', icon: BarChart3 },
   { name: 'Trade', href: '/trade', icon: ArrowRightLeft },
@@ -66,11 +70,18 @@ export function Sidebar() {
                 'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all',
                 isActive
                   ? 'bg-time-primary/20 text-time-primary border border-time-primary/30'
+                  : (item as any).highlight
+                  ? 'text-amber-400 hover:text-amber-300 hover:bg-amber-500/10 border border-amber-500/30'
                   : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
               )}
             >
-              <item.icon className="w-5 h-5" />
+              <item.icon className={clsx('w-5 h-5', (item as any).highlight && !isActive && 'text-amber-400')} />
               {item.name}
+              {(item as any).highlight && (
+                <span className="ml-auto text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 font-bold">
+                  NEW
+                </span>
+              )}
             </Link>
           );
         })}

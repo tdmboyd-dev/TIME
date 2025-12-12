@@ -99,7 +99,7 @@ export class AlphaVantageAPI {
       const response = await fetch(
         `${this.baseUrl}?function=GLOBAL_QUOTE&symbol=${symbol}&apikey=${this.apiKey}`
       );
-      const data = await response.json();
+      const data: any = await response.json();
 
       if (data['Global Quote']) {
         const quote = data['Global Quote'];
@@ -138,7 +138,7 @@ export class AlphaVantageAPI {
       const response = await fetch(
         `${this.baseUrl}?function=SYMBOL_SEARCH&keywords=${encodeURIComponent(query)}&apikey=${this.apiKey}`
       );
-      const data = await response.json();
+      const data: any = await response.json();
 
       if (data.bestMatches) {
         return data.bestMatches.map((match: any) => ({
@@ -171,7 +171,7 @@ export class AlphaVantageAPI {
       }
 
       const response = await fetch(url);
-      const data = await response.json();
+      const data: any = await response.json();
 
       const seriesKey = interval === 'intraday' ? 'Time Series (5min)' : 'Time Series (Daily)';
       const series = data[seriesKey];
@@ -215,7 +215,7 @@ export class FinnhubAPI {
       const response = await fetch(
         `${this.baseUrl}/quote?symbol=${symbol}&token=${this.apiKey}`
       );
-      const data = await response.json();
+      const data: any = await response.json();
 
       if (data && data.c) {
         return {
@@ -247,7 +247,7 @@ export class FinnhubAPI {
       const response = await fetch(
         `${this.baseUrl}/search?q=${encodeURIComponent(query)}&token=${this.apiKey}`
       );
-      const data = await response.json();
+      const data: any = await response.json();
 
       if (data.result) {
         return data.result.slice(0, 20).map((item: any) => ({
@@ -287,7 +287,7 @@ export class FinnhubAPI {
       const response = await fetch(
         `${this.baseUrl}/news?category=${category}&token=${this.apiKey}`
       );
-      return response.json();
+      return response.json() as Promise<any[]>;
     } catch (error) {
       console.error('[Finnhub] News error:', error);
       return [];
@@ -318,7 +318,7 @@ export class PolygonAPI {
       const response = await fetch(
         `${this.baseUrl}/v2/aggs/ticker/${symbol}/prev?apiKey=${this.apiKey}`
       );
-      const data = await response.json();
+      const data: any = await response.json();
 
       if (data.results && data.results[0]) {
         const result = data.results[0];
@@ -351,7 +351,7 @@ export class PolygonAPI {
       const response = await fetch(
         `${this.baseUrl}/v3/reference/tickers?search=${encodeURIComponent(query)}&active=true&limit=20&apiKey=${this.apiKey}`
       );
-      const data = await response.json();
+      const data: any = await response.json();
 
       if (data.results) {
         return data.results.map((item: any) => ({
@@ -382,7 +382,7 @@ export class PolygonAPI {
       const response = await fetch(
         `${this.baseUrl}/v2/aggs/ticker/${symbol}/range/1/${timeframe}/${from}/${to}?apiKey=${this.apiKey}`
       );
-      const data = await response.json();
+      const data: any = await response.json();
 
       if (data.results) {
         return data.results.map((bar: any) => ({
@@ -429,7 +429,7 @@ export class CoinGeckoAPI {
       const response = await fetch(
         `${this.baseUrl}/coins/${id}?localization=false&tickers=false&community_data=false&developer_data=false`
       );
-      const data = await response.json();
+      const data: any = await response.json();
 
       if (data.market_data) {
         return {
@@ -458,7 +458,7 @@ export class CoinGeckoAPI {
       const response = await fetch(
         `${this.baseUrl}/search?query=${encodeURIComponent(query)}`
       );
-      const data = await response.json();
+      const data: any = await response.json();
 
       if (data.coins) {
         return data.coins.slice(0, 20).map((coin: any) => ({
@@ -482,7 +482,7 @@ export class CoinGeckoAPI {
       const response = await fetch(
         `${this.baseUrl}/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=${limit}&page=1&sparkline=false`
       );
-      const data = await response.json();
+      const data: any = await response.json();
 
       return data.map((coin: any) => ({
         symbol: coin.symbol.toUpperCase(),
@@ -522,7 +522,7 @@ export class BinanceAPI {
       const response = await fetch(
         `${this.baseUrl}/api/v3/ticker/price?symbol=${symbol.replace('/', '')}`
       );
-      const data = await response.json();
+      const data: any = await response.json();
       return data.price ? parseFloat(data.price) : null;
     } catch (error) {
       console.error('[Binance] Price error:', error);
@@ -535,7 +535,7 @@ export class BinanceAPI {
       const response = await fetch(
         `${this.baseUrl}/api/v3/ticker/24hr?symbol=${symbol.replace('/', '')}`
       );
-      const data = await response.json();
+      const data: any = await response.json();
 
       if (data.symbol) {
         return {
@@ -568,7 +568,7 @@ export class BinanceAPI {
       const response = await fetch(
         `${this.baseUrl}/api/v3/klines?symbol=${symbol.replace('/', '')}&interval=${interval}&limit=${limit}`
       );
-      const data = await response.json();
+      const data: any = await response.json();
 
       return data.map((kline: any[]) => ({
         timestamp: new Date(kline[0]),
@@ -587,7 +587,7 @@ export class BinanceAPI {
   async getAllSymbols(): Promise<string[]> {
     try {
       const response = await fetch(`${this.baseUrl}/api/v3/exchangeInfo`);
-      const data = await response.json();
+      const data: any = await response.json();
       return data.symbols
         .filter((s: any) => s.status === 'TRADING')
         .map((s: any) => s.symbol);

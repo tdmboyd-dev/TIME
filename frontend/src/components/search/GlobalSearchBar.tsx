@@ -21,7 +21,7 @@ interface QuickQuote {
   type: string;
 }
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
 
 // Popular symbols for quick access
 const popularSymbols = [
@@ -194,6 +194,7 @@ export function GlobalSearchBar() {
           onKeyDown={handleKeyDown}
           placeholder="Search stocks, crypto, ETFs... (Ctrl+K)"
           className="flex-1 bg-transparent text-white placeholder-slate-500 outline-none text-sm"
+          suppressHydrationWarning
         />
         {loading && <Loader2 className="w-4 h-4 text-slate-400 animate-spin" />}
         {query && !loading && (

@@ -9,9 +9,11 @@ import {
   Activity,
   Shield,
   Target,
-  Clock
+  Clock,
+  RefreshCw
 } from 'lucide-react';
 import { useTimeStore } from '@/store/timeStore';
+import { useRealTimeData } from '@/hooks/useRealTimeData';
 import { StatsCard } from '@/components/dashboard/StatsCard';
 import { RegimeIndicator } from '@/components/dashboard/RegimeIndicator';
 import { RecentInsights } from '@/components/dashboard/RecentInsights';
@@ -20,13 +22,22 @@ import { ActiveBots } from '@/components/dashboard/ActiveBots';
 import { LiveChart } from '@/components/charts/LiveChart';
 
 export default function Dashboard() {
-  const { metrics, regime, regimeConfidence, evolutionMode, bots, insights, health } = useTimeStore();
+  const { metrics, regime, regimeConfidence, evolutionMode, bots, insights, health, isConnected } = useTimeStore();
+  const { refresh } = useRealTimeData();
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
-    // Simulate loading data
-    setTimeout(() => setIsLoading(false), 1000);
+    // Wait for initial data fetch
+    const timer = setTimeout(() => setIsLoading(false), 1500);
+    return () => clearTimeout(timer);
   }, []);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    refresh();
+    setTimeout(() => setIsRefreshing(false), 1000);
+  };
 
   if (isLoading) {
     return (
@@ -48,6 +59,17 @@ export default function Dashboard() {
           <p className="text-slate-400">TIME Meta-Intelligence Trading Governor</p>
         </div>
         <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-800/50">
+            <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
+            <span className="text-xs text-slate-400">{isConnected ? 'Live' : 'Offline'}</span>
+          </div>
+          <button
+            onClick={handleRefresh}
+            className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 transition-colors"
+            title="Refresh data"
+          >
+            <RefreshCw className={`w-4 h-4 text-slate-400 ${isRefreshing ? 'animate-spin' : ''}`} />
+          </button>
           <span className={`px-3 py-1.5 rounded-full text-sm font-medium ${
             evolutionMode === 'autonomous'
               ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
