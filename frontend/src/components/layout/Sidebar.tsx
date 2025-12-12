@@ -21,6 +21,7 @@ import {
   Zap,
 } from 'lucide-react';
 import clsx from 'clsx';
+import { TradingModeIndicator } from '@/components/trading/TradingModeToggle';
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
@@ -86,6 +87,18 @@ export function Sidebar() {
           );
         })}
       </nav>
+
+      {/* Trading Mode Indicator */}
+      <div className="px-4 pt-4 border-t border-slate-700/50">
+        <Link href="/settings" className="block">
+          <div className="flex items-center justify-center mb-2">
+            <TradingModeIndicator />
+          </div>
+          <p className="text-[10px] text-slate-500 text-center hover:text-slate-400 transition-colors">
+            Click to change mode
+          </p>
+        </Link>
+      </div>
 
       {/* Market Status */}
       <div className="p-4 border-t border-slate-700/50">

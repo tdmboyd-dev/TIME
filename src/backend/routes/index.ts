@@ -25,6 +25,7 @@ import fmpRoutes from './fmp';
 import fredRoutes from './fred';
 import twelveDataRoutes from './twelvedata';
 import alertsRoutes from './alertsRoutes';
+import tradingModeRoutes from './tradingMode';
 
 const router = Router();
 
@@ -53,6 +54,9 @@ router.use('/twelvedata', twelveDataRoutes); // TwelveData - Technical indicator
 
 // BIG MOVES ALERT SYSTEM & AI TRADE GOD BOT
 router.use('/alerts', alertsRoutes);     // Whale alerts, government policy, institutional moves, AI bot trading
+
+// TRADING MODE - Practice/Live Toggle
+router.use('/trading-mode', tradingModeRoutes);  // Practice/Live mode toggle for all brokers
 
 export default router;
 

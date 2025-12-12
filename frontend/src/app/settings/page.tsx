@@ -23,11 +23,13 @@ import {
   Eye,
   EyeOff,
   Link as LinkIcon,
-  Unlink
+  Unlink,
+  Zap
 } from 'lucide-react';
 import clsx from 'clsx';
+import TradingModeToggle from '@/components/trading/TradingModeToggle';
 
-type Tab = 'profile' | 'notifications' | 'security' | 'brokers' | 'preferences';
+type Tab = 'profile' | 'notifications' | 'security' | 'brokers' | 'trading-mode' | 'preferences';
 
 interface BrokerConnection {
   id: string;
@@ -283,6 +285,7 @@ export default function SettingsPage() {
     { id: 'notifications', label: 'Notifications', icon: Bell },
     { id: 'security', label: 'Security & Risk', icon: Shield },
     { id: 'brokers', label: 'Broker Connections', icon: Wallet },
+    { id: 'trading-mode', label: 'Trading Mode', icon: Zap },
     { id: 'preferences', label: 'Preferences', icon: Settings },
   ];
 
@@ -687,6 +690,13 @@ export default function SettingsPage() {
                   + Connect more brokers to enable multi-asset trading and better diversification
                 </p>
               </div>
+            </div>
+          )}
+
+          {/* Trading Mode Tab */}
+          {activeTab === 'trading-mode' && (
+            <div className="space-y-6">
+              <TradingModeToggle />
             </div>
           )}
 
