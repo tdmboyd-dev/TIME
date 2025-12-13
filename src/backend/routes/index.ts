@@ -34,6 +34,12 @@ import taxRoutes from './tax';
 import transfersRoutes from './transfers';
 import roboRoutes from './robo';
 
+// NEW! Full-Featured Routes (No More Stubs!)
+import chartsRoutes from './charts';
+import learnRoutes from './learn';
+import visionRoutes from './vision';
+import retirementRoutes from './retirement';
+
 const router = Router();
 
 // Mount routes
@@ -73,6 +79,12 @@ router.use('/security', securityRoutes);  // MFA, API keys, audit logging
 router.use('/tax', taxRoutes);            // Tax-loss harvesting, wash sale tracking
 router.use('/transfers', transfersRoutes); // ACATS transfers, account moves
 router.use('/robo', roboRoutes);          // Robo-advisory, goal-based investing
+
+// NEW! Full-Featured Routes
+router.use('/charts', chartsRoutes);        // Real candlestick data, indicators, patterns
+router.use('/learn', learnRoutes);          // Educational content, trading courses
+router.use('/vision', visionRoutes);        // Market Vision Engine outputs
+router.use('/retirement', retirementRoutes); // IRA, 401k, RMD tracking
 
 export default router;
 
