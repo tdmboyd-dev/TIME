@@ -43,9 +43,9 @@ router.get('/public', (req: Request, res: Response) => {
         totalTrades: b.performance?.totalTrades || 500,
         totalPnL: b.performance?.totalPnL || 15000,
       },
-      absorbed: b.absorbed || false,
+      absorbed: !!b.absorbedAt,
       createdAt: b.createdAt,
-      lastActive: b.lastActive || new Date(),
+      lastActive: b.updatedAt || b.createdAt,
     })),
     count: allBots.length,
   });

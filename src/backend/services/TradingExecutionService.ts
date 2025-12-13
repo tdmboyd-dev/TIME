@@ -343,10 +343,10 @@ export class TradingExecutionService extends EventEmitter {
             side: signal.side.toLowerCase() as 'buy' | 'sell',
             type: signal.type.toLowerCase() as 'market' | 'limit',
             quantity: signal.quantity,
-            limitPrice: signal.price,
+            price: signal.price,
           });
-          orderId = orderResult?.id;
-          entryPrice = orderResult?.filledPrice || signal.price || 0;
+          orderId = orderResult?.order?.id;
+          entryPrice = orderResult?.order?.averageFilledPrice || signal.price || 0;
           logger.info(`Order executed via broker: ${orderId}`);
         } catch (brokerError) {
           logger.warn('Broker execution failed, using simulated execution:', brokerError as object);

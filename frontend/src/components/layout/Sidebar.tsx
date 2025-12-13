@@ -20,6 +20,9 @@ import {
   Bell,
   Zap,
   Play,
+  Leaf,
+  Target,
+  Building2,
 } from 'lucide-react';
 import clsx from 'clsx';
 import { TradingModeIndicator } from '@/components/trading/TradingModeToggle';
@@ -40,6 +43,10 @@ const navigation = [
   { name: 'DeFi', href: '/defi', icon: Coins },
   { name: 'Invest', href: '/invest', icon: PiggyBank },
   { name: 'Control Panel', href: '/admin', icon: Settings },
+  // NEW! Vanguard-Level Features
+  { name: 'Account Transfers', href: '/transfers', icon: Building2, highlight: true },
+  { name: 'Tax Optimization', href: '/tax', icon: Leaf, highlight: true },
+  { name: 'Investment Goals', href: '/goals', icon: Target, highlight: true },
 ];
 
 export function Sidebar() {
