@@ -2524,4 +2524,346 @@ curl http://localhost:3001/api/v1/alerts/bots
 ---
 
 *Built by Timebeunus Boyd with Claude*
-*Last Updated: 2025-12-12*
+*Last Updated: 2025-12-13*
+
+---
+
+# DECEMBER 2025 MAJOR UPDATE
+
+## New Documentation Structure
+
+| File | Purpose | Use When |
+|------|---------|----------|
+| **TIMEBEUNUS.md** | Master AI Guide | Understanding what exists vs needs building |
+| **COPILOT1.md** | Feature Catalog | Looking up specific features/endpoints |
+| **TIMEBEUNUS_FINANCIAL.md** | Financial Knowledge | Building trading/investment features |
+| **TIME_TODO.md** | Task Tracker | Checking phase completion status |
+| **TIME_NEXT_PHASE_ARCHITECTURE.md** | Future Systems | Planning next-evolution features |
+
+---
+
+# COMPLETE BACKEND FILE INVENTORY (119+ Files)
+
+## Core Systems (3 files)
+```
+src/backend/core/
+├── time_governor.ts           # Central orchestration
+├── evolution_controller.ts    # Controlled/Autonomous modes
+└── inactivity_monitor.ts      # 5-day failsafe
+```
+
+## Intelligence Engines (15 files)
+```
+src/backend/engines/
+├── learning_engine.ts          # 24/7 continuous learning
+├── risk_engine.ts              # Risk management + emergency brake
+├── regime_detector.ts          # 9 market regime detection
+├── recursive_synthesis_engine.ts # AI strategy synthesis
+├── market_vision_engine.ts     # Multi-perspective analysis
+├── teaching_engine.ts          # 6 teaching modes
+├── attribution_engine.ts       # Trade attribution tracking
+├── ensemble_harmony_detector.ts # Bot agreement detection
+├── signal_conflict_resolver.ts # Signal conflict resolution
+├── learning_velocity_tracker.ts # Learning speed tracking
+├── ai_risk_profiler.ts         # User risk assessment
+├── social_trading_engine.ts    # Copy trading
+├── defi_mastery_engine.ts      # DeFi education & yields
+├── strategy_builder.ts         # Visual strategy creation
+└── ux_innovation_engine.ts     # UX optimization
+```
+
+## Bot Systems (5 files)
+```
+src/backend/bots/
+├── bot_manager.ts              # 8 pre-built bots
+├── bot_ingestion.ts            # Multi-source absorption
+├── auto_bot_engine.ts          # 27 strategies, 14 templates
+├── universal_bot_engine.ts     # 32 specialized bots
+└── pro_copy_trading.ts         # 5-tier copy trading
+```
+
+## Broker Integrations (9 files)
+```
+src/backend/brokers/
+├── broker_interface.ts         # Abstract base
+├── broker_manager.ts           # Multi-broker orchestration
+├── alpaca_broker.ts            # US stocks + crypto
+├── oanda_broker.ts             # Forex
+├── snaptrade_broker.ts         # 20+ brokerages
+├── ib_client.ts                # Interactive Brokers
+├── mt_bridge.ts                # MetaTrader 4/5
+├── crypto_futures.ts           # Binance/Bybit
+└── advanced_broker_engine.ts   # 50+ venues, 18 order types
+```
+
+## Payment Systems (4 files)
+```
+src/backend/payments/
+├── time_pay.ts                 # P2P + banking
+├── time_invoice.ts             # Invoicing + auto-chase
+├── time_payroll.ts             # Employee payroll
+└── instant_payments.ts         # Real-time settlement
+```
+
+## Market Data (6 files)
+```
+src/backend/data/
+├── market_data_providers.ts    # Aggregated interface
+├── fmp_integration.ts          # Financial Modeling Prep
+├── fred_integration.ts         # Federal Reserve data
+├── twelvedata_integration.ts   # Technical analysis
+└── real_market_data_integration.ts # Real-time data
+```
+
+## Revolutionary Systems (5 files)
+```
+src/backend/revolutionary/
+├── index.ts                    # System coordinator
+├── quantum_alpha_synthesizer.ts # Multi-dimensional signals
+├── dark_pool_reconstructor.ts  # Institutional flow
+├── smart_money_tracker.ts      # Hedge fund tracking
+└── volatility_surface_trader.ts # Options volatility
+```
+
+## Next Evolution Systems (8 files)
+```
+src/backend/capital/capital_conductor.ts
+src/backend/alpha/alpha_engine.ts (stub)
+src/backend/portfolio/portfolio_brain.ts
+src/backend/yield/yield_orchestrator.ts (stub)
+src/backend/research/research_annotation_engine.ts
+src/backend/builder/strategy_builder_v2.ts
+src/backend/life/life_timeline_engine.ts
+src/backend/collective/collective_intelligence_network.ts
+src/backend/scenarios/predictive_scenario_engine.ts
+```
+
+## API Routes (20+ files)
+```
+src/backend/routes/
+├── index.ts                    # Route aggregation
+├── auth.ts                     # Authentication (8 endpoints)
+├── users.ts                    # User management (12 endpoints)
+├── bots.ts                     # Bot CRUD (15 endpoints)
+├── auto_bots.ts                # Auto bot creation (18 endpoints)
+├── universal_bots.ts           # Universal bots (14 endpoints)
+├── strategies.ts               # Strategy management (10 endpoints)
+├── admin.ts                    # Admin panel (15 endpoints)
+├── social.ts                   # Social trading (12 endpoints)
+├── assets.ts                   # Asset trading (8 endpoints)
+├── market_data.ts              # Market data (10 endpoints)
+├── defi_mastery.ts             # DeFi (16 endpoints)
+├── risk_profile.ts             # Risk assessment (6 endpoints)
+├── fetcher.ts                  # Bot fetching (8 endpoints)
+├── payments.ts                 # TIME Pay (20 endpoints)
+├── integrations.ts             # Platform bridges (30+ endpoints)
+├── advanced_broker.ts          # Smart order routing (12 endpoints)
+├── real_market_api.ts          # Real market data (10 endpoints)
+├── revolutionary.ts            # Revolutionary systems (15 endpoints)
+├── fmp.ts                      # FMP data (12 endpoints)
+├── fred.ts                     # FRED data (10 endpoints)
+├── twelvedata.ts               # TwelveData (8 endpoints)
+├── alertsRoutes.ts             # Big Moves alerts (10 endpoints)
+└── tradingMode.ts              # Practice/Live toggle (8 endpoints)
+```
+
+## Additional Systems
+```
+src/backend/consent/consent_manager.ts       # GDPR consent
+src/backend/database/connection.ts           # MongoDB + Redis
+src/backend/database/schemas.ts              # Data models
+src/backend/database/repositories.ts         # Data access
+src/backend/notifications/notification_service.ts
+src/backend/fingerprint/bot_fingerprinting.ts
+src/backend/research/bot_research_pipeline.ts
+src/backend/simulator/training_simulator.ts
+src/backend/stories/trade_story_generator.ts
+src/backend/watchers/stock_watchers.ts
+src/backend/dropzone/bot_dropzone.ts
+src/backend/fetcher/github_bot_fetcher.ts
+src/backend/fetcher/multi_source_fetcher.ts
+src/backend/scout/opportunity_scout.ts
+src/backend/marketplace/nft_marketplace.ts
+src/backend/monetization/revenue_engine.ts
+src/backend/assets/tokenized_assets.ts
+src/backend/defi/yield_aggregator.ts
+src/backend/integrations/platform_bridge.ts
+src/backend/integrations/ikickitz_bridge.ts
+src/backend/integrations/mgr_bridge.ts
+src/backend/integrations/unified_tax_flow.ts
+src/backend/services/BigMovesAlertService.ts
+src/backend/services/AITradeGodBot.ts
+src/backend/services/TradingModeService.ts
+src/backend/websocket/index.ts
+src/backend/websocket/realtime_service.ts
+src/backend/websocket/event_hub.ts
+src/backend/websocket/realtime_hub.ts
+```
+
+---
+
+# COMPLETE FRONTEND FILE INVENTORY (32+ Files)
+
+## Pages (25+ pages)
+```
+frontend/src/app/
+├── page.tsx                    # Dashboard
+├── layout.tsx                  # Root layout
+├── globals.css                 # Global styles
+├── markets/page.tsx            # Real-time markets
+├── charts/page.tsx             # Advanced charting
+├── trade/page.tsx              # Buy/sell interface
+├── portfolio/page.tsx          # Holdings view
+├── bots/page.tsx               # Bot management
+├── strategies/page.tsx         # Strategy synthesis
+├── defi/page.tsx               # DeFi & yield farming
+├── invest/page.tsx             # Tokenized assets
+├── learn/page.tsx              # Teaching engine UI
+├── history/page.tsx            # Trade history
+├── vision/page.tsx             # Market vision
+├── alerts/page.tsx             # Big Moves alerts
+├── settings/page.tsx           # User settings + Trading Mode
+├── brokers/page.tsx            # Broker connections
+├── execution/page.tsx          # Smart order routing
+├── live-trading/page.tsx       # Live bot execution
+├── ai-trade-god/page.tsx       # AI trading features
+└── admin/
+    ├── page.tsx                # Evolution control
+    └── health/page.tsx         # System monitoring
+```
+
+## Components
+```
+frontend/src/components/
+├── dashboard/
+│   ├── StatsCard.tsx
+│   ├── RegimeIndicator.tsx
+│   ├── SystemHealth.tsx
+│   ├── ActiveBots.tsx
+│   └── RecentInsights.tsx
+├── charts/
+│   └── LiveChart.tsx
+├── layout/
+│   ├── Sidebar.tsx
+│   └── TopNav.tsx
+├── search/
+│   └── GlobalSearchBar.tsx
+├── alerts/
+│   └── BigMovesAlerts.tsx
+└── trading/
+    └── TradingModeToggle.tsx
+```
+
+## State & Hooks
+```
+frontend/src/store/timeStore.ts   # Zustand global state
+frontend/src/hooks/
+├── index.ts
+└── useWebSocket.ts              # Real-time updates
+```
+
+---
+
+# FEATURES TO BUILD FOR VANGUARD-LEVEL PLATFORM
+
+## Stock Transfers (ACATS)
+```typescript
+// Files needed:
+src/backend/transfers/acats_transfer.ts
+src/backend/transfers/transfer_manager.ts
+src/backend/routes/transfers.ts
+frontend/src/app/transfers/page.tsx
+
+// Key features:
+- Initiate transfer from other brokers
+- Track transfer status
+- Handle partial transfers
+- Support full/fractional shares
+```
+
+## Direct Registration System (DRS)
+```typescript
+// For direct stock ownership (like GameStop DRS movement)
+src/backend/drs/direct_registration.ts
+src/backend/drs/transfer_agent_api.ts
+```
+
+## Tax-Loss Harvesting
+```typescript
+// Automated tax optimization
+src/backend/tax/tax_loss_harvester.ts
+src/backend/tax/wash_sale_tracker.ts
+src/backend/tax/replacement_finder.ts
+```
+
+## Retirement Accounts
+```typescript
+// IRA/401k/529 support
+src/backend/retirement/ira_manager.ts
+src/backend/retirement/contribution_tracker.ts
+src/backend/retirement/rmd_calculator.ts
+```
+
+## Estate Planning
+```typescript
+// Beneficiary management
+src/backend/estate/beneficiary_manager.ts
+src/backend/estate/tod_pod_accounts.ts
+```
+
+---
+
+# TOTAL PLATFORM STATISTICS
+
+| Metric | Count |
+|--------|-------|
+| Backend TypeScript Files | 119+ |
+| Frontend React Files | 32+ |
+| API Endpoints | 430+ |
+| Trading Venues | 50+ |
+| Pre-built Bot Strategies | 27 |
+| Universal Bots | 32 |
+| Market Data Providers | 6 |
+| Broker Integrations | 8 |
+| Teaching Modes | 6 |
+| Market Regimes Detected | 9 |
+| Copy Trading Tiers | 5 |
+| Order Types Supported | 18 |
+| Lines of Code (Est.) | 100,000+ |
+
+---
+
+# CHANGELOG DECEMBER 2025
+
+## [2025-12-13] Documentation Overhaul
+- Created comprehensive TIMEBEUNUS.md master guide
+- Updated COPILOT1.md with complete file inventory
+- Added Vanguard-level feature roadmap
+- Documented all 119+ backend files
+- Added legal/free alternatives for financial features
+
+## [2025-12-12] Live Bot Trading
+- Added LIVE Bot Trading System
+- Bots now execute real trades on connected brokers
+- Added trading mode toggle (Practice/Live)
+- Safety locks prevent accidental live trading
+
+## [2025-12-12] Multi-Source Bot Absorption
+- Added 11-source bot fetcher
+- 36+ pre-qualified FREE bots absorbed
+- Support for GitHub, MQL5, TradingView, npm, PyPI, Discord, Telegram
+
+## [2025-12-11] Next Evolution Systems
+- Capital Conductor (partial)
+- Alpha Engine (stub)
+- Portfolio Brain
+- Yield Orchestrator (stub)
+- Research Annotation Engine
+- Strategy Builder V2
+- Life Timeline Engine
+- Collective Intelligence Network
+- Predictive Scenario Engine
+
+---
+
+> **Mission:** Give everyday people access to the same tools and strategies that hedge funds use — in plain English, with safety guardrails, at minimal cost.
