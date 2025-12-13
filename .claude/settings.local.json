@@ -44,7 +44,9 @@
       "Bash(dir /s /b \"C:\\Users\\Timeb\\AppData\\Roaming\\MetaQuotes\\Terminal\")",
       "Bash(powershell:*)",
       "Bash(npm run dev:backend:*)",
-      "Bash(node -e:*)"
+      "Bash(node -e:*)",
+      "Bash(ls:*)",
+      "Bash(git -C \"C:\\Users\\Timeb\\OneDrive\\TIME\" log --oneline -20)"
     ]
   }
 }

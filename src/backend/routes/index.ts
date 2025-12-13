@@ -28,6 +28,12 @@ import alertsRoutes from './alertsRoutes';
 import tradingModeRoutes from './tradingMode';
 import tradingRoutes from './trading';
 
+// NEW! Vanguard-Level Systems
+import securityRoutes from './security';
+import taxRoutes from './tax';
+import transfersRoutes from './transfers';
+import roboRoutes from './robo';
+
 const router = Router();
 
 // Mount routes
@@ -61,6 +67,12 @@ router.use('/trading-mode', tradingModeRoutes);  // Practice/Live mode toggle fo
 
 // LIVE BOT TRADING - Execute trades from bots!
 router.use('/trading', tradingRoutes);  // Start/stop bots, execute signals, track P&L
+
+// NEW! VANGUARD-LEVEL SYSTEMS - Rivaling Major Brokerages
+router.use('/security', securityRoutes);  // MFA, API keys, audit logging
+router.use('/tax', taxRoutes);            // Tax-loss harvesting, wash sale tracking
+router.use('/transfers', transfersRoutes); // ACATS transfers, account moves
+router.use('/robo', roboRoutes);          // Robo-advisory, goal-based investing
 
 export default router;
 
