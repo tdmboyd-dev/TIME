@@ -2835,6 +2835,12 @@ src/backend/estate/tod_pod_accounts.ts
 
 # CHANGELOG DECEMBER 2025
 
+## [2025-12-13] Sidebar Navigation + Bug Fixes
+- Added Account Transfers, Tax Optimization, Investment Goals to sidebar
+- Fixed TypeScript error in bots.ts (use absorbedAt instead of absorbed)
+- Fixed TypeScript error in TradingExecutionService.ts (use price and order.id)
+- All new Vanguard-level pages now accessible from navigation
+
 ## [2025-12-13] Documentation Overhaul
 - Created comprehensive TIMEBEUNUS.md master guide
 - Updated COPILOT1.md with complete file inventory

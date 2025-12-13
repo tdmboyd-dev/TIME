@@ -46,7 +46,8 @@
       "Bash(npm run dev:backend:*)",
       "Bash(node -e:*)",
       "Bash(ls:*)",
-      "Bash(git -C \"C:\\Users\\Timeb\\OneDrive\\TIME\" log --oneline -20)"
+      "Bash(git -C \"C:\\Users\\Timeb\\OneDrive\\TIME\" log --oneline -20)",
+      "Bash(npm run test)"
     ]
   }
 }
