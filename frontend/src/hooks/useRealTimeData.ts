@@ -23,25 +23,32 @@ export function useRealTimeData() {
   // Fetch system health from backend
   const fetchHealth = useCallback(async () => {
     try {
-      const response = await fetch(`${API_BASE}/health`);
+      // Backend health is at /health not /api/v1/health
+      const API_ROOT = process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || 'http://localhost:3001';
+      const response = await fetch(`${API_ROOT}/health`);
       const data = await response.json();
 
-      if (data.status === 'healthy') {
+      // Backend returns status: 'ok' not 'healthy'
+      if (data.status === 'ok' || data.status === 'healthy') {
         setConnected(true);
 
         // Map backend health data to frontend format
-        const healthItems = [
-          { component: 'TIME Governor', status: data.components?.timeGovernor || 'healthy' },
-          { component: 'Learning Engine', status: data.components?.learningEngine || 'healthy' },
-          { component: 'Risk Engine', status: data.components?.riskEngine || 'healthy' },
-          { component: 'Regime Detector', status: data.components?.regimeDetector || 'healthy' },
-          { component: 'Market Vision', status: data.components?.marketVision || 'healthy' },
-          { component: 'Bot Manager', status: data.components?.botManager || 'healthy' },
-          { component: 'Teaching Engine', status: data.components?.teachingEngine || 'healthy' },
-          { component: 'Attribution Engine', status: data.components?.attributionEngine || 'healthy' },
-          { component: 'Database', status: data.database?.mongodb ? 'healthy' : 'warning' },
-          { component: 'Cache', status: data.database?.redis ? 'healthy' : 'warning' },
-        ];
+        // Backend returns components as an array with {name, status}
+        const healthItems = Array.isArray(data.components)
+          ? data.components.map((c: { name: string; status: string }) => ({
+              component: c.name,
+              status: c.status === 'online' ? 'healthy' : c.status,
+            }))
+          : [
+              { component: 'TIME Governor', status: 'healthy' },
+              { component: 'Learning Engine', status: 'healthy' },
+              { component: 'Risk Engine', status: 'healthy' },
+              { component: 'Regime Detector', status: 'healthy' },
+              { component: 'Market Vision', status: 'healthy' },
+              { component: 'Bot Manager', status: 'healthy' },
+              { component: 'Teaching Engine', status: 'healthy' },
+              { component: 'Attribution Engine', status: 'healthy' },
+            ];
         setHealth(healthItems);
       }
     } catch (error) {
