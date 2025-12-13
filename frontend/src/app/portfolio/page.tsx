@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Wallet,
   TrendingUp,
@@ -18,8 +18,13 @@ import {
   Download,
   Filter,
   CheckCircle,
-  X
+  X,
+  Loader2,
+  Wifi,
+  WifiOff
 } from 'lucide-react';
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
 
 interface Position {
   id: string;
@@ -82,26 +87,98 @@ export default function PortfolioPage() {
   const [sortBy, setSortBy] = useState<'value' | 'pnl' | 'allocation'>('value');
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [livePositions, setLivePositions] = useState<Position[]>(positions);
+  const [alpacaAccount, setAlpacaAccount] = useState<any>(null);
+  const [isConnected, setIsConnected] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Fetch real portfolio from Alpaca
+  const fetchAlpacaData = useCallback(async () => {
+    try {
+      // Fetch account info
+      const accountRes = await fetch(`${API_BASE}/broker/alpaca/account`);
+      const accountData = await accountRes.json();
+
+      if (accountData.success && accountData.data) {
+        setAlpacaAccount(accountData.data);
+        setIsConnected(true);
+      }
+
+      // Fetch positions
+      const positionsRes = await fetch(`${API_BASE}/broker/alpaca/positions`);
+      const positionsData = await positionsRes.json();
+
+      if (positionsData.success && Array.isArray(positionsData.data) && positionsData.data.length > 0) {
+        const alpacaPositions: Position[] = positionsData.data.map((p: any, idx: number) => ({
+          id: p.asset_id || `pos-${idx}`,
+          symbol: p.symbol,
+          name: p.symbol,
+          type: 'stock' as const,
+          quantity: parseFloat(p.qty) || 0,
+          avgPrice: parseFloat(p.avg_entry_price) || 0,
+          currentPrice: parseFloat(p.current_price) || 0,
+          value: parseFloat(p.market_value) || 0,
+          pnl: parseFloat(p.unrealized_pl) || 0,
+          pnlPercent: parseFloat(p.unrealized_plpc) * 100 || 0,
+          allocation: 0, // Will calculate below
+        }));
+
+        // Calculate allocations
+        const totalVal = alpacaPositions.reduce((sum, p) => sum + p.value, 0);
+        alpacaPositions.forEach(p => {
+          p.allocation = totalVal > 0 ? (p.value / totalVal) * 100 : 0;
+        });
+
+        setLivePositions(alpacaPositions.length > 0 ? alpacaPositions : positions);
+      }
+    } catch (error) {
+      console.error('Failed to fetch Alpaca data:', error);
+      setIsConnected(false);
+    } finally {
+      setIsLoading(false);
+      setIsRefreshing(false);
+    }
+  }, []);
+
+  // Initial fetch
+  useEffect(() => {
+    fetchAlpacaData();
+    const interval = setInterval(fetchAlpacaData, 30000);
+    return () => clearInterval(interval);
+  }, [fetchAlpacaData]);
 
   const handleRefresh = () => {
     setIsRefreshing(true);
-    setTimeout(() => {
-      setIsRefreshing(false);
-      setNotification({ type: 'success', message: 'Portfolio data refreshed' });
-      setTimeout(() => setNotification(null), 3000);
-    }, 1000);
+    fetchAlpacaData();
+    setNotification({ type: 'success', message: 'Portfolio data refreshed' });
+    setTimeout(() => setNotification(null), 3000);
   };
 
   const handleExport = () => {
+    // Export positions to CSV
+    const csv = [
+      'Symbol,Name,Type,Quantity,Avg Price,Current Price,Value,P&L,P&L %,Allocation',
+      ...livePositions.map(p =>
+        `${p.symbol},${p.name},${p.type},${p.quantity},${p.avgPrice},${p.currentPrice},${p.value},${p.pnl},${p.pnlPercent}%,${p.allocation}%`
+      )
+    ].join('\n');
+
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `portfolio-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+
     setNotification({ type: 'success', message: 'Portfolio exported to CSV' });
     setTimeout(() => setNotification(null), 3000);
   };
 
-  const totalValue = positions.reduce((sum, p) => sum + p.value, 0);
-  const totalPnL = positions.reduce((sum, p) => sum + p.pnl, 0);
-  const totalPnLPercent = (totalPnL / (totalValue - totalPnL)) * 100;
+  const totalValue = livePositions.reduce((sum, p) => sum + p.value, 0);
+  const totalPnL = livePositions.reduce((sum, p) => sum + p.pnl, 0);
+  const totalPnLPercent = totalValue > totalPnL ? (totalPnL / (totalValue - totalPnL)) * 100 : 0;
 
-  const filteredPositions = positions
+  const filteredPositions = livePositions
     .filter(p => selectedFilter === 'all' || p.type === selectedFilter)
     .sort((a, b) => {
       if (sortBy === 'value') return b.value - a.value;

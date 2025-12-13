@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   TrendingUp,
   TrendingDown,
@@ -15,8 +15,14 @@ import {
   Star,
   BarChart2,
   Activity,
-  Zap
+  Zap,
+  RefreshCw,
+  Wifi,
+  WifiOff,
+  Loader2
 } from 'lucide-react';
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
 
 interface Asset {
   symbol: string;
@@ -59,6 +65,7 @@ const assets: Asset[] = [
 ];
 
 export default function TradePage() {
+  const [liveAssets, setLiveAssets] = useState<Asset[]>(assets);
   const [selectedAsset, setSelectedAsset] = useState<Asset>(assets[0]);
   const [orderSide, setOrderSide] = useState<'buy' | 'sell'>('buy');
   const [orderType, setOrderType] = useState<'market' | 'limit' | 'stop'>('market');
@@ -70,12 +77,105 @@ export default function TradePage() {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [favorites, setFavorites] = useState<string[]>(['AAPL', 'BTC/USD', 'GOLD']);
+  const [isConnected, setIsConnected] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isPlacingOrder, setIsPlacingOrder] = useState(false);
 
-  // Real-time price simulation
+  // Fetch real market data
+  const fetchMarketData = useCallback(async () => {
+    try {
+      const updatedAssets: Asset[] = [];
+
+      // Fetch stock prices
+      for (const symbol of ['AAPL', 'MSFT', 'GOOGL', 'TSLA', 'NVDA']) {
+        try {
+          const res = await fetch(`${API_BASE}/real-market/stock/${symbol}`);
+          const data = await res.json();
+          if (data.success && data.data) {
+            const d = data.data;
+            updatedAssets.push({
+              symbol,
+              name: d.name || `${symbol}`,
+              type: 'stock',
+              price: d.price || 0,
+              change: d.change || 0,
+              changePercent: d.changePercent || 0,
+              bid: d.price * 0.9999,
+              ask: d.price * 1.0001,
+              spread: d.price * 0.0002,
+              volume: d.volume ? `${(d.volume / 1e6).toFixed(1)}M` : '0',
+              high24h: d.high || d.price * 1.02,
+              low24h: d.low || d.price * 0.98,
+            });
+          }
+        } catch (e) { /* skip on error */ }
+      }
+
+      // Fetch crypto prices
+      for (const symbol of ['BTC', 'ETH']) {
+        try {
+          const res = await fetch(`${API_BASE}/real-market/crypto/${symbol}`);
+          const data = await res.json();
+          if (data.success && data.data) {
+            const d = data.data;
+            updatedAssets.push({
+              symbol: `${symbol}/USD`,
+              name: d.name || symbol,
+              type: 'crypto',
+              price: d.price || 0,
+              change: d.change24h || 0,
+              changePercent: d.changePercent24h || 0,
+              bid: d.price * 0.999,
+              ask: d.price * 1.001,
+              spread: d.price * 0.002,
+              volume: d.volume24h ? `${(d.volume24h / 1e9).toFixed(1)}B` : '0',
+              high24h: d.high24h || d.price * 1.05,
+              low24h: d.low24h || d.price * 0.95,
+            });
+          }
+        } catch (e) { /* skip on error */ }
+      }
+
+      if (updatedAssets.length > 0) {
+        // Merge with existing assets to keep favorites
+        setLiveAssets(prev => {
+          const merged = [...updatedAssets];
+          prev.forEach(p => {
+            if (!merged.find(m => m.symbol === p.symbol)) {
+              merged.push(p);
+            }
+          });
+          return merged;
+        });
+
+        // Update selected asset if it's in the updated list
+        const updatedSelected = updatedAssets.find(a => a.symbol === selectedAsset.symbol);
+        if (updatedSelected) {
+          setSelectedAsset(updatedSelected);
+        }
+
+        setIsConnected(true);
+      }
+    } catch (error) {
+      console.error('Failed to fetch market data:', error);
+      setIsConnected(false);
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [selectedAsset.symbol]);
+
+  // Initial fetch and polling
+  useEffect(() => {
+    fetchMarketData();
+    const interval = setInterval(fetchMarketData, 15000); // Refresh every 15s
+    return () => clearInterval(interval);
+  }, [fetchMarketData]);
+
+  // Real-time price simulation for smoother updates
   useEffect(() => {
     const interval = setInterval(() => {
       setSelectedAsset(prev => {
-        const change = (Math.random() - 0.5) * prev.price * 0.001;
+        const change = (Math.random() - 0.5) * prev.price * 0.0005;
         return {
           ...prev,
           price: prev.price + change,
@@ -87,7 +187,12 @@ export default function TradePage() {
     return () => clearInterval(interval);
   }, []);
 
-  const filteredAssets = assets.filter(a =>
+  const handleRefresh = () => {
+    setIsRefreshing(true);
+    fetchMarketData();
+  };
+
+  const filteredAssets = liveAssets.filter(a =>
     a.symbol.toLowerCase().includes(searchTerm.toLowerCase()) ||
     a.name.toLowerCase().includes(searchTerm.toLowerCase())
   );

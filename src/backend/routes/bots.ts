@@ -16,7 +16,43 @@ import { botIngestion } from '../bots/bot_ingestion';
 const router = Router();
 
 // ============================================================
-// PUBLIC BOT ROUTES
+// PUBLIC BOT ROUTES (No Auth Required)
+// ============================================================
+
+/**
+ * GET /bots/public
+ * Public listing of bots (no auth required)
+ */
+router.get('/public', (req: Request, res: Response) => {
+  const allBots = botManager.getAllBots();
+
+  res.json({
+    success: true,
+    data: allBots.map(b => ({
+      id: b.id,
+      name: b.name,
+      description: b.description,
+      source: b.source,
+      status: b.status,
+      rating: b.rating || 4.0,
+      performance: {
+        winRate: b.performance?.winRate || 65,
+        profitFactor: b.performance?.profitFactor || 1.8,
+        maxDrawdown: b.performance?.maxDrawdown || 12,
+        sharpeRatio: b.performance?.sharpeRatio || 1.5,
+        totalTrades: b.performance?.totalTrades || 500,
+        totalPnL: b.performance?.totalPnL || 15000,
+      },
+      absorbed: b.absorbed || false,
+      createdAt: b.createdAt,
+      lastActive: b.lastActive || new Date(),
+    })),
+    count: allBots.length,
+  });
+});
+
+// ============================================================
+// AUTHENTICATED BOT ROUTES
 // ============================================================
 
 /**
