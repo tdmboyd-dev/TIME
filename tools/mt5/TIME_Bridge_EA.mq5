@@ -135,9 +135,64 @@ bool ConnectToTIME()
    }
 
    isConnected = true;
-   Print("[TIME] Connected to TIME server");
+   Print("[TIME] Connected to TIME server!");
 
-   return true;
+   // Send hello message
+   Print("[TIME] Sending hello...");
+   string hello = "{\"type\":\"hello\",\"version\":\"mt5\"}\n";
+   uchar helloData[];
+   int helloLen = StringToCharArray(hello, helloData, 0, WHOLE_ARRAY, CP_UTF8) - 1;
+   int sent = SocketSend(socket, helloData, helloLen);
+
+   if(sent <= 0)
+   {
+      Print("[TIME] Failed to send hello: ", GetLastError());
+      DisconnectFromTIME();
+      return false;
+   }
+   Print("[TIME] Hello sent: ", sent, " bytes");
+
+   // Wait for server response using SocketIsReadable
+   Print("[TIME] Waiting for server response...");
+   uint startTime = GetTickCount();
+   uint timeout = 5000; // 5 second timeout
+
+   while(GetTickCount() - startTime < timeout)
+   {
+      // Check if data is available
+      uint dataLen = SocketIsReadable(socket);
+      if(dataLen > 0)
+      {
+         Print("[TIME] Data available: ", dataLen, " bytes");
+         uchar buffer[];
+         ArrayResize(buffer, (int)dataLen + 1);
+         int received = SocketRead(socket, buffer, (int)dataLen, 1000);
+
+         if(received > 0)
+         {
+            string response = CharArrayToString(buffer, 0, received, CP_UTF8);
+            Print("[TIME] Received: ", response);
+
+            // Check for auth_request in response
+            if(StringFind(response, "auth_request") >= 0)
+            {
+               Print("[TIME] Got auth_request, sending auth_response...");
+               SendAuthResponse();
+               isAuthenticated = true;
+               Print("[TIME] Authenticated!");
+               return true;
+            }
+         }
+         else
+         {
+            Print("[TIME] SocketRead returned: ", received, " error: ", GetLastError());
+         }
+      }
+      Sleep(100); // Small delay before checking again
+   }
+
+   Print("[TIME] Timeout waiting for server response");
+   return true; // Still return true, we're connected even if no response yet
 }
 
 //+------------------------------------------------------------------+
@@ -184,11 +239,13 @@ void ProcessIncomingMessages()
 {
    if(!isConnected || socket == INVALID_HANDLE) return;
 
-   uchar buffer[];
-   ArrayResize(buffer, 4096);
+   // Check if data is available using non-blocking approach
+   uint dataLen = SocketIsReadable(socket);
+   if(dataLen == 0) return; // No data available
 
-   uint timeout = 100;
-   int received = SocketRead(socket, buffer, ArraySize(buffer), timeout);
+   uchar buffer[];
+   ArrayResize(buffer, (int)dataLen + 1);
+   int received = SocketRead(socket, buffer, (int)dataLen, 500);
 
    if(received > 0)
    {
@@ -211,9 +268,10 @@ void ProcessIncomingMessages()
    else if(received < 0)
    {
       int error = GetLastError();
-      if(error != 0 && error != 5273) // 5273 = no data available
+      Print("[TIME] Receive error: ", error);
+      // Only disconnect on critical errors, not on I/O timeout
+      if(error != 5273 && error != 0)
       {
-         Print("[TIME] Receive error: ", error);
          DisconnectFromTIME();
       }
    }

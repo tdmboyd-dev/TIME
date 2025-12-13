@@ -51,6 +51,9 @@ import { stockWatchers } from './watchers/stock_watchers';
 import { botDropZone } from './dropzone/bot_dropzone';
 import { githubBotFetcher } from './fetcher/github_bot_fetcher';
 
+// MetaTrader Bridge
+import { mtBridge } from './brokers/mt_bridge';
+
 // Opportunity Scout (Legitimate Earnings System)
 import { opportunityScout } from './scout/opportunity_scout';
 
@@ -5397,6 +5400,16 @@ async function main(): Promise<void> {
       }
     });
 
+    // Start MetaTrader Bridge
+    if (process.env.MT_BRIDGE_ENABLED === 'true') {
+      const mtPort = parseInt(process.env.MT_BRIDGE_PORT || '15555');
+      mtBridge.start(mtPort).then(() => {
+        log.info(`[MTBridge] MetaTrader Bridge listening on port ${mtPort}`);
+      }).catch((err) => {
+        log.error(`[MTBridge] Failed to start: ${err.message}`);
+      });
+    }
+
     // Start server
     server.listen(config.port, () => {
       log.info('='.repeat(60));
@@ -5404,6 +5417,9 @@ async function main(): Promise<void> {
       log.info(`Environment: ${config.nodeEnv}`);
       log.info(`API: http://localhost:${config.port}/api/v1`);
       log.info(`Health: http://localhost:${config.port}/health`);
+      if (process.env.MT_BRIDGE_ENABLED === 'true') {
+        log.info(`MT Bridge: localhost:${process.env.MT_BRIDGE_PORT || '15555'}`);
+      }
       log.info('='.repeat(60));
     });
 

@@ -307,6 +307,23 @@ class MTBridge extends EventEmitter {
         this.sendMessage(connectionId, { type: 'pong', timestamp: Date.now() });
         break;
 
+      case 'hello':
+        console.log(`[MTBridge] Hello received from ${message.version || 'unknown'} client`);
+        connection.version = message.version === 'mt4' ? 'mt4' : 'mt5';
+        // Send hello response immediately
+        this.sendMessage(connectionId, {
+          type: 'hello_ack',
+          status: 'ok',
+          server: 'TIME',
+          timestamp: Date.now()
+        });
+        // Then send auth request
+        this.sendMessage(connectionId, {
+          type: 'auth_request',
+          timestamp: Date.now(),
+        });
+        break;
+
       default:
         console.log(`[MTBridge] Unknown message type: ${message.type}`);
     }
