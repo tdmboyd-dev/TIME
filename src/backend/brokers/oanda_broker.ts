@@ -8,6 +8,7 @@
  * - Real-time streaming prices
  */
 
+import axios, { AxiosInstance, AxiosError } from 'axios';
 import {
   BrokerInterface,
   BrokerConfig,
@@ -47,6 +48,7 @@ export class OANDABroker extends BrokerInterface {
   private streamUrl: string;
   private accountId: string;
   private environment: 'practice' | 'live';
+  private apiClient: AxiosInstance;
 
   constructor(config: OANDAConfig) {
     super(config);
@@ -63,6 +65,16 @@ export class OANDABroker extends BrokerInterface {
       this.baseUrl = 'https://api-fxtrade.oanda.com';
       this.streamUrl = 'https://stream-fxtrade.oanda.com';
     }
+
+    // Create axios instance with Bearer token auth
+    this.apiClient = axios.create({
+      baseURL: this.baseUrl,
+      headers: {
+        Authorization: `Bearer ${this.config.apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      timeout: 30000,
+    });
   }
 
   /**
@@ -536,64 +548,50 @@ export class OANDABroker extends BrokerInterface {
   // Private methods
 
   private async apiRequest(method: string, path: string, body?: any): Promise<any> {
-    const url = `${this.baseUrl}${path}`;
+    try {
+      logger.debug(`API Request: ${method} ${path}`);
 
-    const headers: Record<string, string> = {
-      Authorization: `Bearer ${this.config.apiKey}`,
-      'Content-Type': 'application/json',
-    };
+      const response = await this.apiClient.request({
+        method,
+        url: path,
+        data: body,
+      });
 
-    logger.debug(`API Request: ${method} ${url}`);
+      return response.data;
+    } catch (error) {
+      const axiosError = error as AxiosError;
 
-    // Simulated responses for development
-    if (path.includes('/accounts/') && path.endsWith(this.accountId)) {
-      return {
-        account: {
-          id: this.accountId,
-          currency: 'USD',
-          balance: '100000.0000',
-          NAV: '100500.0000',
-          marginAvailable: '95000.0000',
-          marginUsed: '5000.0000',
-        },
-      };
+      if (axiosError.response) {
+        const status = axiosError.response.status;
+        const data = axiosError.response.data as any;
+
+        logger.error(`OANDA API error ${status}: ${JSON.stringify(data)}`);
+
+        // Handle specific error codes
+        if (status === 401) {
+          throw new Error('Invalid OANDA API token');
+        }
+        if (status === 403) {
+          throw new Error('Access forbidden - check API permissions');
+        }
+        if (status === 404) {
+          const notFoundError = new Error(data?.errorMessage || 'Resource not found');
+          (notFoundError as any).status = 404;
+          throw notFoundError;
+        }
+        if (status === 400) {
+          throw new Error(`Bad request: ${data?.errorMessage || JSON.stringify(data)}`);
+        }
+
+        throw new Error(data?.errorMessage || `OANDA API error: ${status}`);
+      }
+
+      if (axiosError.code === 'ECONNREFUSED' || axiosError.code === 'ETIMEDOUT') {
+        throw new Error('Unable to connect to OANDA API - check network connection');
+      }
+
+      throw error;
     }
-
-    if (path.includes('/openPositions')) {
-      return { positions: [] };
-    }
-
-    if (path.includes('/pendingOrders')) {
-      return { orders: [] };
-    }
-
-    if (path.includes('/instruments')) {
-      return {
-        instruments: [
-          { name: 'EUR_USD', type: 'CURRENCY' },
-          { name: 'GBP_USD', type: 'CURRENCY' },
-          { name: 'USD_JPY', type: 'CURRENCY' },
-          { name: 'AUD_USD', type: 'CURRENCY' },
-          { name: 'USD_CHF', type: 'CURRENCY' },
-          { name: 'NZD_USD', type: 'CURRENCY' },
-          { name: 'USD_CAD', type: 'CURRENCY' },
-        ],
-      };
-    }
-
-    if (path.includes('/pricing')) {
-      return {
-        prices: [
-          {
-            bids: [{ price: '1.08500', liquidity: 1000000 }],
-            asks: [{ price: '1.08520', liquidity: 1000000 }],
-            time: new Date().toISOString(),
-          },
-        ],
-      };
-    }
-
-    return {};
   }
 
   private mapOandaOrder(oandaOrder: any): Order {

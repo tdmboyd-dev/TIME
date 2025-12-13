@@ -8,6 +8,8 @@
  * - Real-time market data streaming
  */
 
+import axios, { AxiosInstance, AxiosError } from 'axios';
+import WebSocket from 'ws';
 import {
   BrokerInterface,
   BrokerConfig,
@@ -45,8 +47,10 @@ export class AlpacaBroker extends BrokerInterface {
   private baseUrl: string;
   private dataUrl: string;
   private streamUrl: string;
-  private wsConnection: any = null;
+  private wsConnection: WebSocket | null = null;
   private dataFeedType: 'iex' | 'sip';
+  private apiClient: AxiosInstance;
+  private dataClient: AxiosInstance;
 
   constructor(config: AlpacaConfig) {
     super(config);
@@ -63,6 +67,25 @@ export class AlpacaBroker extends BrokerInterface {
       this.dataUrl = 'https://data.alpaca.markets';
       this.streamUrl = 'wss://stream.data.alpaca.markets';
     }
+
+    // Create axios instances with auth headers
+    const headers = {
+      'APCA-API-KEY-ID': this.config.apiKey,
+      'APCA-API-SECRET-KEY': this.config.apiSecret,
+      'Content-Type': 'application/json',
+    };
+
+    this.apiClient = axios.create({
+      baseURL: this.baseUrl,
+      headers,
+      timeout: 30000,
+    });
+
+    this.dataClient = axios.create({
+      baseURL: this.dataUrl,
+      headers,
+      timeout: 30000,
+    });
   }
 
   /**
@@ -500,117 +523,189 @@ export class AlpacaBroker extends BrokerInterface {
   // Private methods
 
   private async connectWebSocket(): Promise<void> {
-    // In a real implementation, this would create a WebSocket connection
-    // to wss://stream.data.alpaca.markets/v2/iex or /v2/sip
-    logger.info('WebSocket connection would be established here');
+    return new Promise((resolve, reject) => {
+      try {
+        const wsUrl = `${this.streamUrl}/v2/${this.dataFeedType}`;
+        logger.info(`Connecting to Alpaca WebSocket: ${wsUrl}`);
 
-    // Simulated connection for now
-    // Real implementation would use 'ws' package:
-    /*
-    this.wsConnection = new WebSocket(`${this.streamUrl}/v2/${this.dataFeedType}`);
+        this.wsConnection = new WebSocket(wsUrl);
 
-    this.wsConnection.on('open', () => {
-      // Authenticate
-      this.wsConnection.send(JSON.stringify({
-        action: 'auth',
-        key: this.config.apiKey,
-        secret: this.config.apiSecret,
-      }));
+        this.wsConnection.on('open', () => {
+          logger.info('WebSocket connected, authenticating...');
+          // Authenticate
+          this.wsConnection?.send(JSON.stringify({
+            action: 'auth',
+            key: this.config.apiKey,
+            secret: this.config.apiSecret,
+          }));
+        });
+
+        this.wsConnection.on('message', (data: Buffer) => {
+          try {
+            const messages = JSON.parse(data.toString());
+
+            for (const msg of messages) {
+              // Authentication response
+              if (msg.T === 'success' && msg.msg === 'authenticated') {
+                logger.info('WebSocket authenticated successfully');
+                resolve();
+              }
+
+              // Authentication error
+              if (msg.T === 'error') {
+                logger.error('WebSocket error:', msg);
+                if (msg.msg?.includes('auth')) {
+                  reject(new Error(`WebSocket authentication failed: ${msg.msg}`));
+                }
+              }
+
+              // Quote update
+              if (msg.T === 'q') {
+                this.emitQuote({
+                  symbol: msg.S,
+                  bid: msg.bp,
+                  ask: msg.ap,
+                  bidSize: msg.bs,
+                  askSize: msg.as,
+                  timestamp: new Date(msg.t),
+                });
+              }
+
+              // Bar update
+              if (msg.T === 'b') {
+                this.emitBar({
+                  symbol: msg.S,
+                  open: msg.o,
+                  high: msg.h,
+                  low: msg.l,
+                  close: msg.c,
+                  volume: msg.v,
+                  timestamp: new Date(msg.t),
+                });
+              }
+
+              // Trade update
+              if (msg.T === 't') {
+                this.emit('trade', {
+                  symbol: msg.S,
+                  price: msg.p,
+                  size: msg.s,
+                  timestamp: new Date(msg.t),
+                });
+              }
+            }
+          } catch (parseError) {
+            logger.error('Failed to parse WebSocket message:', parseError as object);
+          }
+        });
+
+        this.wsConnection.on('error', (error) => {
+          logger.error('WebSocket error:', error as object);
+          this.emit('error', error);
+        });
+
+        this.wsConnection.on('close', (code, reason) => {
+          logger.warn(`WebSocket closed: ${code} - ${reason.toString()}`);
+          this.emit('disconnected', reason.toString() || 'WebSocket closed');
+
+          // Attempt reconnection after 5 seconds
+          setTimeout(() => {
+            if (this.isConnected) {
+              logger.info('Attempting WebSocket reconnection...');
+              this.connectWebSocket().catch(err => {
+                logger.error('WebSocket reconnection failed:', err as object);
+              });
+            }
+          }, 5000);
+        });
+
+        // Set a timeout for initial connection
+        setTimeout(() => {
+          if (this.wsConnection?.readyState !== WebSocket.OPEN) {
+            reject(new Error('WebSocket connection timeout'));
+          }
+        }, 10000);
+
+      } catch (error) {
+        logger.error('Failed to create WebSocket:', error as object);
+        reject(error);
+      }
     });
-
-    this.wsConnection.on('message', (data: string) => {
-      const messages = JSON.parse(data);
-      messages.forEach((msg: any) => {
-        if (msg.T === 'q') {
-          this.emitQuote({
-            symbol: msg.S,
-            bid: msg.bp,
-            ask: msg.ap,
-            bidSize: msg.bs,
-            askSize: msg.as,
-            timestamp: new Date(msg.t),
-          });
-        } else if (msg.T === 'b') {
-          this.emitBar({
-            symbol: msg.S,
-            open: msg.o,
-            high: msg.h,
-            low: msg.l,
-            close: msg.c,
-            volume: msg.v,
-            timestamp: new Date(msg.t),
-          });
-        }
-      });
-    });
-    */
   }
 
   private async apiRequest(method: string, path: string, body?: any): Promise<any> {
-    const url = `${this.baseUrl}${path}`;
+    try {
+      logger.debug(`API Request: ${method} ${path}`);
 
-    const headers: Record<string, string> = {
-      'APCA-API-KEY-ID': this.config.apiKey,
-      'APCA-API-SECRET-KEY': this.config.apiSecret,
-      'Content-Type': 'application/json',
-    };
+      const response = await this.apiClient.request({
+        method,
+        url: path,
+        data: body,
+      });
 
-    const options: RequestInit = {
-      method,
-      headers,
-    };
+      return response.data;
+    } catch (error) {
+      const axiosError = error as AxiosError;
 
-    if (body) {
-      options.body = JSON.stringify(body);
+      if (axiosError.response) {
+        const status = axiosError.response.status;
+        const data = axiosError.response.data as any;
+
+        logger.error(`Alpaca API error ${status}: ${JSON.stringify(data)}`);
+
+        // Handle specific error codes
+        if (status === 401) {
+          throw new Error('Invalid Alpaca API credentials');
+        }
+        if (status === 403) {
+          throw new Error('Access forbidden - check API permissions');
+        }
+        if (status === 404) {
+          const notFoundError = new Error(data?.message || 'Resource not found');
+          (notFoundError as any).status = 404;
+          throw notFoundError;
+        }
+        if (status === 422) {
+          throw new Error(`Validation error: ${data?.message || JSON.stringify(data)}`);
+        }
+        if (status === 429) {
+          throw new Error('Rate limit exceeded - try again later');
+        }
+
+        throw new Error(data?.message || `Alpaca API error: ${status}`);
+      }
+
+      if (axiosError.code === 'ECONNREFUSED' || axiosError.code === 'ETIMEDOUT') {
+        throw new Error('Unable to connect to Alpaca API - check network connection');
+      }
+
+      throw error;
     }
-
-    // In production, use actual fetch
-    // For now, return simulated response
-    logger.debug(`API Request: ${method} ${url}`);
-
-    // Simulated responses
-    if (path === '/v2/account') {
-      return {
-        id: 'alpaca-account-123',
-        currency: 'USD',
-        cash: '100000.00',
-        equity: '105000.00',
-        buying_power: '200000.00',
-        portfolio_value: '105000.00',
-        account_type: this.isPaperTrading ? 'PAPER' : 'MARGIN',
-      };
-    }
-
-    if (path === '/v2/positions') {
-      return []; // No positions initially
-    }
-
-    if (path === '/v2/clock') {
-      return {
-        is_open: true,
-        next_open: new Date(Date.now() + 86400000).toISOString(),
-        next_close: new Date(Date.now() + 43200000).toISOString(),
-      };
-    }
-
-    return {};
   }
 
   private async dataRequest(method: string, path: string): Promise<any> {
-    const url = `${this.dataUrl}${path}`;
+    try {
+      logger.debug(`Data Request: ${method} ${path}`);
 
-    logger.debug(`Data Request: ${method} ${url}`);
+      const response = await this.dataClient.request({
+        method,
+        url: path,
+      });
 
-    // Simulated response
-    return {
-      quote: {
-        bp: 100.5,
-        ap: 100.52,
-        bs: 100,
-        as: 150,
-        t: new Date().toISOString(),
-      },
-    };
+      return response.data;
+    } catch (error) {
+      const axiosError = error as AxiosError;
+
+      if (axiosError.response) {
+        const status = axiosError.response.status;
+        const data = axiosError.response.data as any;
+
+        logger.error(`Alpaca Data API error ${status}: ${JSON.stringify(data)}`);
+        throw new Error(data?.message || `Alpaca Data API error: ${status}`);
+      }
+
+      throw error;
+    }
   }
 
   private mapAlpacaOrder(alpacaOrder: any): Order {
