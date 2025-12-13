@@ -26,6 +26,7 @@ import fredRoutes from './fred';
 import twelveDataRoutes from './twelvedata';
 import alertsRoutes from './alertsRoutes';
 import tradingModeRoutes from './tradingMode';
+import tradingRoutes from './trading';
 
 const router = Router();
 
@@ -57,6 +58,9 @@ router.use('/alerts', alertsRoutes);     // Whale alerts, government policy, ins
 
 // TRADING MODE - Practice/Live Toggle
 router.use('/trading-mode', tradingModeRoutes);  // Practice/Live mode toggle for all brokers
+
+// LIVE BOT TRADING - Execute trades from bots!
+router.use('/trading', tradingRoutes);  // Start/stop bots, execute signals, track P&L
 
 export default router;
 

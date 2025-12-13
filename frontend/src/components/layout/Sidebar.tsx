@@ -19,12 +19,14 @@ import {
   Link2,
   Bell,
   Zap,
+  Play,
 } from 'lucide-react';
 import clsx from 'clsx';
 import { TradingModeIndicator } from '@/components/trading/TradingModeToggle';
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
+  { name: 'LIVE Bot Trading', href: '/live-trading', icon: Play, highlight: true },
   { name: 'Big Moves Alerts', href: '/alerts', icon: Bell, highlight: true },
   { name: 'AI Trade God', href: '/ai-trade-god', icon: Zap, highlight: true },
   { name: 'Markets', href: '/markets', icon: TrendingUp },
