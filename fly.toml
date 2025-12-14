@@ -1,39 +1,39 @@
-# TIME Platform - Fly.io Configuration
-# Deploy with: fly deploy
+# fly.toml app configuration file generated for time-backend-hosting on 2025-12-14T04:23:30-06:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
 
-app = "time-trading-api"
-primary_region = "iad"  # Washington DC - good for US East
+app = 'time-backend-hosting'
+primary_region = 'ord'
 
 [build]
-  dockerfile = "Dockerfile.fly"
+  dockerfile = 'Dockerfile.fly'
 
 [env]
-  NODE_ENV = "production"
-  PORT = "8080"
+  NODE_ENV = 'production'
+  PORT = '8080'
 
 [http_service]
   internal_port = 8080
   force_https = true
-  auto_stop_machines = false  # Keep running 24/7 for trading
+  auto_stop_machines = 'off'
   auto_start_machines = true
   min_machines_running = 1
-  processes = ["app"]
+  processes = ['app']
 
   [http_service.concurrency]
-    type = "connections"
+    type = 'connections'
     hard_limit = 250
     soft_limit = 200
 
-[[vm]]
-  memory = "512mb"
-  cpu_kind = "shared"
-  cpus = 1
+  [[http_service.checks]]
+    interval = '30s'
+    timeout = '5s'
+    grace_period = '10s'
+    method = 'GET'
+    path = '/health'
 
-# Health check
-[http_service.checks]
-  [http_service.checks.health]
-    interval = "30s"
-    timeout = "5s"
-    grace_period = "10s"
-    method = "GET"
-    path = "/health"
+[[vm]]
+  memory = '512mb'
+  cpus = 1
+  memory_mb = 512

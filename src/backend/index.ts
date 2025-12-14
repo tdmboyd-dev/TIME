@@ -5410,10 +5410,11 @@ async function main(): Promise<void> {
       });
     }
 
-    // Start server
-    server.listen(config.port, () => {
+    // Start server - bind to 0.0.0.0 for Docker/Fly.io
+    const HOST = '0.0.0.0';
+    server.listen(config.port, HOST, () => {
       log.info('='.repeat(60));
-      log.info(`TIME server running on port ${config.port}`);
+      log.info(`TIME server running on ${HOST}:${config.port}`);
       log.info(`Environment: ${config.nodeEnv}`);
       log.info(`API: http://localhost:${config.port}/api/v1`);
       log.info(`Health: http://localhost:${config.port}/health`);
