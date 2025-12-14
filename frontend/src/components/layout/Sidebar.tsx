@@ -23,6 +23,16 @@ import {
   Leaf,
   Target,
   Building2,
+  Shield,
+  Users,
+  GraduationCap,
+  Eye,
+  History,
+  Umbrella,
+  UserCheck,
+  Download,
+  LogIn,
+  Crown,
 } from 'lucide-react';
 import clsx from 'clsx';
 import { TradingModeIndicator } from '@/components/trading/TradingModeToggle';
@@ -32,6 +42,7 @@ const navigation = [
   { name: 'LIVE Bot Trading', href: '/live-trading', icon: Play, highlight: true },
   { name: 'Big Moves Alerts', href: '/alerts', icon: Bell, highlight: true },
   { name: 'AI Trade God', href: '/ai-trade-god', icon: Zap, highlight: true },
+  { name: 'Bot Dropzone', href: '/dropzone', icon: Download, highlight: true },
   { name: 'Markets', href: '/markets', icon: TrendingUp },
   { name: 'Charts', href: '/charts', icon: BarChart3 },
   { name: 'Trade', href: '/trade', icon: ArrowRightLeft },
@@ -40,13 +51,22 @@ const navigation = [
   { name: 'Portfolio', href: '/portfolio', icon: Wallet },
   { name: 'Strategies', href: '/strategies', icon: Layers },
   { name: 'Bots', href: '/bots', icon: Bot },
+  { name: 'Social Trading', href: '/social', icon: Users },
   { name: 'DeFi', href: '/defi', icon: Coins },
   { name: 'Invest', href: '/invest', icon: PiggyBank },
-  { name: 'Control Panel', href: '/admin', icon: Settings },
-  // NEW! Vanguard-Level Features
+  { name: 'Robo Advisor', href: '/robo', icon: Bot },
+  { name: 'Risk Profile', href: '/risk', icon: Shield },
+  { name: 'AI Vision', href: '/vision', icon: Eye },
+  { name: 'Learn', href: '/learn', icon: GraduationCap },
+  { name: 'Trade History', href: '/history', icon: History },
+  // Vanguard-Level Features
+  { name: 'Retirement', href: '/retirement', icon: Umbrella, highlight: true },
   { name: 'Account Transfers', href: '/transfers', icon: Building2, highlight: true },
   { name: 'Tax Optimization', href: '/tax', icon: Leaf, highlight: true },
   { name: 'Investment Goals', href: '/goals', icon: Target, highlight: true },
+  // Admin
+  { name: 'Control Panel', href: '/admin', icon: Settings },
+  { name: 'Admin Portal', href: '/admin-portal', icon: Crown, highlight: true },
 ];
 
 export function Sidebar() {
