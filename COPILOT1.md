@@ -25,12 +25,12 @@
 
 | Metric | Count |
 |--------|-------|
-| Total Backend Files | 120+ |
+| Total Backend Files | 130+ |
 | Total Frontend Pages | 31 |
 | Total API Endpoints | 400+ |
 | Total Route Modules | 30 |
 | Backend Engines | 15 |
-| Advanced Systems | 25+ |
+| Advanced Systems | 30+ |
 | Bot Systems | 5 |
 | Universal Bots | 32+ |
 | Trading Strategies | 27+ |
@@ -39,6 +39,7 @@
 | Market Data Providers | 8 |
 | Trading Venues | 50+ |
 | Revolutionary Systems | 5 |
+| Orchestration Systems | 5 |
 
 ---
 
@@ -113,7 +114,8 @@ src/backend/
 ├── core/                     # Core TIME systems
 │   ├── evolution_controller.ts
 │   ├── inactivity_monitor.ts
-│   └── time_governor.ts
+│   ├── time_governor.ts
+│   └── time_integration.ts   # INTEGRATION LAYER - Connects ALL systems
 ├── data/                     # Market data (5 files)
 │   ├── fmp_integration.ts
 │   ├── fred_integration.ts
@@ -128,6 +130,14 @@ src/backend/
 │   └── yield_aggregator.ts
 ├── dropzone/                 # Bot upload
 │   └── bot_dropzone.ts
+├── agents/                   # MULTI-AGENT ORCHESTRATION
+│   └── agent_swarm.ts        # Multi-agent trading swarm (TradingAgents)
+├── graph/                    # KNOWLEDGE GRAPH SYSTEM
+│   └── memory_graph.ts       # Cross-system knowledge graph
+├── mesh/                     # EXECUTION MANAGEMENT
+│   └── execution_mesh.ts     # Smart Order Routing (SOR) & EMS
+├── meta/                     # GLOBAL ORCHESTRATION
+│   └── meta_brain.ts         # The brain of brains - global coordinator
 ├── engines/                  # Core engines (15 files)
 │   ├── ai_risk_profiler.ts
 │   ├── attribution_engine.ts
@@ -224,6 +234,167 @@ src/backend/
 │   └── yield_orchestrator.ts
 └── index.ts                  # Main entry point
 ```
+
+---
+
+# ORCHESTRATION & INTELLIGENCE SYSTEMS (5 NEW SYSTEMS)
+
+These 5 systems work together to provide:
+- **Global Orchestration** - One brain to rule them all
+- **Knowledge Graph** - Memory and relationships across all data
+- **Multi-Agent Swarm** - AI team operating 24/7
+- **Execution Mesh** - Smart order routing across all venues
+- **Integration Layer** - Connects everything together
+
+## 1. TIME Meta-Brain (Global Orchestrator)
+**File:** `src/backend/meta/meta_brain.ts`
+
+The BRAIN OF BRAINS - sits ABOVE all other engines and coordinates everything.
+
+**Key Features:**
+- Sees EVERY engine, bot, user, market, capital source, risk, and opportunity
+- Coordinates all subsystems into one coherent intelligence
+- Makes global decisions that no single engine could make alone
+- Operates in MANUAL (human approval) or AUTO (autonomous) mode
+- Defers to TIME Governor for mode control (centralized)
+
+**System Domains (10):**
+- `capital` - Capital Conductor, TIME Pay
+- `alpha` - Alpha Engine, bots, strategies
+- `risk` - Risk Engine, Portfolio Brain
+- `yield` - Yield Orchestrator, DeFi
+- `execution` - Brokers, order routing
+- `learning` - Learning Engine, velocity tracker
+- `life` - Life Timeline Engine
+- `research` - Research Annotation, Market Vision
+- `social` - Social Trading, Copy Trading
+- `tax` - Tax Loss Harvester
+
+**Recommendation Types (12):**
+- Capital allocation, risk adjustment, strategy change
+- Yield rebalance, hedge action, opportunity capture
+- Emergency action, learning update, life adjustment
+- Tax optimization, execution route, system configuration
+
+---
+
+## 2. TIME Memory Graph (Knowledge Graph)
+**File:** `src/backend/graph/memory_graph.ts`
+
+Cross-system knowledge graph that stores relationships between everything.
+
+**Node Types (13):**
+- `bot`, `signal`, `trade`, `asset`, `regime`
+- `user`, `strategy`, `yield_source`, `life_event`
+- `decision`, `outcome`, `pattern`, `insight`
+
+**Edge Types (12):**
+- `generated`, `executed`, `performed_in`, `resulted_in`
+- `traded`, `correlated_with`, `caused`, `learned_from`
+- `similar_to`, `depends_on`, `part_of`, `influenced`
+
+**Key Features:**
+- BFS/DFS traversal algorithms
+- Shortest path finding between nodes
+- Automatic pattern discovery
+- Relationship strength tracking
+- Used by all systems for context and learning
+
+---
+
+## 3. TIME Agent Swarm (Multi-Agent Coordination)
+**File:** `src/backend/agents/agent_swarm.ts`
+
+Based on TradingAgents research (arXiv 2412.20138) - an AI team that runs TIME 24/7.
+
+**Agent Roles (12):**
+- `coordinator` - Orchestrates other agents
+- `alpha_hunter` - Finds alpha opportunities
+- `bull_analyst` - Analyzes bullish scenarios
+- `bear_analyst` - Analyzes bearish scenarios
+- `risk_guardian` - Monitors and manages risk
+- `yield_optimizer` - Optimizes yield/income
+- `execution_specialist` - Handles order execution
+- `portfolio_manager` - Manages portfolio allocation
+- `research_analyst` - Researches markets/assets
+- `tax_strategist` - Tax optimization
+- `life_advisor` - Life event financial planning
+- `sentinel` - System monitoring
+
+**Key Features:**
+- Agents propose actions and vote on consensus
+- Priority-based message routing
+- Per-agent autonomy levels
+- Emergency mode for crisis response
+- External signal reception from other systems
+
+---
+
+## 4. TIME Execution Mesh (Smart Order Routing)
+**File:** `src/backend/mesh/execution_mesh.ts`
+
+Institutional-grade Execution Management System (EMS).
+
+**Execution Strategies (9):**
+- `best_price` - Get best price regardless of time
+- `fast_fill` - Fill as fast as possible
+- `minimize_impact` - Minimize market impact (large orders)
+- `twap` - Time-weighted average price
+- `vwap` - Volume-weighted average price
+- `iceberg` - Hide order size
+- `dark_pool_first` - Try dark pools before lit markets
+- `smart` - AI-optimized routing
+- `custom` - User-defined
+
+**Venue Types (6):**
+- `exchange` - Public exchanges (NYSE, NASDAQ)
+- `dark_pool` - Private dark pools
+- `broker_internal` - Broker's internal matching
+- `otc` - Over-the-counter
+- `defi` - DeFi DEXs
+- `cex` - Centralized crypto exchanges
+
+**Registered Venues:**
+- Alpaca Paper (stocks/ETF)
+- OANDA Live (forex/CFD)
+- Binance Spot (crypto)
+- Kraken Spot (crypto)
+- MT5 Bridge (multi-asset)
+
+**Key Features:**
+- Smart Order Routing across all venues
+- Execution quality scoring (0-100)
+- Slippage monitoring and optimization
+- Circuit breaker for safety
+- Learning from execution outcomes
+
+---
+
+## 5. TIME Integration Layer (The Glue)
+**File:** `src/backend/core/time_integration.ts`
+
+The CENTRAL NERVOUS SYSTEM CONNECTOR - wires everything together.
+
+**Connected Systems:**
+- TIME Governor (mode control)
+- Evolution Controller (proposals)
+- Meta-Brain (orchestration)
+- Memory Graph (knowledge)
+- Agent Swarm (multi-agent)
+- Autonomous Capital Agent (trading)
+
+**Key Features:**
+- Event routing between all systems
+- Mode synchronization (no duplicate modes)
+- Cross-system decision making
+- Emergency protocol propagation
+- Health monitoring across all systems
+- System graph initialization
+
+**Mode Control:**
+- All mode control flows through TIME Governor
+- Meta-Brain and Agent Swarm use `setExternalModeControl()`
+- No duplicate mode systems - single source of truth
 
 ---
 
