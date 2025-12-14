@@ -32,7 +32,18 @@ import { EventEmitter } from 'events';
 import * as crypto from 'crypto';
 import { createComponentLogger } from '../utils/logger';
 import { botBrain, IntelligentBot, BotAbility, BotPersonality, GeneratedBotTemplate } from './bot_brain';
-import { learningEngine, LearningInsight } from '../engines/learning_engine';
+import { learningEngine } from '../engines/learning_engine';
+
+// Define LearningInsight locally since it's not exported
+interface LearningInsight {
+  id: string;
+  type: string;
+  insight: string;
+  confidence: number;
+  actionable?: boolean;
+  data?: Record<string, any>;
+  createdAt: Date;
+}
 import { learningVelocityTracker, LearningEvent as VelocityEvent } from '../engines/learning_velocity_tracker';
 
 const logger = createComponentLogger('AutoPerfectBotGenerator');
@@ -923,7 +934,7 @@ export class AutoPerfectBotGenerator extends EventEmitter {
 
       return bot;
     } catch (error) {
-      logger.error('Failed to create perfect bot from blueprint:', error);
+      logger.error('Failed to create perfect bot from blueprint:', error as object);
       return null;
     }
   }

@@ -339,8 +339,8 @@ export class MetaBrainEngine extends EventEmitter {
         reasoning: {
           summary: insight.summary || 'Automated insight',
           factors: [],
-          confidence: insight.confidence || 50,
-          dataPoints: 1
+          supportingData: { confidence: insight.confidence || 50, dataPoints: 1 },
+          alternatives: []
         }
       });
     }

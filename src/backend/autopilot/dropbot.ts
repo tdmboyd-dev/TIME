@@ -401,7 +401,7 @@ export class AutoPilotCapitalEngine extends EventEmitter {
     // Start social proof aggregation
     this.startSocialProofAggregation();
 
-    logger.info('AutoPilot Capital initialized with', this.absorbedStrategies.size, 'strategies');
+    logger.info(`AutoPilot Capital initialized with ${this.absorbedStrategies.size} strategies`);
     this.emit('initialized');
   }
 
@@ -925,7 +925,8 @@ export class AutoPilotCapitalEngine extends EventEmitter {
         message: this.getWelcomeMessage(pilot),
         type: 'info'
       }],
-      marketStatus: 'Analyzing market conditions...'
+      marketStatus: 'Analyzing market conditions...',
+      relevantNews: []
     });
 
     // Start trading for this pilot

@@ -285,7 +285,7 @@ export class ExecutionMeshEngine extends EventEmitter {
     this.startQualityAnalyzer();
     this.startLearningLoop();
 
-    logger.info('Execution Mesh initialized with', this.venues.size, 'venues');
+    logger.info(`Execution Mesh initialized with ${this.venues.size} venues`);
     this.emit('initialized');
   }
 
@@ -700,7 +700,7 @@ export class ExecutionMeshEngine extends EventEmitter {
     } catch (error) {
       order.status = 'rejected';
       order.updatedAt = new Date();
-      logger.error(`Order ${order.id} failed:`, error);
+      logger.error(`Order ${order.id} failed:`, error as object);
       this.emit('order_failed', { order, error });
 
       // Check for circuit breaker

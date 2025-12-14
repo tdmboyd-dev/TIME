@@ -24,7 +24,7 @@ import { autonomousCapitalAgent } from '../autonomous/autonomous_capital_agent';
 import { loggers } from '../utils/logger';
 import { SystemHealth, EvolutionMode, MarketRegime } from '../types';
 
-const log = loggers.integration || loggers.system;
+const log = loggers.governor;
 
 // ============================================================================
 // TYPES
@@ -159,18 +159,14 @@ export class TIMEIntegration extends EventEmitter implements TIMEComponent {
 
       // Record in Memory Graph
       memoryGraph.addNode({
-        id: `mode_change_${Date.now()}`,
         type: 'decision',
-        name: `Mode Change: ${state.mode}`,
+        label: `Mode Change: ${state.mode}`,
         properties: {
           from: state.mode === 'autonomous' ? 'controlled' : 'autonomous',
           to: state.mode,
           changedBy: state.changedBy,
           reason: state.reason
-        },
-        connections: [],
-        createdAt: new Date(),
-        updatedAt: new Date()
+        }
       });
 
       this.emit('mode:changed', state);
@@ -184,15 +180,10 @@ export class TIMEIntegration extends EventEmitter implements TIMEComponent {
       metaBrain.updateSystemState('market_regime', regime);
 
       // Create regime node in graph
-      const regimeNodeId = `regime_${regime}_${Date.now()}`;
       memoryGraph.addNode({
-        id: regimeNodeId,
         type: 'regime',
-        name: regime,
-        properties: { detectedAt: new Date(), confidence: 0.8 },
-        connections: [],
-        createdAt: new Date(),
-        updatedAt: new Date()
+        label: regime,
+        properties: { detectedAt: new Date(), confidence: 0.8 }
       });
 
       this.emit('regime:changed', regime);
@@ -224,13 +215,9 @@ export class TIMEIntegration extends EventEmitter implements TIMEComponent {
 
       // Store in memory graph
       memoryGraph.addNode({
-        id: `proposal_${proposal.id}`,
         type: 'decision',
-        name: proposal.title,
-        properties: proposal,
-        connections: [],
-        createdAt: new Date(),
-        updatedAt: new Date()
+        label: proposal.title,
+        properties: proposal
       });
 
       // If in autonomous mode, also notify agent swarm
@@ -250,13 +237,9 @@ export class TIMEIntegration extends EventEmitter implements TIMEComponent {
 
       // Record outcome in memory graph
       memoryGraph.addNode({
-        id: `outcome_${proposal.id}`,
         type: 'outcome',
-        name: `Implemented: ${proposal.title}`,
-        properties: { proposal, implementedAt: new Date() },
-        connections: [],
-        createdAt: new Date(),
-        updatedAt: new Date()
+        label: `Implemented: ${proposal.title}`,
+        properties: { proposal, implementedAt: new Date() }
       });
 
       // Connect proposal to outcome
@@ -286,13 +269,9 @@ export class TIMEIntegration extends EventEmitter implements TIMEComponent {
       // Store in memory graph
       const recNodeId = `recommendation_${rec.id}`;
       memoryGraph.addNode({
-        id: recNodeId,
         type: 'insight',
-        name: rec.title || rec.type,
-        properties: rec,
-        connections: [],
-        createdAt: new Date(),
-        updatedAt: new Date()
+        label: rec.title || rec.type,
+        properties: rec
       });
 
       // If in controlled mode, create proposal
@@ -311,7 +290,7 @@ export class TIMEIntegration extends EventEmitter implements TIMEComponent {
 
       // Send to agent swarm for consensus if needed
       if (rec.requiresConsensus) {
-        agentSwarm.createProposal(
+        agentSwarm.requestProposal(
           'meta_brain_recommendation',
           rec.title || 'Recommendation',
           rec.targetSystems || ['all'],
@@ -327,13 +306,9 @@ export class TIMEIntegration extends EventEmitter implements TIMEComponent {
 
       // Record in graph
       memoryGraph.addNode({
-        id: `alert_${Date.now()}`,
         type: 'insight',
-        name: `Alert: ${alert.type}`,
-        properties: alert,
-        connections: [],
-        createdAt: new Date(),
-        updatedAt: new Date()
+        label: `Alert: ${alert.type}`,
+        properties: alert
       });
 
       // Propagate to Governor if critical
@@ -400,13 +375,9 @@ export class TIMEIntegration extends EventEmitter implements TIMEComponent {
 
       // Record in memory graph
       memoryGraph.addNode({
-        id: `swarm_decision_${proposal.id}`,
         type: 'decision',
-        name: `Swarm: ${proposal.title}`,
-        properties: { ...proposal, consensusReached: true },
-        connections: [],
-        createdAt: new Date(),
-        updatedAt: new Date()
+        label: `Swarm: ${proposal.title}`,
+        properties: { ...proposal, consensusReached: true }
       });
 
       // If controlled mode, needs human approval
@@ -435,13 +406,9 @@ export class TIMEIntegration extends EventEmitter implements TIMEComponent {
 
       // Record individual agent decisions in graph
       memoryGraph.addNode({
-        id: `agent_decision_${Date.now()}_${data.agentId}`,
         type: 'decision',
-        name: `${data.agentId}: ${data.decision.type}`,
-        properties: data,
-        connections: [],
-        createdAt: new Date(),
-        updatedAt: new Date()
+        label: `${data.agentId}: ${data.decision.type}`,
+        properties: data
       });
 
       // Feed to Autonomous Capital Agent if trade-related
@@ -470,13 +437,9 @@ export class TIMEIntegration extends EventEmitter implements TIMEComponent {
       // Record trade in memory graph
       const tradeNodeId = `trade_${data.decision.id}`;
       memoryGraph.addNode({
-        id: tradeNodeId,
         type: 'trade',
-        name: `Trade: ${data.decision.action.description}`,
-        properties: data.decision,
-        connections: [],
-        createdAt: new Date(),
-        updatedAt: new Date()
+        label: `Trade: ${data.decision.action.description}`,
+        properties: data.decision
       });
 
       // Connect to decision that caused it
@@ -505,13 +468,9 @@ export class TIMEIntegration extends EventEmitter implements TIMEComponent {
 
       // Store learning in memory graph
       memoryGraph.addNode({
-        id: `learning_${data.agentId}_${Date.now()}`,
         type: 'insight',
-        name: `Learning: ${data.agentId}`,
-        properties: { agentId: data.agentId, learnedAt: new Date() },
-        connections: [],
-        createdAt: new Date(),
-        updatedAt: new Date()
+        label: `Learning: ${data.agentId}`,
+        properties: { agentId: data.agentId, learnedAt: new Date() }
       });
 
       this.emit('capital:learned', data);
@@ -581,13 +540,9 @@ export class TIMEIntegration extends EventEmitter implements TIMEComponent {
 
     for (const sys of systems) {
       memoryGraph.addNode({
-        id: sys.id,
         type: sys.type,
-        name: sys.name,
-        properties: { isSystemNode: true, initializedAt: new Date() },
-        connections: [],
-        createdAt: new Date(),
-        updatedAt: new Date()
+        label: sys.name,
+        properties: { isSystemNode: true, initializedAt: new Date(), systemId: sys.id }
       });
     }
 
@@ -602,7 +557,7 @@ export class TIMEIntegration extends EventEmitter implements TIMEComponent {
       { source: 'sys_integration', target: 'sys_capitalagent', type: 'correlated_with' },
       { source: 'sys_metabrain', target: 'sys_agentswarm', type: 'correlated_with' },
       { source: 'sys_agentswarm', target: 'sys_capitalagent', type: 'correlated_with' },
-      { source: 'sys_memorygraph', target: 'sys_metabrain', type: 'learned_from' }
+      { source: 'sys_memorygraph', target: 'sys_metabrain', type: 'correlated_with' }
     ];
 
     for (const edge of edges) {
@@ -639,13 +594,9 @@ export class TIMEIntegration extends EventEmitter implements TIMEComponent {
 
     // 4. Record in graph
     memoryGraph.addNode({
-      id: `emergency_${Date.now()}`,
       type: 'insight',
-      name: `EMERGENCY: ${reason}`,
-      properties: { triggeredAt: new Date(), reason, severity: 'critical' },
-      connections: [],
-      createdAt: new Date(),
-      updatedAt: new Date()
+      label: `EMERGENCY: ${reason}`,
+      properties: { triggeredAt: new Date(), reason, severity: 'critical' }
     });
 
     // 5. Emit for external handlers
@@ -722,13 +673,9 @@ export class TIMEIntegration extends EventEmitter implements TIMEComponent {
 
     // Record in memory graph
     memoryGraph.addNode({
-      id: `cross_decision_${decision.id}`,
       type: 'decision',
-      name: `Cross: ${decision.decision.action}`,
-      properties: decision,
-      connections: [],
-      createdAt: new Date(),
-      updatedAt: new Date()
+      label: `Cross: ${decision.decision.action}`,
+      properties: decision
     });
 
     this.emit('cross:executed', decision);

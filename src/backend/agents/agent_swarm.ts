@@ -445,7 +445,7 @@ export class AgentSwarmEngine extends EventEmitter {
       const agent = this.getAgentByRole(role);
       if (agent && agent.enabled) {
         this.sendMessageToAgent(agent.id, {
-          type: 'external_signal',
+          type: 'alert',
           content: {
             subject: signal.type,
             body: `Signal from ${signal.source}`,
@@ -487,9 +487,9 @@ export class AgentSwarmEngine extends EventEmitter {
   }
 
   /**
-   * Create a proposal (called by integration layer)
+   * Request a proposal creation (called by integration layer)
    */
-  public createProposal(
+  public requestProposal(
     type: string,
     title: string,
     targetSystems: string[],
@@ -499,7 +499,7 @@ export class AgentSwarmEngine extends EventEmitter {
     const coordinator = this.getAgentByRole('coordinator');
     if (coordinator) {
       this.sendMessageToAgent(coordinator.id, {
-        type: 'create_proposal',
+        type: 'request',
         content: {
           subject: type,
           body: title,
@@ -859,6 +859,14 @@ export class AgentSwarmEngine extends EventEmitter {
       ...msg,
       fromAgentId: coordinator?.id || 'system',
       toAgentId: 'broadcast'
+    });
+  }
+
+  private sendMessageToAgent(toAgentId: string, msg: Omit<AgentMessage, 'id' | 'timestamp' | 'responses' | 'fromAgentId' | 'toAgentId'>): void {
+    this.sendMessage({
+      ...msg,
+      fromAgentId: 'system',
+      toAgentId
     });
   }
 
