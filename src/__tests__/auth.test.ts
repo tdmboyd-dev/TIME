@@ -9,14 +9,26 @@
  * - Password reset
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import { describe, it, expect, beforeEach, jest } from '@jest/globals';
+
+// Create mock functions with any type to avoid TypeScript issues in tests
+const mockCacheGet = jest.fn();
+const mockCacheSet = jest.fn();
+const mockCacheDelete = jest.fn();
+const mockFindByEmail = jest.fn();
+const mockFindById = jest.fn();
+const mockCreateUser = jest.fn();
+const mockUpdateUser = jest.fn();
+const mockCreateAudit = jest.fn();
+const mockHash = jest.fn();
+const mockCompare = jest.fn();
 
 // Mock the database manager
 jest.mock('../backend/database/connection', () => ({
   databaseManager: {
-    cacheGet: jest.fn(),
-    cacheSet: jest.fn(),
-    cacheDelete: jest.fn(),
+    cacheGet: mockCacheGet,
+    cacheSet: mockCacheSet,
+    cacheDelete: mockCacheDelete,
     getRedisClient: jest.fn(() => null),
   },
 }));
@@ -24,54 +36,56 @@ jest.mock('../backend/database/connection', () => ({
 // Mock the repositories
 jest.mock('../backend/database/repositories', () => ({
   userRepository: {
-    findByEmail: jest.fn(),
-    findById: jest.fn(),
-    create: jest.fn(),
-    update: jest.fn(),
+    findByEmail: mockFindByEmail,
+    findById: mockFindById,
+    create: mockCreateUser,
+    update: mockUpdateUser,
   },
   auditLogRepository: {
-    create: jest.fn(),
+    create: mockCreateAudit,
   },
 }));
 
 // Mock bcrypt
 jest.mock('bcrypt', () => ({
-  hash: jest.fn((password: string) => Promise.resolve(`hashed_${password}`)),
-  compare: jest.fn((plain: string, hashed: string) => Promise.resolve(hashed === `hashed_${plain}`)),
+  hash: mockHash,
+  compare: mockCompare,
 }));
 
 describe('Authentication Module', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    // Setup default mock implementations
+    mockHash.mockImplementation((password: string) => Promise.resolve(`hashed_${password}`));
+    mockCompare.mockImplementation((plain: string, hashed: string) =>
+      Promise.resolve(hashed === `hashed_${plain}`)
+    );
   });
 
   describe('Password Hashing', () => {
     it('should hash passwords correctly', async () => {
-      const bcrypt = require('bcrypt');
       const password = 'TestPassword123!';
 
-      const hashed = await bcrypt.hash(password);
+      const hashed = await mockHash(password);
 
       expect(hashed).toBe(`hashed_${password}`);
-      expect(bcrypt.hash).toHaveBeenCalledWith(password);
+      expect(mockHash).toHaveBeenCalledWith(password);
     });
 
     it('should compare passwords correctly', async () => {
-      const bcrypt = require('bcrypt');
       const password = 'TestPassword123!';
       const hashed = `hashed_${password}`;
 
-      const match = await bcrypt.compare(password, hashed);
+      const match = await mockCompare(password, hashed);
 
       expect(match).toBe(true);
     });
 
     it('should reject incorrect passwords', async () => {
-      const bcrypt = require('bcrypt');
       const password = 'WrongPassword';
       const hashed = 'hashed_CorrectPassword';
 
-      const match = await bcrypt.compare(password, hashed);
+      const match = await mockCompare(password, hashed);
 
       expect(match).toBe(false);
     });
@@ -79,33 +93,29 @@ describe('Authentication Module', () => {
 
   describe('User Repository', () => {
     it('should find user by email', async () => {
-      const { userRepository } = require('../backend/database/repositories');
       const mockUser = {
         id: 'user-123',
         email: 'test@example.com',
         name: 'Test User',
       };
 
-      (userRepository.findByEmail as jest.Mock).mockResolvedValue(mockUser);
+      mockFindByEmail.mockResolvedValue(mockUser);
 
-      const user = await userRepository.findByEmail('test@example.com');
+      const user = await mockFindByEmail('test@example.com');
 
       expect(user).toEqual(mockUser);
-      expect(userRepository.findByEmail).toHaveBeenCalledWith('test@example.com');
+      expect(mockFindByEmail).toHaveBeenCalledWith('test@example.com');
     });
 
     it('should return null for non-existent user', async () => {
-      const { userRepository } = require('../backend/database/repositories');
+      mockFindByEmail.mockResolvedValue(null);
 
-      (userRepository.findByEmail as jest.Mock).mockResolvedValue(null);
-
-      const user = await userRepository.findByEmail('nonexistent@example.com');
+      const user = await mockFindByEmail('nonexistent@example.com');
 
       expect(user).toBeNull();
     });
 
     it('should create new user', async () => {
-      const { userRepository } = require('../backend/database/repositories');
       const newUser = {
         email: 'new@example.com',
         password: 'hashed_password',
@@ -113,9 +123,9 @@ describe('Authentication Module', () => {
       };
       const createdUser = { id: 'user-456', ...newUser };
 
-      (userRepository.create as jest.Mock).mockResolvedValue(createdUser);
+      mockCreateUser.mockResolvedValue(createdUser);
 
-      const user = await userRepository.create(newUser);
+      const user = await mockCreateUser(newUser);
 
       expect(user.id).toBe('user-456');
       expect(user.email).toBe(newUser.email);
@@ -124,11 +134,9 @@ describe('Authentication Module', () => {
 
   describe('Session Management', () => {
     it('should store session in cache', async () => {
-      const { databaseManager } = require('../backend/database/connection');
+      await mockCacheSet('session:token123', { userId: 'user-123' }, 3600);
 
-      await databaseManager.cacheSet('session:token123', { userId: 'user-123' }, 3600);
-
-      expect(databaseManager.cacheSet).toHaveBeenCalledWith(
+      expect(mockCacheSet).toHaveBeenCalledWith(
         'session:token123',
         { userId: 'user-123' },
         3600
@@ -136,42 +144,42 @@ describe('Authentication Module', () => {
     });
 
     it('should retrieve session from cache', async () => {
-      const { databaseManager } = require('../backend/database/connection');
       const mockSession = { userId: 'user-123', email: 'test@example.com' };
 
-      (databaseManager.cacheGet as jest.Mock).mockResolvedValue(mockSession);
+      mockCacheGet.mockResolvedValue(mockSession);
 
-      const session = await databaseManager.cacheGet('session:token123');
+      const session = await mockCacheGet('session:token123');
 
       expect(session).toEqual(mockSession);
     });
 
     it('should delete session on logout', async () => {
-      const { databaseManager } = require('../backend/database/connection');
+      await mockCacheDelete('session:token123');
 
-      await databaseManager.cacheDelete('session:token123');
-
-      expect(databaseManager.cacheDelete).toHaveBeenCalledWith('session:token123');
+      expect(mockCacheDelete).toHaveBeenCalledWith('session:token123');
     });
   });
 
   describe('Audit Logging', () => {
     it('should log authentication events', async () => {
-      const { auditLogRepository } = require('../backend/database/repositories');
-
-      await auditLogRepository.create({
+      const auditEntry = {
         userId: 'user-123',
         action: 'LOGIN',
         details: { success: true },
         ipAddress: '127.0.0.1',
         userAgent: 'test-agent',
         timestamp: new Date(),
-      });
+      };
 
-      expect(auditLogRepository.create).toHaveBeenCalled();
-      const call = (auditLogRepository.create as jest.Mock).mock.calls[0][0];
-      expect(call.action).toBe('LOGIN');
-      expect(call.userId).toBe('user-123');
+      await mockCreateAudit(auditEntry);
+
+      expect(mockCreateAudit).toHaveBeenCalled();
+      expect(mockCreateAudit).toHaveBeenCalledWith(
+        expect.objectContaining({
+          action: 'LOGIN',
+          userId: 'user-123',
+        })
+      );
     });
   });
 
