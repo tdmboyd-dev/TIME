@@ -1,0 +1,50 @@
+# Dependencies
+node_modules
+frontend/node_modules
+
+# Build outputs (we rebuild in Docker)
+dist
+frontend/.next
+frontend/out
+
+# Development files
+.git
+.gitignore
+*.md
+!README.md
+
+# Environment files (set via Fly secrets)
+.env
+.env.*
+!.env.example
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Test files
+__tests__
+*.test.ts
+*.spec.ts
+coverage
+.jest
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Docker files (avoid recursion)
+Dockerfile
+Dockerfile.*
+docker-compose*.yml
+
+# Misc
+.claude
+*.tgz
