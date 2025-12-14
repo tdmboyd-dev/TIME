@@ -57,17 +57,36 @@ export const REJECTION_REASONS = {
 
 // Supported delivering brokers
 export const SUPPORTED_BROKERS = [
+  // Major Traditional Brokers
   { id: 'fidelity', name: 'Fidelity Investments', dtcNumber: '0226' },
   { id: 'schwab', name: 'Charles Schwab', dtcNumber: '0164' },
   { id: 'vanguard', name: 'Vanguard', dtcNumber: '0062' },
   { id: 'td_ameritrade', name: 'TD Ameritrade', dtcNumber: '0188' },
   { id: 'etrade', name: 'E*TRADE', dtcNumber: '0385' },
-  { id: 'robinhood', name: 'Robinhood', dtcNumber: '6769' },
-  { id: 'webull', name: 'Webull', dtcNumber: '8884' },
-  { id: 'interactive_brokers', name: 'Interactive Brokers', dtcNumber: '0534' },
   { id: 'merrill', name: 'Merrill Edge', dtcNumber: '8862' },
   { id: 'morgan_stanley', name: 'Morgan Stanley', dtcNumber: '0015' },
   { id: 'jpmorgan', name: 'J.P. Morgan', dtcNumber: '0352' },
+  { id: 'interactive_brokers', name: 'Interactive Brokers', dtcNumber: '0534' },
+
+  // Modern / Mobile-First Brokers
+  { id: 'robinhood', name: 'Robinhood', dtcNumber: '6769' },
+  { id: 'webull', name: 'Webull', dtcNumber: '8884' },
+  { id: 'cashapp', name: 'Cash App Investing', dtcNumber: '0158', clearingFirm: 'Apex Clearing' },
+  { id: 'sofi', name: 'SoFi Invest', dtcNumber: '0158', clearingFirm: 'Apex Clearing' },
+  { id: 'public', name: 'Public.com', dtcNumber: '0158', clearingFirm: 'Apex Clearing' },
+  { id: 'stash', name: 'Stash', dtcNumber: '0158', clearingFirm: 'Apex Clearing' },
+  { id: 'acorns', name: 'Acorns', dtcNumber: '0158', clearingFirm: 'Apex Clearing' },
+  { id: 'firstrade', name: 'Firstrade', dtcNumber: '0158', clearingFirm: 'Apex Clearing' },
+  { id: 'm1_finance', name: 'M1 Finance', dtcNumber: '0158', clearingFirm: 'Apex Clearing' },
+  { id: 'ally', name: 'Ally Invest', dtcNumber: '0158', clearingFirm: 'Apex Clearing' },
+  { id: 'tastyworks', name: 'Tastyworks', dtcNumber: '0158', clearingFirm: 'Apex Clearing' },
+  { id: 'tradier', name: 'Tradier', dtcNumber: '0158', clearingFirm: 'Apex Clearing' },
+
+  // Crypto-Friendly Brokers (with stock trading)
+  { id: 'coinbase', name: 'Coinbase', dtcNumber: '', note: 'Crypto only - no ACATS' },
+  { id: 'crypto_com', name: 'Crypto.com', dtcNumber: '', note: 'Crypto only - no ACATS' },
+
+  // Other / Custom
   { id: 'other', name: 'Other Broker', dtcNumber: '' },
 ];
 
