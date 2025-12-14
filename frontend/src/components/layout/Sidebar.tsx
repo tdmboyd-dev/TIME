@@ -15,7 +15,6 @@ import {
   Settings,
   Activity,
   Cpu,
-  Network,
   Link2,
   Bell,
   Zap,
@@ -29,43 +28,51 @@ import {
   Eye,
   History,
   Umbrella,
-  UserCheck,
   Download,
-  LogIn,
   Crown,
+  CreditCard,
+  HeartPulse,
 } from 'lucide-react';
 import clsx from 'clsx';
 import { TradingModeIndicator } from '@/components/trading/TradingModeToggle';
 
 const navigation = [
+  // Core
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
   { name: 'LIVE Bot Trading', href: '/live-trading', icon: Play, highlight: true },
   { name: 'Big Moves Alerts', href: '/alerts', icon: Bell, highlight: true },
   { name: 'AI Trade God', href: '/ai-trade-god', icon: Zap, highlight: true },
   { name: 'Bot Dropzone', href: '/dropzone', icon: Download, highlight: true },
+  // Trading
   { name: 'Markets', href: '/markets', icon: TrendingUp },
   { name: 'Charts', href: '/charts', icon: BarChart3 },
   { name: 'Trade', href: '/trade', icon: ArrowRightLeft },
-  { name: 'Broker Connect', href: '/brokers', icon: Link2 },
   { name: 'Execution Engine', href: '/execution', icon: Cpu },
+  { name: 'Trade History', href: '/history', icon: History },
+  // Investments
   { name: 'Portfolio', href: '/portfolio', icon: Wallet },
   { name: 'Strategies', href: '/strategies', icon: Layers },
   { name: 'Bots', href: '/bots', icon: Bot },
   { name: 'Social Trading', href: '/social', icon: Users },
-  { name: 'DeFi', href: '/defi', icon: Coins },
-  { name: 'Invest', href: '/invest', icon: PiggyBank },
   { name: 'Robo Advisor', href: '/robo', icon: Bot },
-  { name: 'Risk Profile', href: '/risk', icon: Shield },
+  { name: 'Invest', href: '/invest', icon: PiggyBank },
+  { name: 'DeFi', href: '/defi', icon: Coins },
+  // Analysis
   { name: 'AI Vision', href: '/vision', icon: Eye },
+  { name: 'Risk Profile', href: '/risk', icon: Shield },
   { name: 'Learn', href: '/learn', icon: GraduationCap },
-  { name: 'Trade History', href: '/history', icon: History },
-  // Vanguard-Level Features
+  // Connections
+  { name: 'Broker Connect', href: '/brokers', icon: Link2 },
+  { name: 'Payments', href: '/payments', icon: CreditCard },
+  // Vanguard Features
   { name: 'Retirement', href: '/retirement', icon: Umbrella, highlight: true },
   { name: 'Account Transfers', href: '/transfers', icon: Building2, highlight: true },
   { name: 'Tax Optimization', href: '/tax', icon: Leaf, highlight: true },
   { name: 'Investment Goals', href: '/goals', icon: Target, highlight: true },
-  // Admin
+  // Settings & Admin
+  { name: 'Settings', href: '/settings', icon: Settings },
   { name: 'Control Panel', href: '/admin', icon: Settings },
+  { name: 'System Health', href: '/admin/health', icon: HeartPulse },
   { name: 'Admin Portal', href: '/admin-portal', icon: Crown, highlight: true },
 ];
 
