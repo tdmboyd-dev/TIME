@@ -77,6 +77,10 @@ export const config = {
       secret: process.env.BYBIT_SECRET || '',
       testnet: process.env.BYBIT_TESTNET === 'true',
     },
+    kraken: {
+      apiKey: process.env.KRAKEN_API_KEY || '',
+      secret: process.env.KRAKEN_SECRET || '',
+    },
   },
 
   // Market Data Providers

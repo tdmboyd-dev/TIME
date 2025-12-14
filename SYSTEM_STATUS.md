@@ -1,5 +1,5 @@
 # TIME Platform - System Status Report
-## Generated: December 13, 2025
+## Generated: December 14, 2025
 
 ---
 
@@ -17,6 +17,8 @@
 | Alpaca | CONFIGURED | Paper Trading | `PKQ2PAYL2OOSEYYLM4T6` |
 | OANDA | CONFIGURED | **LIVE** | `001-001-19983395-001` |
 | Binance | CONFIGURED | **LIVE** | `rLvIsiIW...` |
+| Kraken | CONFIGURED | **LIVE** | US Crypto Futures |
+| SnapTrade | CONFIGURED | Multi-Broker | `TIME-TEST-IMUHU` |
 | MetaTrader Bridge | CONFIGURED | Port 15555 | Enabled |
 
 ## MARKET DATA (CONFIGURED)
@@ -49,10 +51,9 @@
 ## NOT CONFIGURED (But Optional)
 | Service | Status | Why You Might Want It |
 |---------|--------|----------------------|
-| Bybit | NOT CONFIGURED | Crypto derivatives trading |
-| Polygon | NOT CONFIGURED | Alternative market data |
-| SnapTrade | NOT CONFIGURED | Access 20+ additional brokerages |
-| Interactive Brokers | NOT CONFIGURED | 150+ global markets |
+| Bybit | US BLOCKED | Use Kraken instead (already configured) |
+| Polygon | SKIP | Already have 6 free market data providers |
+| Interactive Brokers | PENDING APPROVAL | Waiting for financial change approval |
 | Twilio | NOT CONFIGURED | SMS alerts |
 | SMTP (Gmail) | NOT CONFIGURED | Email alerts |
 
