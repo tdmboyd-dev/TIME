@@ -48,7 +48,8 @@
       "Bash(ls:*)",
       "Bash(git -C \"C:\\Users\\Timeb\\OneDrive\\TIME\" log --oneline -20)",
       "Bash(npm run test)",
-      "Bash(test:*)"
+      "Bash(test:*)",
+      "WebFetch(domain:timebeyondus.com)"
     ]
   }
 }
