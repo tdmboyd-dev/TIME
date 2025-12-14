@@ -2,7 +2,7 @@
 
 ## COMPLETE PLATFORM DOCUMENTATION FOR AI ASSISTANTS
 
-**Version:** 4.0.0 - COMPREHENSIVE EDITION
+**Version:** 5.0.0 - ULTIMATE COMPREHENSIVE EDITION
 **Last Updated:** 2025-12-14
 **Status:** LIVE AND OPERATIONAL
 **Purpose:** Complete platform understanding for Copilot, Claude, and all AI assistants
@@ -25,11 +25,12 @@
 
 | Metric | Count |
 |--------|-------|
-| Total Backend Files | 95+ |
+| Total Backend Files | 120+ |
 | Total Frontend Pages | 31 |
 | Total API Endpoints | 400+ |
 | Total Route Modules | 30 |
 | Backend Engines | 15 |
+| Advanced Systems | 25+ |
 | Bot Systems | 5 |
 | Universal Bots | 32+ |
 | Trading Strategies | 27+ |
@@ -37,6 +38,7 @@
 | Configured Brokers | 6 |
 | Market Data Providers | 8 |
 | Trading Venues | 50+ |
+| Revolutionary Systems | 5 |
 
 ---
 
@@ -70,6 +72,1245 @@
 
 ---
 
+# COMPLETE BACKEND FILE INVENTORY (120+ FILES)
+
+## Directory Structure
+
+```
+src/backend/
+├── alpha/                    # Quant brain systems
+│   └── alpha_engine.ts
+├── assets/                   # Tokenized assets
+│   └── tokenized_assets.ts
+├── autonomous/               # Self-directing systems
+│   └── autonomous_capital_agent.ts
+├── bots/                     # Bot management (5 systems)
+│   ├── auto_bot_engine.ts
+│   ├── bot_ingestion.ts
+│   ├── bot_manager.ts
+│   ├── pro_copy_trading.ts
+│   └── universal_bot_engine.ts
+├── brokers/                  # Broker integrations (8 files)
+│   ├── advanced_broker_engine.ts
+│   ├── alpaca_broker.ts
+│   ├── broker_interface.ts
+│   ├── broker_manager.ts
+│   ├── crypto_futures.ts
+│   ├── ib_client.ts
+│   ├── mt_bridge.ts
+│   ├── oanda_broker.ts
+│   └── snaptrade_broker.ts
+├── builder/                  # Strategy building
+│   └── strategy_builder_v2.ts
+├── capital/                  # Capital management
+│   └── capital_conductor.ts
+├── collective/               # Swarm intelligence
+│   └── collective_intelligence_network.ts
+├── config/                   # Configuration
+│   └── index.ts
+├── consent/                  # User consent
+│   └── consent_manager.ts
+├── core/                     # Core TIME systems
+│   ├── evolution_controller.ts
+│   ├── inactivity_monitor.ts
+│   └── time_governor.ts
+├── data/                     # Market data (5 files)
+│   ├── fmp_integration.ts
+│   ├── fred_integration.ts
+│   ├── market_data_providers.ts
+│   ├── real_market_data_integration.ts
+│   └── twelvedata_integration.ts
+├── database/                 # Database layer
+│   ├── connection.ts
+│   ├── repositories.ts
+│   └── schemas.ts
+├── defi/                     # DeFi systems
+│   └── yield_aggregator.ts
+├── dropzone/                 # Bot upload
+│   └── bot_dropzone.ts
+├── engines/                  # Core engines (15 files)
+│   ├── ai_risk_profiler.ts
+│   ├── attribution_engine.ts
+│   ├── defi_mastery_engine.ts
+│   ├── ensemble_harmony_detector.ts
+│   ├── learning_engine.ts
+│   ├── learning_velocity_tracker.ts
+│   ├── market_vision_engine.ts
+│   ├── recursive_synthesis_engine.ts
+│   ├── regime_detector.ts
+│   ├── risk_engine.ts
+│   ├── signal_conflict_resolver.ts
+│   ├── social_trading_engine.ts
+│   ├── strategy_builder.ts
+│   ├── teaching_engine.ts
+│   └── ux_innovation_engine.ts
+├── fetcher/                  # Bot fetching
+│   ├── github_bot_fetcher.ts
+│   └── multi_source_fetcher.ts
+├── fingerprint/              # Bot DNA
+│   └── bot_fingerprinting.ts
+├── integrations/             # External integrations
+│   ├── demo_one_click_file.ts
+│   ├── ikickitz_bridge.ts
+│   ├── index.ts
+│   ├── mgr_bridge.ts
+│   ├── platform_bridge.ts
+│   └── unified_tax_flow.ts
+├── life/                     # Life-aware planning
+│   └── life_timeline_engine.ts
+├── marketplace/              # NFT marketplace
+│   └── nft_marketplace.ts
+├── monetization/             # Revenue systems
+│   └── revenue_engine.ts
+├── notifications/            # Alerts
+│   └── notification_service.ts
+├── payments/                 # Payment systems (4 files)
+│   ├── instant_payments.ts
+│   ├── time_invoice.ts
+│   ├── time_pay.ts
+│   └── time_payroll.ts
+├── portfolio/                # Portfolio management
+│   └── portfolio_brain.ts
+├── research/                 # Research systems
+│   ├── bot_research_pipeline.ts
+│   └── research_annotation_engine.ts
+├── retirement/               # Retirement planning
+│   └── (retirement systems)
+├── revolutionary/            # Never-before-seen systems (5 files)
+│   ├── dark_pool_reconstructor.ts
+│   ├── index.ts
+│   ├── quantum_alpha_synthesizer.ts
+│   ├── sentiment_velocity_engine.ts
+│   ├── smart_money_tracker.ts
+│   └── volatility_surface_trader.ts
+├── robo/                     # Robo-advisory
+│   └── robo_advisor.ts
+├── routes/                   # API routes (30 files)
+│   └── (see API Routes section)
+├── scenarios/                # Future simulation
+│   └── predictive_scenario_engine.ts
+├── scout/                    # Opportunity discovery
+│   └── opportunity_scout.ts
+├── security/                 # Security systems
+│   ├── api_key_manager.ts
+│   ├── audit_logger.ts
+│   └── mfa_service.ts
+├── services/                 # Trading services (5 files)
+│   ├── AITradeGodBot.ts
+│   ├── BigMovesAlertService.ts
+│   ├── FreeBotsAndAPIsIntegration.ts
+│   ├── TradingExecutionService.ts
+│   └── TradingModeService.ts
+├── simulator/                # Training simulation
+│   └── training_simulator.ts
+├── stories/                  # Trade narratives
+│   └── trade_story_generator.ts
+├── tax/                      # Tax optimization
+│   └── tax_loss_harvester.ts
+├── transfers/                # ACATS transfers
+│   └── acats_transfer.ts
+├── types/                    # Type definitions
+│   └── index.ts
+├── utils/                    # Utilities
+│   └── logger.ts
+├── watchers/                 # Market watchers
+│   └── stock_watchers.ts
+├── websocket/                # Real-time systems
+│   ├── event_hub.ts
+│   ├── index.ts
+│   ├── realtime_hub.ts
+│   └── realtime_service.ts
+├── yield/                    # Yield optimization
+│   └── yield_orchestrator.ts
+└── index.ts                  # Main entry point
+```
+
+---
+
+# CAPITAL & FINANCIAL BRAIN SYSTEMS
+
+## 1. TIME Capital Conductor
+**File:** `src/backend/capital/capital_conductor.ts`
+
+The unified capital brain that sees ALL capital across ALL sources.
+
+**Capital Source Types (11):**
+- `time_pay` - TIME Pay wallet
+- `broker` - Brokerage accounts
+- `defi` - DeFi positions
+- `nft` - NFT holdings
+- `income` - Income streams
+- `tax_reserve` - Tax reserves
+- `payroll` - Payroll obligations
+- `invoice` - Invoice receivables
+- `bank` - External bank accounts
+- `crypto_wallet` - Crypto wallets
+- `staking` - Staking positions
+
+**Capital Status Types (6):**
+- `available` - Ready to use
+- `allocated` - Currently in use
+- `locked` - Locked (staking, LP)
+- `pending` - Pending settlement
+- `reserved` - Reserved for obligations
+- `at_risk` - At risk positions
+
+**Allocation Strategies (6):**
+- `growth` - Maximize long-term returns
+- `income` - Maximize monthly cash flow
+- `preservation` - Protect capital
+- `balanced` - Balanced approach
+- `aggressive` - High risk, high reward
+- `custom` - User-defined
+
+**Key Features:**
+- Unified capital view across all platforms
+- Dynamic capital allocation
+- Cash flow prediction (30/60/90 days)
+- Obligation tracking (bills, payroll, taxes)
+- Automated capital routing
+- Risk balancing across all assets
+- Yield optimization
+- Rebalancing recommendations
+
+---
+
+## 2. Autonomous Capital Agent (ACA)
+**File:** `src/backend/autonomous/autonomous_capital_agent.ts`
+
+World's first AI agent that operates 24/7 making ALL financial decisions within boundaries.
+
+**Agent Mandates (7):**
+- `aggressive_growth` - Maximum returns, high risk
+- `balanced_growth` - Growth with moderate risk
+- `income_generation` - Focus on yield/dividends
+- `capital_preservation` - Protect principal
+- `wealth_building` - Long-term compounding
+- `retirement_prep` - Age-aware de-risking
+- `custom` - User-defined mandate
+
+**Decision Types (15):**
+- `allocation_change` - Move capital between assets
+- `position_entry` - Enter new position
+- `position_exit` - Exit existing position
+- `position_resize` - Change position size
+- `yield_harvest` - Collect yield/dividends
+- `yield_reinvest` - Reinvest collected yield
+- `rebalance` - Portfolio rebalancing
+- `hedge_action` - Add/remove hedges
+- `risk_reduction` - Reduce overall risk
+- `opportunity_capture` - Capture identified alpha
+- `tax_optimization` - Tax-loss harvesting
+- `liquidity_management` - Manage cash reserves
+- `emergency_action` - Crisis response
+- `learning_update` - Update internal models
+- `boundary_adjustment` - Suggest boundary changes
+
+**Agent States (9):**
+- `initializing`, `observing`, `analyzing`, `deciding`, `executing`, `learning`, `sleeping`, `emergency`, `disabled`
+
+**Key Features:**
+- 24/7 autonomous operation
+- Hard and soft boundaries (risk controls)
+- Learning from every decision
+- Full explanation system
+- Performance tracking
+
+---
+
+## 3. Alpha Engine
+**File:** `src/backend/alpha/alpha_engine.ts`
+
+TIME's quant brain - strategy discovery and ranking system.
+
+**Market Regimes (8):**
+- `trending_up`, `trending_down`, `ranging`, `volatile`, `quiet`, `risk_on`, `risk_off`, `crisis`
+
+**Strategy Archetypes (10):**
+- `momentum`, `mean_reversion`, `trend_following`, `volatility`, `carry`, `statistical_arb`, `event_driven`, `ml_based`, `market_making`, `multi_factor`
+
+**Alpha Decay Status (4):**
+- `stable`, `declining`, `decaying`, `dead`
+
+**Overfit Risk Levels (5):**
+- `none`, `low`, `medium`, `high`, `critical`
+
+**Bot Performance Metrics:**
+- Total trades, win rate, profit factor
+- Sharpe/Sortino/Calmar ratios
+- Max drawdown, average win/loss
+- Alpha, beta, information ratio, Treynor ratio
+
+**Key Features:**
+- Bot performance evaluation per regime
+- Alpha scoring and ranking
+- Overfitting detection (walk-forward analysis)
+- Robustness measurement
+- Allocation recommendations
+- Alpha decay detection
+- Bot disable recommendations
+- Monte Carlo simulations
+
+---
+
+## 4. Portfolio Brain
+**File:** `src/backend/portfolio/portfolio_brain.ts`
+
+Cross-asset risk engine aggregating positions across all brokers.
+
+**Asset Classes (8):**
+- `equity`, `fixed_income`, `commodity`, `currency`, `crypto`, `real_estate`, `alternative`, `derivative`
+
+**Factors (10):**
+- `market` (beta), `momentum`, `value`, `quality`, `size`, `volatility`, `carry`, `liquidity`, `growth`, `dividend`
+
+**Stress Scenarios (11):**
+- `financial_crisis_2008`, `covid_crash_2020`, `flash_crash_2010`, `dot_com_2000`, `black_monday_1987`, `interest_rate_shock`, `inflation_spike`, `recession`, `geopolitical_crisis`, `crypto_winter`, `custom`
+
+**Risk Levels (5):**
+- `low`, `moderate`, `elevated`, `high`, `extreme`
+
+**Key Features:**
+- Cross-broker position aggregation
+- Factor exposure analysis (10 factors)
+- Concentration risk detection
+- Stress testing (11 scenarios)
+- Hedge recommendations
+- Sector rotation suggestions
+- Correlation monitoring
+- Tail risk analysis (VaR, CVaR)
+
+---
+
+## 5. Yield Orchestrator
+**File:** `src/backend/yield/yield_orchestrator.ts`
+
+Unified income engine mapping all yield sources.
+
+**Yield Source Types (14):**
+- `defi_staking`, `defi_lending`, `defi_liquidity`, `defi_farming`
+- `dividend_stocks`, `covered_calls`, `bond_yield`, `real_estate`
+- `cashback`, `interest`, `nft_royalties`, `arbitrage`, `referral`, `staking_rewards`
+
+**Risk Tiers (5):**
+- `ultra_safe` (<1% risk), `conservative` (1-5%), `moderate` (5-15%), `aggressive` (15-30%), `speculative` (>30%)
+
+**Lockup Periods (7):**
+- `instant`, `daily`, `weekly`, `monthly`, `quarterly`, `yearly`, `variable`
+
+**Tax Treatments (7):**
+- `ordinary_income`, `qualified_dividend`, `long_term_capital_gain`, `short_term_capital_gain`, `tax_exempt`, `deferred`, `unknown`
+
+**Key Features:**
+- Maps ALL yield sources across platforms
+- Builds yield playbooks by risk tier
+- Calculates TRUE yield (after gas, IL, taxes)
+- Monitors yield drift (APY changes)
+- Regime-aware income strategies
+- Auto-compound optimization
+- Tax-loss harvesting for yields
+
+---
+
+## 6. Yield Aggregator
+**File:** `src/backend/defi/yield_aggregator.ts`
+
+Autonomous DeFi yield farming across protocols.
+
+**Supported Chains (7):**
+- `ethereum`, `bsc`, `polygon`, `arbitrum`, `optimism`, `avalanche`, `base`
+
+**Supported Protocols (10):**
+- `yearn`, `beefy`, `convex`, `aave`, `compound`, `curve`, `uniswap`, `sushiswap`, `gmx`, `aura`
+
+**Vault Types (6):**
+- `single_asset`, `lp_pair`, `stable_lp`, `lending`, `staking`, `leveraged`
+
+**Key Features:**
+- Multi-chain yield optimization
+- Auto-compounding strategies
+- Risk-adjusted yield selection
+- Gas-optimized harvesting
+- Impermanent loss tracking
+- APY comparison across vaults
+
+---
+
+# RESEARCH & ANALYSIS SYSTEMS
+
+## 7. Research & Annotation Engine
+**File:** `src/backend/research/research_annotation_engine.ts`
+
+The Market Time Machine - chart annotation and historical replay.
+
+**Annotation Types (15):**
+- `support`, `resistance`, `trendline`, `channel`, `pattern`, `fibonacci`, `zone`, `note`, `signal`, `trade`, `news`, `economic`, `regime`, `alert`, `custom`
+
+**Pattern Types (19):**
+- `head_and_shoulders`, `inverse_head_and_shoulders`, `double_top`, `double_bottom`, `triple_top`, `triple_bottom`, `ascending_triangle`, `descending_triangle`, `symmetrical_triangle`, `wedge_rising`, `wedge_falling`, `flag_bullish`, `flag_bearish`, `pennant`, `cup_and_handle`, `rounding_bottom`, `rectangle`, `gap`, `island_reversal`
+
+**Economic Event Types (13):**
+- `fomc`, `nfp`, `cpi`, `gdp`, `pmi`, `retail_sales`, `earnings`, `dividend`, `ipo`, `split`, `central_bank`, `geopolitical`, `custom`
+
+**Key Features:**
+- Chart annotation system
+- Regime shift marking
+- Bot event logging
+- Economic event calendar
+- Symbol research summaries
+- Historical day replay (Market Time Machine)
+- Trade journal automation
+- Pattern recognition storage
+- Narrated playback (via Teaching Engine)
+
+---
+
+## 8. Strategy Builder V2
+**File:** `src/backend/builder/strategy_builder_v2.ts`
+
+Visual strategy compiler - build, backtest, deploy.
+
+**Block Categories (9):**
+- `entry`, `exit`, `position_sizing`, `risk_management`, `market_filter`, `indicator`, `condition`, `action`, `execution`
+
+**Indicator Types (16):**
+- `sma`, `ema`, `rsi`, `macd`, `bollinger`, `atr`, `adx`, `stochastic`, `ichimoku`, `vwap`, `volume`, `obv`, `williams_r`, `cci`, `momentum`, `custom`
+
+**Position Size Methods (6):**
+- `fixed_amount`, `fixed_percent`, `kelly_criterion`, `risk_based`, `volatility_adjusted`, `custom`
+
+**Key Features:**
+- Visual drag-drop strategy building
+- Strategy compilation to executable code
+- Auto-generated backtests
+- Monte Carlo simulations
+- Paper trading simulation
+- Live deployment
+- Version control and Strategy DNA
+- Template library
+- Strategy cloning and forking
+
+---
+
+## 9. Bot Fingerprinting
+**File:** `src/backend/fingerprint/bot_fingerprinting.ts`
+
+Creates unique DNA profiles for each bot.
+
+**Fingerprint Components:**
+- **Behavior Signature:** Holding period, trade frequency, timeframes, active hours, regime preference
+- **Signal Signature:** Entry/exit patterns, indicators used, signal strength distribution
+- **Risk Signature:** Position size, stop loss/take profit ranges, risk/reward ratio, drawdown tolerance
+- **Performance Signature:** Win rate, profit factor, Sharpe ratio, max drawdown, expectancy
+
+**Key Features:**
+- Bot similarity detection
+- Duplicate identification
+- Strategy type grouping
+- Trading style inference
+- Bot evolution tracking
+
+---
+
+## 10. Training Simulator
+**File:** `src/backend/simulator/training_simulator.ts`
+
+24/7 demo trading environment for TIME to learn.
+
+**Key Features:**
+- Continuous bot execution on demo accounts
+- Real-time market data simulation
+- Trade execution simulation
+- Performance tracking and analysis
+- Learning event generation
+- Strategy A/B testing
+
+---
+
+## 11. Predictive Scenario Engine
+**File:** `src/backend/scenarios/predictive_scenario_engine.ts`
+
+Future simulation system.
+
+**Scenario Types (10):**
+- `monte_carlo`, `historical_parallel`, `stress_test`, `what_if`, `regime_transition`, `black_swan`, `macro_shock`, `correlation_breakdown`, `liquidity_crisis`, `custom`
+
+**Market Conditions (10):**
+- `bull_quiet`, `bull_volatile`, `bear_quiet`, `bear_volatile`, `sideways_quiet`, `sideways_volatile`, `crash`, `recovery`, `bubble`, `capitulation`
+
+**Key Features:**
+- Simulate thousands of possible futures
+- Map current conditions to historical parallels
+- Generate "what if" scenarios
+- Predict portfolio behavior
+- Create probabilistic outcome distributions
+- Learn from prediction accuracy
+
+---
+
+# REVOLUTIONARY SYSTEMS (5 Never-Before-Seen)
+
+## 12. Quantum Alpha Synthesizer
+**File:** `src/backend/revolutionary/quantum_alpha_synthesizer.ts`
+
+Multi-dimensional signal synthesis using quantum-inspired optimization.
+
+**Key Innovations:**
+- Simulated quantum annealing for global signal optimization
+- Multi-dimensional correlation analysis (beyond 2D)
+- Real-time signal weight adjustment based on regime
+- Conflict resolution using quantum superposition concepts
+- Self-evolving signal strength based on accuracy
+
+**Signal Source Types (6):**
+- `technical`, `fundamental`, `sentiment`, `alternative`, `macro`, `flow`
+
+---
+
+## 13. Sentiment Velocity Engine
+**File:** `src/backend/revolutionary/sentiment_velocity_engine.ts`
+
+Tracks RATE OF CHANGE of sentiment - catches turning points before price moves.
+
+**Velocity Signals (7):**
+- `accelerating_bullish`, `accelerating_bearish`
+- `decelerating_bullish`, `decelerating_bearish`
+- `exhaustion_top`, `exhaustion_bottom`, `neutral`
+
+**Key Innovations:**
+- First and second derivatives of sentiment
+- Sentiment momentum oscillator
+- Exhaustion detection (sentiment at extremes with declining velocity)
+- Divergence detection (price vs sentiment velocity)
+- Multi-source velocity aggregation
+
+---
+
+## 14. Dark Pool Flow Reconstructor
+**File:** `src/backend/revolutionary/dark_pool_reconstructor.ts`
+
+Reverse engineers institutional dark pool activity from public data.
+
+**Signature Types (3):**
+- `accumulation`, `distribution`, `neutral`
+
+**Accumulation Phases (4):**
+- `stealth`, `awareness`, `markup`, `distribution`
+
+**Key Innovations:**
+- Institutional footprint detection
+- Odd-lot trade pattern analysis
+- FINRA ADF data timing
+- Volume anomaly detection
+- Price level clustering
+- VWAP deviation analysis
+- Block trade probability estimation
+
+---
+
+## 15. Smart Money Tracker
+**File:** `src/backend/revolutionary/smart_money_tracker.ts`
+
+Tracks institutional activity from multiple sources.
+
+**Smart Money Entity Types (4):**
+- `hedge_fund` (13F filings)
+- `congress` (Capitol Trades)
+- `insider` (Form 4 filings)
+- `institution` (General institutional)
+
+**Key Innovations:**
+- Weighted by fund performance (follow winners)
+- Timing analysis (how fast they acted)
+- Conviction scoring (position size relative to portfolio)
+- Consensus detection (multiple sources agreeing)
+- Lead time analysis (how early before moves)
+- Congressional trade tracking
+
+---
+
+## 16. Volatility Surface Trader
+**File:** `src/backend/revolutionary/volatility_surface_trader.ts`
+
+Professional-grade options volatility surface analysis.
+
+**Anomaly Types (4):**
+- `mispricing`, `skew_extreme`, `term_inversion`, `smile_asymmetry`
+
+**Volatility Regimes (4):**
+- `low`, `normal`, `elevated`, `extreme`
+
+**Key Innovations:**
+- Real-time IV surface construction
+- Skew and term structure analysis
+- IV mispricing detection across strikes/expirations
+- Optimal strike/expiry selection
+- Greeks-based position sizing
+- IV crush prediction for earnings
+
+---
+
+# AI & AUTONOMOUS SYSTEMS
+
+## 17. Life-Timeline Financial Engine
+**File:** `src/backend/life/life_timeline_engine.ts`
+
+Human-aware money system that maps life events to finances.
+
+**Life Event Types (24):**
+- **Career:** `career_start`, `job_change`, `promotion`, `job_loss`, `career_pivot`, `retirement`, `business_start`, `business_exit`
+- **Family:** `marriage`, `divorce`, `child_birth`, `child_education_start`, `child_graduation`, `empty_nest`, `caring_for_parents`, `death_of_spouse`, `inheritance`
+- **Major Purchases:** `home_purchase`, `home_sale`, `rental_property`, `major_renovation`, `car_purchase`
+- **Health:** `health_issue`, `disability`, `health_recovery`, `long_term_care_needed`
+- **Financial:** `debt_payoff`, `windfall`, `lawsuit`, `bankruptcy`
+- **Lifestyle:** `relocation`, `sabbatical`, `major_travel`, `charitable_giving`
+
+**Life Stages (7):**
+- `early_career` (20s), `career_growth` (30s), `peak_earning` (40s-50s), `pre_retirement` (55-65), `early_retirement` (65-75), `late_retirement` (75+), `legacy_planning`
+
+**Key Features:**
+- Maps user's life events to trading/investing
+- Adjusts strategy automatically based on life stage
+- Projects future financial needs
+- Creates life-aware portfolio allocation
+
+---
+
+## 18. Collective Intelligence Network
+**File:** `src/backend/collective/collective_intelligence_network.ts`
+
+Swarm trading wisdom - aggregates signals from ALL bots across ALL users.
+
+**Swarm Signal Types (10):**
+- `consensus_bullish`, `consensus_bearish`, `strong_divergence`
+- `emerging_consensus`, `consensus_breakdown`, `contrarian_opportunity`
+- `herding_warning`, `regime_shift_detected`, `alpha_cluster`, `smart_money_signal`
+
+**Trust Levels (4):**
+- `new`, `established`, `trusted`, `expert`
+
+**Key Features:**
+- Finds consensus and divergence patterns
+- Identifies "wisdom of the crowd" opportunities
+- Detects when the crowd is wrong (contrarian signals)
+- Creates emergent intelligence from individual bots
+- Preserves privacy while extracting collective insight
+
+---
+
+## 19. Opportunity Scout
+**File:** `src/backend/scout/opportunity_scout.ts`
+
+Discovers legitimate automated income opportunities.
+
+**Opportunity Types (11):**
+- `dividend`, `cashback`, `staking`, `referral`, `freelance`, `survey`, `passive`, `affiliate`, `airdrop`, `interest`, `royalty`
+
+**Key Features:**
+- Dividend tracking & collection alerts
+- Cashback aggregation
+- Staking rewards monitoring
+- Referral program management
+- Passive income tracking
+- Affiliate earnings monitoring
+
+---
+
+# MARKETPLACE & FINTECH SYSTEMS
+
+## 20. NFT Marketplace
+**File:** `src/backend/marketplace/nft_marketplace.ts`
+
+Revolutionary multi-chain NFT and alternative assets marketplace.
+
+**Supported Chains (8):**
+- `ethereum`, `polygon`, `solana`, `base`, `arbitrum`, `optimism`, `avalanche`, `bnb`
+
+**Asset Categories (10):**
+- `art`, `collectibles`, `gaming`, `music`, `domain_names`, `virtual_land`, `real_world_assets`, `tokenized_stocks`, `carbon_credits`, `intellectual_property`
+
+**Key Innovations:**
+- Multi-chain support (8+ blockchains)
+- Creator-first royalties (enforced on-chain)
+- Fractional NFT ownership with governance
+- AI-powered price discovery
+- NFT-to-DeFi integration (collateralize NFTs)
+- Cross-platform aggregation
+- Zero wash trading detection (AI-powered)
+- Real-time portfolio valuation
+- Social trading for NFTs
+
+---
+
+## 21. Tokenized Assets Engine
+**File:** `src/backend/assets/tokenized_assets.ts`
+
+Fractional ownership of real-world and digital assets.
+
+**Asset Classes (9):**
+- `stocks`, `etfs`, `real_estate`, `commodities`, `art`, `collectibles`, `private_equity`, `bonds`, `crypto_index`
+
+**Token Standards (4):**
+- `ERC-20`, `ERC-1400`, `ERC-3643`, `ST-20`
+
+**Compliance Frameworks (5):**
+- `SEC`, `MAS`, `FCA`, `MiCA`, `VARA`
+
+**Key Features:**
+- Fractional shares of stocks, ETFs, commodities
+- Real estate tokenization
+- Art and collectibles fractional ownership
+- Automatic dividend/yield distribution
+- Secondary market for trading fractions
+- Regulatory compliance
+
+---
+
+## 22. Revenue Engine
+**File:** `src/backend/monetization/revenue_engine.ts`
+
+Fair, transparent monetization system.
+
+**Subscription Tiers (5):**
+- `free` - Free Explorer ($0)
+- `starter` - Starter Trader
+- `trader` - Active Trader
+- `professional` - Pro Trader
+- `enterprise` - Institutional
+
+**Revenue Streams (10):**
+1. Subscription tiers (based on features)
+2. Transaction fees (lower than industry)
+3. Premium bots (revenue share with creators)
+4. NFT marketplace (modest fees)
+5. API access (for developers/institutions)
+6. Educational content (premium courses)
+7. Copy trading (small fee on profits only)
+8. Referral program (rewards for growth)
+9. Institutional services (white-label)
+10. Data analytics (premium insights)
+
+---
+
+# CORE BACKEND ENGINES (15)
+
+## 23. Learning Engine
+**File:** `src/backend/engines/learning_engine.ts`
+
+24/7 continuous learning from all data sources.
+
+**Learning Sources:**
+- Live trading data
+- Paper trading results
+- Historical backtests
+- Bot performance metrics
+- Market regime changes
+- User behavior patterns
+
+---
+
+## 24. Risk Engine
+**File:** `src/backend/engines/risk_engine.ts`
+
+Central risk control with emergency safeguards.
+
+**Risk Actions (5):**
+- `allow`, `reduce_size`, `reject`, `halt_bot`, `halt_all`
+
+**Key Features:**
+- Daily loss limits
+- Maximum drawdown limits
+- Portfolio exposure limits
+- Position limits (max 10 open)
+- Slippage detection
+- Latency spike detection
+- Bot misbehavior detection
+- Emergency brake
+
+---
+
+## 25. Regime Detector
+**File:** `src/backend/engines/regime_detector.ts`
+
+Identifies current market regime from 9 types.
+
+**Market Regimes (9):**
+- Trending Up/Down
+- Ranging/Choppy
+- High/Low Volatility
+- Risk On/Off
+- Crisis Mode
+
+---
+
+## 26. Recursive Synthesis Engine
+**File:** `src/backend/engines/recursive_synthesis_engine.ts`
+
+Creates new strategies by combining successful bot signals.
+
+**Key Features:**
+- Bot ensemble creation
+- Signal weighting by performance
+- Regime-aware combinations
+- Automatic strategy generation
+
+---
+
+## 27. Market Vision Engine
+**File:** `src/backend/engines/market_vision_engine.ts`
+
+Multi-perspective market analysis.
+
+**Perspectives (3):**
+- **Human:** Pattern recognition, psychology, intuition
+- **Quantitative:** Statistics, correlations, models
+- **Bot:** Signals, indicators, algorithms
+
+---
+
+## 28. Teaching Engine
+**File:** `src/backend/engines/teaching_engine.ts`
+
+Explains trades in 6 different modes.
+
+**Teaching Modes (6):**
+- `plain_english` - Simple explanations
+- `beginner` - Learning basics
+- `intermediate` - More detail
+- `pro` - Professional level
+- `quant` - Mathematical/statistical
+- `story` - Narrative format
+
+---
+
+## 29. Attribution Engine
+**File:** `src/backend/engines/attribution_engine.ts`
+
+Full transparency - tracks contribution of each bot to outcomes.
+
+**Key Features:**
+- Primary bot identification
+- Contributing bot breakdown
+- Signal contribution weighting
+- Trade outcome attribution
+
+---
+
+## 30. Ensemble Harmony Detector
+**File:** `src/backend/engines/ensemble_harmony_detector.ts`
+
+Detects when multiple bots agree (confluence).
+
+---
+
+## 31. Signal Conflict Resolver
+**File:** `src/backend/engines/signal_conflict_resolver.ts`
+
+Resolves conflicting signals from different bots.
+
+---
+
+## 32. Learning Velocity Tracker
+**File:** `src/backend/engines/learning_velocity_tracker.ts`
+
+Tracks how fast TIME is learning and improving.
+
+---
+
+## 33. AI Risk Profiler
+**File:** `src/backend/engines/ai_risk_profiler.ts`
+
+Dynamic behavioral risk assessment.
+
+**Risk Categories (6):**
+- Ultra Conservative (0-15)
+- Conservative (15-35)
+- Moderate (35-55)
+- Growth (55-75)
+- Aggressive (75-90)
+- Speculative (90-100)
+
+**Investor Types (5):**
+- `Preserver`, `Accumulator`, `Independent`, `Follower`, `Active trader`
+
+---
+
+## 34. Social Trading Engine
+**File:** `src/backend/engines/social_trading_engine.ts`
+
+Copy trading and social features.
+
+---
+
+## 35. DeFi Mastery Engine
+**File:** `src/backend/engines/defi_mastery_engine.ts`
+
+DeFi education and yield optimization.
+
+---
+
+## 36. Strategy Builder (V1)
+**File:** `src/backend/engines/strategy_builder.ts`
+
+Condition-based strategy builder with templates.
+
+**Templates (5):**
+- Golden Cross (trend following)
+- RSI Mean Reversion
+- Bollinger Breakout
+- MACD Momentum
+- Quick Scalp
+
+---
+
+## 37. UX Innovation Engine
+**File:** `src/backend/engines/ux_innovation_engine.ts`
+
+AI-driven UX improvements.
+
+---
+
+# BOT SYSTEMS (5)
+
+## 38. Universal Bot Engine
+**File:** `src/backend/bots/universal_bot_engine.ts`
+
+32+ specialized trading bots across 8 categories.
+
+**Bot Categories (8):**
+- Trend Following
+- Mean Reversion
+- Momentum
+- Scalping
+- Swing Trading
+- News/Sentiment
+- Arbitrage
+- AI/ML Based
+
+---
+
+## 39. Auto Bot Engine
+**File:** `src/backend/bots/auto_bot_engine.ts`
+
+27+ auto-generated trading strategies.
+
+**Strategy Types:**
+- Multi-timeframe systems
+- Regime-adaptive strategies
+- Pattern-based entries
+- Indicator combinations
+
+---
+
+## 40. Bot Manager
+**File:** `src/backend/bots/bot_manager.ts`
+
+Bot lifecycle management.
+
+**Key Features:**
+- Bot registration and activation
+- Performance tracking
+- Status monitoring
+- Error handling
+- Resource allocation
+
+---
+
+## 41. Bot Ingestion
+**File:** `src/backend/bots/bot_ingestion.ts`
+
+Multi-source bot absorption.
+
+**Sources:**
+- GitHub repositories
+- MQL5 Marketplace
+- cTrader Automate
+- TradingView scripts
+- Custom uploads
+
+---
+
+## 42. Pro Copy Trading
+**File:** `src/backend/bots/pro_copy_trading.ts`
+
+5-tier copy trading system.
+
+**Copy Tiers:**
+- Mirror (exact copy)
+- Proportional (scaled)
+- Filtered (selective)
+- Inverse (contrarian)
+- Custom (user rules)
+
+---
+
+# BROKER INTEGRATIONS (8)
+
+## 43. Advanced Broker Engine
+**File:** `src/backend/brokers/advanced_broker_engine.ts`
+
+50+ trading venues with smart order routing.
+
+**Key Features:**
+- Smart Order Routing
+- Arbitrage detection
+- Liquidity aggregation
+- Dark pool routing
+- 18+ order types
+- Latency optimization
+
+---
+
+## 44. Alpaca Broker
+**File:** `src/backend/brokers/alpaca_broker.ts`
+
+Commission-free stocks and crypto.
+
+---
+
+## 45. OANDA Broker
+**File:** `src/backend/brokers/oanda_broker.ts`
+
+Forex and CFDs - 70+ currency pairs.
+
+---
+
+## 46. Crypto Futures (Binance/Kraken)
+**File:** `src/backend/brokers/crypto_futures.ts`
+
+Crypto futures trading.
+
+---
+
+## 47. Interactive Brokers Client
+**File:** `src/backend/brokers/ib_client.ts`
+
+Professional trading API.
+
+---
+
+## 48. MetaTrader Bridge
+**File:** `src/backend/brokers/mt_bridge.ts`
+
+MT4/MT5 connection via Expert Advisors.
+
+---
+
+## 49. SnapTrade Broker
+**File:** `src/backend/brokers/snaptrade_broker.ts`
+
+20+ brokerages unified API.
+
+---
+
+# INTEGRATIONS (6)
+
+## 50. iKickItz Bridge
+**File:** `src/backend/integrations/ikickitz_bridge.ts`
+
+Creator economy platform integration.
+
+**Transaction Types (12):**
+- `BATTLE_EARNINGS`, `TIP_RECEIVED`, `NFT_SALE`, `PODCAST_EARNINGS`
+- `SPONSORSHIP`, `MERCHANDISE`, `SUBSCRIPTION_REVENUE`
+- `IKOINZ_PURCHASE`, `IKOINZ_CONVERSION`, `WITHDRAWAL`
+- `TAX_RESERVE`, `PLATFORM_FEE`
+
+---
+
+## 51. MGR Elite Hub Bridge
+**File:** `src/backend/integrations/mgr_bridge.ts`
+
+Tax and business services integration.
+
+---
+
+## 52. Platform Bridge
+**File:** `src/backend/integrations/platform_bridge.ts`
+
+Cross-platform data sync.
+
+---
+
+## 53. Unified Tax Flow
+**File:** `src/backend/integrations/unified_tax_flow.ts`
+
+One-click tax filing integration.
+
+---
+
+# SERVICES (5)
+
+## 54. AI Trade God Bot
+**File:** `src/backend/services/AITradeGodBot.ts`
+
+Admin-only super bot with lending capabilities.
+
+**Strategy Types (10):**
+- `DCA`, `GRID`, `ARBITRAGE`, `MOMENTUM`, `MEAN_REVERSION`
+- `WHALE_FOLLOW`, `AI_SENTIMENT`, `YIELD_FARM`, `MARKET_MAKE`, `CUSTOM`
+
+**Risk Levels (5):**
+- `ULTRA_SAFE`, `CONSERVATIVE`, `MODERATE`, `AGGRESSIVE`, `DEGEN`
+
+---
+
+## 55. Big Moves Alert Service
+**File:** `src/backend/services/BigMovesAlertService.ts`
+
+Alerts for significant market movements.
+
+---
+
+## 56. Trading Execution Service
+**File:** `src/backend/services/TradingExecutionService.ts`
+
+Order execution and management.
+
+---
+
+## 57. Trading Mode Service
+**File:** `src/backend/services/TradingModeService.ts`
+
+Paper/Live trading mode switching.
+
+---
+
+## 58. Free Bots & APIs Integration
+**File:** `src/backend/services/FreeBotsAndAPIsIntegration.ts`
+
+Integration with free bot and API sources.
+
+---
+
+# PAYMENT SYSTEMS (4)
+
+## 59. TIME Pay
+**File:** `src/backend/payments/time_pay.ts`
+
+Core payment wallet with 4.5% APY.
+
+---
+
+## 60. TIME Invoice
+**File:** `src/backend/payments/time_invoice.ts`
+
+Invoicing with auto-chase and financing.
+
+---
+
+## 61. TIME Payroll
+**File:** `src/backend/payments/time_payroll.ts`
+
+Employee management and instant pay.
+
+---
+
+## 62. Instant Payments
+**File:** `src/backend/payments/instant_payments.ts`
+
+Real-time settlement system.
+
+---
+
+# SECURITY SYSTEMS (3)
+
+## 63. API Key Manager
+**File:** `src/backend/security/api_key_manager.ts`
+
+Secure API key storage and rotation.
+
+---
+
+## 64. Audit Logger
+**File:** `src/backend/security/audit_logger.ts`
+
+Complete audit trail of all actions.
+
+---
+
+## 65. MFA Service
+**File:** `src/backend/security/mfa_service.ts`
+
+Multi-factor authentication.
+
+---
+
+# API ROUTES (30 MODULES, 400+ ENDPOINTS)
+
+| Route File | Endpoints | Description |
+|------------|-----------|-------------|
+| auth.ts | 15+ | Authentication, MFA, sessions |
+| trading.ts | 30+ | Orders, positions, history |
+| bots.ts | 25+ | Bot management |
+| charts.ts | 10+ | Candlestick data |
+| learn.ts | 15+ | Educational content |
+| vision.ts | 10+ | AI market analysis |
+| retirement.ts | 12+ | IRA/401k, RMD |
+| tax.ts | 10+ | Tax-loss harvesting |
+| transfers.ts | 8+ | ACATS transfers |
+| robo.ts | 10+ | Robo-advisory |
+| strategies.ts | 20+ | Strategy builder |
+| admin.ts | 15+ | Admin functions |
+| market_data.ts | 20+ | Real-time data |
+| alertsRoutes.ts | 10+ | Price alerts |
+| social.ts | 15+ | Social features |
+| payments.ts | 15+ | Payment processing |
+| auto_bots.ts | 10+ | Auto bot management |
+| universal_bots.ts | 15+ | Universal bots |
+| risk_profile.ts | 8+ | Risk assessment |
+| defi_mastery.ts | 10+ | DeFi features |
+| revolutionary.ts | 15+ | Revolutionary systems |
+| fmp.ts | 5+ | FMP data |
+| fred.ts | 5+ | FRED data |
+| twelvedata.ts | 5+ | TwelveData |
+| assets.ts | 10+ | Tokenized assets |
+| fetcher.ts | 5+ | Bot fetching |
+| integrations.ts | 10+ | External integrations |
+| users.ts | 10+ | User management |
+| security.ts | 8+ | Security endpoints |
+| tradingMode.ts | 5+ | Trading mode |
+
+---
+
+# FRONTEND PAGES (31)
+
+| Page | URL | Description |
+|------|-----|-------------|
+| Dashboard | `/` | Main dashboard with portfolio overview |
+| Trade | `/trade` | Execute trades across all brokers |
+| Live Trading | `/live-trading` | Real-time trading interface |
+| Bots | `/bots` | Manage 147+ trading bots |
+| Charts | `/charts` | Real-time candlestick charts |
+| Portfolio | `/portfolio` | Portfolio management |
+| Markets | `/markets` | Market overview and screener |
+| Strategies | `/strategies` | Strategy builder and templates |
+| Retirement | `/retirement` | Retirement planning & calculator |
+| Robo-Advisor | `/robo` | AI-powered portfolio management |
+| Risk Profile | `/risk` | Risk assessment and metrics |
+| Social Trading | `/social` | Follow and copy traders |
+| Payments | `/payments` | Payment methods & transactions |
+| Alerts | `/alerts` | Price and trade alerts |
+| Goals | `/goals` | Financial goal tracking |
+| Tax | `/tax` | Tax-loss harvesting |
+| Transfers | `/transfers` | ACATS stock transfers |
+| Learn | `/learn` | Educational courses |
+| Vision | `/vision` | AI market analysis |
+| DeFi | `/defi` | DeFi education & yield |
+| Invest | `/invest` | Investment opportunities |
+| Brokers | `/brokers` | Broker connections |
+| AI Trade God | `/ai-trade-god` | Advanced AI trading |
+| Settings | `/settings` | Account settings |
+| Admin | `/admin` | Admin dashboard |
+| Admin Health | `/admin/health` | System health monitoring |
+| Execution | `/execution` | Order execution details |
+| History | `/history` | Trade history |
+| Notifications | `/notifications` | Alert notifications |
+| Research | `/research` | Market research |
+| NFT | `/nft` | NFT marketplace |
+
+---
+
 # CONFIGURED SERVICES
 
 ## Brokers (6 LIVE)
@@ -98,1300 +1339,31 @@
 
 ## AI & Blockchain
 
-| Service | Status |
-|---------|--------|
-| OpenAI | CONFIGURED |
-| Alchemy | CONFIGURED |
+| Provider | Status | Purpose |
+|----------|--------|---------|
+| OpenAI | CONFIGURED | AI analysis, Trade explanations |
+| Alchemy | CONFIGURED | Blockchain data, NFT metadata |
 
 ## Databases
 
-| Service | Status |
-|---------|--------|
-| MongoDB Atlas | CONNECTED |
-| Redis Upstash | CONNECTED |
-
----
-
-# BACKEND ENGINES (15 ENGINES)
-
-## 1. Learning Engine
-**File:** `src/backend/engines/learning_engine.ts`
-
-24/7 continuous learning from all trading sources.
-
-**Key Methods:**
-- `initialize()` - Starts learning engine and continuous loop
-- `recordEvent(type, source, data)` - Records learning event
-- `getRecentInsights(limit)` - Gets recent generated insights
-- `getInsightsByCategory(category)` - Filters insights by category
-- `getActionableInsights()` - Returns only actionable insights
-- `getMetrics()` - Returns learning metrics
-
-**Learning Event Types:**
-- trade, bot_performance, regime_change, risk_event
-- user_feedback, anomaly_detected, strategy_comparison, ensemble_performance
-
-**Configuration:**
-- minTradesForInsight: 50
-- insightConfidenceThreshold: 0.7 (70%)
-- learningRateDecay: 0.95
-- patternRecognitionWindow: 100 trades
-
----
-
-## 2. Risk Engine
-**File:** `src/backend/engines/risk_engine.ts`
-
-Central risk control system with emergency brake capability.
-
-**Key Methods:**
-- `checkSignal(signal, portfolio)` - Validates signal before execution
-- `recordSlippage(expected, actual, symbol)` - Records slippage event
-- `recordLatency(latencyMs, operation)` - Records latency event
-- `recordBotMisbehavior(botId, reason)` - Halts misbehaving bot
-- `triggerEmergencyBrake(reason)` - Activates emergency brake
-- `releaseEmergencyBrake(authorizedBy)` - Releases emergency brake
-- `updateDailyPnL(pnl)` - Updates daily P&L
-- `getState()` - Returns current risk state
-- `getRecentDecisions(limit)` - Gets recent risk decisions
-
-**Risk Limits (Defaults):**
-- maxPositionSize: 2% of portfolio
-- maxPortfolioRisk: 10%
-- maxDrawdown: 15%
-- maxDailyLoss: 5%
-- maxCorrelation: 70%
-- maxSlippage: 0.5%
-- maxLatency: 1000ms
-
-**Risk Actions:**
-- allow, reduce_size, reject, close_position, halt_bot, halt_all
-
----
-
-## 3. Regime Detector
-**File:** `src/backend/engines/regime_detector.ts`
-
-Market regime classification using multi-indicator voting system.
-
-**Key Methods:**
-- `initialize()` - Starts detection loop (every 60 seconds)
-- `addPriceData(symbol, data)` - Adds OHLCV data
-- `detectRegime(symbol)` - Detects current regime
-- `getCurrentRegime()` - Returns current regime
-- `getRegimeState()` - Returns full state with confidence
-- `getRegimeHistory()` - Returns regime change history
-- `isFavorableRegime(strategyTypes, regime)` - Checks strategy fit
-
-**Regime Types (9):**
-- trending_up, trending_down, ranging
-- high_volatility, low_volatility
-- event_driven, overnight_illiquid
-- sentiment_shift, unknown
-
-**Detection Methods (Weighted Voting):**
-- Trend Detection (30%) - ADX-like calculation
-- Volatility Detection (25%) - Rolling volatility percentile
-- Momentum Detection (20%) - RSI-like calculation
-- Volume Regime (25%) - Volume ratio analysis
-
-**Strategy-Regime Mapping:**
-- trend_following → trending_up, trending_down
-- mean_reversion → ranging, low_volatility
-- momentum → trending_up, trending_down, high_volatility
-- breakout → ranging, low_volatility
-- scalping → ranging, low_volatility
-- swing → trending_up, trending_down, ranging
-
----
-
-## 4. Recursive Synthesis Engine
-**File:** `src/backend/engines/recursive_synthesis_engine.ts`
-
-TIME's evolutionary heart - combines bots/strategies to create optimized ensembles.
-
-**Key Methods:**
-- `initialize()` - Starts synthesis loop (every 6 hours)
-- `registerBot(bot)` - Registers bot for synthesis
-- `updateEnsemblePerformance(ensembleId, performance)` - Updates metrics
-- `getActiveEnsembles()` - Gets active ensembles
-- `getSynthesisResults()` - Gets all synthesis results
-- `getMetrics()` - Returns synthesis metrics
-
-**Synthesis Methods:**
-- ensemble_voting - Majority voting of top performers
-- ensemble_weighted - Weight by Sharpe ratio or profit factor
-- regime_specialized - Specialized for specific market regimes
-- fingerprint_crossover - Combine complementary bot fingerprints
-- risk_optimized - Select low-drawdown bots
-
-**Configuration:**
-- minBotsForSynthesis: 3
-- maxEnsembleSize: 7
-- testDurationDays: 7
-- promotionThreshold: 0.55 (55% win rate)
-- retirementThreshold: 0.40 (40% win rate)
-- synthesisIntervalHours: 6
-
----
-
-## 5. Market Vision Engine
-**File:** `src/backend/engines/market_vision_engine.ts`
-
-Multi-perspective market analysis (human, quant, bot perspectives).
-
-**Key Methods:**
-- `generateVision(context)` - Generates complete market vision
-- `getCachedVision(symbol)` - Retrieves cached vision
-- `getAnnotationHistory()` - Gets all chart annotations
-
-**Analysis Perspectives:**
-- Human: Pattern recognition, support/resistance, volume analysis
-- Quant: Statistical analysis, moving averages, z-scores, skewness
-- Bot: RSI, MACD, Bollinger Bands analysis
-
-**Output:**
-- 3 perspectives with bias, confidence, key levels
-- Merged consensus view with strength and recommendations
-- Chart annotations (volatility shifts, structure breaks)
-- Visualizations (heatmaps, volatility maps)
-
----
-
-## 6. Teaching Engine
-**File:** `src/backend/engines/teaching_engine.ts`
-
-Transforms complex trading decisions into understandable lessons.
-
-**Teaching Modes (5):**
-- beginner - Simple analogies and plain English
-- intermediate - Technical details with markdown
-- pro - Professional table format with detailed breakdown
-- quant - Quantitative analysis with vectors and metrics
-- story - Narrative format
-
-**Key Methods:**
-- `generateTradeStory(trade)` - Complete story for a trade
-- `explainTrade(trade, mode)` - Explains trade in specified mode
-- `createLesson(trade)` - Creates lesson from trade
-- `getLesson(lessonId)` - Retrieves lesson
-- `getAllLessons()` - Gets all lessons
-
----
-
-## 7. Attribution Engine
-**File:** `src/backend/engines/attribution_engine.ts`
-
-Tracks and attributes every trading decision to its sources.
-
-**Key Methods:**
-- `createAttribution(tradeId, signals, riskDecisions, regime, confidence)` - Creates attribution
-- `recordTradeOutcome(tradeId, pnl, pnlPercent)` - Records outcome
-- `getBotContributionScore(botId)` - Gets bot's cumulative contribution
-- `getAttributionRecord(recordId)` - Retrieves attribution record
-- `getAttributionByTradeId(tradeId)` - Retrieves by trade ID
-- `generateBotAttributionSummary(botId)` - Summary for a bot
-
----
-
-## 8. Ensemble Harmony Detector
-**File:** `src/backend/engines/ensemble_harmony_detector.ts`
-
-NEVER-BEFORE-SEEN INVENTION - Detects when ensemble bots are in harmony vs. conflict.
-
-**Key Methods:**
-- `ingestSignal(signal)` - Ingests a new bot signal
-- `ingestSignals(signals)` - Batch ingest signals
-- `getHarmonyState(symbol)` - Gets harmony for symbol
-- `getAllHarmonyStates()` - Gets all harmony states
-- `getDissonanceHistory(limit)` - Gets recent dissonance events
-- `getResonancePatterns(limit)` - Gets resonance patterns
-- `getPulse(symbol)` - Gets ensemble pulse state
-- `getEnsembleHealth()` - Overall ensemble health
-
-**Dissonance Types:**
-- direction_conflict - Bots disagree on long/short
-- strength_divergence - Signal strengths vary widely
-- timing_mismatch - Signals don't align temporally
-- regime_disagreement - Bots disagree on regime
-
-**Resonance Patterns:**
-- convergence - Bots agreeing on same direction
-- cascade - Signals arriving in sequence
-- amplification - Increasing strength over time
-- confirmation - Different indicators same conclusion
-
-**Ensemble Pulse States:**
-- rhythm: steady, accelerating, decelerating, erratic
-- harmonyTrend: improving, stable, declining
-- mood: bullish, bearish, neutral, confused
-
----
-
-## 9. Learning Velocity Tracker
-**File:** `src/backend/engines/learning_velocity_tracker.ts`
-
-NEVER-BEFORE-SEEN INVENTION - Tracks how fast TIME is learning.
-
-**Key Methods:**
-- `recordLearning(event)` - Records learning event
-- `recordAdaptation(event)` - Records adaptation event
-- `calculateVelocity()` - Calculates current velocity
-- `getTrends()` - Gets trends for 1h, 6h, 24h, 7d, 30d
-- `getVelocity()` - Gets current velocity metrics
-- `getMilestones()` - Gets all milestones
-- `getAchievedMilestones()` - Gets completed milestones
-- `getDashboardSummary()` - Summary for dashboard
-
-**Learning Event Types:**
-- pattern_discovered, bot_absorbed, strategy_evolved
-- insight_generated, regime_learned, mistake_recorded, success_cataloged
-
-**Knowledge Categories (10):**
-- market_patterns, bot_behaviors, regime_transitions, risk_events
-- winning_conditions, losing_conditions, indicator_correlations
-- timing_patterns, volatility_patterns, sentiment_signals
-
-**Velocity Metrics:**
-- learningRate: Events per hour
-- absorptionRate: Bots absorbed per day
-- evolutionVelocity: Strategy improvements per day
-- adaptationSpeed: Minutes to adjust to new regime
-- wisdomScore: Overall accumulated knowledge (0-100)
-- momentum: accelerating, steady, decelerating, stalled
-
----
-
-## 10. Signal Conflict Resolver
-**File:** `src/backend/engines/signal_conflict_resolver.ts`
-
-NEVER-BEFORE-SEEN INVENTION - Resolves conflicts when bots disagree.
-
-**Key Methods:**
-- `resolveConflict(symbol, regime, signals)` - Main resolution
-- `recordOutcome(caseId, actualDirection, pnl)` - Records outcome
-- `getStats()` - Gets resolution statistics
-- `getBotTrustProfile(botId)` - Gets bot's trust profile
-- `getAllBotTrustProfiles()` - Gets all trust profiles
-- `getRecentCases(limit)` - Gets past conflict cases
-
-**Resolution Methods (7):**
-1. historical_accuracy - Trust bots with best track record
-2. regime_specialist - Trust bots specialized in current regime
-3. confidence_weighted - Weight by confidence scores
-4. conviction_voting - Democratic vote with conviction weights
-5. meta_pattern - Recognize similar past conflicts
-6. indicator_consensus - Favor signals with indicator overlap
-7. risk_adjusted - Choose least risky option
-
-**Resolution Outcomes:**
-- long, short, neutral, abstain
-
----
-
-## 11. Social Trading Engine
-**File:** `src/backend/engines/social_trading_engine.ts`
-
-Autonomous social trading with AI-powered trader selection.
-
-**Key Methods:**
-- `registerProvider(provider)` - Registers new signal provider
-- `updateProviderPerformance(providerId, performance)` - Updates metrics
-- `getAllProviders(filters)` - Gets providers with filtering
-- `aggregateCollectiveIntelligence(symbol)` - Aggregates signal consensus
-- `setupCopyTrading(config)` - Sets up copy trading
-- `processSignal(signal)` - Processes new signal
-- `getLeaderboard(options)` - Gets trader leaderboard
-- `getAIRecommendations(userId, options)` - Gets AI recommendations
-
-**Signal Provider Platforms (9):**
-- mt4, mt5, ctrader, tradingview, time_bot, time_ai, defi_wallet, manual
-
-**Copy Trade Modes:**
-- mirror - 1:1 copy
-- proportional - Scaled by multiplier
-- fixed_lot - Fixed lot size
-- risk_based - Based on risk percentage
-
-**Leaderboard Badges:**
-- Elite Trader: >70% win rate AND >2.0 profit factor
-- Consistent: >0.9 consistency score
-- Popular: >100 followers
-- AI Recommended: >85 AI score
-
----
-
-## 12. DeFi Mastery Engine
-**File:** `src/backend/engines/defi_mastery_engine.ts`
-
-FREE autonomous DeFi education, analysis, and yield optimization.
-
-**Key Methods:**
-- `analyzeProtocol(protocolId)` - Analyzes DeFi protocol
-- `createAutopilotPortfolio(userId, capital, goals)` - Creates AI portfolio
-- `getContextualLesson(topic, userLevel)` - Gets contextual education
-- `scanForAlpha()` - Scans for opportunities
-- `getGasOptimization(chain)` - Gets optimal gas timing
-- `getOpportunities(filters)` - Gets yield opportunities
-
-**Supported Chains (8):**
-- ethereum, arbitrum, optimism, polygon, base, bsc, avalanche, solana
-
-**Protocol Types (10):**
-- lending, dex, yield_aggregator, liquid_staking, perps
-- options, rwa, cdp, restaking, bridge
-
-**Pre-loaded Protocols:**
-- Aave V3 ($12.5B TVL)
-- Lido Finance ($25B TVL)
-- Uniswap V3 ($5B TVL)
-- EigenLayer ($15B TVL)
-- Pendle Finance ($3B TVL)
-- GMX ($500M TVL)
-
----
-
-## 13. AI Risk Profiler
-**File:** `src/backend/engines/ai_risk_profiler.ts`
-
-Dynamic AI-powered risk profiling adapting to behavior and market conditions.
-
-**Key Methods:**
-- `createProfile(userId, responses)` - Creates initial profile
-- `recordBehavior(userId, event)` - Records user behavior
-- `updateMarketContext(context)` - Updates market conditions
-- `getProfile(userId)` - Gets user's risk profile
-- `getRecommendations(userId)` - Gets recommendations
-- `getRiskSummary(userId)` - Gets simple summary
-
-**Risk Categories (6):**
-- ultra_conservative (0-15)
-- conservative (15-35)
-- moderate (35-55)
-- growth (55-75)
-- aggressive (75-90)
-- speculative (90-100)
-
-**Investor Types:**
-- preserver, accumulator, independent, follower, active_trader
-
-**Behavioral Signals Tracked:**
-- panicSellTendency, fomoBuyTendency, overconfidenceBias
-- lossAversionStrength, recentBiasScore, anchoringTendency
-
----
-
-## 14. Strategy Builder Engine
-**File:** `src/backend/engines/strategy_builder.ts`
-
-Visual, no-code strategy builder for professional trading strategies.
-
-**Key Methods:**
-- `createStrategy(userId, config)` - Creates new strategy
-- `createFromTemplate(userId, templateId, customizations)` - From template
-- `updateStrategy(strategyId, updates)` - Updates strategy
-- `runBacktest(strategyId, config)` - Backtests strategy
-- `optimizeStrategy(strategyId)` - AI optimization suggestions
-- `startPaperTrading(strategyId)` - Paper trading mode
-- `goLive(strategyId)` - Deploy to live
-- `validateStrategy(strategyId)` - Validates for deployment
-- `exportStrategy(strategyId)` - Exports as JSON
-- `importStrategy(userId, json)` - Imports from JSON
-
-**Condition Types (18):**
-- price_above/below, price_crosses_above/below
-- indicator_above/below, indicator_crosses_above/below
-- volume_spike, time_of_day, day_of_week, regime_is
-- volatility_above/below, drawdown_exceeds, profit_target_hit
-- consecutive_losses/wins
-
-**Indicators (13):**
-- SMA, EMA, RSI, MACD (with Signal & Histogram)
-- Bollinger Bands (Upper/Middle/Lower), ATR, ADX
-- Stochastic (K & D), VWAP, Volume MA
-
-**Action Types (13):**
-- buy_market, sell_market, buy_limit, sell_limit
-- close_position, close_partial
-- set_stop_loss, set_take_profit, trail_stop
-- scale_in, scale_out, send_alert, pause_strategy
-
-**Pre-built Templates (5):**
-1. Golden Cross (Beginner) - 50/200 MA crossover
-2. RSI Mean Reversion (Beginner) - RSI oversold/overbought
-3. Bollinger Breakout (Intermediate) - Band squeeze breakout
-4. MACD Momentum (Intermediate) - MACD crossover
-5. Quick Scalp (Advanced) - EMA + RSI scalping
-
----
-
-## 15. UX Innovation Engine
-**File:** `src/backend/engines/ux_innovation_engine.ts`
-
-AI-driven adaptive interface and user experience optimization.
-
-**Key Methods:**
-- `getAdaptiveInterface(userId)` - Gets personalized UI
-- `calculateFees(params)` - Calculates all fees
-- `getQuickTradeOptions(userId, symbol)` - Quick trade options
-- `getInstantSupport(query)` - AI support
-- `getSystemHealth()` - Gets system health
-- `getUnifiedDashboard(userId)` - Unified dashboard
-- `updateLearningProgress(userId, action)` - Updates learning
-- `getTopTraders(category)` - Gets top traders
-- `assessSkillLevel(userId)` - Assesses skill level
-
-**Skill Levels (5):**
-- beginner, intermediate, advanced, expert, professional
-
-**Interface Modes:**
-- simple, standard, advanced, pro, custom
-
-**Quick Trade Templates (5):**
-1. Buy the Dip (10%): Auto-buy on 10% drop
-2. Take Profit (20%): Sell 50% when up 20%
-3. Scale In (3 buys): Spread buys at -5%, -10%, -15%
-4. Safe Trade: Auto 5% SL, 15% TP
-5. Equal Weight Rebalance: Rebalance to equal weights
-
----
-
-# BOT SYSTEMS (5 SYSTEMS)
-
-## 1. Universal Bot Engine
-**File:** `src/backend/bots/universal_bot_engine.ts`
-
-Multi-purpose bot system with 32+ specialized bots across 8 categories.
-
-### 32+ Universal Bots:
-
-**ARBITRAGE BOTS (6):**
-1. Cross-Exchange Arbitrage Hunter - 50+ exchanges
-2. Triangular Arbitrage Bot - Currency triangle inefficiencies
-3. NFT Floor Sniper - OpenSea, Blur, Magic Eden
-4. Gift Card Arbitrage Hunter - Cashback stacking
-5. Retail Arbitrage Scanner - Amazon/Walmart/Target
-6. Futures-Spot Arbitrage - 15-50% APY potential
-
-**DEFI BOTS (6):**
-7. DeFi Yield Optimizer - 100+ protocols tracked
-8. Liquidity Position Manager - Minimize impermanent loss
-9. Auto-Compound Bot - Auto-claims and reinvests
-10. Liquidation Hunter - Liquidation opportunities
-11. Gas Price Optimizer - Save 50-80% on gas
-12. Cross-Chain Bridge Optimizer - Cheapest routes
-
-**REWARDS BOTS (6):**
-13. Cashback Stacking Hunter - Up to 30% back
-14. Points & Miles Optimizer - Credit card points
-15. Airdrop Farming Bot - Track airdrops
-16. Referral Bonus Tracker - Referral programs
-17. Sign-Up Bonus Hunter - $200-500+ bonuses
-18. Dividend Capture Bot - High-yield dividends
-
-**INCOME BOTS (4):**
-19. Freelance Gig Matcher - Upwork, Fiverr, Toptal
-20. Gig Economy Finder - Delivery/rideshare earnings
-21. Paid Survey Aggregator - Highest-paying surveys
-22. Micro-Task Hunter - MTurk, Prolific, UserTesting
-
-**SAVINGS BOTS (4):**
-23. Bill Negotiation Assistant - Negotiable bills
-24. Subscription Optimizer - Track unused subscriptions
-25. Price Drop Monitor - Wishlist alerts
-26. Smart Coupon Finder - Auto-find best coupons
-
-**TRADING BOTS (6):**
-27. Momentum Trader - Trend following
-28. Mean Reversion Pro - Oversold/overbought
-29. Breakout Hunter - Explosive moves
-30. Scalper Elite - High-frequency small gains
-31. Swing Master - Multi-day moves
-32. Grid Trader - Orders at intervals
-
-**Opportunity Categories (8):**
-- trading, arbitrage, defi, rewards, income, savings, nft, airdrop
-
----
-
-## 2. Auto Bot Engine
-**File:** `src/backend/bots/auto_bot_engine.ts`
-
-Next-generation autonomous trading with 27+ strategies.
-
-### 27+ Strategy Types:
-
-**TREND FOLLOWING (4):**
-- trend_momentum, trend_breakout, trend_pullback, supertrend
-
-**MEAN REVERSION (3):**
-- mean_reversion_rsi, mean_reversion_bb, range_trader
-
-**GRID STRATEGIES (4):**
-- grid_classic, grid_geometric, grid_infinity, grid_reverse
-
-**DCA STRATEGIES (4):**
-- dca_time_based, dca_price_based, dca_volatility, dca_smart
-
-**SCALPING (3):**
-- scalp_momentum, scalp_order_flow, scalp_spread
-
-**ARBITRAGE (4):**
-- arb_cross_exchange, arb_triangular, arb_futures_spot, arb_funding_rate
-
-**AI/ML STRATEGIES (4):**
-- ai_ensemble - 10+ strategies weighted by AI (30-80% annually)
-- ai_sentiment - News and social sentiment
-- ai_pattern_recognition - Deep learning patterns
-- ai_regime_adaptive - Auto-switches by regime (30-80% annually)
-
-**DEFI STRATEGIES (3):**
-- defi_yield_optimizer, defi_liquidity_manager, defi_liquidation_hunter
-
-**HYBRID (3):**
-- hybrid_multi_timeframe, hybrid_multi_asset, hybrid_regime_switcher (50-120% annually)
-
----
-
-## 3. Bot Manager
-**File:** `src/backend/bots/bot_manager.ts`
-
-Central management system for all bots.
-
-**Key Methods:**
-- `initialize()` - Loads pre-built and absorbed bots
-- `quickAddBot(name, description, strategyType, riskLevel, paperMode)` - Quick add
-- `registerBot(name, description, source, code, config, ownerId)` - Register
-- `activateBot(botId)` - Activates bot
-- `pauseBot(botId)` - Pauses bot
-- `retireBot(botId)` - Retires bot
-- `absorbBot(botId)` - Absorbs bot into TIME core
-- `recordTrade(botId, isWin, pnl, holdingPeriod)` - Records trade
-- `getTopPerformingBots(limit)` - Gets top performers
-- `getBotsForRegime(regime)` - Gets bots for regime
-
-**Bot Sources:**
-- github, user_upload, open_source, public_free, time_generated
-
-**Bot Statuses:**
-- active, paused, pending_review, retired, absorbed
-
-**8+ Pre-built Bots:**
-1. Momentum Rider
-2. Mean Reversion Pro
-3. Breakout Hunter
-4. Scalper Elite
-5. Swing Master
-6. News Sentiment Bot
-7. Grid Trader
-8. AI Ensemble
-
----
-
-## 4. Bot Ingestion System
-**File:** `src/backend/bots/bot_ingestion.ts`
-
-Handles intake of bots from various sources.
-
-**Key Methods:**
-- `ingestFromUser(userId, request)` - User-submitted bot
-- `ingestFromPublicSource(request)` - Public source bot
-- `ingest(request)` - Main ingestion pipeline
-- `validateRequest(request)` - Validates input
-- `analyzeBot(request)` - Code analysis & safety checks
-- `checkLicense(license)` - License compatibility
-
-**Safety Checks:**
-- Detects dangerous patterns: eval(), exec(), rm -rf, SQL injection
-- Identifies strategy types automatically
-- Detects indicators used
-- Estimates complexity
-- Calculates compatibility score (0-1)
-
-**Compatible Licenses:**
-- MIT, Apache, BSD, Public Domain, CC0, Unlicense, GPL
-
----
-
-## 5. Pro Copy Trading Engine
-**File:** `src/backend/bots/pro_copy_trading.ts`
-
-Advanced copy trading system exceeding BTCC capabilities.
-
-**Key Methods:**
-- `startCopying(userId, traderId, config)` - Starts copying
-- `stopCopying(configId)` - Stops copying
-- `createEnsemble(userId, name, traderIds, weights)` - Multi-trader ensemble
-- `processTraderSignal(traderId, signal)` - Processes signal
-- `getLeaderboard(options)` - Gets trader leaderboard
-- `getAIRecommendations(options)` - AI recommendations
-
-**Trader Tiers (6):**
-- Bronze - New traders, < 3 months
-- Silver - Consistent, 3-6 months
-- Gold - Profitable, 6-12 months
-- Platinum - Elite, > 12 months
-- Diamond - Top 1%, institutional grade
-- Legend - Hall of fame
-
-**Copy Modes:**
-- mirror, proportional, fixed_amount, risk_based, ai_optimized
-
-**Trader Platforms (9):**
-- MT4/MT5, cTrader, TradingView, TIME Bot, TIME AI, DeFi Wallet, Manual
-
----
-
-# BROKER INTEGRATIONS (6 BROKERS)
-
-## 1. Alpaca Broker
-**File:** `src/backend/brokers/alpaca_broker.ts`
-
-**Features:**
-- Asset Classes: Stock, Crypto
-- Order Types: Market, Limit, Stop, Stop-Limit, Bracket
-- Streaming: WebSocket (IEX or SIP feeds)
-- Paper Trading: Yes
-- Margin: Yes
-- Fractional Shares: Yes
-- Extended Hours: Yes
-- Commission: Free
-
-**API Endpoints:**
-- Trading: `https://api.alpaca.markets` (live) or `https://paper-api.alpaca.markets`
-- Data: `https://data.alpaca.markets`
-- WebSocket: `wss://stream.data.alpaca.markets`
-
----
-
-## 2. OANDA Broker
-**File:** `src/backend/brokers/oanda_broker.ts`
-
-**Features:**
-- Asset Classes: Forex (70+ pairs), CFDs
-- Order Types: Market, Limit, Stop, Stop-Limit
-- Streaming: HTTP streaming
-- Paper Trading: Yes (practice accounts)
-- Margin: Yes
-- Extended Hours: Yes (24/5 Forex)
-- Commission: Spread-based
-
-**API Endpoints:**
-- Practice: `https://api-fxpractice.oanda.com`
-- Live: `https://api-fxtrade.oanda.com`
-
----
-
-## 3. Crypto Futures (Binance/Bybit)
-**File:** `src/backend/brokers/crypto_futures.ts`
-
-**Binance Futures:**
-- API: `https://fapi.binance.com`
-- WebSocket: `wss://fstream.binance.com/ws`
-- Features: USDT Perpetual, COIN-M futures
-
-**Bybit Futures:**
-- API: `https://api.bybit.com`
-- WebSocket: `wss://stream.bybit.com/v5/public/linear`
-- Features: USDT Perpetual, Inverse futures
-
-**Contract Types:**
-- usdt_perpetual, coin_perpetual, quarterly, bi_quarterly
-
----
-
-## 4. SnapTrade Broker
-**File:** `src/backend/brokers/snaptrade_broker.ts`
-
-Universal brokerage API providing unified access to 20+ brokerages.
-
-**Features:**
-- Account aggregation across brokerages
-- Trade execution with smart routing
-- Real-time portfolio sync
-- Asset Classes: Stock, Crypto, Options
-
-**API:** `https://api.snaptrade.com/api/v1`
-
----
-
-## 5. Interactive Brokers
-**File:** `src/backend/brokers/ib_client.ts`
-
-Direct connection to TWS/IB Gateway via socket protocol.
-
-**Features:**
-- Asset Classes: All (Stocks, Options, Futures, Forex, Crypto, Bonds)
-- Protocol: Binary socket (null-delimited)
-- Ports: 7497 (paper), 7496 (live), 4001/4002 (gateway)
-
-**Order Types:**
-- MKT, LMT, STP, STP_LMT, MOC, LOC, MIT, LIT
-
----
-
-## 6. MetaTrader Bridge
-**File:** `src/backend/brokers/mt_bridge.ts`
-
-TCP socket bridge for MT4/MT5 EA connections.
-
-**Features:**
-- Protocol: JSON over TCP (newline-delimited)
-- Default Port: 15555
-- Direction: Bidirectional (TIME ↔ MT EA)
-- Multiple simultaneous EA connections
-- Real-time position/order syncing
-
-**Message Types:**
-- auth_request/response, account_info, positions
-- pending_orders, tick, trade_result, history, ping/pong
-
----
-
-## 7. Advanced Broker Engine
-**File:** `src/backend/brokers/advanced_broker_engine.ts`
-
-Cutting-edge execution across 50+ trading venues.
-
-**Features:**
-1. Smart Order Router (SOR) - AI-optimized venue selection
-2. Multi-Broker Arbitrage Detection - Real-time scanning
-3. Unified Liquidity Aggregation - Composite liquidity
-4. Dark Pool Access - Intelligent dark pool routing
-5. Sub-millisecond Latency - Optimized execution
-6. AI-Powered Execution - Adaptive order strategies
-
-**Supported Venues (50+):**
-- Lit Exchanges: NYSE, NASDAQ, ARCA, BATS, IEX, LSE, Euronext, Xetra, HKEX, TSE
-- Dark Pools: Sigma X, Crossfinder, UBS MTU, Level ATS, MS Pool, Liquidnet, Turquoise
-- Crypto CEX: Binance, Coinbase, Kraken, OKX, Bybit, Deribit, Bitfinex, KuCoin
-- Crypto DEX: Uniswap, SushiSwap, Curve, Balancer, PancakeSwap, GMX, dYdX, Jupiter
-- Forex: EBS, Refinitiv, Currenex, Hotspot, Integral, LMAX
-
-**Advanced Order Types:**
-- iceberg, twap, vwap, pov, implementation_shortfall
-- arrival_price, close, dark_sweep, lit_sweep, sniper, stealth
-
----
-
-# API ROUTES (30 MODULES, 400+ ENDPOINTS)
-
-## Authentication Routes (`auth.ts`)
-**Base:** `/api/v1/auth`
-
-| Endpoint | Method | Purpose |
-|----------|--------|---------|
-| `/register` | POST | Register new user |
-| `/login` | POST | Login with optional MFA |
-| `/logout` | POST | Logout and invalidate session |
-| `/refresh-token` | POST | Refresh authentication token |
-| `/verify-email` | POST | Verify email address |
-| `/forgot-password` | POST | Initiate password reset |
-| `/reset-password` | POST | Reset password |
-| `/me` | GET | Get current user info |
-| `/mfa/setup` | POST | Setup MFA |
-| `/mfa/verify` | POST | Verify MFA code |
-
----
-
-## Trading Routes (`trading.ts`)
-**Base:** `/api/v1/trading`
-
-| Endpoint | Method | Purpose |
-|----------|--------|---------|
-| `/status` | GET | Get trading service status |
-| `/stats` | GET | Get detailed statistics |
-| `/start` | POST | Start trading service |
-| `/stop` | POST | Stop trading service |
-| `/bot/:botId/enable` | POST | Enable bot for trading |
-| `/bot/:botId/disable` | POST | Disable bot |
-| `/bot/:botId/pause` | POST | Pause/resume bot |
-| `/bot/:botId/state` | GET | Get bot trading state |
-| `/bot/:botId/trades` | GET | Get bot trade history |
-| `/signals/pending` | GET | Get pending signals |
-| `/signals/:signalId/execute` | POST | Execute signal |
-| `/pnl` | GET | Get overall P&L |
-| `/pnl/daily` | GET | Get daily P&L |
-
----
-
-## Bot Routes (`bots.ts`)
-**Base:** `/api/v1/bots`
-
-| Endpoint | Method | Purpose |
-|----------|--------|---------|
-| `/public` | GET | List public bots |
-| `/` | GET | List bots with filtering |
-| `/:botId` | GET | Get bot details |
-| `/` | POST | Create new bot |
-| `/:botId` | PUT | Update bot |
-| `/:botId` | DELETE | Delete bot |
-| `/:botId/activate` | POST | Activate bot |
-| `/:botId/deactivate` | POST | Deactivate bot |
-| `/:botId/backtest` | POST | Run backtest |
-| `/:botId/performance` | GET | Get performance |
-| `/:botId/fingerprint` | GET | Get bot fingerprint |
-
----
-
-## Market Data Routes (`market_data.ts`)
-**Base:** `/api/v1/market`
-
-| Endpoint | Method | Purpose |
-|----------|--------|---------|
-| `/quote/:symbol` | GET | Get real-time quote |
-| `/quotes` | POST | Get multiple quotes |
-| `/aggregated/:symbol` | GET | Get aggregated quote |
-| `/history/:symbol` | GET | Get historical OHLCV |
-| `/screener` | POST | Screen stocks |
-| `/movers` | GET | Get market movers |
-| `/indices` | GET | Get major indices |
-
----
-
-## Charts Routes (`charts.ts`)
-**Base:** `/api/v1/charts`
-
-| Endpoint | Method | Purpose |
-|----------|--------|---------|
-| `/candles` | GET | Get candlestick data |
-| `/indicators` | GET | Get chart with indicators |
-| `/multi` | GET | Multiple symbols |
-| `/compare` | GET | Compare symbols |
-| `/intraday/:symbol` | GET | Get intraday data |
-| `/historical/:symbol` | GET | Get historical data |
-| `/patterns/:symbol` | GET | Detect patterns |
-
----
-
-## Social Trading Routes (`social.ts`)
-**Base:** `/api/v1/social`
-
-| Endpoint | Method | Purpose |
-|----------|--------|---------|
-| `/providers` | GET | List signal providers |
-| `/providers/:providerId` | GET | Get provider details |
-| `/providers/:providerId/follow` | POST | Follow provider |
-| `/providers/:providerId/copy` | POST | Copy trades |
-| `/copy-trading/status` | GET | Get copy status |
-| `/leaderboard` | GET | Get leaderboard |
-| `/collective-signals` | GET | Get collective intelligence |
-
----
-
-## DeFi Routes (`defi_mastery.ts`)
-**Base:** `/api/v1/defi`
-
-| Endpoint | Method | Purpose |
-|----------|--------|---------|
-| `/opportunities` | GET | Get yield opportunities |
-| `/protocols/:id` | GET | Get protocol analysis |
-| `/autopilot` | POST | Create AI portfolio |
-| `/autopilot/:id/adjust` | POST | Adjust settings |
-| `/autopilot/:id/rebalance` | POST | Trigger rebalance |
-
----
-
-## Risk Profile Routes (`risk_profile.ts`)
-**Base:** `/api/v1/risk`
-
-| Endpoint | Method | Purpose |
-|----------|--------|---------|
-| `/profile` | POST | Create risk profile |
-| `/profile/:userId` | GET | Get risk profile |
-| `/summary/:userId` | GET | Get risk summary |
-| `/recommendations/:userId` | GET | Get recommendations |
-| `/questionnaire` | GET | Get questionnaire |
-
----
-
-## Security Routes (`security.ts`)
-**Base:** `/api/v1/security`
-
-| Endpoint | Method | Purpose |
-|----------|--------|---------|
-| `/mfa/setup` | POST | Generate MFA setup |
-| `/mfa/enable` | POST | Enable MFA |
-| `/mfa/verify` | POST | Verify MFA token |
-| `/mfa/recovery` | POST | Use recovery code |
-| `/api-keys` | GET | List API keys |
-| `/api-keys` | POST | Create API key |
-| `/api-keys/validate` | POST | Validate API key |
-| `/api-keys/:keyId/rotate` | POST | Rotate key |
-| `/api-keys/:keyId` | DELETE | Revoke key |
-| `/audit` | GET | Search audit logs |
-| `/audit/stats` | GET | Get audit statistics |
-
----
-
-## Tax Routes (`tax.ts`)
-**Base:** `/api/v1/tax`
-
-| Endpoint | Method | Purpose |
-|----------|--------|---------|
-| `/harvest/opportunities` | POST | Find harvest opportunities |
-| `/harvest/execute` | POST | Execute tax harvest |
-| `/harvest/summary` | GET | Get yearly summary |
-| `/harvest/wash-sale-calendar` | GET | Get wash sale calendar |
-| `/harvest/replacements` | GET | Get replacement securities |
-
----
-
-## Retirement Routes (`retirement.ts`)
-**Base:** `/api/v1/retirement`
-
-| Endpoint | Method | Purpose |
-|----------|--------|---------|
-| `/accounts` | GET | List retirement accounts |
-| `/accounts` | POST | Create account |
-| `/accounts/:accountId/contribute` | POST | Make contribution |
-| `/rmd/:accountId` | GET | Calculate RMD |
-| `/limits` | GET | Get contribution limits |
-| `/projection` | POST | Calculate projection |
-| `/roth-conversion` | POST | Calculate conversion tax |
-| `/rollover-options` | GET | Get rollover options |
-
----
-
-## Robo-Advisory Routes (`robo.ts`)
-**Base:** `/api/v1/robo`
-
-| Endpoint | Method | Purpose |
-|----------|--------|---------|
-| `/questions` | GET | Get risk questionnaire |
-| `/risk-profile` | POST | Calculate risk profile |
-| `/portfolios` | GET | Get model portfolios |
-| `/goals` | POST | Create investment goal |
-| `/goals` | GET | Get user's goals |
-| `/goals/:goalId/progress` | GET | Get goal progress |
-| `/goals/:goalId/rebalance/check` | POST | Check rebalance |
-| `/goals/:goalId/rebalance/execute` | POST | Execute rebalance |
-
----
-
-## Transfers Routes (`transfers.ts`)
-**Base:** `/api/v1/transfers`
-
-| Endpoint | Method | Purpose |
-|----------|--------|---------|
-| `/brokers` | GET | Get supported brokers |
-| `/initiate` | POST | Initiate ACATS transfer |
-| `/:transferId/submit` | POST | Submit transfer |
-| `/:transferId` | GET | Get transfer details |
-| `/` | GET | Get all user transfers |
-| `/:transferId/cancel` | POST | Cancel transfer |
-| `/stats/overview` | GET | Get transfer statistics |
-
----
-
-## Learn Routes (`learn.ts`)
-**Base:** `/api/v1/learn`
-
-| Endpoint | Method | Purpose |
-|----------|--------|---------|
-| `/courses` | GET | List courses |
-| `/courses/:courseId` | GET | Get course details |
-| `/courses/:courseId/lessons/:lessonId` | GET | Get lesson |
-| `/quiz/:quizId` | GET | Get quiz |
-| `/quiz/:quizId/submit` | POST | Submit quiz |
-| `/courses/:courseId/enroll` | POST | Enroll |
-| `/progress` | GET | Get learning progress |
-| `/recommendations` | GET | Get recommendations |
-
----
-
-## Vision Routes (`vision.ts`)
-**Base:** `/api/v1/vision`
-
-| Endpoint | Method | Purpose |
-|----------|--------|---------|
-| `/:symbol` | GET | Get complete market vision |
-| `/:symbol/regime` | GET | Get market regime |
-| `/:symbol/signals` | GET | Get bot signals |
-| `/market/overview` | GET | Get market overview |
-| `/compare` | POST | Compare multiple symbols |
-
----
-
-## Alerts Routes (`alertsRoutes.ts`)
-**Base:** `/api/v1/alerts`
-
-| Endpoint | Method | Purpose |
-|----------|--------|---------|
-| `/` | GET | Get all alerts |
-| `/critical` | GET | Get critical alerts |
-| `/:id/acknowledge` | POST | Acknowledge alert |
-| `/:id/execute` | POST | Execute alert action |
-| `/whale-activity` | GET | Get whale alerts |
-| `/ai-signals` | GET | Get AI signals |
-| `/institutional` | GET | Get institutional moves |
-
----
-
-## Admin Routes (`admin.ts`)
-**Base:** `/api/v1/admin`
-
-| Endpoint | Method | Purpose |
-|----------|--------|---------|
-| `/status` | GET | Get system status |
-| `/evolution/status` | GET | Get evolution status |
-| `/evolution` | GET | Get evolution state |
-| `/evolution/mode` | POST | Toggle evolution mode |
-| `/system/health` | GET | Get system health |
-| `/system/components` | GET | List components |
-| `/users/list` | GET | List all users |
-| `/proposals` | GET | List proposals |
-| `/proposals/:id/vote` | POST | Vote on proposal |
-
----
-
-## FMP Routes (`fmp.ts`)
-**Base:** `/api/v1/fmp`
-
-| Endpoint | Method | Purpose |
-|----------|--------|---------|
-| `/profile/:symbol` | GET | Get company profile |
-| `/quote/:symbol` | GET | Get quote |
-| `/income-statement/:symbol` | GET | Get income statement |
-| `/balance-sheet/:symbol` | GET | Get balance sheet |
-| `/ratios/:symbol` | GET | Get financial ratios |
-| `/congress/:symbol` | GET | Get congressional trades |
-
----
-
-## FRED Routes (`fred.ts`)
-**Base:** `/api/v1/fred`
-
-| Endpoint | Method | Purpose |
-|----------|--------|---------|
-| `/dashboard` | GET | Get economic dashboard |
-| `/yields` | GET | Get treasury yield curve |
-| `/recession-indicator` | GET | Get recession indicator |
-| `/fed-funds-rate` | GET | Get Fed funds rate |
-| `/unemployment` | GET | Get unemployment rate |
-| `/inflation` | GET | Get inflation rate |
-| `/gdp` | GET | Get GDP data |
-
----
-
-## TwelveData Routes (`twelvedata.ts`)
-**Base:** `/api/v1/twelvedata`
-
-| Endpoint | Method | Purpose |
-|----------|--------|---------|
-| `/quote/:symbol` | GET | Get real-time quote |
-| `/timeseries/:symbol` | GET | Get time series |
-| `/analysis/:symbol` | GET | Get 50+ indicators |
-| `/intraday/:symbol` | GET | Get intraday data |
-
----
-
-## Additional Route Modules:
-
-- `strategies.ts` - Strategy builder endpoints
-- `payments.ts` - Payment processing
-- `universal_bots.ts` - Universal bot management
-- `advanced_broker.ts` - Advanced broker features
-- `real_market_api.ts` - Real market data
-- `revolutionary.ts` - Revolutionary systems
-- `fetcher.ts` - Bot fetcher/scraper
-- `assets.ts` - Tokenized assets
-- `tradingMode.ts` - Trading mode toggle
-- `users.ts` - User management
-
----
-
-# FRONTEND PAGES (31 PAGES)
-
-| Page | Route | Description |
-|------|-------|-------------|
-| Dashboard | `/` | Main portfolio overview with real-time data |
-| Trade | `/trade` | Execute trades across brokers |
-| Live Trading | `/live-trading` | Real-time bot trading interface |
-| Bots | `/bots` | Manage 147+ trading bots |
-| Charts | `/charts` | Advanced candlestick charts |
-| Portfolio | `/portfolio` | Holdings management |
-| Markets | `/markets` | Market screener |
-| Strategies | `/strategies` | Strategy builder |
-| Retirement | `/retirement` | Retirement planning |
-| Robo-Advisor | `/robo` | AI portfolios |
-| Risk Profile | `/risk` | Risk assessment |
-| Social Trading | `/social` | Copy trading |
-| Payments | `/payments` | Payment methods |
-| Alerts | `/alerts` | Big moves alerts |
-| Goals | `/goals` | Financial goals |
-| Tax | `/tax` | Tax-loss harvesting |
-| Transfers | `/transfers` | ACATS transfers |
-| Learn | `/learn` | Educational content |
-| Vision | `/vision` | AI market analysis |
-| DeFi | `/defi` | DeFi education |
-| Invest | `/invest` | Investments |
-| Brokers | `/brokers` | Broker connections |
-| AI Trade God | `/ai-trade-god` | Advanced AI |
-| Settings | `/settings` | Account settings |
-| Admin | `/admin` | Admin dashboard |
-| Admin Health | `/admin/health` | System health |
-| Execution | `/execution` | Order execution |
-| History | `/history` | Trade history |
-
----
-
-# WEBSOCKET EVENTS
-
-## Client → Server Events
-
-| Event | Payload | Purpose |
-|-------|---------|---------|
-| `authenticate` | `{token}` | Authenticate connection |
-| `subscribe` | `{channel, filters?}` | Subscribe to channel |
-| `unsubscribe` | `channels[]` | Unsubscribe from channels |
-| `subscribe:prices` | `symbols[]` | Subscribe to price updates |
-| `ping` | - | Heartbeat |
-
-## Server → Client Events
-
-| Event | Purpose |
-|-------|---------|
-| `authenticated` | Auth confirmation |
-| `subscribed` | Subscription confirmation |
-| `trades:opened` | Trade opened |
-| `trades:closed` | Trade closed |
-| `regime:changed` | Market regime change |
-| `bots:status_update` | Bot status update |
-| `insights:generated` | New insight |
-| `system:health_update` | Health update |
-| `evolution:proposal_generated` | New proposal |
-| `prices:update` | Price update |
-| `alerts:new` | New alert |
-| `portfolio:update` | Portfolio update |
-| `system:announcement` | Announcement |
-
-## Available Channels
-
-- `trades` - Live trade executions
-- `signals` - Bot trading signals
-- `regime` - Market regime changes
-- `bots` - Bot status updates
-- `strategies` - Strategy performance
-- `insights` - Learning insights
-- `system` - System health
-- `evolution` - Evolution proposals
-- `prices` - Price streaming
-- `alerts` - User alerts
-- `portfolio` - Portfolio updates
-
----
-
-# DATABASE SCHEMAS
-
-## Users Collection
-```
-- _id, email, name, passwordHash, role
-- createdAt, lastLogin, lastActivity
-- consent: {termsAccepted, dataLearningConsent, riskDisclosureAccepted}
-- settings: {timezone, currency, language, theme, notifications}
-- brokerConnections: [{brokerId, brokerType, accountId, isPaper, status}]
-```
-
-## Bots Collection
-```
-- _id, name, description, source, sourceUrl, author, version
-- status, rating, downloads, createdAt, updatedAt
-- safetyScore, isAbsorbed, license
-- performance: {winRate, profitFactor, maxDrawdown, sharpeRatio, totalTrades, totalPnL}
-- fingerprint: {strategyType, tradingStyle, dnaHash, patterns, indicators, timeframes}
-```
-
-## Strategies Collection
-```
-- _id, name, description, type, status
-- sourceBots: [{botId, weight, contribution}]
-- parameters, riskLevel, maxPositions
-- performance: {winRate, profitFactor, maxDrawdown, sharpeRatio}
-- regimePerformance: [{regime, winRate, profitFactor, tradeCount}]
-- evolutionHistory: [{version, changes, performance, approved}]
-```
-
-## Trades Collection
-```
-- _id, symbol, direction, quantity, entryPrice, exitPrice
-- entryTime, exitTime, status, pnl, pnlPercent, fees, slippage
-- attribution: {botId, strategyId, signalId, ensembleId}
-- marketRegime, regimeConfidence
-- analysis: {entryReason, exitReason, tags, quality}
-- riskMetrics: {positionSizePercent, stopLossPercent, riskRewardRatio}
-```
-
-## Signals Collection
-```
-- _id, botId, symbol, direction, strength, timestamp
-- entryPrice, stopLoss, takeProfit, timeframe
-- marketRegime, confidence, executed, outcome
-- indicators: [{name, value, signal}], patterns
-```
-
-## Learning Events Collection
-```
-- _id, source, timestamp, processed, eventType
-- data, insights, patternsIdentified, improvementsApplied
-- knowledgeUpdates: [{category, update, impact}]
-```
-
-## Insights Collection
-```
-- _id, category, insight, confidence, actionable
-- createdAt, source, symbols, regime
-- relatedTrades, relatedSignals, relatedBots
-- actedUpon, outcome: {result, impact, notes}
-```
-
----
-
-# ENVIRONMENT VARIABLES
-
-## Core Server
-- `NODE_ENV` - development/production
-- `PORT` - Server port (default: 3001)
-- `API_VERSION` - API version (default: v1)
-
-## Database
-- `MONGODB_URI` - MongoDB connection string
-- `REDIS_URL` - Redis connection URL
-
-## Authentication
-- `JWT_SECRET` - JWT signing key (REQUIRED in production)
-- `JWT_EXPIRES_IN` - Token expiration (default: 7d)
-
-## Brokers
-- `ALPACA_API_KEY`, `ALPACA_SECRET_KEY`, `ALPACA_PAPER`
-- `OANDA_API_KEY`, `OANDA_ACCOUNT_ID`, `OANDA_PRACTICE`
-- `BINANCE_API_KEY`, `BINANCE_SECRET`, `BINANCE_TESTNET`
-- `KRAKEN_API_KEY`, `KRAKEN_SECRET`
-- `SNAPTRADE_CLIENT_ID`, `SNAPTRADE_CONSUMER_KEY`
-
-## Market Data
-- `ALPHA_VANTAGE_API_KEY`
-- `FINNHUB_API_KEY`
-- `TWELVE_DATA_API_KEY`
-- `FMP_API_KEY`
-- `FRED_API_KEY`
-
-## AI & Blockchain
-- `OPENAI_API_KEY`
-- `ALCHEMY_API_KEY`
-
-## Other
-- `GITHUB_TOKEN` - Bot research
-- `FRONTEND_URL` - Frontend URL
-- `CORS_ORIGINS` - Allowed origins
+| Service | Status | Connection |
+|---------|--------|------------|
+| MongoDB Atlas | CONFIGURED | time-db.lzphe8l.mongodb.net |
+| Redis Upstash | CONFIGURED | touched-pheasant-14189.upstash.io |
 
 ---
 
 # QUICK COMMANDS
 
-## Check Backend Health
+## Local Development
 ```bash
-curl https://time-backend-hosting.fly.dev/health
+cd C:\Users\Timeb\OneDrive\TIME
+npm run dev
+```
+
+## Deploy Backend
+```bash
+flyctl deploy
 ```
 
 ## View Logs
@@ -1399,252 +1371,57 @@ curl https://time-backend-hosting.fly.dev/health
 flyctl logs
 ```
 
-## Redeploy Backend
+## Check Status
 ```bash
-cd C:\Users\Timeb\OneDrive\TIME
-flyctl deploy
+flyctl status
+curl https://time-backend-hosting.fly.dev/health
 ```
-
-## Local Development
-```bash
-npm run dev
-```
-
----
-
-# FILE STRUCTURE
-
-```
-TIME/
-├── src/
-│   ├── backend/
-│   │   ├── index.ts              # Main server entry (5000+ lines)
-│   │   ├── config/
-│   │   │   └── index.ts          # Configuration
-│   │   ├── engines/              # 15 engines
-│   │   │   ├── learning_engine.ts
-│   │   │   ├── risk_engine.ts
-│   │   │   ├── regime_detector.ts
-│   │   │   ├── recursive_synthesis_engine.ts
-│   │   │   ├── market_vision_engine.ts
-│   │   │   ├── teaching_engine.ts
-│   │   │   ├── attribution_engine.ts
-│   │   │   ├── ensemble_harmony_detector.ts
-│   │   │   ├── learning_velocity_tracker.ts
-│   │   │   ├── signal_conflict_resolver.ts
-│   │   │   ├── social_trading_engine.ts
-│   │   │   ├── defi_mastery_engine.ts
-│   │   │   ├── ai_risk_profiler.ts
-│   │   │   ├── strategy_builder.ts
-│   │   │   └── ux_innovation_engine.ts
-│   │   ├── routes/               # 30 route files
-│   │   │   ├── auth.ts
-│   │   │   ├── trading.ts
-│   │   │   ├── bots.ts
-│   │   │   ├── strategies.ts
-│   │   │   ├── social.ts
-│   │   │   ├── market_data.ts
-│   │   │   ├── charts.ts
-│   │   │   ├── learn.ts
-│   │   │   ├── vision.ts
-│   │   │   ├── retirement.ts
-│   │   │   ├── tax.ts
-│   │   │   ├── transfers.ts
-│   │   │   ├── robo.ts
-│   │   │   ├── defi_mastery.ts
-│   │   │   ├── risk_profile.ts
-│   │   │   ├── security.ts
-│   │   │   ├── alerts.ts
-│   │   │   ├── payments.ts
-│   │   │   ├── admin.ts
-│   │   │   ├── fmp.ts
-│   │   │   ├── fred.ts
-│   │   │   ├── twelvedata.ts
-│   │   │   └── ...
-│   │   ├── brokers/              # 7 broker integrations
-│   │   │   ├── broker_interface.ts
-│   │   │   ├── alpaca_broker.ts
-│   │   │   ├── oanda_broker.ts
-│   │   │   ├── crypto_futures.ts
-│   │   │   ├── snaptrade_broker.ts
-│   │   │   ├── ib_client.ts
-│   │   │   ├── mt_bridge.ts
-│   │   │   ├── broker_manager.ts
-│   │   │   └── advanced_broker_engine.ts
-│   │   ├── bots/                 # 5 bot systems
-│   │   │   ├── universal_bot_engine.ts
-│   │   │   ├── auto_bot_engine.ts
-│   │   │   ├── bot_manager.ts
-│   │   │   ├── bot_ingestion.ts
-│   │   │   └── pro_copy_trading.ts
-│   │   ├── data/                 # Data providers
-│   │   │   ├── market_data_providers.ts
-│   │   │   ├── fmp_integration.ts
-│   │   │   ├── fred_integration.ts
-│   │   │   └── real_market_data_integration.ts
-│   │   ├── services/             # Core services
-│   │   │   ├── AITradeGodBot.ts
-│   │   │   ├── BigMovesAlertService.ts
-│   │   │   ├── TradingExecutionService.ts
-│   │   │   ├── TradingModeService.ts
-│   │   │   └── FreeBotsAndAPIsIntegration.ts
-│   │   ├── websocket/            # Real-time
-│   │   │   ├── realtime_service.ts
-│   │   │   └── event_hub.ts
-│   │   └── database/             # Database
-│   │       └── connection.ts
-│   └── types/                    # TypeScript types
-├── frontend/
-│   └── src/
-│       ├── app/                  # 31 Next.js pages
-│       ├── components/           # Reusable components
-│       ├── hooks/                # Custom hooks
-│       └── store/                # Zustand store
-├── fly.toml                      # Fly.io config
-├── Dockerfile.fly                # Production Dockerfile
-├── .env                          # Environment variables
-├── TIMEBEUNUS.md                 # Master AI guide
-└── COPILOT1.md                   # This file
-```
-
----
-
-# SERVICES DOCUMENTATION
-
-## AITradeGodBot Service
-**File:** `src/backend/services/AITradeGodBot.ts`
-
-Multi-strategy AI trading bot engine with lending capabilities.
-
-**Strategies Implemented:**
-- DCA (Dollar Cost Averaging)
-- Grid Trading
-- Whale Following
-- AI Sentiment Analysis
-- Yield Farming
-
-**Key Features:**
-- Bot lending/borrowing system
-- Performance analytics (winRate, profitFactor, maxDrawdown, sharpeRatio)
-- Plain English command interface
-
----
-
-## BigMovesAlertService
-**File:** `src/backend/services/BigMovesAlertService.ts`
-
-Real-time alert system for major financial events.
-
-**Alert Categories (9):**
-- GOVERNMENT_POLICY, WHALE_MOVEMENT, INSTITUTIONAL
-- STABLECOIN, DEFI_OPPORTUNITY, PROTOCOL_HACK
-- MARKET_REGIME, EARNINGS, ETF_NEWS
-
-**Risk Levels:**
-- CONSERVATIVE: 2% position, 5% SL, 10% TP
-- MODERATE: 5% position, 10% SL, 25% TP
-- AGGRESSIVE: 10% position, 15% SL, 50% TP
-- YOLO: 20% position, 25% SL, 100% TP
-
----
-
-## TradingExecutionService
-**File:** `src/backend/services/TradingExecutionService.ts`
-
-Core trading execution engine connecting bots to brokers.
-
-**Global Limits:**
-- Max daily loss: $5,000
-- Max position size: $10,000
-- Max open positions: 10
-
-**Per-Bot Limits:**
-- Daily trade limit: 10
-- Daily loss limit: $500
-- Position size limit: $1,000
-
----
-
-## TradingModeService
-**File:** `src/backend/services/TradingModeService.ts`
-
-Practice/Live mode toggle for all brokers.
-
-**Safety Features:**
-- Starts in PRACTICE mode by default
-- Live trading locked by default
-- Confirmation required to switch to live
-- Acknowledgement required: "I_ACCEPT_ALL_TRADING_RISKS_AND_RESPONSIBILITY"
-
----
-
-## FreeBotsAndAPIsIntegration
-**File:** `src/backend/services/FreeBotsAndAPIsIntegration.ts`
-
-Aggregation of 25+ free trading bots and 30+ free APIs.
-
-**Free Trading Bots:**
-- Freqtrade (25k+ stars) - DCA, Grid, Scalping
-- Jesse (5k+ stars) - ML-based strategies
-- OctoBot (2.5k+ stars) - Community strategies
-- Hummingbot (6.5k+ stars) - Market Making, Arbitrage
-- Superalgos (3.5k+ stars) - Visual strategy builder
-- FinRL (8k+ stars) - Deep Reinforcement Learning
-- Zipline (17k+ stars) - Battle-tested backtester
-- Backtrader (12k+ stars) - 100+ indicators
-- LEAN/QuantConnect (8k+ stars) - Institutional-grade
-
-**CCXT Support:** 100+ exchanges
 
 ---
 
 # COST BREAKDOWN
 
-| Service | Monthly Cost |
-|---------|--------------|
-| Vercel | $0 (Free) |
-| Fly.io | $0 (Free) |
-| MongoDB Atlas | $0 (Free) |
-| Redis Upstash | $0 (Free) |
-| Domain | ~$1 |
-| **TOTAL** | **~$1/month** |
-
----
-
-# PENDING ITEMS
-
-| Item | Status |
-|------|--------|
-| Interactive Brokers | Waiting for financial approval |
-| Twilio SMS | Optional |
-| Gmail SMTP | Optional |
+| Service | Cost | Notes |
+|---------|------|-------|
+| Vercel | $0 | Free tier (100GB bandwidth) |
+| Fly.io | $0 | Free tier (3 shared VMs) |
+| MongoDB Atlas | $0 | Free tier (512MB) |
+| Redis Upstash | $0 | Free tier (10K commands/day) |
+| Domain | ~$12/yr | TimeBeyondUs.com (Namecheap) |
+| **TOTAL** | **~$1/month** | Domain cost only |
 
 ---
 
 # CHANGELOG
 
+## v5.0.0 (2025-12-14) - ULTIMATE COMPREHENSIVE EDITION
+- Added ALL 65+ backend systems documentation
+- Added Capital Conductor & Autonomous Capital Agent
+- Added Alpha Engine & Portfolio Brain
+- Added Yield Orchestrator & Yield Aggregator
+- Added Research & Annotation Engine
+- Added Strategy Builder V2
+- Added 5 Revolutionary Systems (Quantum Alpha, Sentiment Velocity, Dark Pool, Smart Money, Volatility Surface)
+- Added Life Timeline Engine
+- Added Collective Intelligence Network
+- Added Predictive Scenario Engine
+- Added NFT Marketplace & Tokenized Assets
+- Added Bot Fingerprinting & Training Simulator
+- Added Revenue Engine & all integrations
+- Complete file inventory (120+ files)
+
 ## v4.0.0 (2025-12-14) - COMPREHENSIVE EDITION
-- Complete documentation of all 15 engines
-- Full API routes documentation (400+ endpoints)
-- All 32+ universal bots documented
-- All 27+ trading strategies documented
-- All 6 broker integrations documented
-- All 8 data providers documented
-- All 31 frontend pages documented
-- WebSocket events documented
-- Database schemas documented
-- Services documentation added
+- Added 15 backend engines with all methods
+- Added 5 bot systems with all strategies
+- Added 6 broker integrations
+- Added 30 API route modules
 
 ## v3.0.0 (2025-12-14) - FULL DEPLOYMENT
-- Frontend live at www.timebeyondus.com
-- Backend live at time-backend-hosting.fly.dev
-- All 13 backend components online
-- 31 frontend pages deployed
-- 6 brokers configured
-- 6 market data providers configured
+- Frontend deployed to Vercel
+- Backend deployed to Fly.io
+- All 13 components online
 
 ---
 
 *Platform fully deployed and operational.*
-*Last updated: December 14, 2025*
-*Generated by Claude Code*
+*Generated by Claude Code - December 14, 2025*
