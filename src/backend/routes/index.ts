@@ -40,6 +40,10 @@ import learnRoutes from './learn';
 import visionRoutes from './vision';
 import retirementRoutes from './retirement';
 
+// BOT BRAIN & AUTO PERFECT BOT GENERATOR - Never-Before-Seen Features!
+import botBrainRoutes from './bot_brain';
+import autoPerfectBotRoutes from './auto_perfect_bot';
+
 const router = Router();
 
 // Mount routes
@@ -85,6 +89,10 @@ router.use('/charts', chartsRoutes);        // Real candlestick data, indicators
 router.use('/learn', learnRoutes);          // Educational content, trading courses
 router.use('/vision', visionRoutes);        // Market Vision Engine outputs
 router.use('/retirement', retirementRoutes); // IRA, 401k, RMD tracking
+
+// BOT BRAIN & AUTO PERFECT BOT GENERATOR - Never-Before-Seen Features!
+router.use('/bot-brain', botBrainRoutes);              // Bot Intelligence: generation, placement, multi-tasking
+router.use('/auto-perfect-bot', autoPerfectBotRoutes); // Auto-watches everything, learns, generates perfect bots
 
 export default router;
 

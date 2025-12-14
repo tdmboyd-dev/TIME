@@ -51,6 +51,10 @@ import { stockWatchers } from './watchers/stock_watchers';
 import { botDropZone } from './dropzone/bot_dropzone';
 import { githubBotFetcher } from './fetcher/github_bot_fetcher';
 
+// Bot Brain & Auto Perfect Bot Generator - Never-Before-Seen Inventions!
+import { botBrain } from './bots/bot_brain';
+import { autoPerfectBotGenerator } from './bots/auto_perfect_bot_generator';
+
 // MetaTrader Bridge
 import { mtBridge } from './brokers/mt_bridge';
 
@@ -174,6 +178,16 @@ async function initializeTIME(): Promise<void> {
   // Start watching the drop zone
   botDropZone.startWatching();
   log.info('Bot Drop Zone watching for new bots...');
+
+  // Initialize Bot Brain - Central Intelligence for all bots
+  log.info('Initializing Bot Brain...');
+  await botBrain.initialize();
+  log.info(`Bot Brain online with ${botBrain.getAllBots().length} intelligent bots`);
+
+  // Initialize Auto Perfect Bot Generator - Watches everything, learns, auto-generates perfect bots
+  log.info('Initializing Auto Perfect Bot Generator...');
+  await autoPerfectBotGenerator.initialize();
+  log.info('Auto Perfect Bot Generator online - watching and learning from everything');
 
   // Initialize TIME Governor (this initializes all components)
   await timeGovernor.initialize();
