@@ -67,26 +67,32 @@ TIME is a **Meta-Intelligence Trading Governor** — a self-evolving, recursive 
 | Pro Copy Trading | Working | 5-tier copy trading system |
 
 ### Broker Integrations (8 Brokers - 100% Complete)
-| Broker | Status | Markets |
-|--------|--------|---------|
-| Alpaca | Connected | US Stocks, ETFs, Crypto |
-| OANDA | Connected | Forex (70+ pairs) |
-| Interactive Brokers | Connected | 150+ global markets |
-| SnapTrade | Connected | 20+ brokerages aggregated |
-| MetaTrader 4/5 | Connected | Forex, CFDs via TCP socket |
-| Binance | Connected | Crypto spot + futures |
-| Bybit | Connected | Crypto derivatives |
-| Advanced Broker Engine | Working | 50+ venues, 18 order types |
+| Broker | Status | Mode | API Key |
+|--------|--------|------|---------|
+| Alpaca | **CONFIGURED** | Paper | PKQ2PAYL2OOSEYYLM4T6 |
+| OANDA | **CONFIGURED** | **LIVE** | 001-001-19983395-001 |
+| Binance | **CONFIGURED** | **LIVE** | rLvIsiIW... |
+| MetaTrader 4/5 | **CONFIGURED** | Port 15555 | Bridge Enabled |
+| Interactive Brokers | Code Ready | Needs TWS | Not configured |
+| SnapTrade | Code Ready | Needs signup | Not configured |
+| Bybit | Code Ready | Needs keys | Not configured |
+| Advanced Broker Engine | Working | 50+ venues | 18 order types |
 
-### Market Data Providers (6 APIs - 100% Complete)
-| Provider | Status | Free Tier |
-|----------|--------|-----------|
-| Alpha Vantage | Connected | 500/day |
-| Finnhub | Connected | 60/min |
-| FMP | Connected | 250/day |
-| FRED | Connected | UNLIMITED |
-| TwelveData | Connected | 800/day |
-| CoinGecko | Connected | No key needed |
+### Market Data Providers (6 APIs - ALL CONFIGURED!)
+| Provider | Status | API Key |
+|----------|--------|---------|
+| Alpha Vantage | **CONFIGURED** | 048UD46ZP2XTTXCY |
+| Finnhub | **CONFIGURED** | d4tto21r01qk9ur8s860... |
+| TwelveData | **CONFIGURED** | 63f9b0b2b17f4ebb... |
+| FMP | **CONFIGURED** | CKeDxW1aL9tMHGUK3S5j... |
+| FRED | **CONFIGURED** | 2a35ca95bf55fe94... |
+| CoinGecko | **NO KEY NEEDED** | Free unlimited |
+
+### AI & Blockchain (CONFIGURED!)
+| Provider | Status | API Key |
+|----------|--------|---------|
+| OpenAI | **CONFIGURED** | sk-proj-IkZaSJIQ7M9D... |
+| Alchemy | **CONFIGURED** | Y6Z1o1QSdcpCLhuRXudjv |
 
 ### Payment Systems (4 Systems - 100% Complete)
 | System | Status | Features |

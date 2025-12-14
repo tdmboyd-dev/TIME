@@ -85,6 +85,18 @@ export const config = {
     polygonKey: process.env.POLYGON_API_KEY || '',
     twelveDataKey: process.env.TWELVE_DATA_API_KEY || '',
     finnhubKey: process.env.FINNHUB_API_KEY || '',
+    fmpKey: process.env.FMP_API_KEY || '',
+    fredKey: process.env.FRED_API_KEY || '',
+  },
+
+  // AI Providers
+  ai: {
+    openaiKey: process.env.OPENAI_API_KEY || '',
+  },
+
+  // Blockchain/Web3
+  blockchain: {
+    alchemyKey: process.env.ALCHEMY_API_KEY || '',
   },
 
   // Broker Connections
@@ -98,17 +110,24 @@ export const config = {
     oanda: {
       apiKey: process.env.OANDA_API_KEY || '',
       accountId: process.env.OANDA_ACCOUNT_ID || '',
-      practice: process.env.OANDA_PRACTICE !== 'false',
+      practice: process.env.OANDA_PRACTICE === 'true',
     },
     snaptrade: {
       clientId: process.env.SNAPTRADE_CLIENT_ID || '',
       consumerKey: process.env.SNAPTRADE_CONSUMER_KEY || '',
     },
     interactiveBrokers: {
-      host: process.env.IB_HOST || '127.0.0.1',
-      port: parseInt(process.env.IB_PORT || '7497', 10),
-      clientId: parseInt(process.env.IB_CLIENT_ID || '1', 10),
+      host: process.env.IBKR_HOST || process.env.IB_HOST || '127.0.0.1',
+      port: parseInt(process.env.IBKR_PORT || process.env.IB_PORT || '7497', 10),
+      clientId: parseInt(process.env.IBKR_CLIENT_ID || process.env.IB_CLIENT_ID || '1', 10),
+      paper: process.env.IBKR_PAPER === 'true',
     },
+  },
+
+  // MetaTrader Bridge
+  mtBridge: {
+    enabled: process.env.MT_BRIDGE_ENABLED === 'true',
+    port: parseInt(process.env.MT_BRIDGE_PORT || '15555', 10),
   },
 
   // Bot Research

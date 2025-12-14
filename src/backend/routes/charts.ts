@@ -61,7 +61,7 @@ interface TechnicalIndicator {
 // CONFIGURATION
 // ============================================================
 
-const TWELVEDATA_API_KEY = process.env.TWELVEDATA_API_KEY || '';
+const TWELVEDATA_API_KEY = process.env.TWELVE_DATA_API_KEY || '';
 const ALPHA_VANTAGE_API_KEY = process.env.ALPHA_VANTAGE_API_KEY || '';
 
 const TWELVEDATA_BASE_URL = 'https://api.twelvedata.com';

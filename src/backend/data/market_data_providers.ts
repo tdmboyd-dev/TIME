@@ -869,7 +869,7 @@ export class MarketDataManager extends EventEmitter {
 
 export const marketData = new MarketDataManager({
   polygonKey: process.env.POLYGON_API_KEY,
-  twelveDataKey: process.env.TWELVEDATA_API_KEY,
+  twelveDataKey: process.env.TWELVE_DATA_API_KEY,
 });
 
 export default marketData;
