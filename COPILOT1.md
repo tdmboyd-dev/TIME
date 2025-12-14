@@ -237,14 +237,16 @@ src/backend/
 
 ---
 
-# ORCHESTRATION & INTELLIGENCE SYSTEMS (5 NEW SYSTEMS)
+# ORCHESTRATION & INTELLIGENCE SYSTEMS (7 SYSTEMS)
 
-These 5 systems work together to provide:
+These 7 systems work together to provide:
 - **Global Orchestration** - One brain to rule them all
 - **Knowledge Graph** - Memory and relationships across all data
 - **Multi-Agent Swarm** - AI team operating 24/7
 - **Execution Mesh** - Smart order routing across all venues
 - **Integration Layer** - Connects everything together
+- **DROPBOT** - "Drop It. Trade It. Profit." for beginners
+- **TIMEBEUNUS** - The Industry Destroyer master bot
 
 ## 1. TIME Meta-Brain (Global Orchestrator)
 **File:** `src/backend/meta/meta_brain.ts`
@@ -395,6 +397,72 @@ The CENTRAL NERVOUS SYSTEM CONNECTOR - wires everything together.
 - All mode control flows through TIME Governor
 - Meta-Brain and Agent Swarm use `setExternalModeControl()`
 - No duplicate mode systems - single source of truth
+
+---
+
+## 6. DROPBOT - Drop It. Trade It. Profit.
+**File:** `src/backend/autopilot/dropbot.ts`
+
+The ultimate "Drop Money & Trade" system for beginners.
+
+**Never-Before-Seen Features:**
+- "Watch Mode" - See trades in real-time with explanations
+- "Learn As You Earn" - Understand trading while making money
+- "Risk DNA" - Auto-discovers your true risk tolerance
+- "Social Proof" - See how others with similar drops are doing
+- "Time Travel" - See "what if I dropped last month/year"
+- "Exit Ramp" - Graceful exit that maximizes final returns
+
+**Plain English Levels (5):**
+- `eli5` - Explain like I'm 5
+- `beginner` - New to investing
+- `intermediate` - Some experience
+- `advanced` - Know the basics well
+- `expert` - Full technical detail
+
+**100+ Absorbed Strategies from:**
+- 3Commas, Cryptohopper, Pionex (Crypto bots)
+- Forex Fury, Evening Scalper Pro (Forex bots)
+- Trade Ideas Holly AI, TrendSpider (Stock bots)
+- Renaissance Technologies, Two Sigma strategies
+- Freqtrade, Jesse, Hummingbot (Open source)
+
+---
+
+## 7. TIMEBEUNUS - The Industry Destroyer
+**File:** `src/backend/master/timebeunus.ts`
+
+👑 THE MASTER ADMIN BOT - Built to beat top 10 bots by 300%
+
+**Key Capabilities:**
+1. **BIG MOVER RADAR** - Spots 10%+ moves before they happen
+2. **BOT HUNTER** - Finds and absorbs best strategies globally
+3. **STRATEGY FUSION** - Combines strategies for 300% better performance
+4. **ALPHA EXTRACTION** - Finds alpha where others see noise
+5. **RISK GUARDIAN** - Protects capital with military precision
+6. **EXECUTION DOMINATOR** - Best fills across all venues
+7. **LEARNING VELOCITY** - Gets smarter every single trade
+
+**Fused Strategies (5):**
+- The Medallion Crusher (95% annual target)
+- The Crypto Dominator (120% annual target)
+- The Forex Fury Killer (80% annual target)
+- The Ultimate Yield Machine (35% annual target)
+- The YOLO Destroyer (250% annual target)
+
+**Dominance Modes:**
+- `stealth` - Quiet accumulation
+- `aggressive` - Maximum alpha extraction
+- `defensive` - Capital preservation
+- `competition` - Competing against benchmarks
+- `destroy` - Full power mode
+
+**Competitors Tracked:**
+- Renaissance Medallion Fund (66% annual)
+- Two Sigma Compass Fund
+- 3Commas SmartTrade
+- Cryptohopper AI
+- Forex Fury
 
 ---
 
