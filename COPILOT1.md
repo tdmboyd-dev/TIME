@@ -55,12 +55,28 @@ These endpoints are LIVE and WORKING at `https://time-backend-hosting.fly.dev`:
 
 | Page | Problem | Fix Status |
 |------|---------|------------|
+| Login `/login` | Was FAKE - accepted any password | ✅ FIXED - Real `/api/v1/auth/login` with bcrypt |
+| Admin Login `/admin-login` | Was FAKE - accepted any credentials | ✅ FIXED - Real auth + admin role verification |
+| Registration `/register` | Didn't exist | ✅ CREATED - Real `/api/v1/auth/register` + consent |
+| Charts `/charts` | Used fake random candles | ✅ FIXED - Real data from TwelveData/CoinGecko |
 | Admin Health | Called `/api/admin/*` (404) | ✅ FIXED - Now uses `/health` + `/api/v1/admin/status` |
 | Dashboard | Called `/api/v1/governor/*` (404) | ✅ FIXED - Now uses real-market endpoints |
 | Portfolio | Called `/api/v1/portfolio/*` (404) | ✅ FIXED - Graceful error handling + demo mode |
 | AutoPilot | Called `/api/autopilot/*` (404) | ✅ FIXED - Uses `/health` + `/api/v1/bots/public` |
 | Bots Page | Already working | ✅ Uses `/api/v1/bots/public` |
 | TIMEBEUNUS | Already working | ✅ Uses `/api/v1/real-market/*` |
+
+## AUTHENTICATION SYSTEM (FULLY WORKING)
+
+The backend has a complete authentication system at `/api/v1/auth/*`:
+- `POST /api/v1/auth/register` - Create new user with bcrypt, consent collection
+- `POST /api/v1/auth/login` - Login with JWT tokens, MFA support, rate limiting
+- `POST /api/v1/auth/logout` - Invalidate session
+- `GET /api/v1/auth/me` - Get current user info
+- `POST /api/v1/auth/mfa/setup` - Setup MFA with TOTP
+- `POST /api/v1/auth/mfa/verify` - Verify MFA code
+
+Session management via Redis with 7-day expiry.
 
 ---
 
