@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Shield,
   AlertTriangle,
@@ -16,11 +16,13 @@ import {
   XCircle,
   Info,
   ArrowRight,
-  Zap
+  Zap,
+  Wifi,
+  WifiOff
 } from 'lucide-react';
 import clsx from 'clsx';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+const API_BASE = 'https://time-backend-hosting.fly.dev/api/v1';
 
 interface RiskProfile {
   overallScore: number;
@@ -45,6 +47,8 @@ interface RiskMetric {
 export default function RiskProfilePage() {
   const [profile, setProfile] = useState<RiskProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isConnected, setIsConnected] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [showAssessment, setShowAssessment] = useState(false);
   const [assessmentStep, setAssessmentStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -81,14 +85,52 @@ export default function RiskProfilePage() {
     fetchProfile();
   }, []);
 
-  const fetchProfile = async () => {
+  const fetchProfile = useCallback(async () => {
     try {
-      const response = await fetch(`${API_BASE}/risk-profile`);
-      const data = await response.json();
-      if (data.success) {
-        setProfile(data.data);
+      setIsRefreshing(true);
+
+      // Fetch risk analysis and portfolio data in parallel
+      const [riskResponse, portfolioResponse] = await Promise.all([
+        fetch(`${API_BASE}/risk/analysis`).catch(() => null),
+        fetch(`${API_BASE}/portfolio/summary`).catch(() => null)
+      ]);
+
+      let riskData = null;
+      let portfolioData = null;
+
+      if (riskResponse?.ok) {
+        const result = await riskResponse.json();
+        riskData = result.data || result;
+        setIsConnected(true);
+      }
+
+      if (portfolioResponse?.ok) {
+        const result = await portfolioResponse.json();
+        portfolioData = result.data || result;
+      }
+
+      // If we got real data, use it
+      if (riskData) {
+        setProfile({
+          overallScore: riskData.overallScore || riskData.riskScore || 72,
+          riskTolerance: riskData.riskTolerance || 'medium',
+          investmentHorizon: riskData.investmentHorizon || '5-10 years',
+          maxDrawdown: riskData.maxDrawdown || portfolioData?.maxDrawdown || 15.5,
+          portfolioVolatility: riskData.volatility || riskData.portfolioVolatility || 18.2,
+          sharpeRatio: riskData.sharpeRatio || portfolioData?.sharpeRatio || 1.45,
+          betaToMarket: riskData.beta || riskData.betaToMarket || 1.12,
+          valueAtRisk: riskData.valueAtRisk || riskData.var || 8500,
+          recommendations: riskData.recommendations || [
+            'Consider reducing exposure to high-volatility tech stocks',
+            'Add more international diversification',
+            'Increase bond allocation by 5% for stability',
+            'Review stop-loss levels on active positions',
+          ],
+          assessmentDate: riskData.assessmentDate || riskData.date || new Date().toISOString().split('T')[0],
+        });
       } else {
-        // Sample data
+        // Use mock data as fallback
+        setIsConnected(false);
         setProfile({
           overallScore: 72,
           riskTolerance: 'medium',
@@ -109,6 +151,8 @@ export default function RiskProfilePage() {
       }
     } catch (error) {
       console.error('Failed to fetch risk profile:', error);
+      setIsConnected(false);
+      // Fallback to mock data
       setProfile({
         overallScore: 72,
         riskTolerance: 'medium',
@@ -127,8 +171,9 @@ export default function RiskProfilePage() {
       });
     } finally {
       setIsLoading(false);
+      setIsRefreshing(false);
     }
-  };
+  }, []);
 
   const getRiskMetrics = (): RiskMetric[] => {
     if (!profile) return [];
@@ -206,6 +251,36 @@ export default function RiskProfilePage() {
           <p className="text-slate-400">Understand and manage your investment risk</p>
         </div>
         <div className="flex items-center gap-3">
+          {/* Connection Status */}
+          <div className={clsx(
+            'flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium',
+            isConnected
+              ? 'bg-green-500/20 text-green-400'
+              : 'bg-yellow-500/20 text-yellow-400'
+          )}>
+            {isConnected ? (
+              <>
+                <Wifi className="w-4 h-4" />
+                <span>Live</span>
+              </>
+            ) : (
+              <>
+                <WifiOff className="w-4 h-4" />
+                <span>Demo</span>
+              </>
+            )}
+          </div>
+
+          {/* Refresh Button */}
+          <button
+            onClick={fetchProfile}
+            disabled={isRefreshing}
+            className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 transition-colors disabled:opacity-50"
+            title="Refresh data"
+          >
+            <RefreshCw className={clsx('w-4 h-4 text-slate-400', isRefreshing && 'animate-spin')} />
+          </button>
+
           <button
             onClick={() => setShowAssessment(true)}
             className="btn-primary flex items-center gap-2"
@@ -225,8 +300,12 @@ export default function RiskProfilePage() {
                 <h2 className="text-lg font-semibold text-white">Overall Risk Score</h2>
                 <p className="text-sm text-slate-400">Last assessed: {profile.assessmentDate}</p>
               </div>
-              <button className="p-2 rounded-lg hover:bg-slate-700 transition-colors">
-                <RefreshCw className="w-4 h-4 text-slate-400" />
+              <button
+                onClick={fetchProfile}
+                disabled={isRefreshing}
+                className="p-2 rounded-lg hover:bg-slate-700 transition-colors disabled:opacity-50"
+              >
+                <RefreshCw className={clsx('w-4 h-4 text-slate-400', isRefreshing && 'animate-spin')} />
               </button>
             </div>
 
