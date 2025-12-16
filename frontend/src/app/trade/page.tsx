@@ -221,32 +221,93 @@ export default function TradePage() {
     setShowConfirmation(true);
   };
 
-  const confirmOrder = () => {
-    const newOrder: Order = {
-      id: `ORD-${Date.now()}`,
-      symbol: selectedAsset.symbol,
-      type: orderSide,
-      orderType: orderType,
-      quantity: parseFloat(quantity),
-      price: orderType === 'market'
-        ? (orderSide === 'buy' ? selectedAsset.ask : selectedAsset.bid)
-        : (orderType === 'limit' ? parseFloat(limitPrice) : parseFloat(stopPrice)),
-      total: calculateTotal(),
-      status: orderType === 'market' ? 'filled' : 'pending',
-      timestamp: new Date(),
-    };
-
-    setOrders(prev => [newOrder, ...prev]);
+  const confirmOrder = async () => {
+    setIsPlacingOrder(true);
     setShowConfirmation(false);
-    setQuantity('1');
-    setLimitPrice('');
-    setStopPrice('');
-    setNotification({
-      type: 'success',
-      message: `${orderSide.toUpperCase()} order for ${quantity} ${selectedAsset.symbol} ${orderType === 'market' ? 'executed' : 'placed'} successfully!`
-    });
 
-    setTimeout(() => setNotification(null), 5000);
+    try {
+      // Submit REAL order to backend via Smart Order Routing
+      const response = await fetch(`${API_BASE}/advanced-broker/smart-order`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          // Include auth token if user is logged in
+          ...(typeof window !== 'undefined' && localStorage.getItem('time_auth_token')
+            ? { 'Authorization': `Bearer ${localStorage.getItem('time_auth_token')}` }
+            : {}),
+        },
+        body: JSON.stringify({
+          symbol: selectedAsset.symbol.replace('/USD', ''),  // Clean symbol for API
+          side: orderSide,
+          quantity: parseFloat(quantity),
+          orderType: orderType === 'market' ? 'adaptive' : orderType,
+          limitPrice: orderType === 'limit' ? parseFloat(limitPrice) : undefined,
+          urgency: 'medium',
+          darkPoolPriority: false,
+          maxSlippageBps: 10,
+          useAI: true,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Create local order record from API response
+        const newOrder: Order = {
+          id: data.data.orderId || `ORD-${Date.now()}`,
+          symbol: selectedAsset.symbol,
+          type: orderSide,
+          orderType: orderType,
+          quantity: parseFloat(quantity),
+          price: data.data.avgFillPrice || (orderSide === 'buy' ? selectedAsset.ask : selectedAsset.bid),
+          total: data.data.avgFillPrice ? data.data.avgFillPrice * parseFloat(quantity) : calculateTotal(),
+          status: data.data.status === 'filled' || data.data.status === 'completed' ? 'filled' : 'pending',
+          timestamp: new Date(),
+        };
+
+        setOrders(prev => [newOrder, ...prev]);
+        setQuantity('1');
+        setLimitPrice('');
+        setStopPrice('');
+
+        setNotification({
+          type: 'success',
+          message: `Order ${data.data.orderId || ''} ${orderSide.toUpperCase()} ${quantity} ${selectedAsset.symbol} - Routed to ${data.data.executionPlan?.venueCount || 1} venues`
+        });
+      } else {
+        throw new Error(data.error || 'Order submission failed');
+      }
+    } catch (error: any) {
+      console.error('Order submission error:', error);
+
+      // Fallback: Store order locally (demo mode)
+      const newOrder: Order = {
+        id: `DEMO-${Date.now()}`,
+        symbol: selectedAsset.symbol,
+        type: orderSide,
+        orderType: orderType,
+        quantity: parseFloat(quantity),
+        price: orderType === 'market'
+          ? (orderSide === 'buy' ? selectedAsset.ask : selectedAsset.bid)
+          : (orderType === 'limit' ? parseFloat(limitPrice) : parseFloat(stopPrice)),
+        total: calculateTotal(),
+        status: 'pending',
+        timestamp: new Date(),
+      };
+
+      setOrders(prev => [newOrder, ...prev]);
+      setQuantity('1');
+      setLimitPrice('');
+      setStopPrice('');
+
+      setNotification({
+        type: 'error',
+        message: `Demo mode: ${error.message || 'Broker not connected'}. Order saved locally.`
+      });
+    } finally {
+      setIsPlacingOrder(false);
+      setTimeout(() => setNotification(null), 5000);
+    }
   };
 
   const toggleFavorite = (symbol: string) => {
@@ -284,7 +345,25 @@ export default function TradePage() {
           <h1 className="text-2xl font-bold text-white">Trade</h1>
           <p className="text-slate-400 mt-1">Buy and sell stocks, crypto, forex, and more</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
+          {/* Connection Status */}
+          <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium ${
+            isConnected
+              ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+              : 'bg-orange-500/20 text-orange-400 border border-orange-500/30'
+          }`}>
+            {isConnected ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
+            {isConnected ? 'Live Prices' : 'Demo Mode'}
+          </div>
+          {/* Refresh Button */}
+          <button
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            className="p-2 rounded-lg bg-slate-800 text-slate-400 hover:text-white transition-colors disabled:opacity-50"
+            title="Refresh Prices"
+          >
+            <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+          </button>
           <span className="flex items-center gap-2 px-3 py-1.5 bg-green-500/20 text-green-400 rounded-full text-sm">
             <Activity className="w-4 h-4" />
             Markets Open
