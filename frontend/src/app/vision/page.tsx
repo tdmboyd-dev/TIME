@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import {
   Activity,
   Eye,
@@ -17,6 +17,8 @@ import {
   Zap
 } from 'lucide-react';
 import clsx from 'clsx';
+
+const API_BASE = 'https://time-backend-hosting.fly.dev/api/v1';
 
 type Perspective = 'human' | 'quant' | 'bot' | 'merged';
 
@@ -111,52 +113,157 @@ export default function VisionPage() {
   const [selectedPerspective, setSelectedPerspective] = useState<Perspective>('merged');
   const [selectedSymbol, setSelectedSymbol] = useState('BTC/USD');
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isConnected, setIsConnected] = useState(false);
+  const [marketData, setMarketData] = useState<any>(null);
+  const [marketStatus, setMarketStatus] = useState<any>(null);
 
   const currentView = mockViews[selectedPerspective];
 
+  // Fetch market status
+  const fetchMarketStatus = useCallback(async () => {
+    try {
+      const response = await fetch(`${API_BASE}/real-market/status`);
+      if (response.ok) {
+        const data = await response.json();
+        setMarketStatus(data);
+        setIsConnected(true);
+        return true;
+      }
+    } catch (error) {
+      console.error('Failed to fetch market status:', error);
+      setIsConnected(false);
+    }
+    return false;
+  }, []);
+
+  // Fetch market data based on selected symbol
+  const fetchMarketData = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      let endpoint = '';
+      const symbol = selectedSymbol.split('/')[0]; // Extract base symbol
+
+      // Determine endpoint based on symbol type
+      if (['BTC', 'ETH'].includes(symbol)) {
+        endpoint = `${API_BASE}/real-market/crypto/${symbol}`;
+      } else {
+        endpoint = `${API_BASE}/real-market/stock/${symbol}`;
+      }
+
+      const response = await fetch(endpoint);
+      if (response.ok) {
+        const data = await response.json();
+        setMarketData(data);
+        setIsConnected(true);
+      } else {
+        console.warn('Failed to fetch market data, using mock data');
+        setIsConnected(false);
+      }
+    } catch (error) {
+      console.error('Error fetching market data:', error);
+      setIsConnected(false);
+      setMarketData(null);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [selectedSymbol]);
+
+  // Initial load
+  useEffect(() => {
+    fetchMarketStatus();
+    fetchMarketData();
+  }, [fetchMarketStatus, fetchMarketData]);
+
   const handleRefresh = () => {
     setIsRefreshing(true);
-    setTimeout(() => setIsRefreshing(false), 1500);
+    Promise.all([fetchMarketStatus(), fetchMarketData()]).finally(() => {
+      setTimeout(() => setIsRefreshing(false), 500);
+    });
   };
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-white">Market Vision</h1>
-          <p className="text-slate-400">See the market through multiple perspectives</p>
+        <div className="flex items-center gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-white">Market Vision</h1>
+            <p className="text-slate-400">See the market through multiple perspectives</p>
+          </div>
+          {/* Connection Status Badge */}
+          <div className={clsx(
+            'px-3 py-1 rounded-full text-xs font-medium flex items-center gap-2',
+            isConnected
+              ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+              : 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
+          )}>
+            <span className={clsx(
+              'w-2 h-2 rounded-full',
+              isConnected ? 'bg-green-400 animate-pulse' : 'bg-yellow-400'
+            )} />
+            {isConnected ? 'Live Data' : 'Demo Mode'}
+          </div>
         </div>
         <button
           onClick={handleRefresh}
-          disabled={isRefreshing}
+          disabled={isRefreshing || isLoading}
           className="btn-secondary flex items-center gap-2"
         >
-          <RefreshCw className={clsx('w-4 h-4', isRefreshing && 'animate-spin')} />
+          <RefreshCw className={clsx('w-4 h-4', (isRefreshing || isLoading) && 'animate-spin')} />
           Refresh Analysis
         </button>
       </div>
 
       {/* Symbol Selector */}
       <div className="card p-4">
-        <div className="flex items-center gap-4">
-          <span className="text-sm text-slate-400">Analyzing:</span>
-          <div className="flex items-center gap-2">
-            {['BTC/USD', 'ETH/USD', 'SPY', 'QQQ'].map((symbol) => (
-              <button
-                key={symbol}
-                onClick={() => setSelectedSymbol(symbol)}
-                className={clsx(
-                  'px-4 py-2 rounded-lg text-sm font-medium transition-all',
-                  selectedSymbol === symbol
-                    ? 'bg-time-primary/20 text-time-primary border border-time-primary/30'
-                    : 'bg-slate-800/50 text-slate-400 hover:text-white border border-transparent'
-                )}
-              >
-                {symbol}
-              </button>
-            ))}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <span className="text-sm text-slate-400">Analyzing:</span>
+            <div className="flex items-center gap-2">
+              {['BTC/USD', 'ETH/USD', 'SPY', 'QQQ'].map((symbol) => (
+                <button
+                  key={symbol}
+                  onClick={() => setSelectedSymbol(symbol)}
+                  className={clsx(
+                    'px-4 py-2 rounded-lg text-sm font-medium transition-all',
+                    selectedSymbol === symbol
+                      ? 'bg-time-primary/20 text-time-primary border border-time-primary/30'
+                      : 'bg-slate-800/50 text-slate-400 hover:text-white border border-transparent'
+                  )}
+                >
+                  {symbol}
+                </button>
+              ))}
+            </div>
           </div>
+          {/* Real-time Market Data Display */}
+          {marketData && isConnected && (
+            <div className="flex items-center gap-4 text-sm">
+              <div>
+                <span className="text-slate-400">Price: </span>
+                <span className="text-white font-mono font-medium">
+                  ${marketData.price?.toLocaleString() || marketData.last_price?.toLocaleString() || 'N/A'}
+                </span>
+              </div>
+              {marketData.change_percent && (
+                <div className={clsx(
+                  'flex items-center gap-1',
+                  marketData.change_percent >= 0 ? 'text-green-400' : 'text-red-400'
+                )}>
+                  {marketData.change_percent >= 0 ? (
+                    <TrendingUp className="w-4 h-4" />
+                  ) : (
+                    <TrendingDown className="w-4 h-4" />
+                  )}
+                  <span className="font-medium">
+                    {marketData.change_percent >= 0 ? '+' : ''}
+                    {marketData.change_percent.toFixed(2)}%
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 

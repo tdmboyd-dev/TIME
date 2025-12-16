@@ -1,8 +1,8 @@
 # TIMEBEUNUS — THE MASTER AI GUIDE
 ## For Copilot, Claude, and All AI Assistants
 
-**Version:** 6.4.0
-**Last Updated:** 2025-12-16 (18 PAGES FIXED - 53% COMPLETE)
+**Version:** 6.4.1
+**Last Updated:** 2025-12-16 (19 PAGES FIXED - 56% COMPLETE)
 **Creator:** Timebeunus Boyd
 **Purpose:** Complete platform understanding for AI assistants to provide proper guidance
 
@@ -15,7 +15,7 @@
 
 # 🎯 RECENT FIXES (December 16, 2025)
 
-## PAGES FIXED & VERIFIED - 18/34 (53%)
+## PAGES FIXED & VERIFIED - 19/34 (56%)
 | Page | Status | What Changed |
 |------|--------|--------------|
 | `/login` | ✅ FIXED | Calls real `/api/v1/auth/login` with bcrypt password verification |
@@ -36,6 +36,7 @@
 | `/timebeunus` | ✅ VERIFIED | Real signals from market APIs and trading stats |
 | `/settings` | ✅ FIXED | Connected to `/api/v1/users/settings` for preferences |
 | `/admin` | ✅ FIXED | Connected to admin evolution, metrics, and activity APIs |
+| `/vision` | ✅ FIXED | Connected to real market data APIs with Live/Demo badge |
 
 ## Key API Endpoints Used
 - `POST /api/v1/auth/login` - Real authentication
@@ -47,6 +48,10 @@
 - `GET /api/v1/bots/public` - Bot listing
 - `POST /api/v1/bots/:id/activate` - Bot activation
 - `GET /api/v1/portfolio/positions` - Portfolio positions
+- `GET /api/v1/real-market/status` - Market provider status
+- `GET /api/v1/real-market/stock/:symbol` - Stock data
+- `GET /api/v1/real-market/crypto/:symbol` - Crypto data
+- `GET /api/v1/real-market/crypto/top/10` - Top cryptos
 - `/health` - System health status
 
 ---
@@ -632,6 +637,21 @@ Should return: `{"status":"ok","timestamp":"...","components":[...]}`
 ---
 
 # CHANGELOG
+
+## v6.4.1 (2025-12-16) - VISION PAGE FIXED
+- ✅ **FIXED Vision Page** (`frontend/src/app/vision/page.tsx`)
+  - Added API_BASE constant pointing to `https://time-backend-hosting.fly.dev/api/v1`
+  - Added useState for isLoading, isConnected, isRefreshing
+  - Added useCallback and useEffect to fetch real data from backend
+  - Added connection status indicator in header (Live/Demo badge with pulse animation)
+  - Added refresh button with loading spinner
+  - Real-time market data display (price and change percentage)
+  - Fetches market status from `/api/v1/real-market/status`
+  - Fetches crypto data from `/api/v1/real-market/crypto/:symbol`
+  - Fetches stock data from `/api/v1/real-market/stock/:symbol`
+  - Graceful fallback to mock data if API fails
+  - All existing functionality preserved (perspectives, signals, key levels, analysis)
+- ✅ Progress: 19/34 pages fixed (56% complete)
 
 ## v6.1.3 (2025-12-16) - CRITICAL API FIX + VERIFIED ENDPOINTS
 - ✅ **FIXED 4 FRONTEND PAGES** calling non-existent/404 endpoints:
