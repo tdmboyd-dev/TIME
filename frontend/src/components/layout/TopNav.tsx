@@ -1,14 +1,16 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Bell, User, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { Bell, User, TrendingUp, TrendingDown, Minus, RefreshCw } from 'lucide-react';
 import { useTimeStore } from '@/store/timeStore';
 import { GlobalSearchBar } from '@/components/search/GlobalSearchBar';
+import { API_BASE } from '@/lib/api';
 
 export function TopNav() {
-  const { regime, evolutionMode, isConnected } = useTimeStore();
+  const { regime, evolutionMode, isConnected, setConnected } = useTimeStore();
   const [currentTime, setCurrentTime] = useState<string>('');
   const [mounted, setMounted] = useState(false);
+  const [isReconnecting, setIsReconnecting] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -16,6 +18,49 @@ export function TopNav() {
     const timer = setInterval(() => setCurrentTime(new Date().toLocaleTimeString()), 1000);
     return () => clearInterval(timer);
   }, []);
+
+  // Check connection on mount and periodically
+  const checkConnection = useCallback(async () => {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+      const response = await fetch(`${API_BASE}/health`, {
+        method: 'GET',
+        credentials: 'include',
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+      setConnected(response.ok);
+      return response.ok;
+    } catch {
+      setConnected(false);
+      return false;
+    }
+  }, [setConnected]);
+
+  // Check connection on mount and every 30 seconds
+  useEffect(() => {
+    checkConnection();
+    const interval = setInterval(checkConnection, 30000);
+    return () => clearInterval(interval);
+  }, [checkConnection]);
+
+  // Reconnect handler
+  const handleReconnect = async () => {
+    setIsReconnecting(true);
+    try {
+      const success = await checkConnection();
+      if (!success) {
+        // Try once more after a short delay
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        await checkConnection();
+      }
+    } finally {
+      setIsReconnecting(false);
+    }
+  };
 
   const getRegimeIcon = () => {
     if (regime?.includes('up')) return <TrendingUp className="w-4 h-4 text-green-400" />;
@@ -48,12 +93,22 @@ export function TopNav() {
 
       {/* Right Section */}
       <div className="flex items-center gap-4">
-        {/* Connection Status */}
+        {/* Connection Status with Reconnect Button */}
         <div className="flex items-center gap-2">
-          <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}></span>
-          <span className="text-xs text-slate-400">
-            {isConnected ? 'Connected' : 'Disconnected'}
+          <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></span>
+          <span className={`text-xs ${isConnected ? 'text-green-400' : 'text-red-400'}`}>
+            {isReconnecting ? 'Reconnecting...' : isConnected ? 'Connected' : 'Disconnected'}
           </span>
+          {!isConnected && (
+            <button
+              onClick={handleReconnect}
+              disabled={isReconnecting}
+              className="ml-1 p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-all disabled:opacity-50"
+              title="Reconnect to server"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isReconnecting ? 'animate-spin' : ''}`} />
+            </button>
+          )}
         </div>
 
         {/* Time */}
