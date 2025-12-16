@@ -595,6 +595,21 @@ Should return: `{"status":"ok","timestamp":"...","components":[...]}`
 
 # CHANGELOG
 
+## v6.1.1 (2025-12-16) - TIMEBEUNUS PAGE FIXED - NO MORE MOCK DATA
+- ✅ **TIMEBEUNUS page completely rewritten** (`frontend/src/app/timebeunus/page.tsx`)
+  - **REMOVED ALL HARDCODED FAKE DATA** - No more mock signals or performance metrics
+  - **REAL API INTEGRATION** with backend at `https://time-backend-hosting.fly.dev/api/v1`
+  - **Real Trading Signals** from `/api/v1/real-market/quick-quote/{symbol}`
+  - **Real Trade History** from `/api/v1/trading/trades`
+  - **Real Performance Metrics** from `/api/v1/trading/stats`
+  - **Real Strategies** from `/api/v1/strategies`
+  - Auto-refresh every 30 seconds when active
+  - Manual refresh button to pull latest data
+  - Error handling with user notifications
+  - Live trading status badges ("REAL DATA", "REAL EXECUTIONS", "REAL PERFORMANCE")
+  - Competitor tracking with dynamic advantage calculations based on real returns
+  - Empty states when no data available (instead of fake data)
+
 ## v6.1.0 (2025-12-16) - LIVE TRADING + ALCHEMY BLOCKCHAIN + REAL STRATEGY ENGINE
 - ✅ Added LIVE Bot Trading System - Bots now execute REAL trades on Binance, Kraken, Alpaca
 - ✅ Added REAL Trading Strategy Engine (`backend/src/strategies/real_strategy_engine.ts`)

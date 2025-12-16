@@ -39,8 +39,8 @@
 
 | Component | Problem | Fix Status |
 |-----------|---------|------------|
+| **TIMEBEUNUS Page** | Hardcoded fake signals | ✅ FIXED - Real API integration complete |
 | Frontend Dashboard | Was `setTimeout + random` | 🔄 IN PROGRESS |
-| TIMEBEUNUS Page | Hardcoded fake signals | 🔄 IN PROGRESS |
 | AutoPilot Page | localStorage only | 🔄 IN PROGRESS |
 | Admin Health | `Math.random()` CPU/Mem | 🔄 TODO |
 | Portfolio Page | Fake positions | 🔄 TODO |
@@ -1501,7 +1501,62 @@ Alerts for significant market movements.
 ## 56. Trading Execution Service
 **File:** `src/backend/services/TradingExecutionService.ts`
 
-Order execution and management.
+**MAJOR UPDATE (Dec 16, 2025):** Completely replaced garbage Math.random() signal generation with REAL strategy engine.
+
+### What Was Fixed:
+- **REMOVED:** `Math.random() > 0.95` signal generation (was only 5% chance)
+- **REMOVED:** Random BUY/SELL selection
+- **REMOVED:** Random confidence scores (70-95)
+
+### What's Now Implemented:
+1. **Real Market Data Integration:**
+   - Fetches 60 days of historical price data from Finnhub API
+   - Uses actual candle data (OHLCV) for analysis
+
+2. **Real Strategy Engine (`backend/src/strategies/real_strategy_engine.ts`):**
+   - **RSI (Relative Strength Index):** Identifies overbought (>70) and oversold (<30) conditions
+   - **MACD (Moving Average Convergence Divergence):** Detects trend momentum and crossovers
+   - **Moving Average Crossover:** Golden Cross (bullish) and Death Cross (bearish) signals
+   - **Bollinger Bands:** Identifies price extremes and volatility
+   - **Momentum:** Calculates price acceleration and trend strength
+
+3. **Consensus-Based Trading:**
+   - Analyzes with all 5 strategies simultaneously
+   - Calculates weighted buy/sell scores
+   - Only trades when multiple strategies agree (confidence >= 60%)
+   - Provides detailed reasoning from each indicator
+
+4. **Risk Management:**
+   - Dynamic position sizing based on bot risk level (LOW/MEDIUM/HIGH)
+   - Automatic stop loss calculation: 1% (LOW), 2% (MEDIUM), 3% (HIGH)
+   - Automatic take profit calculation: 2% (LOW), 4% (MEDIUM), 6% (HIGH)
+
+5. **Detailed Logging:**
+   - Logs every signal with full strategy breakdown
+   - Shows buy score vs sell score
+   - Provides reasoning from all 5 indicators
+
+### How It Works:
+```typescript
+// For each enabled bot and symbol:
+1. Fetch real historical data from Finnhub
+2. Run analyzeWithAllStrategies(prices)
+3. Check if overall signal is BUY/SELL with confidence >= 60%
+4. Calculate position size based on risk level
+5. Set stop loss and take profit levels
+6. Submit signal with detailed reasoning
+```
+
+### Example Signal Output:
+```
+REAL SIGNAL GENERATED for AAPL: BUY at 178.52 (Confidence: 75%)
+Strategy Analysis: 4/5 strategies recommend BUY
+Details: RSI: oversold at 28.45 | MACD: bullish crossover |
+MA: Golden Cross detected | BB: Price at lower band |
+Momentum: Strong positive momentum accelerating
+```
+
+Order execution and management with REAL technical analysis.
 
 ---
 
@@ -1757,6 +1812,16 @@ curl https://time-backend-hosting.fly.dev/health
     - Bollinger Bands (20-period, 2 std dev)
     - Momentum with acceleration tracking
     - analyzeWithAllStrategies() for combined signals
+- **FIXES COMPLETED:**
+  - ✅ **TradingExecutionService** - REPLACED Math.random() with real strategy engine
+    - Removed garbage `Math.random() > 0.95` signal generation
+    - Now fetches 60 days of historical data from Finnhub API
+    - Uses 5 technical indicators: RSI, MACD, MA Crossover, Bollinger Bands, Momentum
+    - Consensus-based trading (requires 60%+ confidence from multiple strategies)
+    - Dynamic position sizing based on bot risk level (LOW/MEDIUM/HIGH)
+    - Automatic stop loss: 1% (LOW), 2% (MEDIUM), 3% (HIGH)
+    - Automatic take profit: 2% (LOW), 4% (MEDIUM), 6% (HIGH)
+    - Detailed logging with full strategy breakdown and reasoning
 - **FIXING NOW:**
   - Frontend Dashboard - replacing setTimeout mock with real API calls
   - Frontend Bots page - real bot status from backend
@@ -1764,7 +1829,6 @@ curl https://time-backend-hosting.fly.dev/health
   - Frontend TIMEBEUNUS page - real signals from strategy engine
   - Frontend AutoPilot page - real backend connection (not localStorage)
   - Frontend Admin Health - real CPU/Memory metrics (not Math.random())
-  - TradingExecutionService - replacing Math.random() with real strategy
 
 ## v5.3.0 (2025-12-16) - LIVE TRADING + ALCHEMY BLOCKCHAIN + REAL STRATEGY ENGINE
 - Added LIVE Bot Trading System - Bots now execute REAL trades on Binance, Kraken, Alpaca
