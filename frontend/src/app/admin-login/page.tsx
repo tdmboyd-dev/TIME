@@ -6,12 +6,15 @@ import { useRouter } from 'next/navigation';
 /**
  * TIME Admin Login Page
  *
- * Secure, serious admin access portal
- * - Enhanced security indicators
- * - Access logging
- * - Device fingerprinting
- * - IP verification
+ * REAL AUTHENTICATION - Connects to backend API
+ * - Real bcrypt password verification
+ * - Real admin role verification
+ * - Real MFA with TOTP
+ * - Real audit logging
+ * - Rate limiting protection
  */
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://time-backend-hosting.fly.dev/api/v1';
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -22,7 +25,7 @@ export default function AdminLoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [securityInfo, setSecurityInfo] = useState({
-    ip: '192.168.x.x',
+    ip: '...',
     device: 'Unknown',
     location: 'Checking...',
     lastLogin: 'Never',
@@ -34,23 +37,62 @@ export default function AdminLoginPage() {
     setIsLoading(true);
 
     try {
-      // Simulate security check
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      setStep('security-check');
-
-      // Simulate device fingerprinting
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Update security info display
       setSecurityInfo({
-        ip: '203.0.113.' + Math.floor(Math.random() * 255),
-        device: navigator.userAgent.includes('Windows') ? 'Windows PC' : 'Mac/Linux',
+        ip: 'Verifying...',
+        device: navigator.userAgent.includes('Windows') ? 'Windows PC' :
+                navigator.userAgent.includes('Mac') ? 'Mac' : 'Linux/Other',
         location: 'Checking location...',
         lastLogin: new Date().toLocaleString(),
       });
+      setStep('security-check');
 
-      // Move to MFA
-      setStep('mfa');
-    } catch (err) {
-      setError('Invalid admin credentials.');
+      // REAL API call to backend authentication
+      const response = await fetch(`${API_BASE}/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          // Admin key is used as email (or special admin identifier)
+          email: adminKey.toLowerCase().trim(),
+          password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        // Handle rate limiting
+        if (response.status === 429) {
+          throw new Error(`Too many attempts. Try again in ${data.retryAfter} seconds.`);
+        }
+        throw new Error(data.error || 'Invalid admin credentials');
+      }
+
+      // Check if MFA is required
+      if (data.requiresMfa) {
+        setStep('mfa');
+        return;
+      }
+
+      // Verify this is an admin user
+      if (data.success && data.token) {
+        if (data.user?.role !== 'admin' && data.user?.role !== 'owner') {
+          throw new Error('This account does not have admin privileges');
+        }
+
+        // Store admin token
+        localStorage.setItem('time_auth_token', data.token);
+        localStorage.setItem('time_user', JSON.stringify(data.user));
+        localStorage.setItem('time_is_admin', 'true');
+
+        // Redirect to admin portal
+        router.push('/admin-portal');
+      }
+    } catch (err: any) {
+      setStep('credentials');
+      setError(err.message || 'Invalid admin credentials.');
     } finally {
       setIsLoading(false);
     }
@@ -62,10 +104,38 @@ export default function AdminLoginPage() {
     setIsLoading(true);
 
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      router.push('/admin-portal');
-    } catch (err) {
-      setError('Invalid MFA code.');
+      // REAL MFA verification
+      const response = await fetch(`${API_BASE}/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: adminKey.toLowerCase().trim(),
+          password,
+          mfaCode: mfaCode,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Invalid MFA code');
+      }
+
+      if (data.success && data.token) {
+        if (data.user?.role !== 'admin' && data.user?.role !== 'owner') {
+          throw new Error('This account does not have admin privileges');
+        }
+
+        localStorage.setItem('time_auth_token', data.token);
+        localStorage.setItem('time_user', JSON.stringify(data.user));
+        localStorage.setItem('time_is_admin', 'true');
+
+        router.push('/admin-portal');
+      }
+    } catch (err: any) {
+      setError(err.message || 'Invalid MFA code.');
     } finally {
       setIsLoading(false);
     }

@@ -6,14 +6,16 @@ import { useRouter } from 'next/navigation';
 /**
  * TIME Login Page
  *
- * Modern, secure login experience for the ultimate trading platform
+ * REAL AUTHENTICATION - Connects to backend API
  * Features:
- * - Gradient design with animated background
- * - Multi-factor authentication
- * - Biometric support
- * - Social login options
- * - Security indicators
+ * - Real bcrypt password verification
+ * - Real JWT token session management
+ * - Real MFA with TOTP
+ * - Rate limiting protection
+ * - Secure token storage
  */
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://time-backend-hosting.fly.dev/api/v1';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -34,13 +36,51 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // REAL API call to backend authentication
+      const response = await fetch(`${API_BASE}/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: email.toLowerCase().trim(),
+          password,
+        }),
+      });
 
-      // Move to MFA step
-      setStep('mfa');
-    } catch (err) {
-      setError('Invalid credentials. Please try again.');
+      const data = await response.json();
+
+      if (!response.ok) {
+        // Handle rate limiting
+        if (response.status === 429) {
+          throw new Error(`Too many attempts. Try again in ${data.retryAfter} seconds.`);
+        }
+        throw new Error(data.error || 'Login failed');
+      }
+
+      // Check if MFA is required
+      if (data.requiresMfa) {
+        setStep('mfa');
+        return;
+      }
+
+      // Login successful - store token and redirect
+      if (data.success && data.token) {
+        // Store token securely
+        localStorage.setItem('time_auth_token', data.token);
+        localStorage.setItem('time_user', JSON.stringify(data.user));
+
+        if (rememberMe) {
+          localStorage.setItem('time_remember_email', email);
+        } else {
+          localStorage.removeItem('time_remember_email');
+        }
+
+        // Redirect to dashboard
+        router.push('/');
+      }
+    } catch (err: any) {
+      setError(err.message || 'Invalid credentials. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -52,12 +92,32 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // REAL MFA verification
+      const response = await fetch(`${API_BASE}/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: email.toLowerCase().trim(),
+          password,
+          mfaCode: verificationCode,
+        }),
+      });
 
-      // Success - redirect to dashboard
-      router.push('/');
-    } catch (err) {
-      setError('Invalid verification code.');
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Invalid verification code');
+      }
+
+      if (data.success && data.token) {
+        localStorage.setItem('time_auth_token', data.token);
+        localStorage.setItem('time_user', JSON.stringify(data.user));
+        router.push('/');
+      }
+    } catch (err: any) {
+      setError(err.message || 'Invalid verification code.');
     } finally {
       setIsLoading(false);
     }
@@ -68,9 +128,9 @@ export default function LoginPage() {
     try {
       // Check for WebAuthn support
       if (window.PublicKeyCredential) {
-        // Simulate biometric authentication
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        router.push('/');
+        // TODO: Implement real WebAuthn authentication
+        // For now, show not implemented
+        setError('Biometric authentication coming soon. Please use email login.');
       } else {
         setError('Biometric authentication not supported on this device.');
       }
@@ -84,8 +144,9 @@ export default function LoginPage() {
   const handleSocialLogin = async (provider: string) => {
     setIsLoading(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      router.push('/');
+      // TODO: Implement real OAuth flow
+      // For now, show not implemented
+      setError(`${provider} login coming soon. Please use email login.`);
     } catch (err) {
       setError(`${provider} login failed.`);
     } finally {
@@ -351,7 +412,7 @@ export default function LoginPage() {
               <div className="mt-8 text-center">
                 <p className="text-white/50">
                   Don't have an account?{' '}
-                  <a href="#" className="text-cyan-400 hover:text-cyan-300 font-medium">
+                  <a href="/register" className="text-cyan-400 hover:text-cyan-300 font-medium">
                     Create Account
                   </a>
                 </p>
