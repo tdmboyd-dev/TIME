@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Target,
   Plus,
@@ -14,7 +14,11 @@ import {
   ChevronRight,
   Loader2,
   Check,
+  Wifi,
+  WifiOff,
 } from 'lucide-react';
+
+const API_BASE = 'https://time-backend-hosting.fly.dev/api/v1';
 
 interface InvestmentGoal {
   id: string;
@@ -57,6 +61,8 @@ export default function GoalsPage() {
   const [questions, setQuestions] = useState<RiskQuestion[]>([]);
   const [showNewGoal, setShowNewGoal] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isConnected, setIsConnected] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [step, setStep] = useState(1);
 
   // Form state
@@ -68,58 +74,149 @@ export default function GoalsPage() {
   const [riskAnswers, setRiskAnswers] = useState<Record<string, number>>({});
   const [riskProfile, setRiskProfile] = useState<any>(null);
 
-  useEffect(() => {
-    fetchGoals();
-    fetchQuestions();
-  }, []);
+  const fetchGoals = useCallback(async () => {
+    // Mock data fallback
+    const mockGoals: InvestmentGoal[] = [
+      {
+        id: 'mock-1',
+        name: 'Retirement Fund',
+        type: 'retirement',
+        targetAmount: 1000000,
+        currentAmount: 150000,
+        targetDate: '2045-12-31',
+        monthlyContribution: 1500,
+        riskProfile: {
+          level: 'moderate',
+          score: 50,
+          description: 'Balanced approach with moderate risk',
+        },
+        allocation: [
+          { assetClass: 'Stocks', targetPercent: 60, etf: 'VTI', etfName: 'Vanguard Total Stock Market' },
+          { assetClass: 'Bonds', targetPercent: 30, etf: 'BND', etfName: 'Vanguard Total Bond Market' },
+          { assetClass: 'Cash', targetPercent: 10, etf: 'VMFXX', etfName: 'Vanguard Federal Money Market' },
+        ],
+      },
+    ];
 
-  const fetchGoals = async () => {
     try {
-      const res = await fetch('/api/v1/robo/goals?userId=demo-user');
+      setIsLoading(true);
+      const res = await fetch(`${API_BASE}/robo/goals?userId=demo-user`, {
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      if (!res.ok) throw new Error('API request failed');
+
       const data = await res.json();
-      if (data.success) {
+      if (data.success && data.data?.goals) {
         setGoals(data.data.goals);
+        setIsConnected(true);
+      } else {
+        throw new Error('Invalid response format');
       }
     } catch (error) {
-      console.error('Failed to fetch goals:', error);
+      console.error('Failed to fetch goals from API, using mock data:', error);
+      setGoals(mockGoals);
+      setIsConnected(false);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const fetchQuestions = async () => {
+  const fetchQuestions = useCallback(async () => {
+    // Mock data fallback
+    const mockQuestions: RiskQuestion[] = [
+      {
+        id: 'q1',
+        question: 'What is your investment time horizon?',
+        options: [
+          { value: 1, label: 'Less than 3 years' },
+          { value: 3, label: '3-5 years' },
+          { value: 5, label: '5-10 years' },
+          { value: 7, label: 'More than 10 years' },
+        ],
+      },
+      {
+        id: 'q2',
+        question: 'How would you react to a 20% market decline?',
+        options: [
+          { value: 1, label: 'Sell everything immediately' },
+          { value: 3, label: 'Hold and wait' },
+          { value: 5, label: 'Buy more at lower prices' },
+        ],
+      },
+    ];
+
     try {
-      const res = await fetch('/api/v1/robo/questions');
+      const res = await fetch(`${API_BASE}/robo/questions`, {
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      if (!res.ok) throw new Error('API request failed');
+
       const data = await res.json();
-      if (data.success) {
+      if (data.success && data.data?.questions) {
         setQuestions(data.data.questions);
+      } else {
+        throw new Error('Invalid response format');
       }
     } catch (error) {
-      console.error('Failed to fetch questions:', error);
+      console.error('Failed to fetch questions from API, using mock data:', error);
+      setQuestions(mockQuestions);
     }
+  }, []);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await Promise.all([fetchGoals(), fetchQuestions()]);
+    setIsRefreshing(false);
   };
+
+  useEffect(() => {
+    fetchGoals();
+    fetchQuestions();
+  }, [fetchGoals, fetchQuestions]);
 
   const calculateRiskProfile = async () => {
     try {
-      const res = await fetch('/api/v1/robo/risk-profile', {
+      const res = await fetch(`${API_BASE}/robo/risk-profile`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ answers: riskAnswers }),
       });
 
+      if (!res.ok) throw new Error('API request failed');
+
       const data = await res.json();
-      if (data.success) {
+      if (data.success && data.data?.profile) {
         setRiskProfile(data.data.profile);
         setStep(3);
+      } else {
+        throw new Error('Invalid response format');
       }
     } catch (error) {
       console.error('Failed to calculate risk profile:', error);
+      // Fallback to basic profile
+      const avgScore = Object.values(riskAnswers).reduce((a, b) => a + b, 0) / Object.values(riskAnswers).length;
+      const score = Math.round((avgScore / 7) * 100);
+      let level = 'moderate';
+      if (score < 20) level = 'conservative';
+      else if (score < 40) level = 'moderate_conservative';
+      else if (score < 60) level = 'moderate';
+      else if (score < 80) level = 'moderate_aggressive';
+      else level = 'aggressive';
+
+      setRiskProfile({
+        level,
+        score,
+        description: `Your risk profile is ${level.replace('_', ' ')}`,
+      });
+      setStep(3);
     }
   };
 
   const createGoal = async () => {
     try {
-      const res = await fetch('/api/v1/robo/goals', {
+      const res = await fetch(`${API_BASE}/robo/goals`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -133,15 +230,20 @@ export default function GoalsPage() {
         }),
       });
 
+      if (!res.ok) throw new Error('API request failed');
+
       const data = await res.json();
       if (data.success) {
         alert(`Goal "${goalName}" created!`);
         setShowNewGoal(false);
         resetForm();
         fetchGoals();
+      } else {
+        throw new Error('Invalid response format');
       }
     } catch (error) {
       console.error('Failed to create goal:', error);
+      alert('Failed to create goal. Please try again.');
     }
   };
 
@@ -179,21 +281,55 @@ export default function GoalsPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold flex items-center gap-3">
-              <Target className="w-8 h-8 text-purple-400" />
-              Investment Goals
-            </h1>
+            <div className="flex items-center gap-3">
+              <h1 className="text-3xl font-bold flex items-center gap-3">
+                <Target className="w-8 h-8 text-purple-400" />
+                Investment Goals
+              </h1>
+              {/* Connection Status Badge */}
+              <div
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium ${
+                  isConnected
+                    ? 'bg-green-500/10 text-green-400 border border-green-500/20'
+                    : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                }`}
+              >
+                {isConnected ? (
+                  <>
+                    <Wifi className="w-3.5 h-3.5" />
+                    Live
+                  </>
+                ) : (
+                  <>
+                    <WifiOff className="w-3.5 h-3.5" />
+                    Demo
+                  </>
+                )}
+              </div>
+            </div>
             <p className="text-gray-400 mt-2">
               Set goals and let our robo-advisor manage your investments
             </p>
           </div>
-          <button
-            onClick={() => setShowNewGoal(!showNewGoal)}
-            className="px-6 py-3 bg-purple-600 hover:bg-purple-700 rounded-lg font-semibold transition-colors flex items-center gap-2"
-          >
-            <Plus className="w-5 h-5" />
-            New Goal
-          </button>
+          <div className="flex items-center gap-3">
+            {/* Refresh Button */}
+            <button
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              className="px-4 py-3 bg-gray-800 hover:bg-gray-700 disabled:bg-gray-800 disabled:cursor-not-allowed rounded-lg font-semibold transition-colors flex items-center gap-2 border border-gray-700"
+              title="Refresh data"
+            >
+              <RefreshCcw className={`w-5 h-5 ${isRefreshing ? 'animate-spin' : ''}`} />
+              {isRefreshing ? 'Refreshing...' : 'Refresh'}
+            </button>
+            <button
+              onClick={() => setShowNewGoal(!showNewGoal)}
+              className="px-6 py-3 bg-purple-600 hover:bg-purple-700 rounded-lg font-semibold transition-colors flex items-center gap-2"
+            >
+              <Plus className="w-5 h-5" />
+              New Goal
+            </button>
+          </div>
         </div>
 
         {/* New Goal Wizard */}
