@@ -15,7 +15,7 @@ import { Wifi, WifiOff, RefreshCw } from 'lucide-react';
  * - Real-time metrics
  */
 
-const API_BASE = 'https://time-backend-hosting.fly.dev/api/v1';
+import { API_BASE } from '@/lib/api';
 
 interface SystemStatus {
   component: string;
@@ -52,7 +52,7 @@ export default function AdminPortalPage() {
       ]);
 
       // Check if we got any successful response
-      const hasConnection = healthRes?.ok || statusRes?.ok || metricsRes?.ok;
+      const hasConnection = !!(healthRes?.ok || statusRes?.ok || metricsRes?.ok);
       setIsConnected(hasConnection);
 
       // Parse responses

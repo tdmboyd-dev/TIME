@@ -19,6 +19,7 @@ import {
   ArrowUpRight,
   ArrowDownRight,
 } from 'lucide-react';
+import { API_BASE } from '@/lib/api';
 
 interface BotConfig {
   id: string;
@@ -54,8 +55,6 @@ export default function AITradeGodPage() {
   const [command, setCommand] = useState('');
   const [commandResponse, setCommandResponse] = useState('');
   const [loading, setLoading] = useState(false);
-
-  const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
 
   useEffect(() => {
     fetchBots();

@@ -26,7 +26,7 @@ import {
   ExternalLink,
 } from 'lucide-react';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://time-backend-hosting.fly.dev/api/v1';
+import { API_BASE } from '@/lib/api';
 
 interface Position {
   id: string;

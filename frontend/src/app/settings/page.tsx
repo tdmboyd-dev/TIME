@@ -31,7 +31,7 @@ import {
 import clsx from 'clsx';
 import TradingModeToggle from '@/components/trading/TradingModeToggle';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://time-backend-hosting.fly.dev/api/v1';
+import { API_BASE } from '@/lib/api';
 
 type Tab = 'profile' | 'notifications' | 'security' | 'brokers' | 'trading-mode' | 'preferences';
 
