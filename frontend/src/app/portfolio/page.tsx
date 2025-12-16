@@ -215,7 +215,7 @@ export default function PortfolioPage() {
       ]);
 
       // Check if any endpoint returned successfully
-      const hasData = positionsRes?.ok || summaryRes?.ok || brokersRes?.ok;
+      const hasData = !!(positionsRes?.ok || summaryRes?.ok || brokersRes?.ok);
       setPortfolioAvailable(hasData);
 
       if (!hasData) {
