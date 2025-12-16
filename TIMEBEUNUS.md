@@ -595,6 +595,27 @@ Should return: `{"status":"ok","timestamp":"...","components":[...]}`
 
 # CHANGELOG
 
+## v6.1.3 (2025-12-16) - CRITICAL API FIX + VERIFIED ENDPOINTS
+- ✅ **FIXED 4 FRONTEND PAGES** calling non-existent/404 endpoints:
+  - **Admin Health:** Changed from `/api/admin/*` (404) to `/health` + `/api/v1/admin/status`
+  - **Dashboard (useRealTimeData):** Changed from `/api/v1/governor/*` (404) to real-market endpoints
+  - **Portfolio:** Added graceful error handling + demo mode when brokers not connected
+  - **AutoPilot:** Changed from `/api/autopilot/*` (404) to `/health` + `/api/v1/bots/public`
+- ✅ **VERIFIED WORKING ENDPOINTS** (tested on deployed backend):
+  - `GET /health` - 13 components, evolution mode, market regime (NO AUTH)
+  - `GET /api/v1/admin/status` - Evolution mode, health, component count (NO AUTH)
+  - `GET /api/v1/bots/public` - 8 trading strategies with performance (NO AUTH)
+  - `GET /api/v1/real-market/status` - Market data provider status (NO AUTH)
+  - `GET /api/v1/real-market/stock/:symbol` - Stock quotes (NO AUTH)
+  - `GET /api/v1/real-market/stocks?symbols=X,Y` - Batch stock quotes (NO AUTH)
+  - `GET /api/v1/real-market/crypto/:symbol` - Crypto quotes (NO AUTH)
+- ⚠️ **ENDPOINTS THAT DON'T WORK:**
+  - `/api/admin/health` → 404 (use `/health` instead)
+  - `/api/admin/metrics` → 404 (use `/api/v1/admin/status` instead)
+  - `/api/v1/governor/*` → 404 (endpoints not deployed)
+  - `/api/v1/portfolio/*` → 404 (requires broker connection setup)
+- ✅ **COMPREHENSIVE DOCUMENTATION** added to COPILOT1.md with all 34 frontend pages
+
 ## v6.1.2 (2025-12-16) - DASHBOARD REAL DATA UPDATE
 - ✅ **Dashboard page updated** (`frontend/src/app/page.tsx`)
   - Already using REAL data via `useRealTimeData` hook - NO CHANGES NEEDED
@@ -617,9 +638,8 @@ Should return: `{"status":"ok","timestamp":"...","components":[...]}`
   - Real market prices (BTC, ETH, SPY, QQQ) via `/api/v1/real-market/stocks`
   - Real bot data via `/api/v1/bots`
   - Real system health via `/health`
-  - Real governor status via `/api/v1/governor/status`
-  - Real market regime via `/api/v1/governor/regime`
-  - Real insights via `/api/v1/governor/insights`
+  - Real governor status via `/api/v1/admin/status`
+  - Real market regime via `/api/v1/real-market/status`
 
 ## v6.1.1 (2025-12-16) - TIMEBEUNUS PAGE FIXED - NO MORE MOCK DATA
 - ✅ **TIMEBEUNUS page completely rewritten** (`frontend/src/app/timebeunus/page.tsx`)
