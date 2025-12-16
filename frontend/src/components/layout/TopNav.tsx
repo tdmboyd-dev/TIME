@@ -4,7 +4,9 @@ import { useState, useEffect, useCallback } from 'react';
 import { Bell, User, TrendingUp, TrendingDown, Minus, RefreshCw } from 'lucide-react';
 import { useTimeStore } from '@/store/timeStore';
 import { GlobalSearchBar } from '@/components/search/GlobalSearchBar';
-import { API_BASE } from '@/lib/api';
+
+// Health endpoint is at root level, not under /api/v1
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 'https://time-backend-hosting.fly.dev';
 
 export function TopNav() {
   const { regime, evolutionMode, isConnected, setConnected } = useTimeStore();
@@ -25,7 +27,7 @@ export function TopNav() {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000);
 
-      const response = await fetch(`${API_BASE}/health`, {
+      const response = await fetch(`${BACKEND_URL}/health`, {
         method: 'GET',
         credentials: 'include',
         signal: controller.signal,
