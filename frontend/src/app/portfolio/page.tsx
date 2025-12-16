@@ -453,7 +453,7 @@ export default function PortfolioPage() {
                     View Demo Portfolio
                   </button>
                   <a
-                    href="/settings/brokers"
+                    href="/brokers"
                     className="px-4 py-2 bg-time-primary hover:bg-time-primary/90 text-white font-medium rounded-lg transition-colors inline-flex items-center gap-2"
                   >
                     <LinkIcon className="w-4 h-4" />
