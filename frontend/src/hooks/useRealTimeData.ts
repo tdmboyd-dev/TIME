@@ -3,7 +3,7 @@
 import { useEffect, useCallback } from 'react';
 import { useTimeStore } from '@/store/timeStore';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://time-backend-hosting.fly.dev/api/v1';
 
 /**
  * Hook to fetch real data from TIME backend APIs
@@ -24,7 +24,7 @@ export function useRealTimeData() {
   const fetchHealth = useCallback(async () => {
     try {
       // Backend health is at /health not /api/v1/health
-      const API_ROOT = process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || 'http://localhost:3001';
+      const API_ROOT = process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || 'https://time-backend-hosting.fly.dev';
       const response = await fetch(`${API_ROOT}/health`);
       const data = await response.json();
 
@@ -122,10 +122,10 @@ export function useRealTimeData() {
           source: bot.source || 'absorbed',
           status: bot.status || 'active',
           performance: {
-            winRate: bot.performance?.winRate || bot.winRate || Math.random() * 30 + 50,
-            profitFactor: bot.performance?.profitFactor || bot.profitFactor || Math.random() * 1.5 + 1,
-            totalTrades: bot.performance?.totalTrades || bot.totalTrades || Math.floor(Math.random() * 500),
-            totalPnL: bot.performance?.totalPnL || bot.totalPnL || Math.random() * 10000 - 2000,
+            winRate: bot.performance?.winRate || bot.winRate || 0,
+            profitFactor: bot.performance?.profitFactor || bot.profitFactor || 0,
+            totalTrades: bot.performance?.totalTrades || bot.totalTrades || 0,
+            totalPnL: bot.performance?.totalPnL || bot.totalPnL || 0,
           },
         }));
         setBots(formattedBots);

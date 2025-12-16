@@ -19,83 +19,95 @@ interface PriceData {
   changePercent: number;
 }
 
-const generateMockCandles = (count: number): CandleData[] => {
-  const candles: CandleData[] = [];
-  let price = 100;
-  const now = Date.now();
-
-  for (let i = 0; i < count; i++) {
-    const open = price;
-    const change = (Math.random() - 0.5) * 4;
-    const high = open + Math.random() * 2;
-    const low = open - Math.random() * 2;
-    const close = open + change;
-    price = close;
-
-    candles.push({
-      time: now - (count - i) * 60000,
-      open,
-      high: Math.max(open, close, high),
-      low: Math.min(open, close, low),
-      close,
-      volume: Math.floor(Math.random() * 10000) + 1000,
-    });
-  }
-
-  return candles;
-};
-
-const mockPrices: PriceData[] = [
-  { symbol: 'BTC/USD', price: 43567.89, change: 1234.56, changePercent: 2.91 },
-  { symbol: 'ETH/USD', price: 2345.67, change: -45.23, changePercent: -1.89 },
-  { symbol: 'SPY', price: 478.92, change: 3.45, changePercent: 0.73 },
-  { symbol: 'QQQ', price: 412.34, change: 5.67, changePercent: 1.39 },
-];
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://time-backend-hosting.fly.dev/api/v1';
 
 export function LiveChart() {
   const [candles, setCandles] = useState<CandleData[]>([]);
-  const [selectedSymbol, setSelectedSymbol] = useState('BTC/USD');
-  const [prices, setPrices] = useState<PriceData[]>(mockPrices);
+  const [selectedSymbol, setSelectedSymbol] = useState('BTC');
+  const [prices, setPrices] = useState<PriceData[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
+  // Fetch real market data for all symbols
+  const fetchMarketData = async () => {
+    try {
+      const response = await fetch(`${API_BASE}/real-market/stocks?symbols=SPY,QQQ,BTC,ETH`);
+      const data = await response.json();
+
+      if (data.success && data.data) {
+        const formattedPrices: PriceData[] = [];
+
+        // Process each symbol
+        Object.entries(data.data).forEach(([symbol, quote]: [string, any]) => {
+          formattedPrices.push({
+            symbol: symbol === 'BTC' || symbol === 'ETH' ? `${symbol}/USD` : symbol,
+            price: quote.price || 0,
+            change: quote.change24h || quote.change || 0,
+            changePercent: quote.changePercent24h || quote.changePercent || 0,
+          });
+        });
+
+        setPrices(formattedPrices);
+        setError(null);
+      }
+    } catch (err) {
+      console.error('Failed to fetch market data:', err);
+      setError('Failed to load market data');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Generate realistic candles from current price
+  const generateCandlesFromPrice = (currentPrice: number): CandleData[] => {
+    const candles: CandleData[] = [];
+    let price = currentPrice * 0.98; // Start slightly lower
+    const now = Date.now();
+
+    for (let i = 0; i < 50; i++) {
+      const open = price;
+      const volatility = currentPrice * 0.002; // 0.2% volatility per candle
+      const change = (Math.random() - 0.5) * volatility * 2;
+      const high = open + Math.abs(Math.random() * volatility);
+      const low = open - Math.abs(Math.random() * volatility);
+      const close = open + change;
+      price = close;
+
+      candles.push({
+        time: now - (50 - i) * 60000, // 1 minute intervals
+        open,
+        high: Math.max(open, close, high),
+        low: Math.min(open, close, low),
+        close,
+        volume: Math.floor(Math.random() * 10000) + 1000,
+      });
+    }
+
+    return candles;
+  };
+
+  // Initial data fetch
   useEffect(() => {
-    setCandles(generateMockCandles(50));
+    fetchMarketData();
   }, []);
 
+  // Update candles when selected symbol or prices change
+  useEffect(() => {
+    if (prices.length > 0) {
+      const symbolKey = selectedSymbol.replace('/USD', '');
+      const priceData = prices.find(p => p.symbol.includes(symbolKey));
+      if (priceData) {
+        setCandles(generateCandlesFromPrice(priceData.price));
+      }
+    }
+  }, [selectedSymbol, prices]);
+
+  // Polling for real-time updates
   useEffect(() => {
     const interval = setInterval(() => {
-      // Update prices
-      setPrices(prev => prev.map(p => {
-        const changeAmount = (Math.random() - 0.5) * p.price * 0.001;
-        const newPrice = p.price + changeAmount;
-        const newChange = p.change + changeAmount;
-        return {
-          ...p,
-          price: newPrice,
-          change: newChange,
-          changePercent: (newChange / (newPrice - newChange)) * 100,
-        };
-      }));
-
-      // Add new candle
-      setCandles(prev => {
-        if (prev.length === 0) return prev;
-        const last = prev[prev.length - 1];
-        const change = (Math.random() - 0.5) * 2;
-        const newClose = last.close + change;
-
-        const newCandle: CandleData = {
-          time: Date.now(),
-          open: last.close,
-          high: Math.max(last.close, newClose) + Math.random() * 0.5,
-          low: Math.min(last.close, newClose) - Math.random() * 0.5,
-          close: newClose,
-          volume: Math.floor(Math.random() * 10000) + 1000,
-        };
-
-        return [...prev.slice(1), newCandle];
-      });
-    }, 2000);
+      fetchMarketData();
+    }, 5000); // Update every 5 seconds
 
     return () => clearInterval(interval);
   }, []);
@@ -200,6 +212,37 @@ export function LiveChart() {
     ctx.fillText(lastCandle.close.toFixed(2), width - padding.right / 2, currentY + 4);
   }, [candles]);
 
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center justify-center h-64 bg-slate-800/30 rounded-lg">
+          <div className="text-center">
+            <div className="w-8 h-8 mx-auto mb-2 rounded-full bg-gradient-to-br from-time-primary to-time-secondary animate-pulse"></div>
+            <p className="text-sm text-slate-400">Loading market data...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center justify-center h-64 bg-slate-800/30 rounded-lg">
+          <div className="text-center">
+            <p className="text-sm text-red-400">{error}</p>
+            <button
+              onClick={fetchMarketData}
+              className="mt-2 px-4 py-2 text-xs bg-time-primary hover:bg-time-primary/80 rounded-lg transition-colors"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
       {/* Price Ticker */}
@@ -207,9 +250,9 @@ export function LiveChart() {
         {prices.map((price) => (
           <button
             key={price.symbol}
-            onClick={() => setSelectedSymbol(price.symbol)}
+            onClick={() => setSelectedSymbol(price.symbol.replace('/USD', ''))}
             className={`flex items-center gap-3 px-4 py-2 rounded-lg transition-all whitespace-nowrap ${
-              selectedSymbol === price.symbol
+              selectedSymbol === price.symbol.replace('/USD', '')
                 ? 'bg-slate-700/70 border border-slate-600'
                 : 'bg-slate-800/50 hover:bg-slate-700/50 border border-transparent'
             }`}
@@ -218,7 +261,7 @@ export function LiveChart() {
             <span className="text-sm font-mono text-white">
               ${price.price.toLocaleString(undefined, {
                 minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
+                maximumFractionDigits: price.price > 1000 ? 0 : 2,
               })}
             </span>
             <span className={`flex items-center gap-1 text-xs font-medium ${

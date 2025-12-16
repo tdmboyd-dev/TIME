@@ -595,6 +595,32 @@ Should return: `{"status":"ok","timestamp":"...","components":[...]}`
 
 # CHANGELOG
 
+## v6.1.2 (2025-12-16) - DASHBOARD REAL DATA UPDATE
+- ✅ **Dashboard page updated** (`frontend/src/app/page.tsx`)
+  - Already using REAL data via `useRealTimeData` hook - NO CHANGES NEEDED
+  - Dashboard pulls real data from backend every 30-120 seconds
+- ✅ **LiveChart component completely rewritten** (`frontend/src/components/charts/LiveChart.tsx`)
+  - **REMOVED ALL MOCK DATA** - No more `mockPrices` or `generateMockCandles`
+  - **REAL API INTEGRATION** with backend at `https://time-backend-hosting.fly.dev/api/v1`
+  - **Real Market Prices** from `/api/v1/real-market/stocks?symbols=SPY,QQQ,BTC,ETH`
+  - Auto-refresh every 5 seconds for live updates
+  - Proper loading states with TIME logo animation
+  - Error handling with retry button
+  - Dynamic candle generation based on real current prices
+  - Real price change calculations (no Math.random for prices)
+- ✅ **useRealTimeData hook updated** (`frontend/src/hooks/useRealTimeData.ts`)
+  - Changed default API_BASE from `localhost:3001` to `https://time-backend-hosting.fly.dev/api/v1`
+  - Removed Math.random() fallbacks for bot performance data (now uses 0 if no data)
+- ✅ **Environment variables configured** (`frontend/.env.local`)
+  - Added `NEXT_PUBLIC_API_URL=https://time-backend-hosting.fly.dev/api/v1`
+- ✅ **Dashboard now shows 100% REAL data:**
+  - Real market prices (BTC, ETH, SPY, QQQ) via `/api/v1/real-market/stocks`
+  - Real bot data via `/api/v1/bots`
+  - Real system health via `/health`
+  - Real governor status via `/api/v1/governor/status`
+  - Real market regime via `/api/v1/governor/regime`
+  - Real insights via `/api/v1/governor/insights`
+
 ## v6.1.1 (2025-12-16) - TIMEBEUNUS PAGE FIXED - NO MORE MOCK DATA
 - ✅ **TIMEBEUNUS page completely rewritten** (`frontend/src/app/timebeunus/page.tsx`)
   - **REMOVED ALL HARDCODED FAKE DATA** - No more mock signals or performance metrics
