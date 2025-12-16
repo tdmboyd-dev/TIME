@@ -1,8 +1,8 @@
 # TIMEBEUNUS — THE MASTER AI GUIDE
 ## For Copilot, Claude, and All AI Assistants
 
-**Version:** 6.4.2
-**Last Updated:** 2025-12-16 (21 PAGES FIXED - 62% COMPLETE)
+**Version:** 6.4.3
+**Last Updated:** 2025-12-16 (22 PAGES FIXED - 65% COMPLETE)
 **Creator:** Timebeunus Boyd
 **Purpose:** Complete platform understanding for AI assistants to provide proper guidance
 
@@ -15,7 +15,7 @@
 
 # 🎯 RECENT FIXES (December 16, 2025)
 
-## PAGES FIXED & VERIFIED - 21/34 (62%)
+## PAGES FIXED & VERIFIED - 22/34 (65%)
 | Page | Status | What Changed |
 |------|--------|--------------|
 | `/login` | ✅ FIXED | Calls real `/api/v1/auth/login` with bcrypt password verification |
@@ -39,6 +39,7 @@
 | `/vision` | ✅ FIXED | Connected to real market data APIs with Live/Demo badge |
 | `/risk` | ✅ FIXED | Connected to real risk analysis and portfolio APIs with Live/Demo status |
 | `/tax` | ✅ FIXED | Tax-loss harvesting connected to real backend APIs with Live/Demo status |
+| `/goals` | ✅ FIXED | Investment goals connected to robo-advisor APIs with Live/Demo status |
 
 ## Key API Endpoints Used
 - `POST /api/v1/auth/login` - Real authentication
@@ -57,6 +58,10 @@
 - `GET /api/v1/tax/harvest/wash-sale-calendar` - Wash sale calendar
 - `POST /api/v1/tax/harvest/opportunities` - Scan for tax-loss harvesting opportunities
 - `POST /api/v1/tax/harvest/execute` - Execute tax-loss harvest
+- `GET /api/v1/robo/goals` - Investment goals list
+- `GET /api/v1/robo/questions` - Risk assessment questions
+- `POST /api/v1/robo/risk-profile` - Calculate risk profile
+- `POST /api/v1/robo/goals` - Create investment goal
 - `GET /api/v1/real-market/status` - Market provider status
 - `GET /api/v1/real-market/stock/:symbol` - Stock data
 - `GET /api/v1/real-market/crypto/:symbol` - Crypto data
@@ -647,7 +652,27 @@ Should return: `{"status":"ok","timestamp":"...","components":[...]}`
 
 # CHANGELOG
 
-## v6.4.3 (2025-12-16) - TAX PAGE FIXED
+## v6.4.3 (2025-12-16) - GOALS PAGE FIXED
+- ✅ **FIXED Goals Page** (`frontend/src/app/goals/page.tsx`)
+  - Added API_BASE constant pointing to `https://time-backend-hosting.fly.dev/api/v1`
+  - Added useState for isConnected and isRefreshing status tracking
+  - Converted fetchGoals and fetchQuestions to useCallback with proper error handling
+  - Added handleRefresh function for manual data refresh with parallel API calls
+  - Updated all API endpoints to use production backend URL:
+    - `GET ${API_BASE}/robo/goals?userId=demo-user` - Fetch investment goals
+    - `GET ${API_BASE}/robo/questions` - Fetch risk assessment questions
+    - `POST ${API_BASE}/robo/risk-profile` - Calculate risk profile from answers
+    - `POST ${API_BASE}/robo/goals` - Create new investment goal
+  - Added Live/Demo connection status badge with Wifi/WifiOff icons in header
+  - Added refresh button with loading spinner animation (separate from New Goal button)
+  - Implemented fallback to mock data for goals and questions if API fails
+  - Added fallback risk profile calculation if API fails (calculates from answers)
+  - All existing functionality preserved (goal creation wizard, risk assessment, goal display)
+  - Better error handling with user-facing error messages on goal creation failures
+  - Connection status updates on all API calls (goals, questions, risk profile, create goal)
+- ✅ Progress: 22/34 pages fixed (65% complete)
+
+## v6.4.2 (2025-12-16) - TAX PAGE FIXED
 - ✅ **FIXED Tax Page** (`frontend/src/app/tax/page.tsx`)
   - Added API_BASE constant pointing to `https://time-backend-hosting.fly.dev/api/v1`
   - Added useState for isConnected and isRefreshing status tracking
