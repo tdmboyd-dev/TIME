@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Layers,
   Search,
@@ -20,9 +20,14 @@ import {
   CheckCircle,
   AlertCircle,
   Loader2,
-  Sparkles
+  Sparkles,
+  RefreshCw,
+  Wifi,
+  WifiOff
 } from 'lucide-react';
 import clsx from 'clsx';
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://time-backend-hosting.fly.dev/api/v1';
 
 interface Strategy {
   id: string;
@@ -158,7 +163,12 @@ export default function StrategiesPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [isSynthesizing, setIsSynthesizing] = useState(false);
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
-  const [strategies, setStrategies] = useState<Strategy[]>(mockStrategies);
+  const [strategies, setStrategies] = useState<Strategy[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isConnected, setIsConnected] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [availableBots, setAvailableBots] = useState<string[]>([]);
 
   // Synthesize form state
   const [synthesizeGoal, setSynthesizeGoal] = useState<'max_return' | 'min_risk' | 'balanced'>('balanced');
@@ -169,7 +179,91 @@ export default function StrategiesPage() {
   const [newStrategyType, setNewStrategyType] = useState<Strategy['type']>('trend_following');
   const [newStrategyRisk, setNewStrategyRisk] = useState<'low' | 'medium' | 'high'>('medium');
 
-  const availableBots = ['Trend Follower Alpha', 'Mean Reversion Master', 'Scalper Pro V2', 'Breakout Hunter', 'Momentum Hunter'];
+  // Fetch strategies from backend
+  const fetchStrategies = useCallback(async () => {
+    try {
+      setError(null);
+      const token = localStorage.getItem('time_auth_token');
+
+      const response = await fetch(`${API_BASE}/strategies`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      if (data.strategies && Array.isArray(data.strategies)) {
+        const formattedStrategies: Strategy[] = data.strategies.map((s: any) => ({
+          id: s.id,
+          name: s.name,
+          description: s.description || '',
+          type: s.type || 'hybrid',
+          status: s.status || 'active',
+          sourceBots: s.sourceBots?.map((sb: any) => sb.botId || sb) || [],
+          performance: {
+            winRate: s.performance?.winRate || 0,
+            profitFactor: s.performance?.profitFactor || 0,
+            maxDrawdown: s.performance?.maxDrawdown || 0,
+            sharpeRatio: s.performance?.sharpeRatio || 0,
+            totalTrades: s.performance?.totalTrades || 0,
+            totalPnL: s.performance?.totalPnL || 0,
+            avgTrade: s.performance?.avgTrade || 0,
+          },
+          riskLevel: s.riskLevel || 'medium',
+          synthesized: !!s.synthesized || s.type === 'synthesized',
+          createdAt: new Date(s.createdAt),
+        }));
+        setStrategies(formattedStrategies);
+        setIsConnected(true);
+      }
+    } catch (error: any) {
+      console.error('Failed to fetch strategies:', error);
+      setError(error.message || 'Failed to connect');
+      setIsConnected(false);
+      // Use fallback mock data for demo
+      setStrategies(mockStrategies);
+    } finally {
+      setIsLoading(false);
+      setIsRefreshing(false);
+    }
+  }, []);
+
+  // Fetch available bots for synthesis
+  const fetchBots = useCallback(async () => {
+    try {
+      const response = await fetch(`${API_BASE}/bots/public`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.data) {
+          setAvailableBots(data.data.map((b: any) => b.name));
+        }
+      }
+    } catch (error) {
+      // Fallback to default bots
+      setAvailableBots(['Trend Follower Alpha', 'Mean Reversion Master', 'Scalper Pro V2', 'Breakout Hunter', 'Momentum Hunter']);
+    }
+  }, []);
+
+  // Initial fetch
+  useEffect(() => {
+    fetchStrategies();
+    fetchBots();
+    // Auto-refresh every 30 seconds
+    const interval = setInterval(fetchStrategies, 30000);
+    return () => clearInterval(interval);
+  }, [fetchStrategies, fetchBots]);
+
+  const handleRefresh = () => {
+    setIsRefreshing(true);
+    fetchStrategies();
+  };
 
   const handleSynthesize = async () => {
     if (synthesizeSourceBots.length < 2) {
@@ -178,35 +272,60 @@ export default function StrategiesPage() {
       return;
     }
     setIsSynthesizing(true);
-    await new Promise(resolve => setTimeout(resolve, 3000));
 
-    const newStrategy: Strategy = {
-      id: `strat-${Date.now()}`,
-      name: `TIME Synthesis #${strategies.filter(s => s.synthesized).length + 1}`,
-      description: `Auto-synthesized ${synthesizeGoal.replace('_', ' ')} strategy from ${synthesizeSourceBots.length} bots`,
-      type: 'synthesized',
-      status: 'backtesting',
-      sourceBots: synthesizeSourceBots,
-      performance: {
-        winRate: Math.random() * 20 + 55,
-        profitFactor: Math.random() * 1.5 + 1.5,
-        maxDrawdown: Math.random() * 10 + 5,
-        sharpeRatio: Math.random() * 1 + 1.5,
-        totalTrades: Math.floor(Math.random() * 200) + 100,
-        totalPnL: Math.random() * 20000 + 5000,
-        avgTrade: Math.random() * 50 + 30,
-      },
-      riskLevel: synthesizeGoal === 'min_risk' ? 'low' : synthesizeGoal === 'max_return' ? 'high' : 'medium',
-      synthesized: true,
-      createdAt: new Date(),
-    };
+    try {
+      const token = localStorage.getItem('time_auth_token');
+      const response = await fetch(`${API_BASE}/strategies/synthesize`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          botIds: synthesizeSourceBots,
+          method: 'ensemble',
+          riskLevel: synthesizeGoal === 'min_risk' ? 'low' : synthesizeGoal === 'max_return' ? 'high' : 'medium',
+        }),
+      });
 
-    setStrategies(prev => [newStrategy, ...prev]);
-    setIsSynthesizing(false);
-    setShowSynthesizeModal(false);
-    setSynthesizeSourceBots([]);
-    setNotification({ type: 'success', message: `Strategy synthesized! Running backtests...` });
-    setTimeout(() => setNotification(null), 5000);
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        setNotification({ type: 'success', message: result.message || 'Strategy synthesized! Running backtests...' });
+        fetchStrategies();
+      } else {
+        throw new Error(result.error || 'Failed to synthesize');
+      }
+    } catch (error: any) {
+      // Fallback to local creation for demo
+      const newStrategy: Strategy = {
+        id: `strat-${Date.now()}`,
+        name: `TIME Synthesis #${strategies.filter(s => s.synthesized).length + 1}`,
+        description: `Auto-synthesized ${synthesizeGoal.replace('_', ' ')} strategy from ${synthesizeSourceBots.length} bots`,
+        type: 'synthesized',
+        status: 'backtesting',
+        sourceBots: synthesizeSourceBots,
+        performance: {
+          winRate: Math.random() * 20 + 55,
+          profitFactor: Math.random() * 1.5 + 1.5,
+          maxDrawdown: Math.random() * 10 + 5,
+          sharpeRatio: Math.random() * 1 + 1.5,
+          totalTrades: Math.floor(Math.random() * 200) + 100,
+          totalPnL: Math.random() * 20000 + 5000,
+          avgTrade: Math.random() * 50 + 30,
+        },
+        riskLevel: synthesizeGoal === 'min_risk' ? 'low' : synthesizeGoal === 'max_return' ? 'high' : 'medium',
+        synthesized: true,
+        createdAt: new Date(),
+      };
+      setStrategies(prev => [newStrategy, ...prev]);
+      setNotification({ type: 'success', message: 'Strategy synthesized (demo)! Running backtests...' });
+    } finally {
+      setIsSynthesizing(false);
+      setShowSynthesizeModal(false);
+      setSynthesizeSourceBots([]);
+      setTimeout(() => setNotification(null), 5000);
+    }
   };
 
   const handleCreateStrategy = async () => {
@@ -216,35 +335,61 @@ export default function StrategiesPage() {
       return;
     }
     setIsSynthesizing(true);
-    await new Promise(resolve => setTimeout(resolve, 1500));
 
-    const newStrategy: Strategy = {
-      id: `strat-${Date.now()}`,
-      name: newStrategyName,
-      description: `Custom ${newStrategyType.replace('_', ' ')} strategy`,
-      type: newStrategyType,
-      status: 'optimizing',
-      sourceBots: [],
-      performance: {
-        winRate: Math.random() * 20 + 50,
-        profitFactor: Math.random() * 1 + 1,
-        maxDrawdown: Math.random() * 15 + 5,
-        sharpeRatio: Math.random() * 1 + 1,
-        totalTrades: 0,
-        totalPnL: 0,
-        avgTrade: 0,
-      },
-      riskLevel: newStrategyRisk,
-      synthesized: false,
-      createdAt: new Date(),
-    };
+    try {
+      const token = localStorage.getItem('time_auth_token');
+      const response = await fetch(`${API_BASE}/strategies`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          name: newStrategyName,
+          description: `Custom ${newStrategyType.replace('_', ' ')} strategy`,
+          type: newStrategyType,
+          riskLevel: newStrategyRisk,
+        }),
+      });
 
-    setStrategies(prev => [newStrategy, ...prev]);
-    setIsSynthesizing(false);
-    setShowCreateModal(false);
-    setNewStrategyName('');
-    setNotification({ type: 'success', message: `Strategy "${newStrategyName}" created! Optimizing parameters...` });
-    setTimeout(() => setNotification(null), 5000);
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        setNotification({ type: 'success', message: `Strategy "${newStrategyName}" created! Optimizing parameters...` });
+        fetchStrategies();
+      } else {
+        throw new Error(result.error || 'Failed to create strategy');
+      }
+    } catch (error: any) {
+      // Fallback to local creation for demo
+      const newStrategy: Strategy = {
+        id: `strat-${Date.now()}`,
+        name: newStrategyName,
+        description: `Custom ${newStrategyType.replace('_', ' ')} strategy`,
+        type: newStrategyType,
+        status: 'optimizing',
+        sourceBots: [],
+        performance: {
+          winRate: Math.random() * 20 + 50,
+          profitFactor: Math.random() * 1 + 1,
+          maxDrawdown: Math.random() * 15 + 5,
+          sharpeRatio: Math.random() * 1 + 1,
+          totalTrades: 0,
+          totalPnL: 0,
+          avgTrade: 0,
+        },
+        riskLevel: newStrategyRisk,
+        synthesized: false,
+        createdAt: new Date(),
+      };
+      setStrategies(prev => [newStrategy, ...prev]);
+      setNotification({ type: 'success', message: `Strategy "${newStrategyName}" created (demo)! Optimizing parameters...` });
+    } finally {
+      setIsSynthesizing(false);
+      setShowCreateModal(false);
+      setNewStrategyName('');
+      setTimeout(() => setNotification(null), 5000);
+    }
   };
 
   const toggleSourceBot = (bot: string) => {
@@ -311,10 +456,38 @@ export default function StrategiesPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">Strategies</h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-bold text-white">Strategies</h1>
+            {isLoading ? (
+              <Loader2 className="w-5 h-5 text-time-primary animate-spin" />
+            ) : (
+              <div className={`flex items-center gap-2 px-3 py-1 rounded-full ${
+                isConnected
+                  ? 'bg-green-500/20 border border-green-500/50'
+                  : 'bg-amber-500/20 border border-amber-500/50'
+              }`}>
+                {isConnected ? (
+                  <Wifi className="w-4 h-4 text-green-400" />
+                ) : (
+                  <WifiOff className="w-4 h-4 text-amber-400" />
+                )}
+                <span className={`text-xs font-medium ${isConnected ? 'text-green-400' : 'text-amber-400'}`}>
+                  {isConnected ? 'Live' : 'Demo'}
+                </span>
+              </div>
+            )}
+          </div>
           <p className="text-slate-400">Synthesized and evolved trading strategies</p>
         </div>
         <div className="flex items-center gap-3">
+          <button
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 transition-colors disabled:opacity-50"
+            title="Refresh strategies"
+          >
+            <RefreshCw className={`w-4 h-4 text-slate-400 ${isRefreshing ? 'animate-spin' : ''}`} />
+          </button>
           <button
             onClick={() => setShowSynthesizeModal(true)}
             className="btn-secondary flex items-center gap-2"
@@ -341,7 +514,7 @@ export default function StrategiesPage() {
             </div>
             <div>
               <p className="text-sm text-slate-400">Total Strategies</p>
-              <p className="text-xl font-bold text-white">{mockStrategies.length}</p>
+              <p className="text-xl font-bold text-white">{strategies.length}</p>
             </div>
           </div>
         </div>
@@ -353,7 +526,7 @@ export default function StrategiesPage() {
             <div>
               <p className="text-sm text-slate-400">Active</p>
               <p className="text-xl font-bold text-green-400">
-                {mockStrategies.filter(s => s.status === 'active').length}
+                {strategies.filter(s => s.status === 'active').length}
               </p>
             </div>
           </div>
@@ -366,7 +539,7 @@ export default function StrategiesPage() {
             <div>
               <p className="text-sm text-slate-400">Synthesized</p>
               <p className="text-xl font-bold text-purple-400">
-                {mockStrategies.filter(s => s.synthesized).length}
+                {strategies.filter(s => s.synthesized).length}
               </p>
             </div>
           </div>
@@ -379,7 +552,7 @@ export default function StrategiesPage() {
             <div>
               <p className="text-sm text-slate-400">Total P&L</p>
               <p className="text-xl font-bold text-green-400">
-                ${mockStrategies.reduce((sum, s) => sum + s.performance.totalPnL, 0).toLocaleString(undefined, {
+                ${strategies.reduce((sum, s) => sum + s.performance.totalPnL, 0).toLocaleString(undefined, {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
                 })}
