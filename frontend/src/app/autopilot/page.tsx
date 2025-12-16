@@ -10,6 +10,8 @@ import {
 } from 'lucide-react';
 import clsx from 'clsx';
 
+const API_BASE = 'https://time-backend-hosting.fly.dev/api/autopilot';
+
 type RiskDNA = 'ultra_safe' | 'careful' | 'balanced' | 'growth' | 'aggressive' | 'yolo';
 
 interface PilotProfile {
@@ -34,6 +36,21 @@ interface RecentTrade {
   profitLoss?: number;
   explanation: string;
   strategy: string;
+}
+
+interface AutoPilotStatus {
+  enabled: boolean;
+  pilot?: PilotProfile;
+  recentTrades?: RecentTrade[];
+  liveActivity?: any[];
+}
+
+interface AutoPilotConfig {
+  riskProfile: RiskDNA;
+  initialCapital: number;
+  maxDrawdown?: number;
+  takeProfitPercent?: number;
+  stopLossPercent?: number;
 }
 
 const riskProfiles = [
@@ -65,18 +82,22 @@ export default function AutoPilotPage() {
   const [notification, setNotification] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
   const [liveCommentary, setLiveCommentary] = useState<{ time: string; message: string; type: string }[]>([]);
 
+  // Fetch autopilot status on mount
   useEffect(() => {
-    setTimeout(() => {
-      const savedPilot = localStorage.getItem('dropbot_pilot');
-      if (savedPilot) {
-        const parsed = JSON.parse(savedPilot);
-        setPilot(parsed);
-        generateTrades();
-      }
-      setIsLoading(false);
-    }, 1000);
+    fetchAutoPilotStatus();
   }, []);
 
+  // Poll for status updates every 10 seconds when autopilot is active
+  useEffect(() => {
+    if (pilot && pilot.autopilotEnabled) {
+      const interval = setInterval(() => {
+        fetchAutoPilotStatus();
+      }, 10000);
+      return () => clearInterval(interval);
+    }
+  }, [pilot?.autopilotEnabled]);
+
+  // Live commentary effect when watch mode is on
   useEffect(() => {
     if (pilot && watchMode) {
       const interval = setInterval(() => {
@@ -94,23 +115,45 @@ export default function AutoPilotPage() {
     }
   }, [pilot, watchMode]);
 
-  const generateTrades = () => {
-    const assets = ['AAPL', 'NVDA', 'BTC', 'ETH', 'EUR/USD', 'TSLA', 'SPY'];
-    const strats = ['Grid Bot', 'Smart DCA', 'Momentum', 'Mean Reversion'];
-    const trades: RecentTrade[] = [];
-    for (let i = 0; i < 10; i++) {
-      const asset = assets[Math.floor(Math.random() * assets.length)];
-      const side = Math.random() > 0.4 ? 'buy' : 'sell';
-      const pnl = (Math.random() - 0.3) * 500;
-      trades.push({
-        id: `trade-${i}`, timestamp: new Date(Date.now() - i * 3600000 * Math.random() * 24),
-        asset, side, quantity: Math.random() * 10, price: Math.random() * 500 + 50,
-        profitLoss: side === 'sell' ? pnl : undefined,
-        explanation: side === 'buy' ? `Bought ${asset} on positive momentum` : `Sold ${asset} at target`,
-        strategy: strats[Math.floor(Math.random() * strats.length)]
+  const fetchAutoPilotStatus = async () => {
+    try {
+      const response = await fetch(`${API_BASE}/status`, {
+        credentials: 'include',
       });
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          // No autopilot configured yet
+          setPilot(null);
+          setIsLoading(false);
+          return;
+        }
+        throw new Error(`Failed to fetch status: ${response.statusText}`);
+      }
+
+      const data: AutoPilotStatus = await response.json();
+
+      if (data.pilot) {
+        setPilot(data.pilot);
+      }
+
+      if (data.recentTrades) {
+        setRecentTrades(data.recentTrades.map(t => ({
+          ...t,
+          timestamp: new Date(t.timestamp)
+        })));
+      }
+
+      setIsLoading(false);
+    } catch (error) {
+      console.error('Error fetching autopilot status:', error);
+      setNotification({
+        type: 'error',
+        message: 'Failed to load AutoPilot status. Please try again.'
+      });
+      setTimeout(() => setNotification(null), 5000);
+      setIsLoading(false);
     }
-    setRecentTrades(trades.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime()));
   };
 
   const handleDrop = async () => {
@@ -120,50 +163,151 @@ export default function AutoPilotPage() {
       setTimeout(() => setNotification(null), 3000);
       return;
     }
+
     setIsDropping(true);
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    const newPilot: PilotProfile = {
-      id: `pilot_${Date.now()}`, riskDNA: selectedRisk,
-      riskScore: riskProfiles.findIndex(r => r.id === selectedRisk) * 20 + 10,
-      totalDeposited: amount, currentValue: amount, totalReturn: 0,
-      totalReturnPercent: 0, winRate: 0, autopilotEnabled: true
-    };
-    setPilot(newPilot);
-    localStorage.setItem('dropbot_pilot', JSON.stringify(newPilot));
-    generateTrades();
-    setIsDropping(false);
-    setShowDropModal(false);
-    setDropAmount('');
-    setNotification({ type: 'success', message: `$${amount.toLocaleString()} dropped! AutoPilot is now trading!` });
-    setTimeout(() => setNotification(null), 5000);
+
+    try {
+      // First, update configuration
+      const configResponse = await fetch(`${API_BASE}/config`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          riskProfile: selectedRisk,
+          initialCapital: amount,
+        } as AutoPilotConfig),
+      });
+
+      if (!configResponse.ok) {
+        throw new Error('Failed to update configuration');
+      }
+
+      // Then start autopilot
+      const startResponse = await fetch(`${API_BASE}/start`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+
+      if (!startResponse.ok) {
+        throw new Error('Failed to start autopilot');
+      }
+
+      // Fetch updated status
+      await fetchAutoPilotStatus();
+
+      setIsDropping(false);
+      setShowDropModal(false);
+      setDropAmount('');
+      setNotification({
+        type: 'success',
+        message: `$${amount.toLocaleString()} dropped! AutoPilot is now trading!`
+      });
+      setTimeout(() => setNotification(null), 5000);
+    } catch (error) {
+      console.error('Error starting autopilot:', error);
+      setNotification({
+        type: 'error',
+        message: 'Failed to start AutoPilot. Please try again.'
+      });
+      setTimeout(() => setNotification(null), 5000);
+      setIsDropping(false);
+    }
   };
 
-  const toggleAutoPilot = () => {
-    if (pilot) {
-      const updated = { ...pilot, autopilotEnabled: !pilot.autopilotEnabled };
-      setPilot(updated);
-      localStorage.setItem('dropbot_pilot', JSON.stringify(updated));
-      setNotification({ type: 'info', message: updated.autopilotEnabled ? 'AutoPilot resumed!' : 'AutoPilot paused' });
+  const toggleAutoPilot = async () => {
+    if (!pilot) return;
+
+    try {
+      const endpoint = pilot.autopilotEnabled ? 'stop' : 'start';
+      const response = await fetch(`${API_BASE}/${endpoint}`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to ${endpoint} autopilot`);
+      }
+
+      // Fetch updated status
+      await fetchAutoPilotStatus();
+
+      setNotification({
+        type: 'info',
+        message: pilot.autopilotEnabled ? 'AutoPilot paused' : 'AutoPilot resumed!'
+      });
+      setTimeout(() => setNotification(null), 3000);
+    } catch (error) {
+      console.error('Error toggling autopilot:', error);
+      setNotification({
+        type: 'error',
+        message: 'Failed to toggle AutoPilot. Please try again.'
+      });
       setTimeout(() => setNotification(null), 3000);
     }
   };
 
-  useEffect(() => {
-    if (pilot && pilot.autopilotEnabled) {
-      const interval = setInterval(() => {
-        setPilot(prev => {
-          if (!prev) return prev;
-          const change = (Math.random() - 0.4) * prev.currentValue * 0.001;
-          const newValue = prev.currentValue + change;
-          const newReturn = newValue - prev.totalDeposited;
-          const updated = { ...prev, currentValue: newValue, totalReturn: newReturn, totalReturnPercent: (newReturn / prev.totalDeposited) * 100, winRate: Math.min(95, prev.winRate + (Math.random() > 0.5 ? 0.1 : 0)) };
-          localStorage.setItem('dropbot_pilot', JSON.stringify(updated));
-          return updated;
-        });
-      }, 5000);
-      return () => clearInterval(interval);
+  const handleAddCapital = async () => {
+    const amount = parseFloat(dropAmount);
+    if (isNaN(amount) || amount < 10) {
+      setNotification({ type: 'error', message: 'Minimum amount is $10' });
+      setTimeout(() => setNotification(null), 3000);
+      return;
     }
-  }, [pilot?.autopilotEnabled]);
+
+    setIsDropping(true);
+
+    try {
+      // Fetch current config
+      const configResponse = await fetch(`${API_BASE}/config`, {
+        credentials: 'include',
+      });
+
+      if (!configResponse.ok) {
+        throw new Error('Failed to fetch current configuration');
+      }
+
+      const currentConfig: AutoPilotConfig = await configResponse.json();
+
+      // Update with additional capital
+      const updateResponse = await fetch(`${API_BASE}/config`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          ...currentConfig,
+          initialCapital: currentConfig.initialCapital + amount,
+        }),
+      });
+
+      if (!updateResponse.ok) {
+        throw new Error('Failed to add capital');
+      }
+
+      // Fetch updated status
+      await fetchAutoPilotStatus();
+
+      setIsDropping(false);
+      setShowDropModal(false);
+      setDropAmount('');
+      setNotification({
+        type: 'success',
+        message: `Added $${amount.toLocaleString()} to your AutoPilot!`
+      });
+      setTimeout(() => setNotification(null), 3000);
+    } catch (error) {
+      console.error('Error adding capital:', error);
+      setNotification({
+        type: 'error',
+        message: 'Failed to add capital. Please try again.'
+      });
+      setTimeout(() => setNotification(null), 3000);
+      setIsDropping(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -285,8 +429,11 @@ export default function AutoPilotPage() {
   return (
     <div className="space-y-6">
       {notification && (
-        <div className={clsx('fixed top-4 right-4 z-50 flex items-center gap-2 px-4 py-3 rounded-lg shadow-lg', notification.type === 'success' && 'bg-green-500/20 border border-green-500/50 text-green-400', notification.type === 'info' && 'bg-blue-500/20 border border-blue-500/50 text-blue-400')}>
-          <CheckCircle className="w-5 h-5" /><span className="text-sm font-medium">{notification.message}</span><button onClick={() => setNotification(null)}><X className="w-4 h-4" /></button>
+        <div className={clsx('fixed top-4 right-4 z-50 flex items-center gap-2 px-4 py-3 rounded-lg shadow-lg', notification.type === 'success' && 'bg-green-500/20 border border-green-500/50 text-green-400', notification.type === 'info' && 'bg-blue-500/20 border border-blue-500/50 text-blue-400', notification.type === 'error' && 'bg-red-500/20 border border-red-500/50 text-red-400')}>
+          {notification.type === 'success' && <CheckCircle className="w-5 h-5" />}
+          {notification.type === 'error' && <AlertCircle className="w-5 h-5" />}
+          {notification.type === 'info' && <Info className="w-5 h-5" />}
+          <span className="text-sm font-medium">{notification.message}</span><button onClick={() => setNotification(null)}><X className="w-4 h-4" /></button>
         </div>
       )}
 
@@ -329,18 +476,22 @@ export default function AutoPilotPage() {
         <div className="lg:col-span-2 card p-5">
           <div className="flex items-center justify-between mb-4"><h3 className="font-semibold text-white flex items-center gap-2"><History className="w-5 h-5 text-slate-400" />Recent Trades</h3><span className="text-xs text-slate-500">{recentTrades.length} trades</span></div>
           <div className="space-y-3">
-            {recentTrades.slice(0, 6).map(trade => (
-              <div key={trade.id} className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <div className={clsx('w-8 h-8 rounded-lg flex items-center justify-center', trade.side === 'buy' ? 'bg-green-500/20' : 'bg-blue-500/20')}>{trade.side === 'buy' ? <ArrowUpRight className="w-4 h-4 text-green-400" /> : <ArrowDownRight className="w-4 h-4 text-blue-400" />}</div>
-                  <div><p className="font-medium text-white text-sm">{trade.asset}</p><p className="text-xs text-slate-500">{trade.explanation}</p></div>
+            {recentTrades.length === 0 ? (
+              <p className="text-slate-500 text-sm text-center py-8">No trades yet. AutoPilot is analyzing markets...</p>
+            ) : (
+              recentTrades.slice(0, 6).map(trade => (
+                <div key={trade.id} className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div className={clsx('w-8 h-8 rounded-lg flex items-center justify-center', trade.side === 'buy' ? 'bg-green-500/20' : 'bg-blue-500/20')}>{trade.side === 'buy' ? <ArrowUpRight className="w-4 h-4 text-green-400" /> : <ArrowDownRight className="w-4 h-4 text-blue-400" />}</div>
+                    <div><p className="font-medium text-white text-sm">{trade.asset}</p><p className="text-xs text-slate-500">{trade.explanation}</p></div>
+                  </div>
+                  <div className="text-right">
+                    {trade.profitLoss !== undefined ? <p className={clsx('font-semibold', trade.profitLoss >= 0 ? 'text-green-400' : 'text-red-400')}>{trade.profitLoss >= 0 ? '+' : ''}${trade.profitLoss.toFixed(2)}</p> : <p className="text-slate-400 text-sm">${(trade.quantity * trade.price).toFixed(2)}</p>}
+                    <p className="text-xs text-slate-600">{new Date(trade.timestamp).toLocaleTimeString()}</p>
+                  </div>
                 </div>
-                <div className="text-right">
-                  {trade.profitLoss !== undefined ? <p className={clsx('font-semibold', trade.profitLoss >= 0 ? 'text-green-400' : 'text-red-400')}>{trade.profitLoss >= 0 ? '+' : ''}${trade.profitLoss.toFixed(2)}</p> : <p className="text-slate-400 text-sm">${(trade.quantity * trade.price).toFixed(2)}</p>}
-                  <p className="text-xs text-slate-600">{new Date(trade.timestamp).toLocaleTimeString()}</p>
-                </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
         <div className="card p-5">
@@ -365,7 +516,7 @@ export default function AutoPilotPage() {
               <div className="space-y-4">
                 <div className="relative"><DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" /><input type="number" value={dropAmount} onChange={(e) => setDropAmount(e.target.value)} placeholder="100" min="10" className="w-full pl-12 pr-4 py-4 bg-slate-800 border border-slate-700 rounded-xl text-2xl text-white font-bold focus:outline-none focus:border-time-primary" /></div>
                 <div className="flex gap-2">{[100, 500, 1000].map(amount => (<button key={amount} onClick={() => setDropAmount(amount.toString())} className="flex-1 py-2 bg-slate-800 rounded-lg text-slate-400 hover:bg-slate-700">${amount}</button>))}</div>
-                <button onClick={async () => { const amount = parseFloat(dropAmount); if (amount >= 10) { setIsDropping(true); await new Promise(r => setTimeout(r, 1500)); setPilot(prev => prev ? { ...prev, totalDeposited: prev.totalDeposited + amount, currentValue: prev.currentValue + amount } : prev); setIsDropping(false); setShowDropModal(false); setDropAmount(''); setNotification({ type: 'success', message: `Added $${amount} to your AutoPilot!` }); setTimeout(() => setNotification(null), 3000); }}} disabled={!dropAmount || parseFloat(dropAmount) < 10} className="w-full py-4 bg-time-primary hover:bg-time-primary/80 disabled:bg-slate-700 rounded-xl text-white font-bold">Add ${dropAmount || '0'}</button>
+                <button onClick={handleAddCapital} disabled={!dropAmount || parseFloat(dropAmount) < 10} className="w-full py-4 bg-time-primary hover:bg-time-primary/80 disabled:bg-slate-700 rounded-xl text-white font-bold">Add ${dropAmount || '0'}</button>
               </div>
             )}
           </div>

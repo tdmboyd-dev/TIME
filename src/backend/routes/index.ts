@@ -27,6 +27,7 @@ import twelveDataRoutes from './twelvedata';
 import alertsRoutes from './alertsRoutes';
 import tradingModeRoutes from './tradingMode';
 import tradingRoutes from './trading';
+import portfolioRoutes from './portfolio';
 
 // NEW! Vanguard-Level Systems
 import securityRoutes from './security';
@@ -77,6 +78,9 @@ router.use('/trading-mode', tradingModeRoutes);  // Practice/Live mode toggle fo
 
 // LIVE BOT TRADING - Execute trades from bots!
 router.use('/trading', tradingRoutes);  // Start/stop bots, execute signals, track P&L
+
+// PORTFOLIO - Real positions and broker data
+router.use('/portfolio', portfolioRoutes);  // Real portfolio positions, broker status, trades
 
 // NEW! VANGUARD-LEVEL SYSTEMS - Rivaling Major Brokerages
 router.use('/security', securityRoutes);  // MFA, API keys, audit logging
