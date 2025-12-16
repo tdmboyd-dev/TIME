@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   TrendingUp,
   TrendingDown,
@@ -17,11 +17,26 @@ import {
   Target,
   Download,
   CheckCircle,
-  X
+  X,
+  RefreshCw,
+  Wifi,
+  WifiOff
 } from 'lucide-react';
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://time-backend-hosting.fly.dev/api/v1';
 
 interface CandleData {
   time: number;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+}
+
+interface APICandle {
+  timestamp: string;
+  datetime: string;
   open: number;
   high: number;
   low: number;
@@ -35,21 +50,21 @@ const symbols = [
   { symbol: 'GOOGL', name: 'Alphabet Inc.', type: 'stock' },
   { symbol: 'TSLA', name: 'Tesla Inc.', type: 'stock' },
   { symbol: 'NVDA', name: 'NVIDIA Corp.', type: 'stock' },
-  { symbol: 'BTC/USD', name: 'Bitcoin', type: 'crypto' },
-  { symbol: 'ETH/USD', name: 'Ethereum', type: 'crypto' },
+  { symbol: 'SPY', name: 'S&P 500 ETF', type: 'stock' },
+  { symbol: 'bitcoin', name: 'Bitcoin', type: 'crypto', apiSymbol: 'bitcoin' },
+  { symbol: 'ethereum', name: 'Ethereum', type: 'crypto', apiSymbol: 'ethereum' },
   { symbol: 'EUR/USD', name: 'Euro/USD', type: 'forex' },
   { symbol: 'GBP/USD', name: 'British Pound/USD', type: 'forex' },
-  { symbol: 'GOLD', name: 'Gold', type: 'commodity' },
 ];
 
 const timeframes = [
-  { label: '1m', value: 1 },
-  { label: '5m', value: 5 },
-  { label: '15m', value: 15 },
-  { label: '1H', value: 60 },
-  { label: '4H', value: 240 },
-  { label: '1D', value: 1440 },
-  { label: '1W', value: 10080 },
+  { label: '1m', value: '1min', minutes: 1 },
+  { label: '5m', value: '5min', minutes: 5 },
+  { label: '15m', value: '15min', minutes: 15 },
+  { label: '1H', value: '1h', minutes: 60 },
+  { label: '4H', value: '4h', minutes: 240 },
+  { label: '1D', value: '1day', minutes: 1440 },
+  { label: '1W', value: '1week', minutes: 10080 },
 ];
 
 const indicators = [
@@ -61,12 +76,11 @@ const indicators = [
   { id: 'volume', name: 'Volume', active: true },
 ];
 
-// Generate mock candlestick data
-function generateMockCandles(count: number, basePrice: number, timeframeMinutes: number = 60): CandleData[] {
+// Fallback demo data generator (only used when API fails)
+function generateDemoCandles(count: number, basePrice: number, timeframeMinutes: number = 60): CandleData[] {
   const candles: CandleData[] = [];
   let currentPrice = basePrice;
   const now = Date.now();
-  // Volatility scales with timeframe
   const volatilityMultiplier = Math.sqrt(timeframeMinutes / 60);
 
   for (let i = count - 1; i >= 0; i--) {
@@ -102,6 +116,9 @@ export default function ChartsPage() {
   const [showSettingsPanel, setShowSettingsPanel] = useState(false);
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [zoomLevel, setZoomLevel] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isLive, setIsLive] = useState(false);
+  const [dataSource, setDataSource] = useState<string>('');
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const handleDownload = () => {
@@ -142,25 +159,68 @@ export default function ChartsPage() {
     }
   };
 
-  // Generate data when symbol or timeframe changes
-  useEffect(() => {
-    const basePrice = selectedSymbol.type === 'crypto' ? 43000 :
-                     selectedSymbol.type === 'forex' ? 1.08 :
-                     selectedSymbol.type === 'commodity' ? 2000 : 180;
-    // Regenerate candles with different volatility based on timeframe
-    const candleCount = selectedTimeframe.value <= 15 ? 150 :
-                        selectedTimeframe.value <= 60 ? 100 :
-                        selectedTimeframe.value <= 240 ? 80 : 50;
-    setCandles(generateMockCandles(candleCount, basePrice, selectedTimeframe.value));
+  // Fetch REAL candlestick data from backend API
+  const fetchChartData = useCallback(async () => {
+    setIsLoading(true);
+
+    try {
+      // Build API URL based on asset type
+      const symbolForApi = (selectedSymbol as any).apiSymbol || selectedSymbol.symbol;
+      const url = `${API_BASE}/charts/candles?symbol=${symbolForApi}&interval=${selectedTimeframe.value}&type=${selectedSymbol.type}&limit=100`;
+
+      const response = await fetch(url);
+      const data = await response.json();
+
+      if (data.success && data.data?.candles?.length > 0) {
+        // Convert API response to our format
+        const chartCandles: CandleData[] = data.data.candles.map((c: APICandle) => ({
+          time: new Date(c.timestamp).getTime(),
+          open: c.open,
+          high: c.high,
+          low: c.low,
+          close: c.close,
+          volume: c.volume || 0,
+        }));
+
+        setCandles(chartCandles);
+        setIsLive(true);
+        setDataSource(data.data.meta?.source || 'API');
+        setNotification({ type: 'success', message: `Real data loaded from ${data.data.meta?.source || 'API'}` });
+        setTimeout(() => setNotification(null), 2000);
+      } else {
+        throw new Error('No data returned');
+      }
+    } catch (error) {
+      console.error('Failed to fetch chart data:', error);
+      // Fallback to demo data
+      const basePrice = selectedSymbol.type === 'crypto' ? 43000 :
+                       selectedSymbol.type === 'forex' ? 1.08 :
+                       180;
+      const candleCount = selectedTimeframe.minutes <= 15 ? 150 :
+                          selectedTimeframe.minutes <= 60 ? 100 :
+                          selectedTimeframe.minutes <= 240 ? 80 : 50;
+      setCandles(generateDemoCandles(candleCount, basePrice, selectedTimeframe.minutes));
+      setIsLive(false);
+      setDataSource('Demo');
+      setNotification({ type: 'error', message: 'Using demo data (API unavailable)' });
+      setTimeout(() => setNotification(null), 3000);
+    } finally {
+      setIsLoading(false);
+    }
   }, [selectedSymbol, selectedTimeframe]);
 
-  // Real-time updates
+  // Fetch data when symbol or timeframe changes
+  useEffect(() => {
+    fetchChartData();
+  }, [fetchChartData]);
+
+  // Real-time updates (simulated tick updates for demo, real WebSocket would be better)
   useEffect(() => {
     const interval = setInterval(() => {
       setCandles(prev => {
         if (prev.length === 0) return prev;
         const lastCandle = prev[prev.length - 1];
-        const volatility = lastCandle.close * 0.001;
+        const volatility = lastCandle.close * 0.0005; // Small tick updates
         const newClose = lastCandle.close + (Math.random() - 0.5) * volatility;
 
         return [
@@ -173,7 +233,7 @@ export default function ChartsPage() {
           },
         ];
       });
-    }, 1000);
+    }, 2000);
 
     return () => clearInterval(interval);
   }, []);
@@ -325,6 +385,24 @@ export default function ChartsPage() {
 
         {/* Chart Controls */}
         <div className="flex items-center gap-2">
+          {/* Data Source Indicator */}
+          <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium ${
+            isLive ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-orange-500/20 text-orange-400 border border-orange-500/30'
+          }`}>
+            {isLive ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
+            {dataSource || 'Loading...'}
+          </div>
+
+          {/* Refresh Button */}
+          <button
+            onClick={fetchChartData}
+            disabled={isLoading}
+            className="p-2 rounded-lg bg-slate-800 text-slate-400 hover:text-white transition-colors disabled:opacity-50"
+            title="Refresh Data"
+          >
+            <RefreshCw className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
+          </button>
+
           {/* Chart Type */}
           <div className="flex items-center bg-slate-800 rounded-lg p-1">
             <button
@@ -404,7 +482,7 @@ export default function ChartsPage() {
             key={tf.label}
             onClick={() => setSelectedTimeframe(tf)}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              selectedTimeframe.value === tf.value
+              selectedTimeframe.label === tf.label
                 ? 'bg-time-primary text-white'
                 : 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700'
             }`}
@@ -412,6 +490,12 @@ export default function ChartsPage() {
             {tf.label}
           </button>
         ))}
+        {isLoading && (
+          <div className="flex items-center gap-2 ml-4 text-slate-400 text-sm">
+            <RefreshCw className="w-4 h-4 animate-spin" />
+            Loading chart data...
+          </div>
+        )}
       </div>
 
       {/* Main Chart Area */}
