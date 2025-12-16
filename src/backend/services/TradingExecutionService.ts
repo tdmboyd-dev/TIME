@@ -12,6 +12,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { createComponentLogger } from '../utils/logger';
 import { botManager } from '../bots/bot_manager';
 import { BrokerManager } from '../brokers/broker_manager';
+import { analyzeWithAllStrategies } from '../../../backend/src/strategies/real_strategy_engine';
+import { getCandles } from '../../../backend/src/data/real_finnhub_service';
 
 const logger = createComponentLogger('TradingExecution');
 
@@ -477,7 +479,7 @@ export class TradingExecutionService extends EventEmitter {
   }
 
   /**
-   * Generate signals from enabled bots
+   * Generate signals from enabled bots using REAL strategy analysis
    */
   private async generateBotSignals(): Promise<void> {
     const enabledBots = this.getEnabledBots().filter(b => !b.isPaused);
@@ -488,10 +490,10 @@ export class TradingExecutionService extends EventEmitter {
         const bot = botManager.getBot(state.botId);
         if (!bot) continue;
 
-        // Generate a signal based on bot strategy (simplified for now)
-        const signal = this.generateSignalForBot(bot, state);
+        // Generate a signal based on REAL strategy analysis
+        const signal = await this.generateSignalForBot(bot, state);
 
-        if (signal && signal.confidence >= 70) {
+        if (signal && signal.confidence >= 60) {
           this.submitSignal(signal);
         }
       } catch (error) {
@@ -501,34 +503,100 @@ export class TradingExecutionService extends EventEmitter {
   }
 
   /**
-   * Generate a signal for a specific bot (simplified strategy implementation)
+   * Generate a signal for a specific bot using REAL strategy analysis
+   * Uses real_strategy_engine.ts for RSI, MACD, Moving Average, Bollinger Bands, and Momentum strategies
    */
-  private generateSignalForBot(bot: any, state: BotTradingState): Omit<TradeSignal, 'id' | 'timestamp'> | null {
+  private async generateSignalForBot(bot: any, state: BotTradingState): Promise<Omit<TradeSignal, 'id' | 'timestamp'> | null> {
     // Don't generate if we already have open positions for this bot
     if (state.openPositions.length > 0) return null;
 
-    // Simple random signal for demo - in production, this would use the bot's actual strategy
-    const shouldTrade = Math.random() > 0.95; // Only 5% chance per check
-    if (!shouldTrade) return null;
+    try {
+      // Get symbols from bot config
+      const symbols = bot.config?.symbols?.length > 0
+        ? bot.config.symbols
+        : ['AAPL', 'MSFT', 'GOOGL', 'SPY'];
 
-    const symbols = bot.config?.symbols?.length > 0
-      ? bot.config.symbols
-      : ['AAPL', 'MSFT', 'GOOGL', 'SPY'];
+      // Analyze each symbol with real strategies
+      for (const symbol of symbols) {
+        try {
+          // Get real historical price data from Finnhub
+          const to = Math.floor(Date.now() / 1000);
+          const from = to - (60 * 60 * 24 * 60); // 60 days of data
+          const candles = await getCandles(symbol, 'D', from, to);
 
-    const symbol = symbols[Math.floor(Math.random() * symbols.length)];
-    const side = Math.random() > 0.5 ? 'BUY' : 'SELL';
-    const confidence = 70 + Math.floor(Math.random() * 25); // 70-95
+          // Need sufficient data for analysis
+          if (!candles || candles.length < 50) {
+            logger.debug(`Insufficient data for ${symbol}, skipping...`);
+            continue;
+          }
 
-    return {
-      botId: bot.id,
-      botName: bot.name,
-      symbol,
-      side: side as 'BUY' | 'SELL',
-      type: 'MARKET',
-      quantity: Math.max(1, Math.floor(state.maxPositionSize / 200)), // Rough quantity
-      confidence,
-      reasoning: `${bot.name} generated ${side} signal for ${symbol} with ${confidence}% confidence`,
-    };
+          // Extract close prices for strategy analysis
+          const prices = candles.map(c => c.close);
+
+          // Run REAL strategy analysis
+          const analysis = analyzeWithAllStrategies(prices);
+
+          // Check if we have a strong signal
+          if (analysis.overall.signal !== 'HOLD' && analysis.overall.confidence >= 60) {
+            const currentPrice = prices[prices.length - 1];
+
+            // Calculate position sizing based on risk level
+            let quantity = Math.floor(state.maxPositionSize / currentPrice);
+            quantity = Math.max(1, quantity); // Ensure at least 1 share
+
+            // Calculate stop loss and take profit based on strategy
+            const stopLossPercent = state.riskLevel === 'HIGH' ? 0.03 : state.riskLevel === 'MEDIUM' ? 0.02 : 0.01;
+            const takeProfitPercent = state.riskLevel === 'HIGH' ? 0.06 : state.riskLevel === 'MEDIUM' ? 0.04 : 0.02;
+
+            const stopLoss = analysis.overall.signal === 'BUY'
+              ? currentPrice * (1 - stopLossPercent)
+              : currentPrice * (1 + stopLossPercent);
+
+            const takeProfit = analysis.overall.signal === 'BUY'
+              ? currentPrice * (1 + takeProfitPercent)
+              : currentPrice * (1 - takeProfitPercent);
+
+            // Build detailed reasoning from all strategies
+            const strategyReasons = [
+              `RSI: ${analysis.strategies.rsi.reason}`,
+              `MACD: ${analysis.strategies.macd.reason}`,
+              `MA: ${analysis.strategies.movingAverageCrossover.reason}`,
+              `BB: ${analysis.strategies.bollingerBands.reason}`,
+              `Momentum: ${analysis.strategies.momentum.reason}`
+            ].join(' | ');
+
+            logger.info(`REAL SIGNAL GENERATED for ${symbol}: ${analysis.overall.signal} at ${currentPrice.toFixed(2)} (Confidence: ${analysis.overall.confidence}%)`);
+            logger.info(`Strategy Analysis: ${analysis.overall.reason}`);
+            logger.info(`Details: ${strategyReasons}`);
+
+            return {
+              botId: bot.id,
+              botName: bot.name,
+              symbol,
+              side: analysis.overall.signal as 'BUY' | 'SELL',
+              type: 'MARKET',
+              quantity,
+              price: currentPrice,
+              stopLoss,
+              takeProfit,
+              confidence: analysis.overall.confidence,
+              reasoning: `${analysis.overall.reason} | Buy Score: ${analysis.overall.indicators?.buyScore?.toFixed(1)}% | Sell Score: ${analysis.overall.indicators?.sellScore?.toFixed(1)}% | ${strategyReasons}`,
+            };
+          } else {
+            logger.debug(`${symbol}: ${analysis.overall.reason} (Confidence: ${analysis.overall.confidence}%) - No action`);
+          }
+        } catch (symbolError) {
+          logger.error(`Error analyzing ${symbol}:`, symbolError as object);
+          continue;
+        }
+      }
+
+      // No strong signals found for any symbols
+      return null;
+    } catch (error) {
+      logger.error(`Error generating signal for bot ${bot.name}:`, error as object);
+      return null;
+    }
   }
 
   // ============================================
