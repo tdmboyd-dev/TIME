@@ -2,9 +2,9 @@
 
 ## COMPLETE PLATFORM DOCUMENTATION FOR AI ASSISTANTS
 
-**Version:** 5.5.0 - VERIFIED REAL DATA EDITION
+**Version:** 5.5.1 - VERIFIED REAL DATA EDITION
 **Last Updated:** 2025-12-16
-**Status:** PRODUCTION - All pages using REAL API endpoints
+**Status:** PRODUCTION - 22/34 pages using REAL API endpoints (65% complete)
 **Purpose:** Complete platform understanding for Copilot, Claude, and all AI assistants
 
 ---
@@ -25,6 +25,10 @@ These endpoints are LIVE and WORKING at `https://time-backend-hosting.fly.dev`:
 | `GET /api/v1/real-market/stocks?symbols=X,Y` | Batch stock quotes | NO |
 | `GET /api/v1/real-market/crypto/:symbol` | Crypto quote (BTC, ETH) | NO |
 | `GET /api/v1/real-market/crypto/top/:limit` | Top cryptos by market cap | NO |
+| `GET /api/v1/robo/goals?userId=X` | Investment goals list | NO |
+| `GET /api/v1/robo/questions` | Risk assessment questions | NO |
+| `POST /api/v1/robo/risk-profile` | Calculate risk profile | NO |
+| `POST /api/v1/robo/goals` | Create investment goal | NO |
 
 ## ⚠️ ENDPOINTS THAT REQUIRE AUTH OR DON'T EXIST
 
@@ -65,6 +69,7 @@ These endpoints are LIVE and WORKING at `https://time-backend-hosting.fly.dev`:
 | AutoPilot | Called `/api/autopilot/*` (404) | ✅ FIXED - Uses `/health` + `/api/v1/bots/public` |
 | Bots Page | Already working | ✅ Uses `/api/v1/bots/public` |
 | TIMEBEUNUS | Already working | ✅ Uses `/api/v1/real-market/*` |
+| Goals `/goals` | Not connected to backend | ✅ FIXED - Now uses `/api/v1/robo/*` with Live/Demo status |
 
 ## AUTHENTICATION SYSTEM (FULLY WORKING)
 
