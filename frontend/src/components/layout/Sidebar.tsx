@@ -32,6 +32,9 @@ import {
   Crown,
   CreditCard,
   HeartPulse,
+  Lock,
+  Rocket,
+  Brain,
 } from 'lucide-react';
 import clsx from 'clsx';
 import { TradingModeIndicator } from '@/components/trading/TradingModeToggle';
@@ -74,6 +77,9 @@ const navigation = [
   { name: 'Control Panel', href: '/admin', icon: Settings },
   { name: 'System Health', href: '/admin/health', icon: HeartPulse },
   { name: 'Admin Portal', href: '/admin-portal', icon: Crown, highlight: true },
+  // Admin-Only Features
+  { name: 'TIMEBEUNUS', href: '/timebeunus', icon: Brain, adminOnly: true },
+  { name: 'DROPBOT AutoPilot', href: '/autopilot', icon: Rocket, adminOnly: true },
 ];
 
 export function Sidebar() {
@@ -107,14 +113,22 @@ export function Sidebar() {
                 'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all',
                 isActive
                   ? 'bg-time-primary/20 text-time-primary border border-time-primary/30'
+                  : (item as any).adminOnly
+                  ? 'text-red-400 hover:text-red-300 hover:bg-red-500/10 border border-red-500/30'
                   : (item as any).highlight
                   ? 'text-amber-400 hover:text-amber-300 hover:bg-amber-500/10 border border-amber-500/30'
                   : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
               )}
             >
-              <item.icon className={clsx('w-5 h-5', (item as any).highlight && !isActive && 'text-amber-400')} />
+              <item.icon className={clsx('w-5 h-5', (item as any).adminOnly && !isActive && 'text-red-400', (item as any).highlight && !isActive && 'text-amber-400')} />
               {item.name}
-              {(item as any).highlight && (
+              {(item as any).adminOnly && (
+                <span className="ml-auto flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-red-500/20 text-red-400 font-bold">
+                  <Lock className="w-3 h-3" />
+                  ADMIN
+                </span>
+              )}
+              {(item as any).highlight && !(item as any).adminOnly && (
                 <span className="ml-auto text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 font-bold">
                   NEW
                 </span>
