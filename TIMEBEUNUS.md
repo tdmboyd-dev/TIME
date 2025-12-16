@@ -1,8 +1,8 @@
 # TIMEBEUNUS — THE MASTER AI GUIDE
 ## For Copilot, Claude, and All AI Assistants
 
-**Version:** 6.0.0
-**Last Updated:** 2025-12-14 (AI-GOVERNED SYSTEMS - QUANTUM SECURITY)
+**Version:** 6.1.0
+**Last Updated:** 2025-12-16 (LIVE TRADING + ALCHEMY BLOCKCHAIN)
 **Creator:** Timebeunus Boyd
 **Purpose:** Complete platform understanding for AI assistants to provide proper guidance
 
@@ -76,12 +76,19 @@ TIME is a **Meta-Intelligence Trading Governor** — a self-evolving, recursive 
 ## Brokers (6 CONFIGURED)
 | Broker | Status | Mode | Account/Key |
 |--------|--------|------|-------------|
-| Alpaca | ✅ **CONFIGURED** | Paper Trading | PKQ2PAYL2OOSEYYLM4T6 |
-| OANDA | ✅ **CONFIGURED** | **LIVE TRADING** | 001-001-19983395-001 |
-| Binance | ✅ **CONFIGURED** | **LIVE TRADING** | rLvIsiIW... |
-| Kraken | ✅ **CONFIGURED** | **LIVE TRADING** | US Crypto Futures |
-| SnapTrade | ✅ **CONFIGURED** | Multi-Broker | TIME-TEST-IMUHU |
+| Alpaca | ✅ **CONFIGURED** | Paper Trading | PKWQN3B7... (truncated) |
+| OANDA | ⚠️ **NEEDS API TOKEN** | **LIVE TRADING** | 001-001-19983395-001 |
+| Binance | ✅ **CONFIGURED** | **LIVE TRADING** | xROC81ZqG5gU... |
+| Kraken | ✅ **CONFIGURED** | **LIVE TRADING** | ZGlqu4jjbAr9... |
+| SnapTrade | ✅ **CONFIGURED** | Multi-Broker | TIME_PLATFORM |
 | MetaTrader 4/5 | ✅ **CONFIGURED** | Bridge | Port 15555 |
+
+### OANDA Setup Required
+OANDA account ID is configured but API token is missing. To generate:
+1. Login to https://www.oanda.com
+2. Go to **Manage API Access** in account settings
+3. Click **Generate** or **Create New Token**
+4. Update token in `.env` file and Fly.io secrets
 
 ## Pending Brokers
 | Broker | Status | Notes |
@@ -92,18 +99,31 @@ TIME is a **Meta-Intelligence Trading Governor** — a self-evolving, recursive 
 ## Market Data Providers (6 CONFIGURED)
 | Provider | Status | API Key |
 |----------|--------|---------|
-| Alpha Vantage | ✅ **CONFIGURED** | 048UD46ZP2XTTXCY |
-| Finnhub | ✅ **CONFIGURED** | d4tto21r01qk9ur8s860... |
-| TwelveData | ✅ **CONFIGURED** | 63f9b0b2b17f4ebb... |
+| Alpha Vantage | ✅ **CONFIGURED** | H4SEQWVF... (truncated) |
+| Finnhub | ✅ **CONFIGURED** | d50gdd1r01qsabpt97ng... |
+| TwelveData | ✅ **CONFIGURED** | 95f20cb4f7da4cc0... |
 | FMP | ✅ **CONFIGURED** | CKeDxW1aL9tMHGUK3S5j... |
-| FRED | ✅ **CONFIGURED** | 2a35ca95bf55fe94... |
+| FRED | ✅ **CONFIGURED** | 0a0fdd447a4271ad... |
 | CoinGecko | ✅ **NO KEY NEEDED** | Free unlimited |
 
 ## AI & Blockchain (CONFIGURED)
 | Provider | Status | API Key |
 |----------|--------|---------|
-| OpenAI | ✅ **CONFIGURED** | sk-proj-IkZaSJIQ7M9D... |
+| OpenAI | ✅ **CONFIGURED** | sk-proj-aiUA5VXO6dTBc... |
 | Alchemy | ✅ **CONFIGURED** | Y6Z1o1QSdcpCLhuRXudjv |
+
+### Alchemy Blockchain Layer (NEW in v6.1.0)
+File: `backend/src/integrations/alchemy_blockchain_layer.ts`
+
+**Features:**
+- **Whale Wallet Tracking** - 50+ known whales (Binance, Coinbase, Jump Trading, Wintermute, vitalik.eth)
+- **Token Holder Analysis** - Holder distribution, whale concentration, smart money activity
+- **Transaction Simulation** - Simulate TX before execution, gas estimation, revert detection
+- **NFT Floor Monitoring** - Real-time floor prices across collections
+- **Multi-Chain Portfolio** - Unified view across 13 chains
+
+**Supported Chains:**
+ETH Mainnet, Polygon, Arbitrum, Optimism, Base, Avalanche, BSC, Fantom, Gnosis, zkSync, Linea, Scroll, Celo
 
 ## Databases (CONFIGURED)
 | Service | Status | Connection |
@@ -536,8 +556,27 @@ All secrets are configured in:
 | Item | Status | Action Required |
 |------|--------|-----------------|
 | Interactive Brokers | ⏳ Pending | Waiting for financial approval to upgrade Lite → Pro |
+| OANDA API Token | ⚠️ Needs setup | Go to oanda.com → Manage API Access → Generate Token |
 | Twilio (SMS) | ❌ Not configured | Optional - Sign up at twilio.com |
 | Gmail SMTP | ❌ Not configured | Optional - Create app password |
+
+---
+
+# TROUBLESHOOTING
+
+## Dashboard Shows "Disconnected"
+This happens when the frontend was built before environment variables were set.
+
+**Fix:**
+1. Ensure Vercel has `NEXT_PUBLIC_API_URL=https://time-backend-hosting.fly.dev`
+2. Redeploy: `cd C:\Users\Timeb\OneDrive\TIME && npx vercel --prod --yes`
+3. Frontend will rebuild with correct API URL baked in
+
+## Backend Health Check
+```bash
+curl https://time-backend-hosting.fly.dev/health
+```
+Should return: `{"status":"ok","timestamp":"...","components":[...]}`
 
 ---
 
@@ -555,6 +594,18 @@ All secrets are configured in:
 ---
 
 # CHANGELOG
+
+## v6.1.0 (2025-12-16) - LIVE TRADING + ALCHEMY BLOCKCHAIN
+- ✅ Added LIVE Bot Trading System - Bots now execute REAL trades on Binance, Kraken, Alpaca
+- ✅ Added Alchemy Blockchain Layer (`backend/src/integrations/alchemy_blockchain_layer.ts`)
+  - Whale wallet tracking (50+ known whales)
+  - Token holder analysis
+  - Transaction simulation
+  - NFT floor monitoring
+  - Multi-chain portfolio aggregation (13 chains)
+- ✅ Updated all API keys (Binance, Kraken, Alpaca, Alpha Vantage, etc.)
+- ✅ Live data integration across all frontend pages
+- ⚠️ OANDA API token still needs to be generated (account ID configured)
 
 ## v6.0.0 (2025-12-14) - AI-GOVERNED SYSTEMS & QUANTUM SECURITY
 - ✅ Added QUANTUM FORTRESS - Post-quantum security with lattice encryption

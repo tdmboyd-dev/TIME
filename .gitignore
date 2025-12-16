@@ -68,3 +68,5 @@ secrets/
 
 # Bot libraries (large files)
 bot_library/external/
+.vercel
+.env*.local
