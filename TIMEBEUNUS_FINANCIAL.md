@@ -1,11 +1,72 @@
 # TIMEBEUNUS FINANCIAL KNOWLEDGE BASE
 ## Complete Financial Markets Master Reference
-### Version 2.1.0 | Last Updated: December 14, 2025
+### Version 2.2.0 | Last Updated: December 16, 2025
 
 ---
 
 > ## *"Never get left out again. The big boys' playbook is now YOUR playbook."*
 > **— TIMEBEUNUS**
+
+---
+
+# HONEST SYSTEM STATUS - DECEMBER 16, 2025
+
+## WHAT'S ACTUALLY CONNECTED AND WORKING
+
+| API/Service | Has Key | Connected | Working | Notes |
+|-------------|---------|-----------|---------|-------|
+| Binance | ✅ | ✅ | ✅ | LIVE trading enabled |
+| Kraken | ✅ | ✅ | ✅ | LIVE trading enabled |
+| Alpaca | ✅ | ✅ | ✅ | Paper trading |
+| OANDA | ⚠️ ID only | ❌ | ❌ | Needs API token |
+| Alchemy | ✅ | ✅ | ✅ | Blockchain data |
+| Finnhub | ✅ | ✅ | ✅ | Stock/forex/crypto data - WebSocket + REST |
+| TwelveData | ✅ | ❌ | ❌ | Key exists, not connected |
+| Alpha Vantage | ✅ | ❌ | ❌ | Key exists, not connected |
+| OpenAI | ✅ | ❌ | ❌ | Key exists, not used |
+
+## RECENT FIXES - DECEMBER 16, 2025
+
+### ✅ FIXED: Bots Page
+- **BEFORE**: 100+ hardcoded fake bots with `Math.random()` performance
+- **AFTER**: Real API calls to `https://time-backend-hosting.fly.dev/api/v1/bots/public`
+- **Features**:
+  - GET /api/v1/bots/public - fetch all bots
+  - POST /api/v1/bots/quick-add - create new bot
+  - POST /api/v1/bots/upload - import bot from external source
+  - POST /api/v1/bots/:id/activate - start bot trading
+  - POST /api/v1/bots/:id/deactivate - stop bot trading
+  - Real connection status indicator
+  - Proper error handling with retry mechanism
+  - Loading states and error boundaries
+
+### ✅ FIXED: Market Data
+- **BEFORE**: Mock prices with `generateMockPrice()`
+- **AFTER**: Finnhub real-time data with WebSocket + REST API
+- Real stock, forex, and crypto prices
+- Live market data streaming
+
+### ✅ FIXED: Trading Strategy Engine
+- **BEFORE**: Random signals with `Math.random()`
+- **AFTER**: Real technical analysis (RSI, MACD, MA, Bollinger Bands, etc.)
+- 15+ real trading strategies implemented
+- Proper signal generation based on actual market data
+
+## CRITICAL GAPS IDENTIFIED
+
+1. ~~**Signal Generation**: Currently uses `Math.random()` - NEEDS REAL STRATEGIES~~ ✅ FIXED
+2. ~~**Market Data**: Mock prices with `generateMockPrice()` - NEEDS REAL API CALLS~~ ✅ FIXED
+3. ~~**Frontend Bots Page**: Hardcoded mock data - NEEDS REAL BACKEND~~ ✅ FIXED
+
+## REMAINING WORK
+
+1. 🟡 Connect TwelveData for additional market coverage
+2. 🟡 Connect Alpha Vantage as backup data source
+3. 🟡 Implement OpenAI for market sentiment analysis
+4. 🟡 Add OANDA API token for forex trading
+5. 🟢 Dashboard page - verify real data integration
+6. 🟢 Autopilot page - verify real data integration
+7. 🟢 Signals page - verify real data integration
 
 ---
 
