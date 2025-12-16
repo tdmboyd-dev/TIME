@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   PiggyBank,
   TrendingUp,
@@ -22,8 +22,12 @@ import {
   Zap,
   CheckCircle,
   Loader2,
-  X
+  X,
+  RefreshCw,
+  Activity
 } from 'lucide-react';
+
+const API_BASE = 'https://time-backend-hosting.fly.dev/api/v1';
 
 type InvestCategory = 'all' | 'stocks' | 'real-estate' | 'commodities' | 'art' | 'etfs' | 'high-yield';
 
@@ -372,6 +376,78 @@ export default function InvestPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
+  // API Connection States
+  const [isLoading, setIsLoading] = useState(true);
+  const [isConnected, setIsConnected] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [liveAssets, setLiveAssets] = useState<TokenizedAsset[]>([]);
+
+  // Fetch real data from backend
+  const fetchLiveData = useCallback(async () => {
+    try {
+      const [positionsRes, summaryRes] = await Promise.all([
+        fetch(`${API_BASE}/portfolio/positions`),
+        fetch(`${API_BASE}/portfolio/summary`)
+      ]);
+
+      if (positionsRes.ok && summaryRes.ok) {
+        const positions = await positionsRes.json();
+        const summary = await summaryRes.json();
+
+        // Map API data to asset format
+        const mappedAssets: TokenizedAsset[] = [];
+
+        // Fetch stock data for tokenized stocks
+        const stockSymbols = ['TSLA', 'AAPL', 'NVDA'];
+        for (const symbol of stockSymbols) {
+          try {
+            const stockRes = await fetch(`${API_BASE}/real-market/stock/${symbol}`);
+            if (stockRes.ok) {
+              const stockData = await stockRes.json();
+
+              // Find corresponding mock asset for metadata
+              const mockAsset = tokenizedAssets.find(a => a.symbol === `t${symbol}`);
+              if (mockAsset) {
+                mappedAssets.push({
+                  ...mockAsset,
+                  price: stockData.current_price || mockAsset.price,
+                  change: stockData.change || mockAsset.change,
+                  changePercent: stockData.change_percent || mockAsset.changePercent,
+                });
+              }
+            }
+          } catch (error) {
+            console.error(`Error fetching ${symbol}:`, error);
+          }
+        }
+
+        setLiveAssets(mappedAssets);
+        setIsConnected(true);
+      } else {
+        setIsConnected(false);
+        setLiveAssets([]);
+      }
+    } catch (error) {
+      console.error('Error fetching live data:', error);
+      setIsConnected(false);
+      setLiveAssets([]);
+    } finally {
+      setIsLoading(false);
+      setIsRefreshing(false);
+    }
+  }, []);
+
+  // Initial load
+  useEffect(() => {
+    fetchLiveData();
+  }, [fetchLiveData]);
+
+  // Manual refresh
+  const handleRefresh = useCallback(() => {
+    setIsRefreshing(true);
+    fetchLiveData();
+  }, [fetchLiveData]);
+
   const handleConfirmInvestment = async () => {
     if (!selectedAsset || !investAmount || parseFloat(investAmount) < selectedAsset.minInvestment) {
       setNotification({ type: 'error', message: 'Please enter a valid investment amount' });
@@ -391,7 +467,12 @@ export default function InvestPage() {
     setTimeout(() => setNotification(null), 5000);
   };
 
-  const filteredAssets = tokenizedAssets.filter(
+  // Use live data if connected, otherwise use mock data
+  const currentAssets = isConnected && liveAssets.length > 0
+    ? [...liveAssets, ...tokenizedAssets.filter(a => !liveAssets.find(la => la.symbol === a.symbol))]
+    : tokenizedAssets;
+
+  const filteredAssets = currentAssets.filter(
     asset => selectedCategory === 'all' || asset.category === selectedCategory
   );
 
@@ -418,8 +499,8 @@ export default function InvestPage() {
     setShowInvestModal(true);
   };
 
-  const totalInvestors = tokenizedAssets.reduce((sum, a) => sum + a.investors, 0);
-  const totalAUM = tokenizedAssets.reduce((sum, a) => sum + a.totalValue, 0);
+  const totalInvestors = currentAssets.reduce((sum, a) => sum + a.investors, 0);
+  const totalAUM = currentAssets.reduce((sum, a) => sum + a.totalValue, 0);
 
   return (
     <div className="space-y-6">
@@ -443,6 +524,34 @@ export default function InvestPage() {
           <p className="text-slate-400 mt-1">Tokenized assets - fractional ownership in premium investments</p>
         </div>
         <div className="flex items-center gap-2">
+          {/* Connection Status Badge */}
+          {isLoading ? (
+            <span className="flex items-center gap-2 px-3 py-1.5 bg-slate-700 text-slate-400 rounded-full text-sm">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Connecting...
+            </span>
+          ) : isConnected ? (
+            <span className="flex items-center gap-2 px-3 py-1.5 bg-green-500/20 text-green-400 rounded-full text-sm">
+              <Activity className="w-4 h-4" />
+              Live Data
+            </span>
+          ) : (
+            <span className="flex items-center gap-2 px-3 py-1.5 bg-yellow-500/20 text-yellow-400 rounded-full text-sm">
+              <Info className="w-4 h-4" />
+              Demo Mode
+            </span>
+          )}
+
+          {/* Refresh Button */}
+          <button
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            className="flex items-center gap-2 px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-full text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            Refresh
+          </button>
+
           <span className="flex items-center gap-2 px-3 py-1.5 bg-time-primary/20 text-time-primary rounded-full text-sm">
             <Shield className="w-4 h-4" />
             SEC Compliant
@@ -475,7 +584,7 @@ export default function InvestPage() {
             <BarChart3 className="w-5 h-5 text-green-400" />
             <span className="text-sm text-slate-400">Assets Available</span>
           </div>
-          <p className="text-2xl font-bold text-white">{tokenizedAssets.length}</p>
+          <p className="text-2xl font-bold text-white">{currentAssets.length}</p>
           <p className="text-xs text-slate-500 mt-1">Across 6 categories</p>
         </div>
 

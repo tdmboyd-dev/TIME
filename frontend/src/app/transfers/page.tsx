@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   ArrowRightLeft,
   Building2,
@@ -10,7 +10,12 @@ import {
   FileText,
   ChevronRight,
   Loader2,
+  Wifi,
+  WifiOff,
+  RefreshCw,
 } from 'lucide-react';
+
+const API_BASE = 'https://time-backend-hosting.fly.dev/api/v1';
 
 interface Transfer {
   id: string;
@@ -29,11 +34,40 @@ interface Broker {
   dtcNumber: string;
 }
 
+// Mock data as fallback
+const MOCK_BROKERS: Broker[] = [
+  { id: 'broker-1', name: 'Robinhood', dtcNumber: '8050' },
+  { id: 'broker-2', name: 'Fidelity', dtcNumber: '0226' },
+  { id: 'broker-3', name: 'Charles Schwab', dtcNumber: '0164' },
+  { id: 'broker-4', name: 'TD Ameritrade', dtcNumber: '0188' },
+  { id: 'broker-5', name: 'E*TRADE', dtcNumber: '0385' },
+];
+
+const MOCK_TRANSFERS: Transfer[] = [
+  {
+    id: 'transfer-1',
+    status: 'in_progress',
+    deliveringBroker: { brokerName: 'Robinhood' },
+    totalEstimatedValue: 25000,
+    createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+    expectedCompletionDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: 'transfer-2',
+    status: 'completed',
+    deliveringBroker: { brokerName: 'Fidelity' },
+    totalEstimatedValue: 50000,
+    createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+];
+
 export default function TransfersPage() {
   const [transfers, setTransfers] = useState<Transfer[]>([]);
   const [brokers, setBrokers] = useState<Broker[]>([]);
   const [showNewTransfer, setShowNewTransfer] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isConnected, setIsConnected] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Form state
   const [selectedBroker, setSelectedBroker] = useState('');
@@ -42,40 +76,56 @@ export default function TransfersPage() {
   const [ssnLast4, setSsnLast4] = useState('');
   const [transferType, setTransferType] = useState<'full' | 'partial'>('full');
 
-  useEffect(() => {
-    fetchBrokers();
-    fetchTransfers();
-  }, []);
-
-  const fetchBrokers = async () => {
+  const fetchBrokers = useCallback(async () => {
     try {
-      const res = await fetch('/api/v1/transfers/brokers');
+      const res = await fetch(`${API_BASE}/transfers/brokers`, {
+        headers: { 'Content-Type': 'application/json' },
+      });
       const data = await res.json();
       if (data.success) {
         setBrokers(data.data.brokers);
+        setIsConnected(true);
       }
     } catch (error) {
-      console.error('Failed to fetch brokers:', error);
+      console.error('Failed to fetch brokers from API, using mock data:', error);
+      setBrokers(MOCK_BROKERS);
+      setIsConnected(false);
     }
-  };
+  }, []);
 
-  const fetchTransfers = async () => {
+  const fetchTransfers = useCallback(async () => {
     try {
-      const res = await fetch('/api/v1/transfers?userId=demo-user');
+      const res = await fetch(`${API_BASE}/transfers?userId=demo-user`, {
+        headers: { 'Content-Type': 'application/json' },
+      });
       const data = await res.json();
       if (data.success) {
         setTransfers(data.data.transfers);
+        setIsConnected(true);
       }
     } catch (error) {
-      console.error('Failed to fetch transfers:', error);
+      console.error('Failed to fetch transfers from API, using mock data:', error);
+      setTransfers(MOCK_TRANSFERS);
+      setIsConnected(false);
     } finally {
       setIsLoading(false);
+      setIsRefreshing(false);
     }
-  };
+  }, []);
+
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    await Promise.all([fetchBrokers(), fetchTransfers()]);
+  }, [fetchBrokers, fetchTransfers]);
+
+  useEffect(() => {
+    fetchBrokers();
+    fetchTransfers();
+  }, [fetchBrokers, fetchTransfers]);
 
   const initiateTransfer = async () => {
     try {
-      const res = await fetch('/api/v1/transfers/initiate', {
+      const res = await fetch(`${API_BASE}/transfers/initiate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -108,6 +158,7 @@ export default function TransfersPage() {
       }
     } catch (error) {
       console.error('Failed to initiate transfer:', error);
+      alert('Failed to initiate transfer. Please try again.');
     }
   };
 
@@ -144,20 +195,53 @@ export default function TransfersPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold flex items-center gap-3">
-              <ArrowRightLeft className="w-8 h-8 text-blue-400" />
-              Account Transfers
-            </h1>
+            <div className="flex items-center gap-4">
+              <h1 className="text-3xl font-bold flex items-center gap-3">
+                <ArrowRightLeft className="w-8 h-8 text-blue-400" />
+                Account Transfers
+              </h1>
+              {/* Connection Status Badge */}
+              <div
+                className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium ${
+                  isConnected
+                    ? 'bg-green-500/10 text-green-400 border border-green-500/30'
+                    : 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/30'
+                }`}
+              >
+                {isConnected ? (
+                  <>
+                    <Wifi className="w-4 h-4" />
+                    <span>Live</span>
+                  </>
+                ) : (
+                  <>
+                    <WifiOff className="w-4 h-4" />
+                    <span>Demo</span>
+                  </>
+                )}
+              </div>
+            </div>
             <p className="text-gray-400 mt-2">
               Transfer your investments from other brokerages to TIME
             </p>
           </div>
-          <button
-            onClick={() => setShowNewTransfer(!showNewTransfer)}
-            className="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-semibold transition-colors"
-          >
-            Start New Transfer
-          </button>
+          <div className="flex items-center gap-3">
+            {/* Refresh Button */}
+            <button
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              className="px-4 py-3 bg-gray-800 hover:bg-gray-700 disabled:bg-gray-900 rounded-lg font-semibold transition-colors flex items-center gap-2"
+              title="Refresh data"
+            >
+              <RefreshCw className={`w-5 h-5 ${isRefreshing ? 'animate-spin' : ''}`} />
+            </button>
+            <button
+              onClick={() => setShowNewTransfer(!showNewTransfer)}
+              className="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-semibold transition-colors"
+            >
+              Start New Transfer
+            </button>
+          </div>
         </div>
 
         {/* New Transfer Form */}

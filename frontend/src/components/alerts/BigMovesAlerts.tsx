@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   AlertTriangle,
   TrendingUp,
@@ -16,11 +16,13 @@ import {
   ChevronRight,
   Play,
   Pause,
-  RefreshCw
+  RefreshCw,
+  Wifi,
+  WifiOff
 } from 'lucide-react';
 import clsx from 'clsx';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+const API_BASE = 'https://time-backend-hosting.fly.dev/api/v1';
 
 interface AlertAction {
   id: string;
@@ -90,32 +92,120 @@ const riskColors = {
   YOLO: 'bg-red-500/20 text-red-400 border-red-500'
 };
 
+// Mock data as fallback
+const MOCK_ALERTS: BigMovesAlert[] = [
+  {
+    id: 'mock-1',
+    timestamp: new Date(Date.now() - 5 * 60000).toISOString(),
+    priority: 'HIGH',
+    category: 'WHALE_MOVEMENT',
+    title: '50M USDT Transfer Detected',
+    plainEnglish: 'A whale just moved 50 million USDT from Binance to an unknown wallet. This could signal a major buy-in coming.',
+    whatItMeans: 'Large whale movements often precede price action. Monitor BTC and ETH for potential volatility.',
+    source: 'Whale Alert',
+    suggestedActions: [
+      {
+        id: 'action-1',
+        label: 'Conservative Play',
+        riskLevel: 'CONSERVATIVE',
+        action: 'Set alerts',
+        description: 'Set price alerts for BTC at key levels and wait for confirmation before entering.'
+      },
+      {
+        id: 'action-2',
+        label: 'Moderate Play',
+        riskLevel: 'MODERATE',
+        action: 'Buy',
+        symbol: 'BTC',
+        description: 'Enter 25% position in BTC with tight stop loss at recent support.'
+      }
+    ],
+    riskLevel: 'HIGH',
+    affectedAssets: ['BTC', 'ETH', 'USDT'],
+    confidence: 85,
+    acknowledged: false
+  },
+  {
+    id: 'mock-2',
+    timestamp: new Date(Date.now() - 15 * 60000).toISOString(),
+    priority: 'MEDIUM',
+    category: 'INSTITUTIONAL',
+    title: 'Major Fund Increases Crypto Holdings',
+    plainEnglish: 'Grayscale reported a $100M increase in Bitcoin holdings this week.',
+    whatItMeans: 'Institutional accumulation is bullish long-term signal. Consider gradual position building.',
+    source: 'SEC Filings',
+    suggestedActions: [
+      {
+        id: 'action-3',
+        label: 'DCA Strategy',
+        riskLevel: 'CONSERVATIVE',
+        action: 'Dollar-cost average',
+        symbol: 'BTC',
+        description: 'Set up automated weekly buys to accumulate during institutional buying phase.'
+      }
+    ],
+    riskLevel: 'MEDIUM',
+    affectedAssets: ['BTC'],
+    confidence: 92,
+    acknowledged: false
+  }
+];
+
 export function BigMovesAlerts() {
   const [alerts, setAlerts] = useState<BigMovesAlert[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isConnected, setIsConnected] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [selectedAlert, setSelectedAlert] = useState<BigMovesAlert | null>(null);
   const [filter, setFilter] = useState<'ALL' | 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW'>('ALL');
   const [isMonitoring, setIsMonitoring] = useState(false);
   const [executing, setExecuting] = useState<string | null>(null);
 
-  // Fetch alerts
-  const fetchAlerts = async () => {
+  // Fetch alerts with fallback to mock data
+  const fetchAlerts = useCallback(async (showRefreshing = false) => {
+    if (showRefreshing) {
+      setIsRefreshing(true);
+    } else {
+      setIsLoading(true);
+    }
+
     try {
       const url = filter === 'ALL'
         ? `${API_BASE}/alerts`
         : `${API_BASE}/alerts?priority=${filter}`;
-      const response = await fetch(url);
+
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
       const data = await response.json();
 
-      if (data.success) {
+      if (data.success && data.data) {
         setAlerts(data.data);
+        setIsConnected(true);
+      } else {
+        throw new Error('Invalid response format');
       }
     } catch (error) {
-      console.error('Error fetching alerts:', error);
+      console.error('Error fetching alerts, using mock data:', error);
+      // Fallback to mock data
+      const filteredMockData = filter === 'ALL'
+        ? MOCK_ALERTS
+        : MOCK_ALERTS.filter(alert => alert.priority === filter);
+      setAlerts(filteredMockData);
+      setIsConnected(false);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
+      setIsRefreshing(false);
     }
-  };
+  }, [filter]);
 
   // Toggle monitoring
   const toggleMonitoring = async () => {
@@ -181,9 +271,9 @@ export function BigMovesAlerts() {
   useEffect(() => {
     fetchAlerts();
     // Poll for new alerts every 30 seconds
-    const interval = setInterval(fetchAlerts, 30000);
+    const interval = setInterval(() => fetchAlerts(true), 30000);
     return () => clearInterval(interval);
-  }, [filter]);
+  }, [filter, fetchAlerts]);
 
   const formatTime = (timestamp: string) => {
     const date = new Date(timestamp);
@@ -202,16 +292,47 @@ export function BigMovesAlerts() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">Big Moves Alerts</h1>
+          <div className="flex items-center gap-3 mb-2">
+            <h1 className="text-2xl font-bold text-white">Big Moves Alerts</h1>
+            {/* Connection Status Badge */}
+            <div className={clsx(
+              'flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium',
+              isConnected
+                ? 'bg-green-500/20 text-green-400 border border-green-500'
+                : 'bg-orange-500/20 text-orange-400 border border-orange-500'
+            )}>
+              {isConnected ? (
+                <>
+                  <Wifi className="w-3 h-3" />
+                  LIVE
+                </>
+              ) : (
+                <>
+                  <WifiOff className="w-3 h-3" />
+                  DEMO
+                </>
+              )}
+            </div>
+          </div>
           <p className="text-slate-400 italic">"Never get left out again. The big boys' playbook is now YOUR playbook."</p>
         </div>
         <div className="flex items-center gap-3">
+          {/* Refresh Button with Spinner */}
           <button
-            onClick={() => fetchAlerts()}
-            className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 transition-colors"
+            onClick={() => fetchAlerts(true)}
+            disabled={isRefreshing}
+            className={clsx(
+              'p-2 rounded-lg transition-colors',
+              isRefreshing
+                ? 'bg-slate-700 cursor-not-allowed'
+                : 'bg-slate-800 hover:bg-slate-700'
+            )}
             title="Refresh"
           >
-            <RefreshCw className="w-4 h-4 text-slate-400" />
+            <RefreshCw className={clsx(
+              'w-4 h-4 text-slate-400',
+              isRefreshing && 'animate-spin'
+            )} />
           </button>
           <button
             onClick={toggleMonitoring}
@@ -291,7 +412,7 @@ export function BigMovesAlerts() {
 
       {/* Alerts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {loading ? (
+        {isLoading ? (
           <div className="col-span-2 text-center py-12 text-slate-400">
             Loading alerts...
           </div>

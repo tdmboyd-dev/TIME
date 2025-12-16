@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   PiggyBank,
   TrendingUp,
@@ -18,11 +18,13 @@ import {
   Clock,
   AlertCircle,
   CheckCircle,
-  Info
+  Info,
+  Wifi,
+  WifiOff
 } from 'lucide-react';
 import clsx from 'clsx';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+const API_BASE = 'https://time-backend-hosting.fly.dev/api/v1';
 
 interface RetirementPlan {
   id: string;
@@ -46,6 +48,8 @@ interface RetirementPlan {
 export default function RetirementPage() {
   const [plans, setPlans] = useState<RetirementPlan[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isConnected, setIsConnected] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [showCalculator, setShowCalculator] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<RetirementPlan | null>(null);
 
@@ -56,63 +60,134 @@ export default function RetirementPage() {
   const [calcMonthly, setCalcMonthly] = useState(1000);
   const [calcReturn, setCalcReturn] = useState(7);
 
-  useEffect(() => {
-    fetchPlans();
+  // Mock data as fallback
+  const getMockData = useCallback((): RetirementPlan[] => {
+    return [
+      {
+        id: '1',
+        name: 'Primary Retirement Plan',
+        currentAge: 35,
+        retirementAge: 65,
+        currentSavings: 150000,
+        monthlyContribution: 2000,
+        expectedReturn: 7,
+        inflationRate: 2.5,
+        targetAmount: 2000000,
+        projectedAmount: 2450000,
+        onTrack: true,
+        accounts: [
+          { type: '401(k)', balance: 120000, allocation: { stocks: 80, bonds: 15, cash: 5 } },
+          { type: 'Roth IRA', balance: 30000, allocation: { stocks: 90, bonds: 8, cash: 2 } },
+        ],
+      },
+    ];
   }, []);
 
-  const fetchPlans = async () => {
+  const fetchPlans = useCallback(async () => {
     try {
-      const response = await fetch(`${API_BASE}/retirement/plans`);
-      const data = await response.json();
-      if (data.success) {
-        setPlans(data.data);
-      } else {
-        // Sample data
-        setPlans([
-          {
+      setIsLoading(true);
+
+      // Try fetching from robo-advisor goals endpoint
+      const goalsResponse = await fetch(`${API_BASE}/robo/goals`, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (goalsResponse.ok) {
+        const goalsData = await goalsResponse.json();
+        console.log('Robo goals data:', goalsData);
+
+        // Try to map retirement goals to retirement plans
+        if (goalsData.success && goalsData.data) {
+          const retirementGoals = Array.isArray(goalsData.data)
+            ? goalsData.data.filter((goal: any) => goal.type === 'retirement' || goal.name?.toLowerCase().includes('retirement'))
+            : [];
+
+          if (retirementGoals.length > 0) {
+            // Map goals to retirement plan format
+            const mappedPlans = retirementGoals.map((goal: any) => ({
+              id: goal.id || goal._id || Math.random().toString(),
+              name: goal.name || 'Retirement Goal',
+              currentAge: goal.current_age || 35,
+              retirementAge: goal.target_age || goal.retirement_age || 65,
+              currentSavings: goal.current_amount || goal.amount || 0,
+              monthlyContribution: goal.monthly_contribution || 0,
+              expectedReturn: goal.expected_return || 7,
+              inflationRate: goal.inflation_rate || 2.5,
+              targetAmount: goal.target_amount || goal.goal_amount || 0,
+              projectedAmount: goal.projected_amount || goal.target_amount || 0,
+              onTrack: goal.on_track ?? (goal.progress >= 100),
+              accounts: goal.accounts || [],
+            }));
+
+            setPlans(mappedPlans);
+            setIsConnected(true);
+            return;
+          }
+        }
+      }
+
+      // Try fetching from portfolio summary endpoint
+      const portfolioResponse = await fetch(`${API_BASE}/portfolio/summary`, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (portfolioResponse.ok) {
+        const portfolioData = await portfolioResponse.json();
+        console.log('Portfolio summary data:', portfolioData);
+
+        // Check if we can derive retirement info from portfolio
+        if (portfolioData.success && portfolioData.data) {
+          const summary = portfolioData.data;
+
+          // Create a basic retirement plan from portfolio data
+          const derivedPlan: RetirementPlan = {
             id: '1',
-            name: 'Primary Retirement Plan',
+            name: 'Portfolio-Based Retirement Plan',
             currentAge: 35,
             retirementAge: 65,
-            currentSavings: 150000,
-            monthlyContribution: 2000,
-            expectedReturn: 7,
+            currentSavings: summary.total_value || summary.totalValue || 0,
+            monthlyContribution: 2000, // Default
+            expectedReturn: summary.return_rate || 7,
             inflationRate: 2.5,
-            targetAmount: 2000000,
-            projectedAmount: 2450000,
+            targetAmount: 2000000, // Default target
+            projectedAmount: (summary.total_value || 0) * Math.pow(1.07, 30), // Simple projection
             onTrack: true,
-            accounts: [
-              { type: '401(k)', balance: 120000, allocation: { stocks: 80, bonds: 15, cash: 5 } },
-              { type: 'Roth IRA', balance: 30000, allocation: { stocks: 90, bonds: 8, cash: 2 } },
-            ],
-          },
-        ]);
+            accounts: summary.accounts || [],
+          };
+
+          setPlans([derivedPlan]);
+          setIsConnected(true);
+          return;
+        }
       }
+
+      // If all API calls fail, use mock data
+      console.log('Using mock data as fallback');
+      setPlans(getMockData());
+      setIsConnected(false);
+
     } catch (error) {
       console.error('Failed to fetch retirement plans:', error);
-      setPlans([
-        {
-          id: '1',
-          name: 'Primary Retirement Plan',
-          currentAge: 35,
-          retirementAge: 65,
-          currentSavings: 150000,
-          monthlyContribution: 2000,
-          expectedReturn: 7,
-          inflationRate: 2.5,
-          targetAmount: 2000000,
-          projectedAmount: 2450000,
-          onTrack: true,
-          accounts: [
-            { type: '401(k)', balance: 120000, allocation: { stocks: 80, bonds: 15, cash: 5 } },
-            { type: 'Roth IRA', balance: 30000, allocation: { stocks: 90, bonds: 8, cash: 2 } },
-          ],
-        },
-      ]);
+      setPlans(getMockData());
+      setIsConnected(false);
     } finally {
       setIsLoading(false);
+      setIsRefreshing(false);
     }
-  };
+  }, [getMockData]);
+
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    await fetchPlans();
+  }, [fetchPlans]);
+
+  useEffect(() => {
+    fetchPlans();
+  }, [fetchPlans]);
 
   const calculateProjection = () => {
     const years = calcRetireAge - calcAge;
@@ -145,10 +220,34 @@ export default function RetirementPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">Retirement Planning</h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-bold text-white">Retirement Planning</h1>
+            {/* Connection Status Badge */}
+            {isConnected ? (
+              <span className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium bg-green-500/20 text-green-400 rounded-full border border-green-500/30">
+                <Wifi className="w-3 h-3" />
+                Live
+              </span>
+            ) : (
+              <span className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium bg-slate-500/20 text-slate-400 rounded-full border border-slate-500/30">
+                <WifiOff className="w-3 h-3" />
+                Demo
+              </span>
+            )}
+          </div>
           <p className="text-slate-400">Plan and track your path to financial freedom</p>
         </div>
         <div className="flex items-center gap-3">
+          {/* Refresh Button */}
+          <button
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            className="btn-secondary flex items-center gap-2"
+            title="Refresh data"
+          >
+            <RefreshCw className={clsx('w-4 h-4', isRefreshing && 'animate-spin')} />
+            Refresh
+          </button>
           <button
             onClick={() => setShowCalculator(true)}
             className="btn-secondary flex items-center gap-2"

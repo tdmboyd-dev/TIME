@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Bot,
   Brain,
@@ -19,11 +19,13 @@ import {
   CheckCircle,
   AlertCircle,
   Info,
-  ChevronRight
+  ChevronRight,
+  Wifi,
+  WifiOff
 } from 'lucide-react';
 import clsx from 'clsx';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+const API_BASE = 'https://time-backend-hosting.fly.dev/api/v1';
 
 interface Portfolio {
   id: string;
@@ -53,85 +55,93 @@ const riskColors = {
 export default function RoboAdvisorPage() {
   const [portfolios, setPortfolios] = useState<Portfolio[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isConnected, setIsConnected] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedRisk, setSelectedRisk] = useState<'conservative' | 'moderate' | 'aggressive'>('moderate');
 
-  useEffect(() => {
-    fetchPortfolios();
-  }, []);
+  // Mock data fallback
+  const getMockPortfolios = useCallback((): Portfolio[] => [
+    {
+      id: '1',
+      name: 'Growth Portfolio',
+      riskLevel: 'aggressive',
+      totalValue: 125000,
+      totalReturn: 18500,
+      returnPercent: 17.4,
+      allocation: [
+        { asset: 'US Stocks', percentage: 50, value: 62500, change: 2.3 },
+        { asset: 'International Stocks', percentage: 25, value: 31250, change: 1.8 },
+        { asset: 'Emerging Markets', percentage: 15, value: 18750, change: -0.5 },
+        { asset: 'Bonds', percentage: 10, value: 12500, change: 0.2 },
+      ],
+      isActive: true,
+      autoRebalance: true,
+      lastRebalance: '2024-12-01',
+      monthlyDeposit: 1500,
+    },
+    {
+      id: '2',
+      name: 'Balanced Portfolio',
+      riskLevel: 'moderate',
+      totalValue: 85000,
+      totalReturn: 8900,
+      returnPercent: 11.7,
+      allocation: [
+        { asset: 'US Stocks', percentage: 40, value: 34000, change: 1.5 },
+        { asset: 'International Stocks', percentage: 20, value: 17000, change: 0.8 },
+        { asset: 'Bonds', percentage: 30, value: 25500, change: 0.3 },
+        { asset: 'Real Estate', percentage: 10, value: 8500, change: 0.5 },
+      ],
+      isActive: true,
+      autoRebalance: true,
+      lastRebalance: '2024-11-15',
+      monthlyDeposit: 1000,
+    },
+  ], []);
 
-  const fetchPortfolios = async () => {
+  const fetchPortfolios = useCallback(async () => {
+    const loadingState = isRefreshing ? setIsRefreshing : setIsLoading;
+    loadingState(true);
+
     try {
-      const response = await fetch(`${API_BASE}/robo/portfolios`);
+      const response = await fetch(`${API_BASE}/robo/portfolios`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
       const data = await response.json();
-      if (data.success) {
+
+      if (response.ok && data.success && data.data) {
+        setIsConnected(true);
         setPortfolios(data.data);
+        console.log('Connected to live Robo API:', data.data.length, 'portfolios');
       } else {
-        // Sample data
-        setPortfolios([
-          {
-            id: '1',
-            name: 'Growth Portfolio',
-            riskLevel: 'aggressive',
-            totalValue: 125000,
-            totalReturn: 18500,
-            returnPercent: 17.4,
-            allocation: [
-              { asset: 'US Stocks', percentage: 50, value: 62500, change: 2.3 },
-              { asset: 'International Stocks', percentage: 25, value: 31250, change: 1.8 },
-              { asset: 'Emerging Markets', percentage: 15, value: 18750, change: -0.5 },
-              { asset: 'Bonds', percentage: 10, value: 12500, change: 0.2 },
-            ],
-            isActive: true,
-            autoRebalance: true,
-            lastRebalance: '2024-12-01',
-            monthlyDeposit: 1500,
-          },
-          {
-            id: '2',
-            name: 'Balanced Portfolio',
-            riskLevel: 'moderate',
-            totalValue: 85000,
-            totalReturn: 8900,
-            returnPercent: 11.7,
-            allocation: [
-              { asset: 'US Stocks', percentage: 40, value: 34000, change: 1.5 },
-              { asset: 'International Stocks', percentage: 20, value: 17000, change: 0.8 },
-              { asset: 'Bonds', percentage: 30, value: 25500, change: 0.3 },
-              { asset: 'Real Estate', percentage: 10, value: 8500, change: 0.5 },
-            ],
-            isActive: true,
-            autoRebalance: true,
-            lastRebalance: '2024-11-15',
-            monthlyDeposit: 1000,
-          },
-        ]);
+        // API returned error, use mock data
+        setIsConnected(false);
+        setPortfolios(getMockPortfolios());
+        console.log('Using mock data - API returned error');
       }
     } catch (error) {
+      // Network error or API unreachable, use mock data
       console.error('Failed to fetch portfolios:', error);
-      setPortfolios([
-        {
-          id: '1',
-          name: 'Growth Portfolio',
-          riskLevel: 'aggressive',
-          totalValue: 125000,
-          totalReturn: 18500,
-          returnPercent: 17.4,
-          allocation: [
-            { asset: 'US Stocks', percentage: 50, value: 62500, change: 2.3 },
-            { asset: 'International Stocks', percentage: 25, value: 31250, change: 1.8 },
-            { asset: 'Emerging Markets', percentage: 15, value: 18750, change: -0.5 },
-            { asset: 'Bonds', percentage: 10, value: 12500, change: 0.2 },
-          ],
-          isActive: true,
-          autoRebalance: true,
-          lastRebalance: '2024-12-01',
-          monthlyDeposit: 1500,
-        },
-      ]);
+      setIsConnected(false);
+      setPortfolios(getMockPortfolios());
+      console.log('Using mock data - API unreachable');
     } finally {
-      setIsLoading(false);
+      loadingState(false);
     }
+  }, [isRefreshing, getMockPortfolios]);
+
+  useEffect(() => {
+    fetchPortfolios();
+  }, [fetchPortfolios]);
+
+  const handleRefresh = () => {
+    setIsRefreshing(true);
+    fetchPortfolios();
   };
 
   const formatCurrency = (amount: number) => {
@@ -151,10 +161,45 @@ export default function RoboAdvisorPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">Robo-Advisor</h1>
+          <div className="flex items-center gap-3 mb-1">
+            <h1 className="text-2xl font-bold text-white">Robo-Advisor</h1>
+            {/* Connection Status Badge */}
+            <span
+              className={clsx(
+                'flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full',
+                isConnected
+                  ? 'bg-green-500/20 text-green-400'
+                  : 'bg-slate-700 text-slate-400'
+              )}
+            >
+              {isConnected ? (
+                <>
+                  <Wifi className="w-3 h-3" />
+                  Live
+                </>
+              ) : (
+                <>
+                  <WifiOff className="w-3 h-3" />
+                  Demo
+                </>
+              )}
+            </span>
+          </div>
           <p className="text-slate-400">AI-powered portfolio management and optimization</p>
         </div>
         <div className="flex items-center gap-3">
+          {/* Refresh Button */}
+          <button
+            onClick={handleRefresh}
+            disabled={isRefreshing || isLoading}
+            className={clsx(
+              'p-2 rounded-lg border border-slate-700 hover:bg-slate-700 transition-colors',
+              (isRefreshing || isLoading) && 'opacity-50 cursor-not-allowed'
+            )}
+            title="Refresh data"
+          >
+            <RefreshCw className={clsx('w-4 h-4 text-slate-400', isRefreshing && 'animate-spin')} />
+          </button>
           <button
             onClick={() => setShowCreateModal(true)}
             className="btn-primary flex items-center gap-2"

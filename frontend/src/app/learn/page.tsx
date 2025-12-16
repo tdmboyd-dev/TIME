@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   GraduationCap,
   Search,
@@ -16,9 +16,15 @@ import {
   Zap,
   ChevronRight,
   CheckCircle,
-  Lock
+  Lock,
+  RefreshCw,
+  Wifi,
+  WifiOff,
+  Loader2
 } from 'lucide-react';
 import clsx from 'clsx';
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://time-backend-hosting.fly.dev/api/v1';
 
 type ExplanationMode = 'plain_english' | 'beginner' | 'intermediate' | 'pro' | 'quant' | 'story';
 
@@ -142,24 +148,100 @@ export default function LearnPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedMode, setSelectedMode] = useState<ExplanationMode>('plain_english');
   const [filterCategory, setFilterCategory] = useState('all');
+  const [lessons, setLessons] = useState<Lesson[]>(mockLessons);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isConnected, setIsConnected] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const filteredLessons = mockLessons.filter(lesson => {
+  // Fetch courses from backend
+  const fetchCourses = useCallback(async () => {
+    try {
+      const token = localStorage.getItem('time_auth_token');
+      const response = await fetch(`${API_BASE}/learn/courses`, {
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.courses) {
+          const formattedLessons: Lesson[] = data.courses.map((c: any) => ({
+            id: c.id,
+            title: c.title,
+            description: c.description,
+            category: c.category || 'General',
+            difficulty: c.level || 'beginner',
+            duration: c.duration || 15,
+            completed: c.completed || false,
+            locked: c.locked || false,
+            rating: c.rating || 4.5,
+            lessons: c.lessons?.length || c.lessonCount || 5,
+          }));
+          setLessons(formattedLessons);
+          setIsConnected(true);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch courses:', error);
+      setIsConnected(false);
+    } finally {
+      setIsLoading(false);
+      setIsRefreshing(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchCourses();
+  }, [fetchCourses]);
+
+  const handleRefresh = () => {
+    setIsRefreshing(true);
+    fetchCourses();
+  };
+
+  const filteredLessons = lessons.filter(lesson => {
     const matchesSearch = lesson.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       lesson.description.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = filterCategory === 'all' || lesson.category === filterCategory;
     return matchesSearch && matchesCategory;
   });
 
-  const completedCount = mockLessons.filter(l => l.completed).length;
-  const totalCount = mockLessons.length;
+  const completedCount = lessons.filter(l => l.completed).length;
+  const totalCount = lessons.length;
   const progressPercent = Math.round((completedCount / totalCount) * 100);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 text-time-primary mx-auto animate-spin mb-4" />
+          <p className="text-white font-medium">Loading courses...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">Learn</h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-bold text-white">Learn</h1>
+            <div className={`flex items-center gap-2 px-3 py-1 rounded-full ${
+              isConnected
+                ? 'bg-green-500/20 border border-green-500/50'
+                : 'bg-amber-500/20 border border-amber-500/50'
+            }`}>
+              {isConnected ? (
+                <Wifi className="w-4 h-4 text-green-400" />
+              ) : (
+                <WifiOff className="w-4 h-4 text-amber-400" />
+              )}
+              <span className={`text-xs font-medium ${isConnected ? 'text-green-400' : 'text-amber-400'}`}>
+                {isConnected ? 'Live' : 'Demo'}
+              </span>
+            </div>
+          </div>
           <p className="text-slate-400">TIME teaches you in your preferred style</p>
         </div>
         <div className="flex items-center gap-3">

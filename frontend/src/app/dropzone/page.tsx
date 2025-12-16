@@ -29,7 +29,7 @@ import {
 } from 'lucide-react';
 import clsx from 'clsx';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://time-backend-hosting.fly.dev/api/v1';
 
 // Bot Card Component - Visual representation with symbol
 function BotCard({ bot, onSelect, isSelected }: { bot: AutoGenBot; onSelect: () => void; isSelected: boolean }) {

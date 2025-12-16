@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Coins,
   TrendingUp,
@@ -18,8 +18,11 @@ import {
   Info,
   X,
   CheckCircle,
-  Loader2
+  Loader2,
+  RefreshCw
 } from 'lucide-react';
+
+const API_BASE = 'https://time-backend-hosting.fly.dev/api/v1';
 
 interface Pool {
   id: string;
@@ -76,6 +79,14 @@ export default function DeFiPage() {
   const [depositAmount, setDepositAmount] = useState('');
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
+  // API connection state
+  const [isLoading, setIsLoading] = useState(true);
+  const [isConnected, setIsConnected] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [apiPools, setApiPools] = useState<Pool[]>([]);
+  const [apiStaking, setApiStaking] = useState<StakingOption[]>([]);
+  const [apiPortfolio, setApiPortfolio] = useState<any>(null);
+
   const wallets = [
     { id: 'metamask', name: 'MetaMask', icon: '🦊', popular: true },
     { id: 'coinbase', name: 'Coinbase Wallet', icon: '🔵', popular: true },
@@ -84,6 +95,64 @@ export default function DeFiPage() {
     { id: 'trust', name: 'Trust Wallet', icon: '🛡️', popular: false },
     { id: 'rainbow', name: 'Rainbow', icon: '🌈', popular: false },
   ];
+
+  // Fetch DeFi data from API
+  const fetchDeFiData = useCallback(async () => {
+    const startTime = Date.now();
+    setIsRefreshing(true);
+
+    try {
+      const [protocolsRes, yieldRes, portfolioRes] = await Promise.all([
+        fetch(`${API_BASE}/defi/protocols`).catch(() => null),
+        fetch(`${API_BASE}/defi/yield-opportunities`).catch(() => null),
+        fetch(`${API_BASE}/defi/portfolio`).catch(() => null),
+      ]);
+
+      if (protocolsRes?.ok) {
+        const data = await protocolsRes.json();
+        // Map API data to Pool format if available
+        if (data.protocols && Array.isArray(data.protocols)) {
+          setApiPools(data.protocols);
+        }
+      }
+
+      if (yieldRes?.ok) {
+        const data = await yieldRes.json();
+        // Map API data to StakingOption format if available
+        if (data.opportunities && Array.isArray(data.opportunities)) {
+          setApiStaking(data.opportunities);
+        }
+      }
+
+      if (portfolioRes?.ok) {
+        const data = await portfolioRes.json();
+        setApiPortfolio(data);
+      }
+
+      setIsConnected(true);
+    } catch (error) {
+      console.error('Failed to fetch DeFi data:', error);
+      setIsConnected(false);
+    } finally {
+      // Ensure loading indicator shows for at least 500ms
+      const elapsed = Date.now() - startTime;
+      const remaining = Math.max(0, 500 - elapsed);
+      setTimeout(() => {
+        setIsLoading(false);
+        setIsRefreshing(false);
+      }, remaining);
+    }
+  }, []);
+
+  // Load data on mount
+  useEffect(() => {
+    fetchDeFiData();
+  }, [fetchDeFiData]);
+
+  // Refresh handler
+  const handleRefresh = () => {
+    fetchDeFiData();
+  };
 
   const connectWallet = async (walletId: string) => {
     setIsConnecting(true);
@@ -120,10 +189,14 @@ export default function DeFiPage() {
     setTimeout(() => setNotification(null), 5000);
   };
 
-  const totalTVL = liquidityPools.reduce((sum, p) => sum + p.tvl, 0);
-  const userTotalStaked = liquidityPools.reduce((sum, p) => sum + (p.userStaked || 0), 0) +
-                          stakingOptions.reduce((sum, s) => sum + (s.userStaked || 0) * 100, 0);
-  const userTotalRewards = liquidityPools.reduce((sum, p) => sum + (p.userRewards || 0), 0);
+  // Use API data if available, otherwise fallback to mock data
+  const displayPools = apiPools.length > 0 ? apiPools : liquidityPools;
+  const displayStaking = apiStaking.length > 0 ? apiStaking : stakingOptions;
+
+  const totalTVL = displayPools.reduce((sum, p) => sum + p.tvl, 0);
+  const userTotalStaked = displayPools.reduce((sum, p) => sum + (p.userStaked || 0), 0) +
+                          displayStaking.reduce((sum, s) => sum + (s.userStaked || 0) * 100, 0);
+  const userTotalRewards = displayPools.reduce((sum, p) => sum + (p.userRewards || 0), 0);
 
   const getRiskColor = (risk: string) => {
     switch (risk) {
@@ -133,6 +206,21 @@ export default function DeFiPage() {
       default: return 'text-slate-400 bg-slate-500/20';
     }
   };
+
+  // Show loading state on initial load
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="text-center">
+            <Loader2 className="w-12 h-12 text-time-primary mx-auto animate-spin mb-4" />
+            <p className="text-white font-medium">Loading DeFi data...</p>
+            <p className="text-sm text-slate-400 mt-1">Connecting to backend API</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -151,32 +239,61 @@ export default function DeFiPage() {
 
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-white">DeFi</h1>
-          <p className="text-slate-400 mt-1">Earn yield through decentralized finance protocols</p>
-        </div>
-        {walletConnected ? (
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 px-3 py-2 bg-green-500/20 border border-green-500/30 rounded-lg">
-              <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-              <span className="text-sm text-green-400 font-mono">{walletAddress}</span>
-            </div>
-            <button
-              onClick={disconnectWallet}
-              className="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-white font-medium transition-colors"
-            >
-              Disconnect
-            </button>
+        <div className="flex items-center gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-white">DeFi</h1>
+            <p className="text-slate-400 mt-1">Earn yield through decentralized finance protocols</p>
           </div>
-        ) : (
+          {/* Connection Status Badge */}
+          <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border ${
+            isConnected
+              ? 'bg-green-500/20 border-green-500/30'
+              : 'bg-yellow-500/20 border-yellow-500/30'
+          }`}>
+            <span className={`w-2 h-2 rounded-full ${
+              isConnected ? 'bg-green-500' : 'bg-yellow-500'
+            } ${isConnected ? 'animate-pulse' : ''}`}></span>
+            <span className={`text-xs font-medium ${
+              isConnected ? 'text-green-400' : 'text-yellow-400'
+            }`}>
+              {isConnected ? 'Live' : 'Demo'}
+            </span>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          {/* Refresh Button */}
           <button
-            onClick={() => setShowWalletModal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-time-primary hover:bg-time-primary/80 rounded-lg text-white font-medium transition-colors"
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            className="flex items-center gap-2 px-3 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg text-white font-medium transition-colors"
+            title="Refresh data"
           >
-            <Wallet className="w-4 h-4" />
-            Connect Wallet
+            <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            {isRefreshing ? 'Refreshing...' : 'Refresh'}
           </button>
-        )}
+          {walletConnected ? (
+            <>
+              <div className="flex items-center gap-2 px-3 py-2 bg-green-500/20 border border-green-500/30 rounded-lg">
+                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                <span className="text-sm text-green-400 font-mono">{walletAddress}</span>
+              </div>
+              <button
+                onClick={disconnectWallet}
+                className="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-white font-medium transition-colors"
+              >
+                Disconnect
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={() => setShowWalletModal(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-time-primary hover:bg-time-primary/80 rounded-lg text-white font-medium transition-colors"
+            >
+              <Wallet className="w-4 h-4" />
+              Connect Wallet
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Summary Cards */}
@@ -257,7 +374,7 @@ export default function DeFiPage() {
               </tr>
             </thead>
             <tbody className="text-sm">
-              {liquidityPools.map(pool => (
+              {displayPools.map(pool => (
                 <tr key={pool.id} className="border-b border-slate-800/50 hover:bg-slate-800/30">
                   <td className="px-4 py-4">
                     <div className="flex items-center gap-2">
@@ -324,7 +441,7 @@ export default function DeFiPage() {
       {/* Staking Tab */}
       {activeTab === 'staking' && (
         <div className="grid grid-cols-3 gap-4">
-          {stakingOptions.map(option => (
+          {displayStaking.map(option => (
             <div key={option.id} className="card p-4 space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
