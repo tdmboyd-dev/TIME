@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Shield,
   Power,
@@ -21,9 +21,13 @@ import {
   Lock,
   Unlock,
   X,
-  Loader2
+  Loader2,
+  Wifi,
+  WifiOff
 } from 'lucide-react';
 import clsx from 'clsx';
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://time-backend-hosting.fly.dev/api/v1';
 
 type EvolutionMode = 'controlled' | 'autonomous';
 
@@ -52,30 +56,125 @@ export default function AdminPage() {
   const [botsRunning, setBotsRunning] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
   const [showEmergencyDialog, setShowEmergencyDialog] = useState(false);
+  const [isConnected, setIsConnected] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [systemEvents, setSystemEvents] = useState<SystemEvent[]>(mockEvents);
+  const [metrics, setMetrics] = useState<any>(null);
+
+  // Fetch admin data from backend
+  const fetchAdminData = useCallback(async () => {
+    try {
+      const token = localStorage.getItem('time_auth_token');
+      if (!token) {
+        setIsLoading(false);
+        return;
+      }
+
+      const [evolutionRes, activityRes, metricsRes] = await Promise.all([
+        fetch(`${API_BASE}/admin/evolution`, {
+          headers: { 'Authorization': `Bearer ${token}` },
+        }),
+        fetch(`${API_BASE}/admin/activity`, {
+          headers: { 'Authorization': `Bearer ${token}` },
+        }),
+        fetch(`${API_BASE}/admin/metrics`, {
+          headers: { 'Authorization': `Bearer ${token}` },
+        }),
+      ]);
+
+      if (evolutionRes.ok) {
+        const data = await evolutionRes.json();
+        if (data.success) {
+          setEvolutionMode(data.mode || 'controlled');
+          setIsConnected(true);
+        }
+      }
+
+      if (activityRes.ok) {
+        const data = await activityRes.json();
+        if (data.success && data.events) {
+          setSystemEvents(data.events.map((e: any) => ({
+            ...e,
+            timestamp: new Date(e.timestamp),
+          })));
+        }
+      }
+
+      if (metricsRes.ok) {
+        const data = await metricsRes.json();
+        if (data.success) {
+          setMetrics(data.metrics);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch admin data:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchAdminData();
+    const interval = setInterval(fetchAdminData, 15000);
+    return () => clearInterval(interval);
+  }, [fetchAdminData]);
 
   const handleStartAllBots = async () => {
     setNotification({ type: 'success', message: 'Starting all bots...' });
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    setBotsRunning(true);
-    setNotification({ type: 'success', message: 'All 12 bots are now active and trading!' });
+    try {
+      const token = localStorage.getItem('time_auth_token');
+      const response = await fetch(`${API_BASE}/trading/start-all`, {
+        method: 'POST',
+        headers: { ...(token ? { 'Authorization': `Bearer ${token}` } : {}) },
+      });
+      if (response.ok) {
+        setBotsRunning(true);
+        setNotification({ type: 'success', message: 'All bots are now active and trading!' });
+      } else {
+        throw new Error('Failed to start bots');
+      }
+    } catch (error) {
+      setNotification({ type: 'error', message: 'Failed to start bots' });
+    }
     setTimeout(() => setNotification(null), 4000);
   };
 
   const handlePauseAllBots = async () => {
     setNotification({ type: 'warning', message: 'Pausing all bots...' });
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    setBotsRunning(false);
-    setNotification({ type: 'success', message: 'All bots paused. Trading halted.' });
+    try {
+      const token = localStorage.getItem('time_auth_token');
+      const response = await fetch(`${API_BASE}/admin/emergency/pause-all`, {
+        method: 'POST',
+        headers: { ...(token ? { 'Authorization': `Bearer ${token}` } : {}) },
+      });
+      if (response.ok) {
+        setBotsRunning(false);
+        setNotification({ type: 'success', message: 'All bots paused. Trading halted.' });
+      } else {
+        throw new Error('Failed to pause bots');
+      }
+    } catch (error) {
+      setNotification({ type: 'error', message: 'Failed to pause bots' });
+    }
     setTimeout(() => setNotification(null), 4000);
   };
 
   const handleForceSync = async () => {
     setIsSyncing(true);
     setNotification({ type: 'success', message: 'Syncing with all connected brokers...' });
-    await new Promise(resolve => setTimeout(resolve, 2500));
-    setIsSyncing(false);
-    setNotification({ type: 'success', message: 'Successfully synced with 5 broker connections!' });
-    setTimeout(() => setNotification(null), 4000);
+    try {
+      const token = localStorage.getItem('time_auth_token');
+      await fetch(`${API_BASE}/portfolio/brokers/status`, {
+        headers: { ...(token ? { 'Authorization': `Bearer ${token}` } : {}) },
+      });
+      setNotification({ type: 'success', message: 'Successfully synced with broker connections!' });
+      fetchAdminData();
+    } catch (error) {
+      setNotification({ type: 'error', message: 'Failed to sync brokers' });
+    } finally {
+      setIsSyncing(false);
+      setTimeout(() => setNotification(null), 4000);
+    }
   };
 
   const handleEmergencyBrake = async () => {

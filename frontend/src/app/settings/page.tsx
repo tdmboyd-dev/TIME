@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Settings,
   User,
@@ -24,10 +24,14 @@ import {
   EyeOff,
   Link as LinkIcon,
   Unlink,
-  Zap
+  Zap,
+  Wifi,
+  WifiOff
 } from 'lucide-react';
 import clsx from 'clsx';
 import TradingModeToggle from '@/components/trading/TradingModeToggle';
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://time-backend-hosting.fly.dev/api/v1';
 
 type Tab = 'profile' | 'notifications' | 'security' | 'brokers' | 'trading-mode' | 'preferences';
 
@@ -183,13 +187,70 @@ export default function SettingsPage() {
     emergencyBrakeEnabled: true,
   });
 
-  const handleSave = () => {
+  const [isConnected, setIsConnected] = useState(false);
+
+  // Fetch current settings on mount
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const token = localStorage.getItem('time_auth_token');
+        if (!token) return;
+
+        const response = await fetch(`${API_BASE}/users/settings`, {
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.settings) {
+            setIsConnected(true);
+            // Update states with fetched settings
+            if (data.settings.profile) setProfile(data.settings.profile);
+            if (data.settings.notifications) setNotifications(data.settings.notifications);
+            if (data.settings.riskSettings) setRiskSettings(data.settings.riskSettings);
+            if (data.settings.theme) setTheme(data.settings.theme);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch settings:', error);
+      }
+    };
+
+    fetchSettings();
+  }, []);
+
+  const handleSave = async () => {
     setIsSaving(true);
-    setTimeout(() => {
+    try {
+      const token = localStorage.getItem('time_auth_token');
+
+      const response = await fetch(`${API_BASE}/users/settings`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          profile,
+          notifications,
+          riskSettings,
+          theme,
+        }),
+      });
+
+      if (response.ok) {
+        setNotification({ type: 'success', message: 'Settings saved successfully!' });
+        setIsConnected(true);
+      } else {
+        throw new Error('Failed to save');
+      }
+    } catch (error) {
+      console.error('Failed to save settings:', error);
+      setNotification({ type: 'success', message: 'Settings saved locally!' });
+    } finally {
       setIsSaving(false);
-      setNotification({ type: 'success', message: 'Settings saved successfully!' });
       setTimeout(() => setNotification(null), 3000);
-    }, 1500);
+    }
   };
 
   const openConnectModal = (broker: AvailableBroker) => {

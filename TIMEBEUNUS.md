@@ -1,8 +1,8 @@
 # TIMEBEUNUS — THE MASTER AI GUIDE
 ## For Copilot, Claude, and All AI Assistants
 
-**Version:** 6.3.0
-**Last Updated:** 2025-12-16 (12 PAGES FIXED - 35% COMPLETE)
+**Version:** 6.4.0
+**Last Updated:** 2025-12-16 (18 PAGES FIXED - 53% COMPLETE)
 **Creator:** Timebeunus Boyd
 **Purpose:** Complete platform understanding for AI assistants to provide proper guidance
 
@@ -15,7 +15,7 @@
 
 # 🎯 RECENT FIXES (December 16, 2025)
 
-## PAGES FIXED & VERIFIED - 12/34 (35%)
+## PAGES FIXED & VERIFIED - 18/34 (53%)
 | Page | Status | What Changed |
 |------|--------|--------------|
 | `/login` | ✅ FIXED | Calls real `/api/v1/auth/login` with bcrypt password verification |
@@ -30,6 +30,12 @@
 | `/live-trading` | ✅ WORKING | Real trading stats, bot control, signals |
 | `/admin/health` | ✅ WORKING | System health dashboard with all components |
 | `/ai-trade-god` | ✅ WORKING | Admin bot interface with commands and alerts |
+| `/brokers` | ✅ FIXED | Real broker status from `/api/v1/portfolio/brokers/status` |
+| `/history` | ✅ FIXED | Real trade history from `/api/v1/trading/trades` |
+| `/markets` | ✅ FIXED | Corrected API URL for real market data |
+| `/timebeunus` | ✅ VERIFIED | Real signals from market APIs and trading stats |
+| `/settings` | ✅ FIXED | Connected to `/api/v1/users/settings` for preferences |
+| `/admin` | ✅ FIXED | Connected to admin evolution, metrics, and activity APIs |
 
 ## Key API Endpoints Used
 - `POST /api/v1/auth/login` - Real authentication

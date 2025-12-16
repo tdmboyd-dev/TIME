@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   History,
   Search,
@@ -14,9 +14,15 @@ import {
   Target,
   ChevronDown,
   ChevronUp,
-  ExternalLink
+  ExternalLink,
+  Wifi,
+  WifiOff,
+  RefreshCw,
+  Loader2
 } from 'lucide-react';
 import clsx from 'clsx';
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://time-backend-hosting.fly.dev/api/v1';
 
 interface Trade {
   id: string;
@@ -125,8 +131,123 @@ export default function HistoryPage() {
   const [expandedTrade, setExpandedTrade] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<'date' | 'pnl'>('date');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [trades, setTrades] = useState<Trade[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isConnected, setIsConnected] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const filteredTrades = mockTrades
+  // Fetch trades from backend
+  const fetchTrades = useCallback(async () => {
+    try {
+      const token = localStorage.getItem('time_auth_token');
+      const [tradingResponse, portfolioResponse] = await Promise.all([
+        fetch(`${API_BASE}/trading/trades?limit=100`, {
+          headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+        }),
+        fetch(`${API_BASE}/portfolio/trades`, {
+          headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+        }),
+      ]);
+
+      let allTrades: Trade[] = [];
+
+      // Parse trading history
+      if (tradingResponse.ok) {
+        const tradingData = await tradingResponse.json();
+        if (tradingData.success && tradingData.data) {
+          const formattedTrades = tradingData.data.map((t: any) => ({
+            id: t.id,
+            symbol: t.symbol,
+            direction: t.side === 'buy' ? 'long' : 'short',
+            entryPrice: t.entryPrice,
+            exitPrice: t.exitPrice || t.currentPrice || t.entryPrice,
+            quantity: t.quantity,
+            pnl: t.pnl || 0,
+            pnlPercent: t.pnlPercent || 0,
+            botName: t.botId || 'Manual',
+            strategyName: t.strategy || 'Unknown',
+            entryTime: new Date(t.entryTime || t.createdAt),
+            exitTime: new Date(t.exitTime || t.updatedAt || Date.now()),
+            duration: t.duration || 0,
+            reasoning: t.reasoning || t.notes || 'No reasoning provided',
+          }));
+          allTrades = [...allTrades, ...formattedTrades];
+          setIsConnected(true);
+        }
+      }
+
+      // Parse portfolio trades
+      if (portfolioResponse.ok) {
+        const portfolioData = await portfolioResponse.json();
+        if (portfolioData.success && portfolioData.data) {
+          const portfolioTrades = portfolioData.data.map((t: any) => ({
+            id: t.id || `portfolio-${Date.now()}-${Math.random()}`,
+            symbol: t.symbol,
+            direction: t.side === 'buy' ? 'long' : 'short',
+            entryPrice: t.avgPrice || t.price,
+            exitPrice: t.currentPrice || t.avgPrice,
+            quantity: t.quantity,
+            pnl: t.pnl || t.unrealizedPnL || 0,
+            pnlPercent: t.pnlPercent || 0,
+            botName: t.broker || 'Portfolio',
+            strategyName: 'Position',
+            entryTime: new Date(t.openedAt || Date.now()),
+            exitTime: new Date(t.closedAt || Date.now()),
+            duration: 0,
+            reasoning: 'Portfolio position',
+          }));
+          allTrades = [...allTrades, ...portfolioTrades];
+        }
+      }
+
+      if (allTrades.length > 0) {
+        setTrades(allTrades);
+      } else {
+        // Use mock data as fallback
+        setTrades(mockTrades);
+        setIsConnected(false);
+      }
+    } catch (error) {
+      console.error('Failed to fetch trades:', error);
+      setTrades(mockTrades);
+      setIsConnected(false);
+    } finally {
+      setIsLoading(false);
+      setIsRefreshing(false);
+    }
+  }, []);
+
+  // Initial fetch
+  useEffect(() => {
+    fetchTrades();
+    // Auto-refresh every 30 seconds
+    const interval = setInterval(fetchTrades, 30000);
+    return () => clearInterval(interval);
+  }, [fetchTrades]);
+
+  const handleRefresh = () => {
+    setIsRefreshing(true);
+    fetchTrades();
+  };
+
+  const handleExport = () => {
+    const csvContent = [
+      ['ID', 'Symbol', 'Direction', 'Entry Price', 'Exit Price', 'Quantity', 'P&L', 'P&L %', 'Bot', 'Strategy', 'Entry Time', 'Exit Time'].join(','),
+      ...trades.map(t => [
+        t.id, t.symbol, t.direction, t.entryPrice, t.exitPrice, t.quantity, t.pnl, t.pnlPercent, t.botName, t.strategyName, t.entryTime.toISOString(), t.exitTime.toISOString()
+      ].join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `trade-history-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const filteredTrades = trades
     .filter(trade => {
       const matchesSearch = trade.symbol.toLowerCase().includes(searchQuery.toLowerCase()) ||
         trade.botName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -160,18 +281,55 @@ export default function HistoryPage() {
     return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 text-time-primary mx-auto animate-spin mb-4" />
+          <p className="text-white font-medium">Loading trade history...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">Trade History</h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-bold text-white">Trade History</h1>
+            <div className={`flex items-center gap-2 px-3 py-1 rounded-full ${
+              isConnected
+                ? 'bg-green-500/20 border border-green-500/50'
+                : 'bg-amber-500/20 border border-amber-500/50'
+            }`}>
+              {isConnected ? (
+                <Wifi className="w-4 h-4 text-green-400" />
+              ) : (
+                <WifiOff className="w-4 h-4 text-amber-400" />
+              )}
+              <span className={`text-xs font-medium ${isConnected ? 'text-green-400' : 'text-amber-400'}`}>
+                {isConnected ? 'Live' : 'Demo'}
+              </span>
+            </div>
+          </div>
           <p className="text-slate-400">Complete record of all trades with attribution</p>
         </div>
-        <button className="btn-secondary flex items-center gap-2">
-          <Download className="w-4 h-4" />
-          Export
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 transition-colors disabled:opacity-50"
+            title="Refresh trades"
+          >
+            <RefreshCw className={`w-5 h-5 text-slate-400 ${isRefreshing ? 'animate-spin' : ''}`} />
+          </button>
+          <button onClick={handleExport} className="btn-secondary flex items-center gap-2">
+            <Download className="w-4 h-4" />
+            Export
+          </button>
+        </div>
       </div>
 
       {/* Stats */}
