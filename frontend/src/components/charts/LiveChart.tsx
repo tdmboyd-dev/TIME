@@ -260,7 +260,7 @@ export function LiveChart() {
             <span className="text-sm font-medium text-white">{price.symbol}</span>
             <span className="text-sm font-mono text-white">
               ${price.price.toLocaleString(undefined, {
-                minimumFractionDigits: 2,
+                minimumFractionDigits: price.price > 1000 ? 0 : 2,
                 maximumFractionDigits: price.price > 1000 ? 0 : 2,
               })}
             </span>
