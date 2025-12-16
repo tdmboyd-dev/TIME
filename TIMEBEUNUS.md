@@ -1,8 +1,8 @@
 # TIMEBEUNUS — THE MASTER AI GUIDE
 ## For Copilot, Claude, and All AI Assistants
 
-**Version:** 6.4.1
-**Last Updated:** 2025-12-16 (19 PAGES FIXED - 56% COMPLETE)
+**Version:** 6.4.2
+**Last Updated:** 2025-12-16 (20 PAGES FIXED - 59% COMPLETE)
 **Creator:** Timebeunus Boyd
 **Purpose:** Complete platform understanding for AI assistants to provide proper guidance
 
@@ -15,7 +15,7 @@
 
 # 🎯 RECENT FIXES (December 16, 2025)
 
-## PAGES FIXED & VERIFIED - 19/34 (56%)
+## PAGES FIXED & VERIFIED - 20/34 (59%)
 | Page | Status | What Changed |
 |------|--------|--------------|
 | `/login` | ✅ FIXED | Calls real `/api/v1/auth/login` with bcrypt password verification |
@@ -37,6 +37,7 @@
 | `/settings` | ✅ FIXED | Connected to `/api/v1/users/settings` for preferences |
 | `/admin` | ✅ FIXED | Connected to admin evolution, metrics, and activity APIs |
 | `/vision` | ✅ FIXED | Connected to real market data APIs with Live/Demo badge |
+| `/risk` | ✅ FIXED | Connected to real risk analysis and portfolio APIs with Live/Demo status |
 
 ## Key API Endpoints Used
 - `POST /api/v1/auth/login` - Real authentication
@@ -48,6 +49,9 @@
 - `GET /api/v1/bots/public` - Bot listing
 - `POST /api/v1/bots/:id/activate` - Bot activation
 - `GET /api/v1/portfolio/positions` - Portfolio positions
+- `GET /api/v1/portfolio/summary` - Portfolio summary with metrics
+- `GET /api/v1/risk/analysis` - Risk analysis and metrics
+- `GET /api/v1/risk/settings` - Risk management settings
 - `GET /api/v1/real-market/status` - Market provider status
 - `GET /api/v1/real-market/stock/:symbol` - Stock data
 - `GET /api/v1/real-market/crypto/:symbol` - Crypto data
@@ -637,6 +641,19 @@ Should return: `{"status":"ok","timestamp":"...","components":[...]}`
 ---
 
 # CHANGELOG
+
+## v6.4.2 (2025-12-16) - RISK PAGE FIXED
+- ✅ **FIXED Risk Page** (`frontend/src/app/risk/page.tsx`)
+  - Updated API_BASE to point to `https://time-backend-hosting.fly.dev/api/v1`
+  - Added useState for isConnected and isRefreshing status tracking
+  - Converted fetchProfile to useCallback for better performance
+  - Added parallel API calls to `/api/v1/risk/analysis` and `/api/v1/portfolio/summary`
+  - Added Live/Demo connection status badge with Wifi/WifiOff icons in header
+  - Added refresh button with loading spinner animation (both in header and Risk Score card)
+  - Implemented flexible data mapping to handle various backend response formats
+  - Graceful fallback to mock data if API fails
+  - All existing functionality preserved (Risk Score, metrics, recommendations, assessment modal)
+- ✅ Progress: 20/34 pages fixed (59% complete)
 
 ## v6.4.1 (2025-12-16) - VISION PAGE FIXED
 - ✅ **FIXED Vision Page** (`frontend/src/app/vision/page.tsx`)
