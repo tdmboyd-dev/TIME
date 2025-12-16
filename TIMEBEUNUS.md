@@ -2,7 +2,7 @@
 ## For Copilot, Claude, and All AI Assistants
 
 **Version:** 6.4.2
-**Last Updated:** 2025-12-16 (20 PAGES FIXED - 59% COMPLETE)
+**Last Updated:** 2025-12-16 (21 PAGES FIXED - 62% COMPLETE)
 **Creator:** Timebeunus Boyd
 **Purpose:** Complete platform understanding for AI assistants to provide proper guidance
 
@@ -15,7 +15,7 @@
 
 # 🎯 RECENT FIXES (December 16, 2025)
 
-## PAGES FIXED & VERIFIED - 20/34 (59%)
+## PAGES FIXED & VERIFIED - 21/34 (62%)
 | Page | Status | What Changed |
 |------|--------|--------------|
 | `/login` | ✅ FIXED | Calls real `/api/v1/auth/login` with bcrypt password verification |
@@ -38,6 +38,7 @@
 | `/admin` | ✅ FIXED | Connected to admin evolution, metrics, and activity APIs |
 | `/vision` | ✅ FIXED | Connected to real market data APIs with Live/Demo badge |
 | `/risk` | ✅ FIXED | Connected to real risk analysis and portfolio APIs with Live/Demo status |
+| `/tax` | ✅ FIXED | Tax-loss harvesting connected to real backend APIs with Live/Demo status |
 
 ## Key API Endpoints Used
 - `POST /api/v1/auth/login` - Real authentication
@@ -52,6 +53,10 @@
 - `GET /api/v1/portfolio/summary` - Portfolio summary with metrics
 - `GET /api/v1/risk/analysis` - Risk analysis and metrics
 - `GET /api/v1/risk/settings` - Risk management settings
+- `GET /api/v1/tax/harvest/summary` - Tax-loss harvesting yearly summary
+- `GET /api/v1/tax/harvest/wash-sale-calendar` - Wash sale calendar
+- `POST /api/v1/tax/harvest/opportunities` - Scan for tax-loss harvesting opportunities
+- `POST /api/v1/tax/harvest/execute` - Execute tax-loss harvest
 - `GET /api/v1/real-market/status` - Market provider status
 - `GET /api/v1/real-market/stock/:symbol` - Stock data
 - `GET /api/v1/real-market/crypto/:symbol` - Crypto data
@@ -641,6 +646,21 @@ Should return: `{"status":"ok","timestamp":"...","components":[...]}`
 ---
 
 # CHANGELOG
+
+## v6.4.3 (2025-12-16) - TAX PAGE FIXED
+- ✅ **FIXED Tax Page** (`frontend/src/app/tax/page.tsx`)
+  - Added API_BASE constant pointing to `https://time-backend-hosting.fly.dev/api/v1`
+  - Added useState for isConnected and isRefreshing status tracking
+  - Converted fetchData to useCallback for better performance
+  - Added handleRefresh callback for manual data refresh
+  - Updated all fetch calls to use full backend URL (`${API_BASE}/tax/harvest/*`)
+  - Added Live/Demo connection status badge with Wifi/WifiOff icons in header
+  - Added refresh button with loading spinner in header (separate from Scan Portfolio button)
+  - Implemented fallback to mock data (yearly summary, wash sale calendar) if API fails
+  - All existing functionality preserved (scan opportunities, execute harvest, wash sale calendar)
+  - Connection status updates on all API calls (summary, calendar, opportunities, execute)
+  - Better error handling with user notifications on harvest execution failures
+- ✅ Progress: 21/34 pages fixed (62% complete)
 
 ## v6.4.2 (2025-12-16) - RISK PAGE FIXED
 - ✅ **FIXED Risk Page** (`frontend/src/app/risk/page.tsx`)

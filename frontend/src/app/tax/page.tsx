@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Receipt,
   TrendingDown,
@@ -12,7 +12,12 @@ import {
   RefreshCcw,
   ArrowRight,
   Loader2,
+  Wifi,
+  WifiOff,
 } from 'lucide-react';
+
+// Backend API Configuration
+const API_BASE = 'https://time-backend-hosting.fly.dev/api/v1';
 
 interface HarvestOpportunity {
   id: string;
@@ -57,32 +62,71 @@ export default function TaxPage() {
   const [yearlySummary, setYearlySummary] = useState<YearlySummary | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isScanning, setIsScanning] = useState(false);
+  const [isConnected, setIsConnected] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+  // Mock data for fallback
+  const mockYearlySummary: YearlySummary = {
+    year: 2025,
+    totalHarvested: 12500,
+    totalTaxSavings: 3125,
+    harvestCount: 8,
+  };
 
-  const fetchData = async () => {
+  const mockWashSaleCalendar: WashSaleEntry[] = [
+    { symbol: 'AAPL', canTradeAfter: '2025-12-30', dayesRemaining: 14 },
+    { symbol: 'TSLA', canTradeAfter: '2025-12-25', dayesRemaining: 9 },
+  ];
+
+  const fetchData = useCallback(async () => {
     try {
       // Fetch yearly summary
-      const summaryRes = await fetch('/api/v1/tax/harvest/summary');
+      const summaryRes = await fetch(`${API_BASE}/tax/harvest/summary`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+      });
       const summaryData = await summaryRes.json();
-      if (summaryData.success) {
+
+      if (summaryData.success && summaryData.data) {
         setYearlySummary(summaryData.data);
+        setIsConnected(true);
+      } else {
+        throw new Error('Invalid response format');
       }
 
       // Fetch wash sale calendar
-      const calendarRes = await fetch('/api/v1/tax/harvest/wash-sale-calendar');
+      const calendarRes = await fetch(`${API_BASE}/tax/harvest/wash-sale-calendar`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+      });
       const calendarData = await calendarRes.json();
-      if (calendarData.success) {
-        setWashSaleCalendar(calendarData.data.calendar);
+
+      if (calendarData.success && calendarData.data) {
+        setWashSaleCalendar(calendarData.data.calendar || []);
+        setIsConnected(true);
+      } else {
+        throw new Error('Invalid response format');
       }
     } catch (error) {
-      console.error('Failed to fetch data:', error);
+      console.error('Failed to fetch data from backend, using mock data:', error);
+      // Fallback to mock data
+      setYearlySummary(mockYearlySummary);
+      setWashSaleCalendar(mockWashSaleCalendar);
+      setIsConnected(false);
     } finally {
       setIsLoading(false);
+      setIsRefreshing(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    await fetchData();
+  }, [fetchData]);
 
   const scanForOpportunities = async () => {
     setIsScanning(true);
@@ -103,7 +147,7 @@ export default function TaxPage() {
         accountId: p.accountId,
       }));
 
-      const res = await fetch('/api/v1/tax/harvest/opportunities', {
+      const res = await fetch(`${API_BASE}/tax/harvest/opportunities`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -114,11 +158,16 @@ export default function TaxPage() {
       });
 
       const data = await res.json();
-      if (data.success) {
-        setOpportunities(data.data.opportunities);
+      if (data.success && data.data) {
+        setOpportunities(data.data.opportunities || []);
+        setIsConnected(true);
+      } else {
+        throw new Error('Invalid response format');
       }
     } catch (error) {
-      console.error('Failed to scan:', error);
+      console.error('Failed to scan, backend may be unavailable:', error);
+      setIsConnected(false);
+      // Keep opportunities empty if scan fails
     } finally {
       setIsScanning(false);
     }
@@ -126,7 +175,7 @@ export default function TaxPage() {
 
   const executeHarvest = async (opportunity: HarvestOpportunity) => {
     try {
-      const res = await fetch('/api/v1/tax/harvest/execute', {
+      const res = await fetch(`${API_BASE}/tax/harvest/execute`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ opportunity }),
@@ -135,11 +184,16 @@ export default function TaxPage() {
       const data = await res.json();
       if (data.success) {
         alert(`Tax-loss harvest executed! Estimated tax savings: $${opportunity.estimatedTaxSavings.toFixed(2)}`);
+        setIsConnected(true);
         fetchData();
         scanForOpportunities();
+      } else {
+        throw new Error('Invalid response format');
       }
     } catch (error) {
       console.error('Failed to execute harvest:', error);
+      setIsConnected(false);
+      alert('Failed to execute harvest. Backend may be unavailable.');
     }
   };
 
@@ -149,26 +203,62 @@ export default function TaxPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold flex items-center gap-3">
-              <Leaf className="w-8 h-8 text-green-400" />
-              Tax-Loss Harvesting
-            </h1>
+            <div className="flex items-center gap-3 mb-2">
+              <h1 className="text-3xl font-bold flex items-center gap-3">
+                <Leaf className="w-8 h-8 text-green-400" />
+                Tax-Loss Harvesting
+              </h1>
+              {/* Connection Status Badge */}
+              <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm font-semibold ${
+                isConnected
+                  ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                  : 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
+              }`}>
+                {isConnected ? (
+                  <>
+                    <Wifi className="w-4 h-4" />
+                    <span>Live</span>
+                  </>
+                ) : (
+                  <>
+                    <WifiOff className="w-4 h-4" />
+                    <span>Demo</span>
+                  </>
+                )}
+              </div>
+            </div>
             <p className="text-gray-400 mt-2">
               Automatically optimize your taxes by harvesting losses
             </p>
           </div>
-          <button
-            onClick={scanForOpportunities}
-            disabled={isScanning}
-            className="px-6 py-3 bg-green-600 hover:bg-green-700 disabled:bg-gray-700 rounded-lg font-semibold transition-colors flex items-center gap-2"
-          >
-            {isScanning ? (
-              <Loader2 className="w-5 h-5 animate-spin" />
-            ) : (
-              <RefreshCcw className="w-5 h-5" />
-            )}
-            Scan Portfolio
-          </button>
+          <div className="flex items-center gap-3">
+            {/* Refresh Button */}
+            <button
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              className="px-4 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 rounded-lg font-semibold transition-colors flex items-center gap-2"
+              title="Refresh data"
+            >
+              {isRefreshing ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <RefreshCcw className="w-5 h-5" />
+              )}
+            </button>
+            {/* Scan Portfolio Button */}
+            <button
+              onClick={scanForOpportunities}
+              disabled={isScanning}
+              className="px-6 py-3 bg-green-600 hover:bg-green-700 disabled:bg-gray-700 rounded-lg font-semibold transition-colors flex items-center gap-2"
+            >
+              {isScanning ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <RefreshCcw className="w-5 h-5" />
+              )}
+              Scan Portfolio
+            </button>
+          </div>
         </div>
 
         {/* Stats Cards */}
