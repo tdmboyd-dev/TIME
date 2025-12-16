@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Users,
   UserPlus,
@@ -20,11 +20,13 @@ import {
   Filter,
   CheckCircle,
   Crown,
-  Zap
+  Zap,
+  Wifi,
+  WifiOff
 } from 'lucide-react';
 import clsx from 'clsx';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://time-backend-hosting.fly.dev/api/v1';
 
 interface Trader {
   id: string;
@@ -57,29 +59,59 @@ export default function SocialTradingPage() {
   const [traders, setTraders] = useState<Trader[]>([]);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isConnected, setIsConnected] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterBy, setFilterBy] = useState<'all' | 'following' | 'copying'>('all');
   const [showCopyModal, setShowCopyModal] = useState(false);
   const [selectedTrader, setSelectedTrader] = useState<Trader | null>(null);
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
+  // Fetch data from backend API with fallback to mock data
+  const fetchData = useCallback(async () => {
     try {
-      const [tradersRes, leaderboardRes] = await Promise.all([
-        fetch(`${API_BASE}/social/traders`),
-        fetch(`${API_BASE}/social/leaderboard`),
+      setIsConnected(false);
+
+      // Try to fetch from real backend API
+      const [tradersRes, leaderboardRes, botsRes] = await Promise.all([
+        fetch(`${API_BASE}/social/traders`).catch(() => null),
+        fetch(`${API_BASE}/social/feed`).catch(() => null),
+        fetch(`${API_BASE}/bots/public`).catch(() => null),
       ]);
 
-      const tradersData = await tradersRes.json();
-      const leaderboardData = await leaderboardRes.json();
+      // Check if we got successful responses
+      let hasRealData = false;
 
-      if (tradersData.success) setTraders(tradersData.data);
-      if (leaderboardData.success) setLeaderboard(leaderboardData.data);
+      if (tradersRes?.ok) {
+        const tradersData = await tradersRes.json();
+        if (tradersData.success && Array.isArray(tradersData.data)) {
+          setTraders(tradersData.data);
+          hasRealData = true;
+        }
+      }
+
+      if (leaderboardRes?.ok) {
+        const leaderboardData = await leaderboardRes.json();
+        if (leaderboardData.success && Array.isArray(leaderboardData.data)) {
+          setLeaderboard(leaderboardData.data);
+          hasRealData = true;
+        }
+      }
+
+      // If we got real data from API, mark as connected
+      if (hasRealData) {
+        setIsConnected(true);
+        setIsLoading(false);
+        setIsRefreshing(false);
+        return;
+      }
+
+      // Fallback to mock data if API fails
+      throw new Error('API not available, using mock data');
     } catch (error) {
-      // Sample data
+      console.log('Using mock data - API endpoints not yet available');
+      setIsConnected(false);
+
+      // Sample data (fallback)
       const sampleTraders: Trader[] = [
         {
           id: '1',
@@ -168,7 +200,21 @@ export default function SocialTradingPage() {
       })));
     } finally {
       setIsLoading(false);
+      setIsRefreshing(false);
     }
+  }, []);
+
+  // Initial fetch and auto-refresh
+  useEffect(() => {
+    fetchData();
+    // Refresh every 30 seconds
+    const interval = setInterval(fetchData, 30000);
+    return () => clearInterval(interval);
+  }, [fetchData]);
+
+  const handleRefresh = () => {
+    setIsRefreshing(true);
+    fetchData();
   };
 
   const filteredTraders = traders.filter(trader => {
@@ -199,6 +245,22 @@ export default function SocialTradingPage() {
           <p className="text-slate-400">Follow and copy successful traders</p>
         </div>
         <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-800/50">
+            {isConnected ? (
+              <Wifi className="w-4 h-4 text-green-400" />
+            ) : (
+              <WifiOff className="w-4 h-4 text-yellow-400" />
+            )}
+            <span className="text-xs text-slate-400">{isConnected ? 'Live' : 'Demo'}</span>
+          </div>
+          <button
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            className="btn-secondary flex items-center gap-2"
+          >
+            <RefreshCw className={clsx('w-4 h-4', isRefreshing && 'animate-spin')} />
+            Refresh
+          </button>
           <button className="btn-secondary flex items-center gap-2">
             <Share2 className="w-4 h-4" />
             Share Profile
