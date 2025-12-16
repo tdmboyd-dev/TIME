@@ -170,15 +170,35 @@ export type Config = typeof config;
 // Validate required configuration
 export function validateConfig(): void {
   const errors: string[] = [];
+  const warnings: string[] = [];
+
+  // Always validate JWT secret (not just production)
+  if (config.jwt.secret === 'change-me-in-production') {
+    if (config.nodeEnv === 'production') {
+      errors.push('CRITICAL: JWT_SECRET must be set in production - refusing to start');
+    } else {
+      warnings.push('WARNING: Using default JWT_SECRET - set a secure secret for production');
+    }
+  } else if (config.jwt.secret.length < 32) {
+    errors.push('JWT_SECRET must be at least 32 characters long');
+  }
 
   if (config.nodeEnv === 'production') {
-    if (config.jwt.secret === 'change-me-in-production') {
-      errors.push('JWT_SECRET must be set in production');
-    }
     if (!config.admin.email) {
-      errors.push('ADMIN_EMAIL must be set');
+      errors.push('ADMIN_EMAIL must be set in production');
+    }
+
+    // Validate CORS doesn't include localhost in production
+    const hasLocalhost = config.frontend.corsOrigins.some(o =>
+      o.includes('localhost') || o.includes('127.0.0.1')
+    );
+    if (hasLocalhost) {
+      warnings.push('WARNING: CORS includes localhost origins in production');
     }
   }
+
+  // Log warnings
+  warnings.forEach(w => console.warn(`[Config] ${w}`));
 
   if (errors.length > 0) {
     throw new Error(`Configuration errors:\n${errors.join('\n')}`);

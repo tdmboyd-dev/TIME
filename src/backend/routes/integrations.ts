@@ -12,8 +12,63 @@ import { platformBridgeRoutes } from '../integrations/platform_bridge';
 import { ikickitzBridgeRoutes } from '../integrations/ikickitz_bridge';
 import { mgrBridgeRoutes, MGRReturnType } from '../integrations/mgr_bridge';
 import { unifiedTaxFlowRoutes, TaxFilingUser } from '../integrations/unified_tax_flow';
+import { authMiddleware } from './auth';
+import crypto from 'crypto';
+import { logger } from '../utils/logger';
 
 const router = Router();
+
+// Webhook secrets (should be stored in env vars)
+const WEBHOOK_SECRETS = {
+  ikickitz: process.env.IKICKITZ_WEBHOOK_SECRET || '',
+  mgr: process.env.MGR_WEBHOOK_SECRET || '',
+  irs: process.env.IRS_WEBHOOK_SECRET || '',
+};
+
+/**
+ * Verify webhook signature using HMAC-SHA256
+ * Returns true if signature is valid
+ */
+function verifyWebhookSignature(
+  payload: string,
+  signature: string | undefined,
+  secret: string,
+  source: string
+): boolean {
+  // If no secret configured, log warning and reject in production
+  if (!secret) {
+    if (process.env.NODE_ENV === 'production') {
+      logger.warn(`Webhook secret not configured for ${source} - rejecting request`);
+      return false;
+    }
+    // In development, allow without signature (but warn)
+    logger.warn(`WARNING: Webhook verification disabled for ${source} in development`);
+    return true;
+  }
+
+  if (!signature) {
+    logger.warn(`Missing webhook signature from ${source}`);
+    return false;
+  }
+
+  // Extract signature from header (format: "sha256=abc123...")
+  const expectedSignature = signature.startsWith('sha256=') ? signature.slice(7) : signature;
+
+  // Calculate HMAC
+  const hmac = crypto.createHmac('sha256', secret);
+  hmac.update(payload);
+  const calculatedSignature = hmac.digest('hex');
+
+  // Constant-time comparison to prevent timing attacks
+  try {
+    return crypto.timingSafeEqual(
+      Buffer.from(calculatedSignature),
+      Buffer.from(expectedSignature)
+    );
+  } catch {
+    return false;
+  }
+}
 
 // ============================================================================
 // HEALTH CHECK
@@ -74,9 +129,15 @@ router.post('/bridge/approve-and-file', async (req: Request, res: Response) => {
 /**
  * GET /integrations/bridge/status/:userId
  * Get unified filing status
+ * SECURITY: Requires auth, user can only access their own status
  */
-router.get('/bridge/status/:userId', async (req: Request, res: Response) => {
+router.get('/bridge/status/:userId', authMiddleware, async (req: Request, res: Response) => {
   try {
+    const user = (req as any).user;
+    // Users can only access their own status (or admin can access any)
+    if (req.params.userId !== user.id && !user.isAdmin) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
     const result = await platformBridgeRoutes.getStatus(req.params.userId);
     res.json(result);
   } catch (error: any) {
@@ -87,9 +148,14 @@ router.get('/bridge/status/:userId', async (req: Request, res: Response) => {
 /**
  * GET /integrations/bridge/quotes/:userId
  * Get pending prep fee quotes
+ * SECURITY: Requires auth, user can only access their own quotes
  */
-router.get('/bridge/quotes/:userId', async (req: Request, res: Response) => {
+router.get('/bridge/quotes/:userId', authMiddleware, async (req: Request, res: Response) => {
   try {
+    const user = (req as any).user;
+    if (req.params.userId !== user.id && !user.isAdmin) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
     const result = await platformBridgeRoutes.getPendingQuotes(req.params.userId);
     res.json(result);
   } catch (error: any) {
@@ -397,9 +463,15 @@ router.get('/tax/session/:sessionId', async (req: Request, res: Response) => {
 /**
  * GET /integrations/tax/user/:userId/sessions
  * Get all tax filing sessions for user
+ * SECURITY: Requires auth, user can only access their own sessions
  */
-router.get('/tax/user/:userId/sessions', async (req: Request, res: Response) => {
+router.get('/tax/user/:userId/sessions', authMiddleware, async (req: Request, res: Response) => {
   try {
+    const user = (req as any).user;
+    // Users can only access their own sessions
+    if (req.params.userId !== user.id && !user.isAdmin) {
+      return res.status(403).json({ error: 'Access denied: You can only view your own sessions' });
+    }
     const result = await unifiedTaxFlowRoutes.getUserSessions(req.params.userId);
     res.json(result);
   } catch (error: any) {
@@ -410,9 +482,15 @@ router.get('/tax/user/:userId/sessions', async (req: Request, res: Response) => 
 /**
  * GET /integrations/tax/user/:userId/summary
  * Get tax filing summary for user dashboard
+ * SECURITY: Requires auth, user can only access their own summary
  */
-router.get('/tax/user/:userId/summary', async (req: Request, res: Response) => {
+router.get('/tax/user/:userId/summary', authMiddleware, async (req: Request, res: Response) => {
   try {
+    const user = (req as any).user;
+    // Users can only access their own summary
+    if (req.params.userId !== user.id && !user.isAdmin) {
+      return res.status(403).json({ error: 'Access denied: You can only view your own summary' });
+    }
     const result = await unifiedTaxFlowRoutes.getFilingSummary(req.params.userId);
     res.json(result);
   } catch (error: any) {
@@ -421,16 +499,29 @@ router.get('/tax/user/:userId/summary', async (req: Request, res: Response) => {
 });
 
 // ============================================================================
-// WEBHOOK ENDPOINTS
+// WEBHOOK ENDPOINTS (with signature verification)
 // ============================================================================
 
 /**
  * POST /integrations/webhook/ikickitz
  * Handle webhooks from iKickItz
+ * SECURITY: Verifies HMAC signature
  */
 router.post('/webhook/ikickitz', async (req: Request, res: Response) => {
   try {
-    // Verify webhook signature in production
+    // Get raw body for signature verification
+    const rawBody = JSON.stringify(req.body);
+    const signature = req.headers['x-ikickitz-signature'] as string;
+
+    // Verify webhook signature
+    if (!verifyWebhookSignature(rawBody, signature, WEBHOOK_SECRETS.ikickitz, 'iKickItz')) {
+      logger.warn('Invalid webhook signature from iKickItz', {
+        ip: req.ip,
+        headers: req.headers,
+      });
+      return res.status(401).json({ error: 'Invalid webhook signature' });
+    }
+
     await platformBridgeRoutes.ikickitzWebhook(req.body);
     res.json({ received: true });
   } catch (error: any) {
@@ -441,10 +532,23 @@ router.post('/webhook/ikickitz', async (req: Request, res: Response) => {
 /**
  * POST /integrations/webhook/mgr
  * Handle webhooks from MGR Elite Hub
+ * SECURITY: Verifies HMAC signature
  */
 router.post('/webhook/mgr', async (req: Request, res: Response) => {
   try {
-    // Verify webhook signature in production
+    // Get raw body for signature verification
+    const rawBody = JSON.stringify(req.body);
+    const signature = req.headers['x-mgr-signature'] as string;
+
+    // Verify webhook signature
+    if (!verifyWebhookSignature(rawBody, signature, WEBHOOK_SECRETS.mgr, 'MGR')) {
+      logger.warn('Invalid webhook signature from MGR', {
+        ip: req.ip,
+        headers: req.headers,
+      });
+      return res.status(401).json({ error: 'Invalid webhook signature' });
+    }
+
     await platformBridgeRoutes.mgrWebhook(req.body);
     res.json({ received: true });
   } catch (error: any) {
@@ -455,9 +559,23 @@ router.post('/webhook/mgr', async (req: Request, res: Response) => {
 /**
  * POST /integrations/webhook/irs
  * Handle IRS acceptance/rejection webhooks
+ * SECURITY: Verifies HMAC signature
  */
 router.post('/webhook/irs', async (req: Request, res: Response) => {
   try {
+    // Get raw body for signature verification
+    const rawBody = JSON.stringify(req.body);
+    const signature = req.headers['x-irs-signature'] as string;
+
+    // Verify webhook signature
+    if (!verifyWebhookSignature(rawBody, signature, WEBHOOK_SECRETS.irs, 'IRS')) {
+      logger.warn('Invalid webhook signature from IRS', {
+        ip: req.ip,
+        headers: req.headers,
+      });
+      return res.status(401).json({ error: 'Invalid webhook signature' });
+    }
+
     await mgrBridgeRoutes.irsWebhook(req.body);
     res.json({ received: true });
   } catch (error: any) {

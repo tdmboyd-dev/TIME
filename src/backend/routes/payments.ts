@@ -22,8 +22,64 @@ import {
   MERCHANT_FEES,
   SUBSCRIPTION_TIERS
 } from '../payments/time_pay';
+import { auditLogger, AUDIT_ACTIONS } from '../security/audit_logger';
 
 const router = Router();
+
+// Daily transfer limit tracking (should use Redis in production)
+const dailyTransferTracker = new Map<string, { amount: number; date: string }>();
+
+/**
+ * Verify wallet ownership - CRITICAL SECURITY CHECK
+ * Prevents users from accessing/transferring from wallets they don't own
+ */
+function verifyWalletOwnership(walletId: string, userId: string): boolean {
+  const wallet = timePayEngine.getWallet(walletId);
+  if (!wallet) return false;
+  return wallet.odUserId === userId;
+}
+
+/**
+ * Check daily transfer limits
+ */
+function checkDailyLimit(userId: string, amount: number, dailyLimit: number): { allowed: boolean; remaining: number } {
+  const today = new Date().toISOString().split('T')[0];
+  const key = `${userId}:${today}`;
+  const tracker = dailyTransferTracker.get(key);
+
+  if (!tracker || tracker.date !== today) {
+    dailyTransferTracker.set(key, { amount: 0, date: today });
+    return { allowed: amount <= dailyLimit, remaining: dailyLimit };
+  }
+
+  const remaining = dailyLimit - tracker.amount;
+  return { allowed: amount <= remaining, remaining };
+}
+
+/**
+ * Record transfer for daily limit tracking
+ */
+function recordTransfer(userId: string, amount: number): void {
+  const today = new Date().toISOString().split('T')[0];
+  const key = `${userId}:${today}`;
+  const tracker = dailyTransferTracker.get(key) || { amount: 0, date: today };
+  tracker.amount += amount;
+  dailyTransferTracker.set(key, tracker);
+}
+
+// Duplicate transaction prevention (use Redis in production)
+const recentTransactions = new Map<string, number>();
+const DUPLICATE_WINDOW_MS = 60000; // 1 minute window
+
+function isDuplicateTransaction(fromWalletId: string, toWalletId: string, amount: number): boolean {
+  const key = `${fromWalletId}:${toWalletId}:${amount}`;
+  const lastTime = recentTransactions.get(key);
+  if (lastTime && Date.now() - lastTime < DUPLICATE_WINDOW_MS) {
+    return true;
+  }
+  recentTransactions.set(key, Date.now());
+  return false;
+}
 
 // ============================================================
 // PUBLIC ENDPOINTS
@@ -128,13 +184,20 @@ router.get('/wallets', authMiddleware, (req: Request, res: Response) => {
 /**
  * GET /payments/wallet/:walletId
  * Get specific wallet details
+ * SECURITY: Verifies wallet ownership
  */
 router.get('/wallet/:walletId', authMiddleware, (req: Request, res: Response) => {
   const { walletId } = req.params;
+  const user = (req as any).user;
   const wallet = timePayEngine.getWallet(walletId);
 
   if (!wallet) {
     return res.status(404).json({ error: 'Wallet not found' });
+  }
+
+  // SECURITY: Verify wallet belongs to authenticated user
+  if (!verifyWalletOwnership(walletId, user.id)) {
+    return res.status(403).json({ error: 'Access denied: You do not own this wallet' });
   }
 
   // Include remaining free P2P info
@@ -158,9 +221,16 @@ router.get('/wallet/:walletId', authMiddleware, (req: Request, res: Response) =>
 /**
  * GET /payments/wallet/:walletId/free-limit
  * Check remaining free P2P transfer amount
+ * SECURITY: Verifies wallet ownership
  */
 router.get('/wallet/:walletId/free-limit', authMiddleware, (req: Request, res: Response) => {
   const { walletId } = req.params;
+  const user = (req as any).user;
+
+  // SECURITY: Verify wallet belongs to authenticated user
+  if (!verifyWalletOwnership(walletId, user.id)) {
+    return res.status(403).json({ error: 'Access denied: You do not own this wallet' });
+  }
 
   try {
     const freeP2PInfo = timePayEngine.getRemainingFreeP2P(walletId);
@@ -190,9 +260,12 @@ router.get('/wallet/:walletId/free-limit', authMiddleware, (req: Request, res: R
 /**
  * POST /payments/send
  * Send money to another TIME user (instant & FREE!)
+ * SECURITY: Ownership verification, daily limits, duplicate prevention
  */
 router.post('/send', authMiddleware, async (req: Request, res: Response) => {
   const { fromWalletId, toWalletId, amount, memo } = req.body;
+  const user = (req as any).user;
+  const clientIP = req.ip || 'unknown';
 
   if (!fromWalletId || !toWalletId || !amount) {
     return res.status(400).json({
@@ -201,12 +274,57 @@ router.post('/send', authMiddleware, async (req: Request, res: Response) => {
     });
   }
 
-  if (amount <= 0) {
-    return res.status(400).json({ error: 'Amount must be positive' });
+  // Validate amount is positive and has proper decimal precision (2 places max)
+  const parsedAmount = parseFloat(amount);
+  if (isNaN(parsedAmount) || parsedAmount <= 0) {
+    return res.status(400).json({ error: 'Amount must be a positive number' });
+  }
+
+  // Validate decimal precision (max 2 decimal places for currency)
+  if (Math.round(parsedAmount * 100) !== parsedAmount * 100) {
+    return res.status(400).json({ error: 'Amount cannot have more than 2 decimal places' });
+  }
+
+  // SECURITY: Verify the sender owns the fromWallet
+  if (!verifyWalletOwnership(fromWalletId, user.id)) {
+    await auditLogger.logAction(AUDIT_ACTIONS.SUSPICIOUS_ACTIVITY || 'security_violation', {
+      userId: user.id,
+      clientIP,
+      resource: 'wallet',
+      resourceId: fromWalletId,
+      result: 'failure',
+      errorMessage: 'Attempted transfer from wallet not owned by user',
+    });
+    return res.status(403).json({ error: 'Access denied: You do not own this wallet' });
+  }
+
+  // SECURITY: Check for duplicate transactions (prevent double-spend)
+  if (isDuplicateTransaction(fromWalletId, toWalletId, parsedAmount)) {
+    return res.status(429).json({
+      error: 'Duplicate transaction detected. Please wait a moment before retrying.',
+      retryAfter: '60 seconds',
+    });
+  }
+
+  // SECURITY: Check daily transfer limit
+  const wallet = timePayEngine.getWallet(fromWalletId);
+  const dailyLimit = wallet?.dailyLimit || TRANSFER_LIMITS.verified.daily;
+  const limitCheck = checkDailyLimit(user.id, parsedAmount, dailyLimit);
+
+  if (!limitCheck.allowed) {
+    return res.status(400).json({
+      error: 'Daily transfer limit exceeded',
+      dailyLimit,
+      remaining: limitCheck.remaining,
+      message: `You can transfer up to $${limitCheck.remaining.toFixed(2)} more today`,
+    });
   }
 
   try {
-    const transfer = await timePayEngine.sendInstant(fromWalletId, toWalletId, amount, memo);
+    const transfer = await timePayEngine.sendInstant(fromWalletId, toWalletId, parsedAmount, memo);
+
+    // Record transfer for daily limit tracking
+    recordTransfer(user.id, parsedAmount);
 
     res.json({
       success: true,
@@ -228,15 +346,22 @@ router.post('/send', authMiddleware, async (req: Request, res: Response) => {
 /**
  * POST /payments/send-external
  * Send to external account (bank, card)
+ * SECURITY: Ownership verification required
  */
 router.post('/send-external', authMiddleware, async (req: Request, res: Response) => {
   const { fromWalletId, type, amount, instant = false } = req.body;
+  const user = (req as any).user;
 
   if (!fromWalletId || !type || !amount) {
     return res.status(400).json({
       error: 'Missing required fields',
       required: ['fromWalletId', 'type', 'amount'],
     });
+  }
+
+  // SECURITY: Verify wallet ownership
+  if (!verifyWalletOwnership(fromWalletId, user.id)) {
+    return res.status(403).json({ error: 'Access denied: You do not own this wallet' });
   }
 
   const validTypes = ['bank', 'debit_card', 'wire'];
@@ -267,15 +392,22 @@ router.post('/send-external', authMiddleware, async (req: Request, res: Response
 /**
  * POST /payments/send-international
  * Send cross-border transfer (1% fee vs 3-5% at banks!)
+ * SECURITY: Ownership verification required
  */
 router.post('/send-international', authMiddleware, async (req: Request, res: Response) => {
   const { fromWalletId, recipientCountry, amount, currency, recipientDetails } = req.body;
+  const user = (req as any).user;
 
   if (!fromWalletId || !recipientCountry || !amount || !currency) {
     return res.status(400).json({
       error: 'Missing required fields',
       required: ['fromWalletId', 'recipientCountry', 'amount', 'currency'],
     });
+  }
+
+  // SECURITY: Verify wallet ownership
+  if (!verifyWalletOwnership(fromWalletId, user.id)) {
+    return res.status(403).json({ error: 'Access denied: You do not own this wallet' });
   }
 
   try {
@@ -308,15 +440,25 @@ router.post('/send-international', authMiddleware, async (req: Request, res: Res
 /**
  * POST /payments/to-trading
  * Move funds to trading account (FREE & instant!)
+ * SECURITY: Both wallets must be owned by authenticated user
  */
 router.post('/to-trading', authMiddleware, async (req: Request, res: Response) => {
   const { fromWalletId, tradingWalletId, amount } = req.body;
+  const user = (req as any).user;
 
   if (!fromWalletId || !tradingWalletId || !amount) {
     return res.status(400).json({
       error: 'Missing required fields',
       required: ['fromWalletId', 'tradingWalletId', 'amount'],
     });
+  }
+
+  // SECURITY: Verify user owns BOTH wallets
+  if (!verifyWalletOwnership(fromWalletId, user.id)) {
+    return res.status(403).json({ error: 'Access denied: You do not own the source wallet' });
+  }
+  if (!verifyWalletOwnership(tradingWalletId, user.id)) {
+    return res.status(403).json({ error: 'Access denied: You do not own the trading wallet' });
   }
 
   try {
@@ -372,13 +514,20 @@ router.post('/request', authMiddleware, (req: Request, res: Response) => {
 /**
  * POST /payments/request/:requestId/pay
  * Pay a payment request
+ * SECURITY: Verify wallet ownership before paying
  */
 router.post('/request/:requestId/pay', authMiddleware, async (req: Request, res: Response) => {
   const { requestId } = req.params;
   const { walletId } = req.body;
+  const user = (req as any).user;
 
   if (!walletId) {
     return res.status(400).json({ error: 'walletId required' });
+  }
+
+  // SECURITY: Verify user owns the wallet they're paying from
+  if (!verifyWalletOwnership(walletId, user.id)) {
+    return res.status(403).json({ error: 'Access denied: You do not own this wallet' });
   }
 
   try {
@@ -405,15 +554,22 @@ router.post('/request/:requestId/pay', authMiddleware, async (req: Request, res:
 /**
  * POST /payments/deposit
  * Deposit from linked account
+ * SECURITY: Verify wallet ownership
  */
 router.post('/deposit', authMiddleware, async (req: Request, res: Response) => {
   const { walletId, amount, source = 'bank' } = req.body;
+  const user = (req as any).user;
 
   if (!walletId || !amount) {
     return res.status(400).json({
       error: 'Missing required fields',
       required: ['walletId', 'amount'],
     });
+  }
+
+  // SECURITY: Verify user owns the wallet they're depositing to
+  if (!verifyWalletOwnership(walletId, user.id)) {
+    return res.status(403).json({ error: 'Access denied: You do not own this wallet' });
   }
 
   try {
