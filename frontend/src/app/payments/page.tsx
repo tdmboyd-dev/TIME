@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   CreditCard,
   Building2,
@@ -20,11 +20,14 @@ import {
   Lock,
   Eye,
   EyeOff,
-  ExternalLink
+  ExternalLink,
+  Wifi,
+  WifiOff,
+  Loader2
 } from 'lucide-react';
 import clsx from 'clsx';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+const API_BASE = 'https://time-backend-hosting.fly.dev/api/v1';
 
 interface PaymentMethod {
   id: string;
@@ -56,31 +59,51 @@ export default function PaymentsPage() {
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isConnected, setIsConnected] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showDepositModal, setShowDepositModal] = useState(false);
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const [addMethodType, setAddMethodType] = useState<'card' | 'bank' | 'crypto'>('card');
   const [balance, setBalance] = useState(125438.67);
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
-      const [methodsRes, transactionsRes] = await Promise.all([
-        fetch(`${API_BASE}/payments/methods`),
-        fetch(`${API_BASE}/payments/transactions`),
+      // Try multiple payment-related endpoints
+      const [methodsRes, transactionsRes, historyRes] = await Promise.all([
+        fetch(`${API_BASE}/payments/methods`).catch(() => null),
+        fetch(`${API_BASE}/payments/transactions`).catch(() => null),
+        fetch(`${API_BASE}/payments/history`).catch(() => null),
       ]);
 
-      const methodsData = await methodsRes.json();
-      const transactionsData = await transactionsRes.json();
+      // Check if any endpoint returned successfully
+      const hasData = !!(methodsRes?.ok || transactionsRes?.ok || historyRes?.ok);
+      setIsConnected(hasData);
 
-      if (methodsData.success) setPaymentMethods(methodsData.data);
-      if (transactionsData.success) setTransactions(transactionsData.data);
-    } catch (error) {
-      // Sample data
-      setPaymentMethods([
+      if (methodsRes?.ok) {
+        const methodsData = await methodsRes.json();
+        if (methodsData.success && Array.isArray(methodsData.data)) {
+          setPaymentMethods(methodsData.data);
+        }
+      }
+
+      if (transactionsRes?.ok) {
+        const transactionsData = await transactionsRes.json();
+        if (transactionsData.success && Array.isArray(transactionsData.data)) {
+          setTransactions(transactionsData.data);
+        }
+      }
+
+      if (historyRes?.ok) {
+        const historyData = await historyRes.json();
+        if (historyData.success && Array.isArray(historyData.data)) {
+          setTransactions(historyData.data);
+        }
+      }
+
+      // If no real data available, fall back to mock data
+      if (!hasData) {
+        setPaymentMethods([
         {
           id: '1',
           type: 'card',
@@ -160,10 +183,24 @@ export default function PaymentsPage() {
           description: 'Wire Transfer Deposit',
           method: 'Chase Checking ****6789',
         },
-      ]);
+        ]);
+      }
+    } catch (error) {
+      console.error('Payment data fetch error:', error);
+      setIsConnected(false);
     } finally {
       setIsLoading(false);
+      setIsRefreshing(false);
     }
+  }, []);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  const handleRefresh = () => {
+    setIsRefreshing(true);
+    fetchData();
   };
 
   const formatCurrency = (amount: number) => {
@@ -219,10 +256,35 @@ export default function PaymentsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">Payments & Transfers</h1>
-          <p className="text-slate-400">Manage your payment methods and transactions</p>
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-bold text-white">Payments & Transfers</h1>
+            {isLoading ? (
+              <Loader2 className="w-5 h-5 text-time-primary animate-spin" />
+            ) : isConnected ? (
+              <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-green-500/20 border border-green-500/50">
+                <Wifi className="w-4 h-4 text-green-400" />
+                <span className="text-xs font-medium text-green-400">Live</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-500/50">
+                <WifiOff className="w-4 h-4 text-amber-400" />
+                <span className="text-xs font-medium text-amber-400">Demo</span>
+              </div>
+            )}
+          </div>
+          <p className="text-slate-400 mt-1">
+            {isConnected ? 'Live payment data from backend' : 'Manage your payment methods and transactions'}
+          </p>
         </div>
         <div className="flex items-center gap-3">
+          <button
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            className={`p-2 rounded-lg bg-slate-800 text-slate-400 hover:text-white transition-colors ${isRefreshing ? 'animate-spin' : ''}`}
+            title="Refresh data"
+          >
+            <RefreshCw className="w-5 h-5" />
+          </button>
           <button
             onClick={() => setShowWithdrawModal(true)}
             className="btn-secondary flex items-center gap-2"

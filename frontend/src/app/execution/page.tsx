@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Zap,
   TrendingUp,
@@ -29,8 +29,13 @@ import {
   Info,
   Rocket,
   Brain,
+  Wifi,
+  WifiOff,
 } from 'lucide-react';
 import clsx from 'clsx';
+
+// API Configuration
+const API_BASE = 'https://time-backend-hosting.fly.dev/api/v1';
 
 // Types
 interface Venue {
@@ -104,6 +109,11 @@ export default function ExecutionPage() {
   const [liquidityPools, setLiquidityPools] = useState<LiquidityPool[]>([]);
   const [notification, setNotification] = useState<{ type: 'success' | 'error' | 'warning'; message: string } | null>(null);
 
+  // API Connection State
+  const [isLoading, setIsLoading] = useState(true);
+  const [isConnected, setIsConnected] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
   // Smart Order Form State
   const [orderForm, setOrderForm] = useState({
     symbol: 'AAPL',
@@ -133,9 +143,60 @@ export default function ExecutionPage() {
   const [activeTab, setActiveTab] = useState<'overview' | 'venues' | 'arbitrage' | 'orders' | 'analytics'>('overview');
   const [expandedVenue, setExpandedVenue] = useState<string | null>(null);
 
+  // Fetch data from backend API
+  const fetchBackendData = useCallback(async () => {
+    try {
+      setIsRefreshing(true);
+
+      // Fetch venues
+      const venuesResponse = await fetch(`${API_BASE}/advanced-broker/venues`);
+      if (venuesResponse.ok) {
+        const venuesData = await venuesResponse.json();
+        if (venuesData && Array.isArray(venuesData)) {
+          setVenues(venuesData);
+          setIsConnected(true);
+        }
+      }
+
+      // Fetch active orders
+      const ordersResponse = await fetch(`${API_BASE}/advanced-broker/smart-orders`);
+      if (ordersResponse.ok) {
+        const ordersData = await ordersResponse.json();
+        if (ordersData && Array.isArray(ordersData)) {
+          setActiveOrders(ordersData);
+        }
+      }
+
+      // Fetch execution analytics
+      const analyticsResponse = await fetch(`${API_BASE}/advanced-broker/analytics/executions`);
+      if (analyticsResponse.ok) {
+        const analyticsData = await analyticsResponse.json();
+        if (analyticsData) {
+          // Update stats from backend data
+          setStats(prev => ({
+            ...prev,
+            ...analyticsData,
+          }));
+        }
+      }
+
+    } catch (error) {
+      console.error('Failed to fetch backend data:', error);
+      setIsConnected(false);
+      // Use mock data as fallback
+      setVenues(generateVenues());
+      setArbitrageOpps(generateArbitrageOpportunities());
+    } finally {
+      setIsLoading(false);
+      setIsRefreshing(false);
+    }
+  }, []);
+
   useEffect(() => {
-    setVenues(generateVenues());
-    setArbitrageOpps(generateArbitrageOpportunities());
+    // Initial load
+    fetchBackendData();
+
+    // Set up fallback with mock data
     setLiquidityPools([
       { symbol: 'AAPL', totalLiquidity: 15000000, spread: 0.02, quality: 92 },
       { symbol: 'BTCUSD', totalLiquidity: 85000000, spread: 5.50, quality: 95 },
@@ -143,18 +204,22 @@ export default function ExecutionPage() {
       { symbol: 'EURUSD', totalLiquidity: 250000000, spread: 0.0001, quality: 98 },
     ]);
 
-    // Simulate real-time updates
+    // Real-time updates - try backend first, fallback to mock
     const interval = setInterval(() => {
-      setArbitrageOpps(generateArbitrageOpportunities());
-      setStats(prev => ({
-        ...prev,
-        avgLatency: 8 + Math.random() * 2,
-        profitToday: prev.profitToday + Math.floor(Math.random() * 50),
-      }));
-    }, 1000);
+      if (isConnected) {
+        fetchBackendData();
+      } else {
+        setArbitrageOpps(generateArbitrageOpportunities());
+        setStats(prev => ({
+          ...prev,
+          avgLatency: 8 + Math.random() * 2,
+          profitToday: prev.profitToday + Math.floor(Math.random() * 50),
+        }));
+      }
+    }, 5000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [isConnected, fetchBackendData]);
 
   const handleSmartOrder = async () => {
     setIsSubmitting(true);
@@ -244,16 +309,49 @@ export default function ExecutionPage() {
           <h1 className="text-2xl font-bold text-white flex items-center gap-3">
             <Cpu className="w-8 h-8 text-time-primary" />
             Advanced Execution Engine
+            {/* Connection Status Badge */}
+            <span className={clsx(
+              'px-3 py-1 rounded-full text-xs font-medium flex items-center gap-2',
+              isConnected
+                ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                : 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
+            )}>
+              {isConnected ? (
+                <>
+                  <Wifi className="w-3 h-3" />
+                  Live
+                </>
+              ) : (
+                <>
+                  <WifiOff className="w-3 h-3" />
+                  Demo
+                </>
+              )}
+            </span>
           </h1>
-          <p className="text-slate-400">Institutional-grade smart order routing across 50+ venues</p>
+          <p className="text-slate-400">
+            Institutional-grade smart order routing across 50+ venues
+            {!isConnected && <span className="text-yellow-400 ml-2">(Using mock data)</span>}
+          </p>
         </div>
-        <button
-          onClick={() => setShowOrderModal(true)}
-          className="btn-primary flex items-center gap-2"
-        >
-          <Rocket className="w-4 h-4" />
-          New Smart Order
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => fetchBackendData()}
+            disabled={isRefreshing}
+            className="btn-secondary flex items-center gap-2"
+            title="Refresh data"
+          >
+            <RefreshCw className={clsx('w-4 h-4', isRefreshing && 'animate-spin')} />
+            Refresh
+          </button>
+          <button
+            onClick={() => setShowOrderModal(true)}
+            className="btn-primary flex items-center gap-2"
+          >
+            <Rocket className="w-4 h-4" />
+            New Smart Order
+          </button>
+        </div>
       </div>
 
       {/* Key Stats */}

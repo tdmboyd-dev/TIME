@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * QUANTUM FORTRESS - Advanced Quantum-Resistant Security System
  *

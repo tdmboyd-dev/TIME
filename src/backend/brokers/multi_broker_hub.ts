@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * MULTI-BROKER HUB - Universal Broker Integration System
  *

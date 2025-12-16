@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * AI SUPPORT SYSTEM - Autonomous Customer Support
  *

@@ -41,6 +41,53 @@ router.get('/opportunities', (req: Request, res: Response) => {
 });
 
 /**
+ * GET /api/defi/protocols
+ * Get list of all DeFi protocols with basic info
+ */
+router.get('/protocols', (req: Request, res: Response) => {
+  try {
+    // Get all opportunities and extract unique protocols
+    const opportunities = defiMastery.getOpportunities({});
+
+    // Create protocol summaries from opportunities
+    const protocolMap = new Map<string, any>();
+
+    for (const opp of opportunities) {
+      const protocolId = opp.protocolId;
+      if (!protocolMap.has(protocolId)) {
+        protocolMap.set(protocolId, {
+          id: protocolId,
+          name: opp.name,
+          chain: opp.chain,
+          tvl: opp.tvl || 0,
+          apy: opp.apy,
+          risk: opp.riskScore <= 30 ? 'low' : opp.riskScore <= 60 ? 'medium' : 'high',
+          opportunities: 1,
+        });
+      } else {
+        const existing = protocolMap.get(protocolId);
+        existing.tvl += opp.tvl || 0;
+        existing.opportunities += 1;
+        // Keep highest APY
+        if (opp.apy > existing.apy) {
+          existing.apy = opp.apy;
+        }
+      }
+    }
+
+    const protocols = Array.from(protocolMap.values());
+
+    res.json({
+      success: true,
+      count: protocols.length,
+      protocols,
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
  * GET /api/defi/protocols/:id
  * Get detailed protocol analysis
  */
@@ -144,6 +191,64 @@ router.get('/topics', (req: Request, res: Response) => {
 // ============================================================================
 // Alpha & Alerts
 // ============================================================================
+
+/**
+ * GET /api/defi/yield-opportunities
+ * Get yield farming opportunities (alias for opportunities)
+ */
+router.get('/yield-opportunities', (req: Request, res: Response) => {
+  try {
+    const opportunities = defiMastery.getOpportunities({});
+
+    // Map to staking/yield format
+    const yieldOpportunities = opportunities.map((opp, idx) => ({
+      id: opp.id || `yield-${idx}`,
+      token: opp.assets[0] || 'TOKEN',
+      name: opp.name,
+      apy: opp.apy,
+      lockPeriod: opp.lockup ? `${opp.lockup} days` : 'Flexible',
+      minStake: opp.minDeposit || 0,
+      totalStaked: opp.tvl || 0,
+      protocol: opp.protocolId,
+      chain: opp.chain,
+      risk: opp.riskScore <= 30 ? 'low' : opp.riskScore <= 60 ? 'medium' : 'high',
+    }));
+
+    res.json({
+      success: true,
+      count: yieldOpportunities.length,
+      opportunities: yieldOpportunities,
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * GET /api/defi/portfolio
+ * Get user's DeFi portfolio summary
+ */
+router.get('/portfolio', (req: Request, res: Response) => {
+  try {
+    // Return mock portfolio data for demo
+    res.json({
+      success: true,
+      portfolio: {
+        totalValue: 15000,
+        totalStaked: 12500,
+        pendingRewards: 530.70,
+        avgApy: 18.5,
+        positions: [
+          { protocol: 'Uniswap V3', pool: 'ETH/USDC', staked: 5000, rewards: 125.50, apy: 12.5 },
+          { protocol: 'Curve', pool: 'BTC/ETH', staked: 3200, rewards: 65.20, apy: 8.2 },
+          { protocol: 'TIME DEX', pool: 'ETH/TIME', staked: 1500, rewards: 340.00, apy: 45.8 },
+        ],
+      },
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
 
 /**
  * GET /api/defi/alpha
