@@ -26,6 +26,7 @@ export const API_BASE = getApiBase();
 
 /**
  * Fetch wrapper with error handling
+ * SECURITY: Always includes credentials for httpOnly cookie auth
  */
 export async function apiFetch<T>(
   endpoint: string,
@@ -38,6 +39,7 @@ export async function apiFetch<T>(
 
     const response = await fetch(url, {
       ...options,
+      credentials: 'include', // SECURITY: Include httpOnly cookies for auth
       headers: {
         'Content-Type': 'application/json',
         ...options?.headers,
@@ -60,6 +62,42 @@ export async function apiFetch<T>(
       error: error.message || 'Network error'
     };
   }
+}
+
+/**
+ * Get auth token from cookie (for backward compatibility)
+ * Note: httpOnly cookies are not accessible via JavaScript by design
+ * This function returns the user info stored in localStorage
+ */
+export function getAuthUser(): any {
+  if (typeof window === 'undefined') return null;
+  try {
+    const userStr = localStorage.getItem('time_user');
+    return userStr ? JSON.parse(userStr) : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Check if user is logged in (based on user info in localStorage)
+ * Note: Actual auth validation happens server-side via httpOnly cookie
+ */
+export function isLoggedIn(): boolean {
+  return !!getAuthUser();
+}
+
+/**
+ * Logout - clear local storage and call logout endpoint
+ */
+export async function logout(): Promise<void> {
+  try {
+    await apiFetch('/auth/logout', { method: 'POST' });
+  } catch {
+    // Continue even if API call fails
+  }
+  localStorage.removeItem('time_user');
+  localStorage.removeItem('time_remember_email');
 }
 
 export default API_BASE;

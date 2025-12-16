@@ -10,6 +10,7 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import cookieParser from 'cookie-parser';
 import { createServer } from 'http';
 
 import config, { validateConfig } from './config';
@@ -235,6 +236,9 @@ function createApp(): express.Application {
   // Body parsing
   app.use(express.json({ limit: '10mb' }));
   app.use(express.urlencoded({ extended: true }));
+
+  // Cookie parsing - REQUIRED for httpOnly cookie authentication
+  app.use(cookieParser());
 
   // Mount API Routes
   app.use('/api/v1', router);

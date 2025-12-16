@@ -37,11 +37,13 @@ export default function LoginPage() {
 
     try {
       // REAL API call to backend authentication
+      // SECURITY: Use credentials: 'include' to send/receive httpOnly cookies
       const response = await fetch(`${API_BASE}/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include', // IMPORTANT: Include cookies in request
         body: JSON.stringify({
           email: email.toLowerCase().trim(),
           password,
@@ -64,10 +66,10 @@ export default function LoginPage() {
         return;
       }
 
-      // Login successful - store token and redirect
-      if (data.success && data.token) {
-        // Store token securely
-        localStorage.setItem('time_auth_token', data.token);
+      // Login successful - token is now stored in httpOnly cookie by the server
+      if (data.success) {
+        // Store user info (non-sensitive data only) for display purposes
+        // Token is stored securely in httpOnly cookie - NOT accessible via JavaScript
         localStorage.setItem('time_user', JSON.stringify(data.user));
 
         if (rememberMe) {
@@ -93,11 +95,13 @@ export default function LoginPage() {
 
     try {
       // REAL MFA verification
+      // SECURITY: Use credentials: 'include' for httpOnly cookies
       const response = await fetch(`${API_BASE}/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include', // IMPORTANT: Include cookies
         body: JSON.stringify({
           email: email.toLowerCase().trim(),
           password,
@@ -111,8 +115,8 @@ export default function LoginPage() {
         throw new Error(data.error || 'Invalid verification code');
       }
 
-      if (data.success && data.token) {
-        localStorage.setItem('time_auth_token', data.token);
+      if (data.success) {
+        // Token is stored in httpOnly cookie by server - only store non-sensitive user info
         localStorage.setItem('time_user', JSON.stringify(data.user));
         router.push('/');
       }

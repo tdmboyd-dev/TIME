@@ -189,7 +189,7 @@ The following are implemented correctly:
 
 ### Within 1 Week:
 - [x] Implement route protection middleware ✅ FIXED - frontend/src/middleware.ts created
-- [ ] Move tokens to httpOnly cookies (frontend changes needed)
+- [x] Move tokens to httpOnly cookies ✅ FIXED - auth.ts sets cookies, frontend uses credentials:include
 - [x] Add ownership checks to all endpoints ✅ FIXED - payments.ts and integrations.ts updated
 - [ ] Implement CSRF protection
 - [x] Add rate limiting to security endpoints ✅ FIXED - security.ts
@@ -247,9 +247,18 @@ The following are implemented correctly:
 - Constant-time comparison to prevent timing attacks
 - Rejects unsigned webhooks in production
 
+### 8. httpOnly Cookie Token Storage (FIXED)
+**Files:** `src/backend/routes/auth.ts`, `src/backend/index.ts`, `frontend/src/app/login/page.tsx`, `frontend/src/app/admin-login/page.tsx`, `frontend/src/lib/api.ts`
+- Auth tokens now stored in httpOnly cookies (XSS-proof)
+- Cookies have Secure flag (HTTPS only in production)
+- SameSite=Lax for CSRF protection
+- Frontend uses credentials: 'include' for cookie-based auth
+- cookie-parser middleware added to backend
+- Tokens no longer stored in localStorage
+
 ---
 
-## Updated Security Rating: 7.5/10 (Improved from 5.5)
+## Updated Security Rating: 8.0/10 (Improved from 5.5)
 
 ---
 

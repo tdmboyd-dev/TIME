@@ -48,11 +48,13 @@ export default function AdminLoginPage() {
       setStep('security-check');
 
       // REAL API call to backend authentication
+      // SECURITY: Use credentials: 'include' for httpOnly cookies
       const response = await fetch(`${API_BASE}/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include', // IMPORTANT: Include cookies
         body: JSON.stringify({
           // Admin key is used as email (or special admin identifier)
           email: adminKey.toLowerCase().trim(),
@@ -77,15 +79,13 @@ export default function AdminLoginPage() {
       }
 
       // Verify this is an admin user
-      if (data.success && data.token) {
+      if (data.success) {
         if (data.user?.role !== 'admin' && data.user?.role !== 'owner') {
           throw new Error('This account does not have admin privileges');
         }
 
-        // Store admin token
-        localStorage.setItem('time_auth_token', data.token);
+        // Token is stored in httpOnly cookie by server - only store non-sensitive user info
         localStorage.setItem('time_user', JSON.stringify(data.user));
-        localStorage.setItem('time_is_admin', 'true');
 
         // Redirect to admin portal
         router.push('/admin-portal');
@@ -105,11 +105,13 @@ export default function AdminLoginPage() {
 
     try {
       // REAL MFA verification
+      // SECURITY: Use credentials: 'include' for httpOnly cookies
       const response = await fetch(`${API_BASE}/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include', // IMPORTANT: Include cookies
         body: JSON.stringify({
           email: adminKey.toLowerCase().trim(),
           password,
@@ -123,14 +125,13 @@ export default function AdminLoginPage() {
         throw new Error(data.error || 'Invalid MFA code');
       }
 
-      if (data.success && data.token) {
+      if (data.success) {
         if (data.user?.role !== 'admin' && data.user?.role !== 'owner') {
           throw new Error('This account does not have admin privileges');
         }
 
-        localStorage.setItem('time_auth_token', data.token);
+        // Token is stored in httpOnly cookie by server
         localStorage.setItem('time_user', JSON.stringify(data.user));
-        localStorage.setItem('time_is_admin', 'true');
 
         router.push('/admin-portal');
       }

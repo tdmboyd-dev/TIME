@@ -34,6 +34,20 @@ const SESSION_DURATION_MS = SESSION_DURATION_DAYS * 24 * 60 * 60 * 1000;
 const MAX_LOGIN_ATTEMPTS = 5;
 const LOCKOUT_DURATION_MS = 15 * 60 * 1000; // 15 minutes
 
+// Cookie configuration for secure token storage
+const COOKIE_OPTIONS = {
+  httpOnly: true,           // Prevents XSS attacks - JavaScript cannot access
+  secure: process.env.NODE_ENV === 'production', // HTTPS only in production
+  sameSite: 'lax' as const, // CSRF protection
+  maxAge: SESSION_DURATION_MS,
+  path: '/',
+};
+
+const ADMIN_COOKIE_OPTIONS = {
+  ...COOKIE_OPTIONS,
+  // Admin cookie has same settings
+};
+
 // Rate limiting store (use Redis in production cluster)
 const loginAttempts: Map<string, { count: number; lastAttempt: Date; lockedUntil?: Date }> = new Map();
 
@@ -198,7 +212,10 @@ async function deleteSession(token: string): Promise<void> {
 // ============================================================
 
 export async function authMiddleware(req: Request, res: Response, next: NextFunction): Promise<void> {
-  const token = req.headers.authorization?.replace('Bearer ', '');
+  // SECURITY: Check for token in httpOnly cookie first (preferred), then header
+  const cookieToken = req.cookies?.time_auth_token;
+  const headerToken = req.headers.authorization?.replace('Bearer ', '');
+  const token = cookieToken || headerToken;
 
   if (!token) {
     res.status(401).json({ error: 'Authentication required' });
@@ -409,6 +426,9 @@ router.post('/register', async (req: Request, res: Response) => {
 
     logger.info(`New user registered: ${email}`);
 
+    // SECURITY: Set httpOnly cookie for secure token storage
+    res.cookie('time_auth_token', token, COOKIE_OPTIONS);
+
     res.status(201).json({
       success: true,
       user: {
@@ -417,7 +437,7 @@ router.post('/register', async (req: Request, res: Response) => {
         name,
         role: 'user',
       },
-      token,
+      token, // For backward compatibility
       expiresAt: new Date(Date.now() + SESSION_DURATION_MS),
       message: 'Registration successful. Welcome to TIME.',
     });
@@ -511,6 +531,17 @@ router.post('/login', async (req: Request, res: Response) => {
 
     logger.info(`User logged in: ${email}`);
 
+    // SECURITY: Set httpOnly cookie for secure token storage
+    res.cookie('time_auth_token', token, COOKIE_OPTIONS);
+
+    // Set admin flag cookie if user is admin (for frontend routing)
+    if (user.role === 'admin' || user.role === 'owner') {
+      res.cookie('time_is_admin', 'true', {
+        ...COOKIE_OPTIONS,
+        httpOnly: false, // Frontend needs to read this for routing
+      });
+    }
+
     res.json({
       success: true,
       user: {
@@ -520,6 +551,8 @@ router.post('/login', async (req: Request, res: Response) => {
         role: user.role,
         mfaEnabled,
       },
+      // Token still returned for backward compatibility (mobile apps, etc.)
+      // Frontend should prefer using httpOnly cookie
       token,
       expiresAt: new Date(Date.now() + SESSION_DURATION_MS),
     });
@@ -535,11 +568,17 @@ router.post('/login', async (req: Request, res: Response) => {
  * Invalidate current session
  */
 router.post('/logout', authMiddleware, async (req: Request, res: Response) => {
-  const token = (req as any).token;
+  const cookieToken = req.cookies?.time_auth_token;
+  const headerToken = req.headers.authorization?.replace('Bearer ', '');
+  const token = cookieToken || headerToken || (req as any).token;
   const user = (req as any).user;
 
   await deleteSession(token);
   await auditLogRepository.log('auth', 'logout', {}, { userId: user.id });
+
+  // SECURITY: Clear all auth cookies
+  res.clearCookie('time_auth_token', { path: '/' });
+  res.clearCookie('time_is_admin', { path: '/' });
 
   res.json({ success: true, message: 'Logged out successfully' });
 });
