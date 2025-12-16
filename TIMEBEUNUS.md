@@ -595,14 +595,28 @@ Should return: `{"status":"ok","timestamp":"...","components":[...]}`
 
 # CHANGELOG
 
-## v6.1.0 (2025-12-16) - LIVE TRADING + ALCHEMY BLOCKCHAIN
+## v6.1.0 (2025-12-16) - LIVE TRADING + ALCHEMY BLOCKCHAIN + REAL STRATEGY ENGINE
 - ✅ Added LIVE Bot Trading System - Bots now execute REAL trades on Binance, Kraken, Alpaca
+- ✅ Added REAL Trading Strategy Engine (`backend/src/strategies/real_strategy_engine.ts`)
+  - RSI Strategy with Wilder's Smoothing Method (real oversold/overbought detection)
+  - MACD Strategy with EMA(12,26,9) (real crossover detection)
+  - Moving Average Crossover (SMA 20/50 with Golden/Death Cross detection)
+  - Bollinger Bands Strategy (20-period, 2 std dev with real band touches)
+  - Momentum Strategy (multi-period momentum with acceleration tracking)
+  - Combined strategy analysis with weighted signals
+  - All calculations use REAL math, no mock data
 - ✅ Added Alchemy Blockchain Layer (`backend/src/integrations/alchemy_blockchain_layer.ts`)
   - Whale wallet tracking (50+ known whales)
   - Token holder analysis
   - Transaction simulation
   - NFT floor monitoring
   - Multi-chain portfolio aggregation (13 chains)
+- ✅ Added REAL Finnhub Market Data Service (`backend/src/data/real_finnhub_service.ts`)
+  - REST API for real-time quotes and historical data
+  - WebSocket for real-time price streaming
+  - Rate limiting and error handling
+  - Multi-symbol support with batch operations
+  - Auto-reconnect and connection management
 - ✅ Updated all API keys (Binance, Kraken, Alpaca, Alpha Vantage, etc.)
 - ✅ Live data integration across all frontend pages
 - ⚠️ OANDA API token still needs to be generated (account ID configured)

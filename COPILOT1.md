@@ -1710,14 +1710,26 @@ curl https://time-backend-hosting.fly.dev/health
 
 # CHANGELOG
 
-## v5.3.0 (2025-12-16) - LIVE TRADING + ALCHEMY BLOCKCHAIN
+## v5.3.0 (2025-12-16) - LIVE TRADING + ALCHEMY BLOCKCHAIN + REAL STRATEGY ENGINE
 - Added LIVE Bot Trading System - Bots now execute REAL trades on Binance, Kraken, Alpaca
+- Added REAL Trading Strategy Engine (backend/src/strategies/real_strategy_engine.ts)
+  - RSI Strategy with Wilder's Smoothing Method (real oversold/overbought detection)
+  - MACD Strategy with EMA(12,26,9) (real crossover detection)
+  - Moving Average Crossover (SMA 20/50 with Golden/Death Cross detection)
+  - Bollinger Bands Strategy (20-period, 2 std dev with real band touches)
+  - Momentum Strategy (multi-period momentum with acceleration tracking)
+  - Combined strategy analysis with weighted signals (NO MOCK DATA)
 - Added Alchemy Blockchain Layer (backend/src/integrations/alchemy_blockchain_layer.ts)
   - Whale wallet tracking (50+ known whales)
   - Token holder analysis
   - Transaction simulation
   - NFT floor monitoring
   - Multi-chain portfolio aggregation (13 chains)
+- Added REAL Finnhub Market Data Service (backend/src/data/real_finnhub_service.ts)
+  - REST API for quotes, candles, and historical data
+  - WebSocket for real-time streaming
+  - Rate limiting and auto-reconnect
+  - Multi-symbol batch operations
 - Updated all API keys across platform
 - Live data integration across all pages
 
