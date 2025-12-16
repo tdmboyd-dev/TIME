@@ -207,28 +207,9 @@ router.get('/sentiment/exhaustion-warnings', (req: Request, res: Response) => {
 // ============================================================================
 
 /**
- * GET /api/revolutionary/darkpool/:symbol
- * Get dark pool footprint for a symbol
- */
-router.get('/darkpool/:symbol', (req: Request, res: Response) => {
-  try {
-    const { symbol } = req.params;
-    const footprint = darkPoolReconstructor.getLatestFootprint(symbol.toUpperCase());
-    if (!footprint) {
-      return res.status(404).json({ success: false, error: 'No dark pool data for symbol' });
-    }
-    res.json({
-      success: true,
-      data: footprint,
-    });
-  } catch (error: any) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-/**
  * GET /api/revolutionary/darkpool/high-probability
  * Get high probability institutional activity
+ * NOTE: Must be defined BEFORE /darkpool/:symbol to avoid route conflict
  */
 router.get('/darkpool/high-probability', (req: Request, res: Response) => {
   try {
@@ -280,33 +261,35 @@ router.get('/darkpool/volume-profile/:symbol', (req: Request, res: Response) => 
   }
 });
 
-// ============================================================================
-// Smart Money Tracker Endpoints
-// ============================================================================
-
 /**
- * GET /api/revolutionary/smartmoney/:symbol
- * Get smart money consensus for a symbol
+ * GET /api/revolutionary/darkpool/:symbol
+ * Get dark pool footprint for a symbol
+ * NOTE: Must be defined AFTER specific routes to avoid conflict
  */
-router.get('/smartmoney/:symbol', (req: Request, res: Response) => {
+router.get('/darkpool/:symbol', (req: Request, res: Response) => {
   try {
     const { symbol } = req.params;
-    const consensus = smartMoneyTracker.generateConsensus(symbol.toUpperCase());
-    if (!consensus) {
-      return res.status(404).json({ success: false, error: 'No smart money data for symbol' });
+    const footprint = darkPoolReconstructor.getLatestFootprint(symbol.toUpperCase());
+    if (!footprint) {
+      return res.status(404).json({ success: false, error: 'No dark pool data for symbol' });
     }
     res.json({
       success: true,
-      data: consensus,
+      data: footprint,
     });
   } catch (error: any) {
     res.status(500).json({ success: false, error: error.message });
   }
 });
 
+// ============================================================================
+// Smart Money Tracker Endpoints
+// ============================================================================
+
 /**
  * GET /api/revolutionary/smartmoney/top-activity
  * Get top smart money activity
+ * NOTE: Specific routes must be defined BEFORE /smartmoney/:symbol
  */
 router.get('/smartmoney/top-activity', (req: Request, res: Response) => {
   try {
@@ -375,33 +358,35 @@ router.get('/smartmoney/entities', (req: Request, res: Response) => {
   }
 });
 
-// ============================================================================
-// Volatility Surface Trader Endpoints
-// ============================================================================
-
 /**
- * GET /api/revolutionary/volatility/:symbol
- * Get volatility surface for a symbol
+ * GET /api/revolutionary/smartmoney/:symbol
+ * Get smart money consensus for a symbol
+ * NOTE: Must be defined AFTER specific routes to avoid conflict
  */
-router.get('/volatility/:symbol', (req: Request, res: Response) => {
+router.get('/smartmoney/:symbol', (req: Request, res: Response) => {
   try {
     const { symbol } = req.params;
-    const surface = volatilitySurfaceTrader.getSurface(symbol.toUpperCase());
-    if (!surface) {
-      return res.status(404).json({ success: false, error: 'No volatility surface for symbol' });
+    const consensus = smartMoneyTracker.generateConsensus(symbol.toUpperCase());
+    if (!consensus) {
+      return res.status(404).json({ success: false, error: 'No smart money data for symbol' });
     }
     res.json({
       success: true,
-      data: surface,
+      data: consensus,
     });
   } catch (error: any) {
     res.status(500).json({ success: false, error: error.message });
   }
 });
 
+// ============================================================================
+// Volatility Surface Trader Endpoints
+// ============================================================================
+
 /**
  * GET /api/revolutionary/volatility/anomalies
  * Get all detected volatility anomalies
+ * NOTE: Specific routes must be defined BEFORE /volatility/:symbol
  */
 router.get('/volatility/anomalies', (req: Request, res: Response) => {
   try {
@@ -491,6 +476,27 @@ router.get('/volatility/iv-crush/:symbol', (req: Request, res: Response) => {
     res.json({
       success: true,
       data: prediction,
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * GET /api/revolutionary/volatility/:symbol
+ * Get volatility surface for a symbol
+ * NOTE: Must be defined AFTER specific routes to avoid conflict
+ */
+router.get('/volatility/:symbol', (req: Request, res: Response) => {
+  try {
+    const { symbol } = req.params;
+    const surface = volatilitySurfaceTrader.getSurface(symbol.toUpperCase());
+    if (!surface) {
+      return res.status(404).json({ success: false, error: 'No volatility surface for symbol' });
+    }
+    res.json({
+      success: true,
+      data: surface,
     });
   } catch (error: any) {
     res.status(500).json({ success: false, error: error.message });
