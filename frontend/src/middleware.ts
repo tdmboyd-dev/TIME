@@ -67,7 +67,8 @@ export function middleware(request: NextRequest) {
   const hasValidToken = !!(authToken || headerToken);
 
   // Check if route requires admin access
-  const isAdminRoute = ADMIN_ROUTES.some(route => pathname.startsWith(route));
+  // Make sure to NOT redirect /admin-login to itself
+  const isAdminRoute = ADMIN_ROUTES.some(route => pathname.startsWith(route)) && !pathname.startsWith('/admin-login');
   if (isAdminRoute) {
     if (!hasValidToken) {
       // Redirect to admin login
