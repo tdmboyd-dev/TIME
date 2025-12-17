@@ -75,29 +75,7 @@ export default function GoalsPage() {
   const [riskProfile, setRiskProfile] = useState<any>(null);
 
   const fetchGoals = useCallback(async () => {
-    // Mock data fallback
-    const mockGoals: InvestmentGoal[] = [
-      {
-        id: 'mock-1',
-        name: 'Retirement Fund',
-        type: 'retirement',
-        targetAmount: 1000000,
-        currentAmount: 150000,
-        targetDate: '2045-12-31',
-        monthlyContribution: 1500,
-        riskProfile: {
-          level: 'moderate',
-          score: 50,
-          description: 'Balanced approach with moderate risk',
-        },
-        allocation: [
-          { assetClass: 'Stocks', targetPercent: 60, etf: 'VTI', etfName: 'Vanguard Total Stock Market' },
-          { assetClass: 'Bonds', targetPercent: 30, etf: 'BND', etfName: 'Vanguard Total Bond Market' },
-          { assetClass: 'Cash', targetPercent: 10, etf: 'VMFXX', etfName: 'Vanguard Federal Money Market' },
-        ],
-      },
-    ];
-
+    // NO MOCK DATA - All goals come from real API endpoints
     try {
       setIsLoading(true);
       const res = await fetch(`${API_BASE}/robo/goals?userId=demo-user`, {
@@ -114,8 +92,8 @@ export default function GoalsPage() {
         throw new Error('Invalid response format');
       }
     } catch (error) {
-      console.error('Failed to fetch goals from API, using mock data:', error);
-      setGoals(mockGoals);
+      console.error('Failed to fetch goals from API:', error);
+      setGoals([]);
       setIsConnected(false);
     } finally {
       setIsLoading(false);
@@ -123,29 +101,7 @@ export default function GoalsPage() {
   }, []);
 
   const fetchQuestions = useCallback(async () => {
-    // Mock data fallback
-    const mockQuestions: RiskQuestion[] = [
-      {
-        id: 'q1',
-        question: 'What is your investment time horizon?',
-        options: [
-          { value: 1, label: 'Less than 3 years' },
-          { value: 3, label: '3-5 years' },
-          { value: 5, label: '5-10 years' },
-          { value: 7, label: 'More than 10 years' },
-        ],
-      },
-      {
-        id: 'q2',
-        question: 'How would you react to a 20% market decline?',
-        options: [
-          { value: 1, label: 'Sell everything immediately' },
-          { value: 3, label: 'Hold and wait' },
-          { value: 5, label: 'Buy more at lower prices' },
-        ],
-      },
-    ];
-
+    // NO MOCK DATA - All questions come from real API endpoints
     try {
       const res = await fetch(`${API_BASE}/robo/questions`, {
         headers: { 'Content-Type': 'application/json' },
@@ -160,8 +116,8 @@ export default function GoalsPage() {
         throw new Error('Invalid response format');
       }
     } catch (error) {
-      console.error('Failed to fetch questions from API, using mock data:', error);
-      setQuestions(mockQuestions);
+      console.error('Failed to fetch questions from API:', error);
+      setQuestions([]);
     }
   }, []);
 

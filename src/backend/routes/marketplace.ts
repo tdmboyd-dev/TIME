@@ -241,6 +241,40 @@ router.post('/list-bot', async (req: Request, res: Response) => {
 });
 
 /**
+ * POST /marketplace/admin/auto-list-all
+ * Admin endpoint to auto-list ALL bots with performance data to marketplace
+ * Full abilities enabled: auto-rental, verified, ready for trading
+ */
+router.post('/admin/auto-list-all', async (req: Request, res: Response) => {
+  try {
+    // Check admin auth
+    const user = (req as any).user;
+    if (!user || (user.role !== 'admin' && user.role !== 'owner')) {
+      return res.status(403).json({
+        success: false,
+        error: 'Admin access required',
+      });
+    }
+
+    // Auto-list all bots from BotManager
+    const result = botMarketplace.autoListAllBots(() => botManager.getAllBots());
+
+    res.json({
+      success: true,
+      message: `Auto-listed ${result.listed} bots to marketplace`,
+      data: result,
+      marketplaceStats: botMarketplace.getStats(),
+    });
+  } catch (error) {
+    log.error('Failed to auto-list bots:', error as object);
+    res.status(500).json({
+      success: false,
+      error: (error as Error).message,
+    });
+  }
+});
+
+/**
  * GET /marketplace/check-access/:botId
  * Check if user has access to a bot
  */

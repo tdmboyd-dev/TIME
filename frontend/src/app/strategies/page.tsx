@@ -50,88 +50,7 @@ interface Strategy {
   createdAt: Date;
 }
 
-const mockStrategies: Strategy[] = [
-  {
-    id: '1',
-    name: 'Multi-Trend Fusion',
-    description: 'Combines signals from multiple timeframes with adaptive position sizing',
-    type: 'trend_following',
-    status: 'active',
-    sourceBots: ['Trend Follower Alpha', 'Momentum Hunter'],
-    performance: {
-      winRate: 67.3,
-      profitFactor: 2.45,
-      maxDrawdown: 11.2,
-      sharpeRatio: 2.01,
-      totalTrades: 892,
-      totalPnL: 67890.45,
-      avgTrade: 76.12,
-    },
-    riskLevel: 'medium',
-    synthesized: true,
-    createdAt: new Date('2024-01-20'),
-  },
-  {
-    id: '2',
-    name: 'Statistical Arbitrage V2',
-    description: 'Mean reversion strategy with dynamic hedging',
-    type: 'mean_reversion',
-    status: 'active',
-    sourceBots: ['Mean Reversion Master'],
-    performance: {
-      winRate: 73.8,
-      profitFactor: 1.92,
-      maxDrawdown: 7.5,
-      sharpeRatio: 2.34,
-      totalTrades: 1567,
-      totalPnL: 45678.23,
-      avgTrade: 29.15,
-    },
-    riskLevel: 'low',
-    synthesized: false,
-    createdAt: new Date('2024-02-15'),
-  },
-  {
-    id: '3',
-    name: 'Breakout Momentum Hybrid',
-    description: 'Combines breakout detection with momentum confirmation',
-    type: 'hybrid',
-    status: 'optimizing',
-    sourceBots: ['Breakout Hunter', 'Momentum Hunter'],
-    performance: {
-      winRate: 58.9,
-      profitFactor: 2.67,
-      maxDrawdown: 15.8,
-      sharpeRatio: 1.78,
-      totalTrades: 456,
-      totalPnL: 23456.78,
-      avgTrade: 51.44,
-    },
-    riskLevel: 'high',
-    synthesized: true,
-    createdAt: new Date('2024-03-01'),
-  },
-  {
-    id: '4',
-    name: 'TIME Synthesis #12',
-    description: 'Auto-evolved strategy optimized for current market regime',
-    type: 'synthesized',
-    status: 'backtesting',
-    sourceBots: ['Trend Follower Alpha', 'Mean Reversion Master', 'Scalper Pro V2'],
-    performance: {
-      winRate: 64.2,
-      profitFactor: 2.12,
-      maxDrawdown: 9.3,
-      sharpeRatio: 1.89,
-      totalTrades: 234,
-      totalPnL: 12345.67,
-      avgTrade: 52.76,
-    },
-    riskLevel: 'medium',
-    synthesized: true,
-    createdAt: new Date('2024-04-10'),
-  },
-];
+// NO MOCK DATA - All strategies come from real API endpoints
 
 const typeColors: Record<string, string> = {
   trend_following: 'bg-blue-500/20 text-blue-400',
@@ -227,8 +146,8 @@ export default function StrategiesPage() {
       console.error('Failed to fetch strategies:', error);
       setError(error.message || 'Failed to connect');
       setIsConnected(false);
-      // Use fallback mock data for demo
-      setStrategies(mockStrategies);
+      // No mock fallback - show empty state
+      setStrategies([]);
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);

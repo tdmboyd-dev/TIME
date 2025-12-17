@@ -558,6 +558,71 @@ export class BotMarketplace extends EventEmitter {
   }
 
   /**
+   * Auto-list all bots from BotManager to marketplace
+   * Called by admin to bulk-list all absorbed bots with full trading abilities
+   */
+  public autoListAllBots(getBots: () => any[]): { listed: number; skipped: number } {
+    const bots = getBots();
+    let listed = 0;
+    let skipped = 0;
+
+    for (const bot of bots) {
+      // Skip if already listed
+      if (this.listings.has(bot.id)) {
+        skipped++;
+        continue;
+      }
+
+      // Skip bots without performance data
+      if (!bot.performance || bot.performance.totalTrades === 0) {
+        skipped++;
+        continue;
+      }
+
+      // Determine category based on bot name/description
+      let category: BotListing['category'] = 'multi-asset';
+      const nameDesc = `${bot.name} ${bot.description || ''}`.toLowerCase();
+      if (nameDesc.includes('crypto') || nameDesc.includes('btc') || nameDesc.includes('eth')) {
+        category = 'crypto';
+      } else if (nameDesc.includes('forex') || nameDesc.includes('fx') || nameDesc.includes('eur') || nameDesc.includes('usd')) {
+        category = 'forex';
+      } else if (nameDesc.includes('stock') || nameDesc.includes('equit')) {
+        category = 'stocks';
+      } else if (nameDesc.includes('option')) {
+        category = 'options';
+      }
+
+      // Auto-list with full abilities
+      this.listBot(bot.id, bot.name, null, {
+        description: bot.description || `${bot.name} - Absorbed trading bot with verified performance`,
+        category,
+        strategy: bot.fingerprint?.strategyType?.[0] || 'hybrid',
+        winRate: bot.performance.winRate * 100, // Convert to percentage
+        profitFactor: bot.performance.profitFactor,
+        sharpeRatio: bot.performance.sharpeRatio,
+        maxDrawdown: bot.performance.maxDrawdown * 100, // Convert to percentage
+        totalTrades: bot.performance.totalTrades,
+        avgMonthlyReturn: (bot.performance.totalPnL / 12) || 5,
+        performanceFee: 20, // 20% performance fee
+        isAutoRental: true, // Full auto-rental enabled
+      });
+
+      listed++;
+    }
+
+    log.info(`Auto-listed ${listed} bots to marketplace (${skipped} skipped)`);
+    this.emit('bulk-listed', { listed, skipped });
+    return { listed, skipped };
+  }
+
+  /**
+   * Get listing by bot ID
+   */
+  public getListing(botId: string): BotListing | undefined {
+    return this.listings.get(botId);
+  }
+
+  /**
    * Update rental performance during rental period
    */
   public updateRentalPerformance(rentalId: string, pnl: number, trades: number): void {

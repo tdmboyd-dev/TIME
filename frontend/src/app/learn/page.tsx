@@ -41,68 +41,7 @@ interface Lesson {
   lessons: number;
 }
 
-const mockLessons: Lesson[] = [
-  {
-    id: '1',
-    title: 'Understanding Market Regimes',
-    description: 'Learn how TIME detects and adapts to different market conditions',
-    category: 'Fundamentals',
-    difficulty: 'beginner',
-    duration: 15,
-    completed: true,
-    locked: false,
-    rating: 4.8,
-    lessons: 5,
-  },
-  {
-    id: '2',
-    title: 'Bot Analysis & Selection',
-    description: 'How to evaluate trading bots and understand their performance metrics',
-    category: 'Bot Management',
-    difficulty: 'beginner',
-    duration: 20,
-    completed: true,
-    locked: false,
-    rating: 4.7,
-    lessons: 7,
-  },
-  {
-    id: '3',
-    title: 'Risk Management Essentials',
-    description: 'Master position sizing, stop losses, and portfolio risk',
-    category: 'Risk',
-    difficulty: 'intermediate',
-    duration: 30,
-    completed: false,
-    locked: false,
-    rating: 4.9,
-    lessons: 8,
-  },
-  {
-    id: '4',
-    title: 'Strategy Synthesis Deep Dive',
-    description: 'Understand how TIME combines multiple strategies into powerful hybrids',
-    category: 'Advanced',
-    difficulty: 'advanced',
-    duration: 45,
-    completed: false,
-    locked: false,
-    rating: 4.6,
-    lessons: 12,
-  },
-  {
-    id: '5',
-    title: 'Quantitative Analysis',
-    description: 'Statistical methods, backtesting, and performance optimization',
-    category: 'Quant',
-    difficulty: 'expert',
-    duration: 60,
-    completed: false,
-    locked: true,
-    rating: 4.9,
-    lessons: 15,
-  },
-];
+// NO MOCK DATA - All lessons come from real API endpoints
 
 const modeDescriptions: Record<ExplanationMode, { icon: typeof Brain; label: string; description: string }> = {
   plain_english: {
@@ -148,7 +87,7 @@ export default function LearnPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedMode, setSelectedMode] = useState<ExplanationMode>('plain_english');
   const [filterCategory, setFilterCategory] = useState('all');
-  const [lessons, setLessons] = useState<Lesson[]>(mockLessons);
+  const [lessons, setLessons] = useState<Lesson[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isConnected, setIsConnected] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
