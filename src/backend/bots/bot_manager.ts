@@ -162,6 +162,7 @@ export class BotManager extends EventEmitter implements TIMEComponent {
 
   /**
    * Load absorbed bots from the dropzone/incoming folder
+   * NOW CHECKS FOR EXISTING BOTS TO AVOID DUPLICATES!
    */
   private async loadAbsorbedBots(): Promise<void> {
     const dropzonePath = path.resolve('./dropzone/incoming');
@@ -177,23 +178,41 @@ export class BotManager extends EventEmitter implements TIMEComponent {
 
     log.info(`Found ${folders.length} bot repositories in dropzone`);
 
+    // Get existing bot names to avoid duplicates
+    const existingBotNames = new Set(Array.from(this.bots.values()).map(b => b.name.toLowerCase()));
+    let skippedCount = 0;
+    let loadedCount = 0;
+
     for (const folder of folders) {
       try {
         const botPath = path.join(dropzonePath, folder);
+
+        // Check if bot with similar name already exists (loaded from DB)
+        const botName = this.formatBotName(folder.replace(/^harvest\d+_/, '').split('_').slice(1).join(' ') || folder);
+        if (existingBotNames.has(botName.toLowerCase())) {
+          log.debug(`Absorbed bot "${botName}" already exists in DB, skipping`);
+          skippedCount++;
+          continue;
+        }
+
         const bot = await this.createBotFromFolder(folder, botPath);
 
         if (bot) {
           this.bots.set(bot.id, bot);
+          existingBotNames.add(bot.name.toLowerCase()); // Track to avoid duplicates within same load
           if (bot.status === 'active') {
             this.activeBots.add(bot.id);
           }
+          // Persist to database
+          await this.persistBot(bot);
+          loadedCount++;
         }
       } catch (error) {
         log.warn(`Failed to load bot from ${folder}:`, error as object);
       }
     }
 
-    log.info(`Loaded ${folders.length} absorbed bots from dropzone`);
+    log.info(`Absorbed bots: ${loadedCount} new, ${skippedCount} existing (skipped)`);
   }
 
   /**
