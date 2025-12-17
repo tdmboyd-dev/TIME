@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
 
 interface Bot {
   id: string;
@@ -79,9 +80,21 @@ interface TimeState {
     status: string;
   }>;
   setHealth: (health: TimeState['health']) => void;
+
+  // User preferences (persisted)
+  userPreferences: {
+    watchMode: boolean;
+    autoTradeEnabled: boolean;
+    notifications: boolean;
+    theme: 'dark' | 'light';
+    riskProfile: 'conservative' | 'moderate' | 'aggressive';
+  };
+  setUserPreferences: (prefs: Partial<TimeState['userPreferences']>) => void;
 }
 
-export const useTimeStore = create<TimeState>((set) => ({
+export const useTimeStore = create<TimeState>()(
+  persist(
+    (set) => ({
   // Connection
   isConnected: false,
   setConnected: (connected) => set({ isConnected: connected }),
@@ -122,4 +135,27 @@ export const useTimeStore = create<TimeState>((set) => ({
   // System Health
   health: [],
   setHealth: (health) => set({ health }),
-}));
+
+  // User preferences (persisted to localStorage)
+  userPreferences: {
+    watchMode: false,
+    autoTradeEnabled: false,
+    notifications: true,
+    theme: 'dark',
+    riskProfile: 'moderate',
+  },
+  setUserPreferences: (prefs) => set((state) => ({
+    userPreferences: { ...state.userPreferences, ...prefs }
+  })),
+    }),
+    {
+      name: 'time-storage', // localStorage key
+      storage: createJSONStorage(() => localStorage),
+      // Only persist user preferences, not transient state like connection status
+      partialize: (state) => ({
+        evolutionMode: state.evolutionMode,
+        userPreferences: state.userPreferences,
+      }),
+    }
+  )
+);
