@@ -84,11 +84,17 @@ export default function AdminLoginPage() {
           throw new Error('This account does not have admin privileges');
         }
 
-        // Token is stored in httpOnly cookie by server - only store non-sensitive user info
+        // Set auth cookies on frontend domain (cross-origin cookie fix)
+        const expires = new Date(data.expiresAt);
+        const cookieOptions = `path=/; expires=${expires.toUTCString()}; SameSite=Lax; Secure`;
+        document.cookie = `time_auth_token=${data.token}; ${cookieOptions}`;
+        document.cookie = `time_is_admin=true; ${cookieOptions}`;
+
         localStorage.setItem('time_user', JSON.stringify(data.user));
 
-        // Redirect to admin portal
-        router.push('/admin-portal');
+        // Redirect to admin portal or requested page
+        const redirectUrl = new URLSearchParams(window.location.search).get('redirect');
+        router.push(redirectUrl || '/admin-portal');
       }
     } catch (err: any) {
       setStep('credentials');
@@ -130,10 +136,16 @@ export default function AdminLoginPage() {
           throw new Error('This account does not have admin privileges');
         }
 
-        // Token is stored in httpOnly cookie by server
+        // Set auth cookies on frontend domain (cross-origin cookie fix)
+        const expires = new Date(data.expiresAt);
+        const cookieOptions = `path=/; expires=${expires.toUTCString()}; SameSite=Lax; Secure`;
+        document.cookie = `time_auth_token=${data.token}; ${cookieOptions}`;
+        document.cookie = `time_is_admin=true; ${cookieOptions}`;
+
         localStorage.setItem('time_user', JSON.stringify(data.user));
 
-        router.push('/admin-portal');
+        const redirectUrl = new URLSearchParams(window.location.search).get('redirect');
+        router.push(redirectUrl || '/admin-portal');
       }
     } catch (err: any) {
       setError(err.message || 'Invalid MFA code.');

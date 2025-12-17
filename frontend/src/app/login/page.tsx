@@ -66,10 +66,16 @@ export default function LoginPage() {
         return;
       }
 
-      // Login successful - token is now stored in httpOnly cookie by the server
+      // Login successful
       if (data.success) {
-        // Store user info (non-sensitive data only) for display purposes
-        // Token is stored securely in httpOnly cookie - NOT accessible via JavaScript
+        // Set auth cookies on frontend domain (cross-origin cookie fix)
+        // The backend also sets cookies, but they're bound to backend domain
+        const expires = new Date(data.expiresAt);
+        const cookieOptions = `path=/; expires=${expires.toUTCString()}; SameSite=Lax; Secure`;
+        document.cookie = `time_auth_token=${data.token}; ${cookieOptions}`;
+        document.cookie = `time_is_admin=${data.user?.role === 'admin' || data.user?.role === 'owner'}; ${cookieOptions}`;
+
+        // Store user info for display purposes
         localStorage.setItem('time_user', JSON.stringify(data.user));
 
         if (rememberMe) {
@@ -78,8 +84,9 @@ export default function LoginPage() {
           localStorage.removeItem('time_remember_email');
         }
 
-        // Redirect to dashboard
-        router.push('/');
+        // Redirect to dashboard or requested page
+        const redirectUrl = new URLSearchParams(window.location.search).get('redirect');
+        router.push(redirectUrl || '/');
       }
     } catch (err: any) {
       setError(err.message || 'Invalid credentials. Please try again.');
@@ -116,9 +123,16 @@ export default function LoginPage() {
       }
 
       if (data.success) {
-        // Token is stored in httpOnly cookie by server - only store non-sensitive user info
+        // Set auth cookies on frontend domain (cross-origin cookie fix)
+        const expires = new Date(data.expiresAt);
+        const cookieOptions = `path=/; expires=${expires.toUTCString()}; SameSite=Lax; Secure`;
+        document.cookie = `time_auth_token=${data.token}; ${cookieOptions}`;
+        document.cookie = `time_is_admin=${data.user?.role === 'admin' || data.user?.role === 'owner'}; ${cookieOptions}`;
+
         localStorage.setItem('time_user', JSON.stringify(data.user));
-        router.push('/');
+
+        const redirectUrl = new URLSearchParams(window.location.search).get('redirect');
+        router.push(redirectUrl || '/');
       }
     } catch (err: any) {
       setError(err.message || 'Invalid verification code.');
