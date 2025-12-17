@@ -23,6 +23,8 @@ export interface UserSchema {
   name: string;
   passwordHash: string;
   role: 'user' | 'admin' | 'owner';
+  phone?: string;
+  avatar?: string;
   createdAt: Date;
   lastLogin: Date;
   lastActivity: Date;
@@ -66,27 +68,30 @@ export interface BotSchema {
   _id: string;
   name: string;
   description: string;
-  source: 'github' | 'mql5' | 'ctrader' | 'tradingview' | 'user_uploaded' | 'synthesized' | 'forum';
+  source: 'github' | 'mql5' | 'ctrader' | 'tradingview' | 'user_upload' | 'user_uploaded' | 'synthesized' | 'forum' | 'time_generated' | 'absorbed';
   sourceUrl?: string;
-  author: string;
-  version: string;
-  status: 'pending' | 'active' | 'paused' | 'stopped' | 'archived' | 'analyzing' | 'training';
-  rating: number;
-  downloads: number;
+  ownerId?: string;
+  author?: string;
+  version?: string;
+  status: 'pending' | 'pending_review' | 'testing' | 'active' | 'paused' | 'stopped' | 'archived' | 'analyzing' | 'training';
+  rating?: number;
+  downloads?: number;
   createdAt: Date;
   updatedAt: Date;
-  lastActiveAt: Date;
+  lastActiveAt?: Date;
+  absorbedAt?: Date;
 
   // Code and configuration
+  code?: string;
   codeHash?: string;
+  config?: Record<string, any>;
   configSchema?: Record<string, any>;
-  parameters: Record<string, any>;
+  parameters?: Record<string, any>;
 
   // Safety and compliance
-  safetyScore: number;
-  isAbsorbed: boolean;
-  absorbedAt?: Date;
-  license: string;
+  safetyScore?: number;
+  isAbsorbed?: boolean;
+  license?: string;
 
   // Performance metrics
   performance: {

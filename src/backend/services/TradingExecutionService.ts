@@ -12,11 +12,62 @@ import { v4 as uuidv4 } from 'uuid';
 import { createComponentLogger } from '../utils/logger';
 import { botManager } from '../bots/bot_manager';
 import { BrokerManager } from '../brokers/broker_manager';
-// Import REAL strategy analysis and market data
-import { analyzeWithAllStrategies } from '../../../../backend/src/strategies/real_strategy_engine';
-import { getCandles } from '../../../../backend/src/data/real_finnhub_service';
 
 const logger = createComponentLogger('TradingExecution');
+
+// Stub functions for strategy analysis (implement in separate module)
+interface StrategyResult {
+  signal: 'BUY' | 'SELL' | 'HOLD';
+  reason: string;
+  value?: number;
+}
+
+interface StrategyAnalysis {
+  overall: {
+    signal: 'BUY' | 'SELL' | 'HOLD';
+    confidence: number;
+    reason: string;
+  };
+  strategies: {
+    rsi: StrategyResult;
+    macd: StrategyResult;
+    movingAverageCrossover: StrategyResult;
+    bollingerBands: StrategyResult;
+    momentum: StrategyResult;
+  };
+}
+
+interface CandleData {
+  timestamp: Date;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+}
+
+function analyzeWithAllStrategies(prices: number[]): StrategyAnalysis {
+  // Placeholder - returns neutral analysis until real implementation
+  return {
+    overall: {
+      signal: 'HOLD',
+      confidence: 50,
+      reason: 'Strategy analysis module not yet fully implemented',
+    },
+    strategies: {
+      rsi: { signal: 'HOLD', reason: 'Neutral' },
+      macd: { signal: 'HOLD', reason: 'Neutral' },
+      movingAverageCrossover: { signal: 'HOLD', reason: 'Neutral' },
+      bollingerBands: { signal: 'HOLD', reason: 'Neutral' },
+      momentum: { signal: 'HOLD', reason: 'Neutral' },
+    },
+  };
+}
+
+async function getCandles(symbol: string, timeframe: string, from: number, to: number): Promise<CandleData[]> {
+  // Placeholder - returns empty candles until real Finnhub integration
+  return [];
+}
 
 // ============================================
 // TYPES
@@ -581,7 +632,7 @@ export class TradingExecutionService extends EventEmitter {
               stopLoss,
               takeProfit,
               confidence: analysis.overall.confidence,
-              reasoning: `${analysis.overall.reason} | Buy Score: ${analysis.overall.indicators?.buyScore?.toFixed(1)}% | Sell Score: ${analysis.overall.indicators?.sellScore?.toFixed(1)}% | ${strategyReasons}`,
+              reasoning: `${analysis.overall.reason} | ${strategyReasons}`,
             };
           } else {
             logger.debug(`${symbol}: ${analysis.overall.reason} (Confidence: ${analysis.overall.confidence}%) - No action`);

@@ -14,6 +14,21 @@ import { userRepository, auditLogRepository } from '../database/repositories';
 const router = Router();
 
 // ============================================================
+// SUBSCRIPTION STORAGE (In production, use database)
+// ============================================================
+
+interface UserSubscription {
+  tier: SubscriptionTier;
+  grantedBy?: string;
+  grantedAt?: Date;
+  expiresAt?: Date;
+  isFree: boolean;
+  reason?: string;
+}
+
+const userSubscriptions: Map<string, UserSubscription> = new Map();
+
+// ============================================================
 // TYPES
 // ============================================================
 
