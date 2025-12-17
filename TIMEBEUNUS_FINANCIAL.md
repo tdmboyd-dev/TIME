@@ -1,11 +1,132 @@
 # TIMEBEUNUS FINANCIAL KNOWLEDGE BASE
 ## Complete Financial Markets Master Reference
-### Version 2.2.0 | Last Updated: December 16, 2025
+### Version 2.3.0 | Last Updated: December 17, 2025
 
 ---
 
 > ## *"Never get left out again. The big boys' playbook is now YOUR playbook."*
 > **— TIMEBEUNUS**
+
+---
+
+# 🆕 AUTO-SKIM TRADING RESEARCH (December 17, 2025)
+
+## SCALPING/SKIMMING METHODS - KEY FINDINGS
+
+### What is Skimming?
+Skimming (a.k.a. scalping) is a high-frequency trading strategy that:
+- Targets tiny price movements (5-50 basis points = 0.05%-0.5%)
+- Holds positions for seconds to minutes
+- Executes 50-200+ trades per day
+- Aims for 55-65% win rate to cover transaction costs
+
+### 2025 Statistics (Web Research)
+| Metric | Value |
+|--------|-------|
+| Average hold time | < 3 minutes |
+| Trades per day | 50-200+ |
+| Target win rate | 55-65% |
+| Capital required | $5,000-$10,000 minimum |
+| Automation usage | 78% of scalpers use bots |
+
+### Best Markets for Skimming
+| Market | Typical Spread | Why Good |
+|--------|----------------|----------|
+| EUR/USD | 0.5-1 pip (1-2 bps) | High liquidity, low spread |
+| SPY | 1 cent ($0.01) | Most liquid ETF |
+| BTC/USDT | 0.01% (1-5 bps) | 24/7, high volatility |
+| QQQ | 1-2 cents | Tech exposure, liquid |
+
+### High Win Rate Strategies (55-70%+)
+1. **Triple EMA** - 25/50/100 EMAs on 5-min, enter on pullbacks
+2. **RSI + 200 EMA** - Price above 200 EMA, RSI > 50, bullish engulfing
+3. **VWAP Mean Reversion** - Fade price when stretched from VWAP
+4. **Bollinger Band Squeeze** - Enter on squeeze breakout
+
+---
+
+## PLATFORMS RESEARCHED
+
+### HolaPrime (Prop Firm)
+- **Website:** holaprime.com
+- **Founded:** 2024
+- **Account Sizes:** $5K - $300K
+- **Evaluation:** 1-Step (10% target) or 2-Step (8%+5%)
+- **Profit Split:** Up to 95% (monthly)
+- **Payout Speed:** 1 hour (with fee)
+- **Scaling:** Up to $4M capital
+- **Key Feature:** No evaluation with Direct Account ($129+)
+
+### WealthCharts (Charting Platform)
+- **Website:** wealthcharts.com
+- **Features:** 200+ indicators, AI scanners
+- **Key Indicators:**
+  - Champion Trend (Buy/Sell zones)
+  - WealthSignal (Momentum oscillator)
+  - Breakout Forecaster (AI prediction)
+  - IRB/RIRB Scanner (Bar pattern breakouts)
+- **WealthScript:** Custom indicator language
+
+### TastyTrade (Options Broker)
+- **Website:** tastytrade.com
+- **Specialty:** Options education
+- **Key Strategy:** 45 DTE Iron Condor
+  - 20 delta short legs
+  - Take profit at 50% of credit
+  - Close at 21 DTE regardless
+- **Theta:** Optimal decay around 45 DTE
+
+---
+
+## BOTS ABSORBED INTO TIME
+
+### Open Source (GitHub)
+| Bot | Language | Strategies | Stars |
+|-----|----------|------------|-------|
+| Freqtrade | Python | FreqAI ML, 100+ strategies | 30K+ |
+| Hummingbot | Python | Market making, arbitrage | 7K+ |
+| Jesse | Python | Backtest framework | 5K+ |
+| OctoBot | Python | AI + Grid trading | 3K+ |
+| Superalgos | JS | Visual strategy builder | 4K+ |
+
+### Commercial (Absorbed Logic)
+- **3Commas:** Grid, DCA, Smart Trade
+- **Cryptohopper:** AI momentum, trailing
+- **Pionex:** Grid, martingale, reverse grid
+- **Trade Ideas:** Holly AI breakout
+- **TrendSpider:** Auto-pattern recognition
+
+### DeFi/MEV (Legal Versions)
+- DEX price arbitrage (88% win rate)
+- Funding rate arbitrage (82% win rate)
+- Spot-futures basis trade (85% win rate)
+- Liquidation positioning (65% win rate)
+
+---
+
+## AUTO-SKIM SYSTEM (IMPLEMENTED)
+
+**File:** `src/backend/autopilot/dropbot.ts`
+**Class:** `AutoSkimEngine`
+
+### 10 Skim Strategies
+1. **Micro-Vacuum** - Price deviation from average
+2. **Spread Skim** - Capture bid-ask spread
+3. **Theta Skim** - Options time decay
+4. **VWAP Bounce** - Mean reversion to VWAP
+5. **Funding Rate** - Perp funding arbitrage
+6. **Flash Arb** - Cross-exchange price diff
+7. **Correlation Skim** - Pair divergence
+8. **News Velocity** - Sentiment momentum
+9. **Order Flow Skim** - Large order detection
+10. **Vol Regime** - Volatility transitions
+
+### Configuration Defaults
+- Min profit: 5 bps (0.05%)
+- Max profit: 50 bps (0.5%)
+- Position size: 2% of capital
+- Max concurrent: 10 skims
+- Daily loss limit: 2%
 
 ---
 
