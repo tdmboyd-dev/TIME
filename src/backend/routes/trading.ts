@@ -621,4 +621,237 @@ router.get('/autopilot/:pilotId', authMiddleware, (req: Request, res: Response) 
   });
 });
 
+// ============================================
+// TIMEBEUNUS AUTO-TRADE CONTROL
+// ============================================
+
+// In-memory state for TIMEBEUNUS (can be moved to DB later)
+let timebeunusState = {
+  isActive: false,
+  dominanceMode: 'balanced' as string,
+  autoTradeEnabled: false,
+  startedAt: null as Date | null,
+  totalTrades: 0,
+  totalPnL: 0,
+  enabledStrategies: [] as string[],
+};
+
+/**
+ * GET /trading/timebeunus/status
+ * Get TIMEBEUNUS auto-trade status
+ */
+router.get('/timebeunus/status', (req: Request, res: Response) => {
+  const enabledBots = tradingExecutionService.getEnabledBots();
+  const stats = tradingExecutionService.getStats();
+
+  res.json({
+    success: true,
+    data: {
+      ...timebeunusState,
+      enabledBotCount: enabledBots.length,
+      tradingStats: stats,
+    },
+  });
+});
+
+/**
+ * POST /trading/timebeunus/start
+ * Start TIMEBEUNUS auto-trading
+ * SECURITY: Requires admin role
+ */
+router.post('/timebeunus/start', authMiddleware, async (req: Request, res: Response) => {
+  const user = (req as any).user;
+  const { dominanceMode = 'balanced', enableTopBots = 5 } = req.body;
+
+  // Only admin/owner can start TIMEBEUNUS
+  if (user.role !== 'admin' && user.role !== 'owner') {
+    return res.status(403).json({
+      success: false,
+      error: 'Admin access required to control TIMEBEUNUS',
+    });
+  }
+
+  try {
+    // Get top performing bots
+    const allBots = botManager.getAllBots();
+    const topBots = allBots
+      .filter(b => b.status === 'active' && b.performance)
+      .sort((a, b) => (b.performance?.winRate || 0) - (a.performance?.winRate || 0))
+      .slice(0, enableTopBots);
+
+    // Enable top bots for trading
+    const enabledBots: string[] = [];
+    for (const bot of topBots) {
+      await tradingExecutionService.enableBot(bot.id);
+      enabledBots.push(bot.name);
+    }
+
+    // Start the trading engine if not running
+    tradingExecutionService.start();
+
+    // Update state
+    timebeunusState = {
+      isActive: true,
+      dominanceMode,
+      autoTradeEnabled: true,
+      startedAt: new Date(),
+      totalTrades: 0,
+      totalPnL: 0,
+      enabledStrategies: enabledBots,
+    };
+
+    res.json({
+      success: true,
+      message: 'TIMEBEUNUS auto-trading ACTIVATED!',
+      data: {
+        ...timebeunusState,
+        enabledBots: enabledBots,
+      },
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
+/**
+ * POST /trading/timebeunus/pause
+ * Pause TIMEBEUNUS auto-trading (keeps positions open)
+ * SECURITY: Requires admin role
+ */
+router.post('/timebeunus/pause', authMiddleware, async (req: Request, res: Response) => {
+  const user = (req as any).user;
+
+  if (user.role !== 'admin' && user.role !== 'owner') {
+    return res.status(403).json({
+      success: false,
+      error: 'Admin access required',
+    });
+  }
+
+  // Stop the trading engine
+  tradingExecutionService.stop();
+
+  timebeunusState.isActive = false;
+  timebeunusState.autoTradeEnabled = false;
+
+  res.json({
+    success: true,
+    message: 'TIMEBEUNUS paused. Existing positions remain open.',
+    data: timebeunusState,
+  });
+});
+
+/**
+ * POST /trading/timebeunus/resume
+ * Resume TIMEBEUNUS auto-trading
+ * SECURITY: Requires admin role
+ */
+router.post('/timebeunus/resume', authMiddleware, async (req: Request, res: Response) => {
+  const user = (req as any).user;
+
+  if (user.role !== 'admin' && user.role !== 'owner') {
+    return res.status(403).json({
+      success: false,
+      error: 'Admin access required',
+    });
+  }
+
+  // Resume the trading engine
+  tradingExecutionService.start();
+
+  timebeunusState.isActive = true;
+  timebeunusState.autoTradeEnabled = true;
+
+  res.json({
+    success: true,
+    message: 'TIMEBEUNUS resumed! Auto-trading active.',
+    data: timebeunusState,
+  });
+});
+
+/**
+ * POST /trading/timebeunus/mode
+ * Change TIMEBEUNUS dominance mode
+ * SECURITY: Requires admin role
+ */
+router.post('/timebeunus/mode', authMiddleware, (req: Request, res: Response) => {
+  const user = (req as any).user;
+  const { mode } = req.body;
+
+  if (user.role !== 'admin' && user.role !== 'owner') {
+    return res.status(403).json({
+      success: false,
+      error: 'Admin access required',
+    });
+  }
+
+  const validModes = ['stealth', 'defensive', 'balanced', 'aggressive', 'competition', 'destroy'];
+  if (!validModes.includes(mode)) {
+    return res.status(400).json({
+      success: false,
+      error: `Invalid mode. Valid modes: ${validModes.join(', ')}`,
+    });
+  }
+
+  timebeunusState.dominanceMode = mode;
+
+  res.json({
+    success: true,
+    message: `TIMEBEUNUS mode set to: ${mode.toUpperCase()}`,
+    data: timebeunusState,
+  });
+});
+
+/**
+ * POST /trading/timebeunus/stop
+ * Stop TIMEBEUNUS and close all positions
+ * SECURITY: Requires admin role
+ */
+router.post('/timebeunus/stop', authMiddleware, async (req: Request, res: Response) => {
+  const user = (req as any).user;
+
+  if (user.role !== 'admin' && user.role !== 'owner') {
+    return res.status(403).json({
+      success: false,
+      error: 'Admin access required',
+    });
+  }
+
+  try {
+    // Stop engine first
+    tradingExecutionService.stop();
+
+    // Disable all bots
+    const enabledBots = tradingExecutionService.getEnabledBots();
+    for (const bot of enabledBots) {
+      tradingExecutionService.disableBot(bot.botId);
+    }
+
+    // Reset state
+    timebeunusState = {
+      isActive: false,
+      dominanceMode: 'balanced',
+      autoTradeEnabled: false,
+      startedAt: null,
+      totalTrades: timebeunusState.totalTrades,
+      totalPnL: timebeunusState.totalPnL,
+      enabledStrategies: [],
+    };
+
+    res.json({
+      success: true,
+      message: 'TIMEBEUNUS stopped. All bots disabled.',
+      data: timebeunusState,
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
 export default router;

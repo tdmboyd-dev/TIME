@@ -81,8 +81,9 @@ const dominanceModes = [
 ];
 
 export default function TIMEBEUNUSPage() {
-  const [isActive, setIsActive] = useState(true);
+  const [isActive, setIsActive] = useState(false);
   const [dominanceMode, setDominanceMode] = useState<DominanceMode>('balanced');
+  const [isStarting, setIsStarting] = useState(false);
   const [performance, setPerformance] = useState<Performance>({
     dailyReturn: 0, weeklyReturn: 0, monthlyReturn: 0, yearlyReturn: 0,
     sharpeRatio: 0, maxDrawdown: 0, winRate: 0, totalTrades: 0,
@@ -235,6 +236,7 @@ export default function TIMEBEUNUSPage() {
     const loadData = async () => {
       setIsLoading(true);
       await Promise.all([
+        fetchTimebeunusStatus(), // Get current auto-trade status
         fetchSignals(),
         fetchTrades(),
         fetchPerformance(),
@@ -271,9 +273,111 @@ export default function TIMEBEUNUSPage() {
     return () => clearInterval(interval);
   }, [isActive]);
 
-  const handleModeChange = (mode: DominanceMode) => {
+  // Fetch TIMEBEUNUS status from API
+  const fetchTimebeunusStatus = async () => {
+    try {
+      const response = await fetch(`${API_BASE}/trading/timebeunus/status`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.data) {
+          setIsActive(data.data.isActive);
+          setDominanceMode(data.data.dominanceMode as DominanceMode);
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching TIMEBEUNUS status:', err);
+    }
+  };
+
+  // Start TIMEBEUNUS auto-trading
+  const handleStart = async () => {
+    setIsStarting(true);
+    try {
+      const response = await fetch(`${API_BASE}/trading/timebeunus/start`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ dominanceMode, enableTopBots: 5 }),
+      });
+      const data = await response.json();
+      if (data.success) {
+        setIsActive(true);
+        setNotification({ type: 'success', message: 'TIMEBEUNUS auto-trading ACTIVATED!' });
+      } else {
+        setNotification({ type: 'error', message: data.error || 'Failed to start' });
+      }
+    } catch (err) {
+      setNotification({ type: 'error', message: 'Failed to connect to server' });
+    }
+    setIsStarting(false);
+  };
+
+  // Pause TIMEBEUNUS
+  const handlePause = async () => {
+    try {
+      const response = await fetch(`${API_BASE}/trading/timebeunus/pause`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+      const data = await response.json();
+      if (data.success) {
+        setIsActive(false);
+        setNotification({ type: 'info', message: 'TIMEBEUNUS paused. Positions remain open.' });
+      } else {
+        setNotification({ type: 'error', message: data.error });
+      }
+    } catch (err) {
+      setNotification({ type: 'error', message: 'Failed to pause' });
+    }
+  };
+
+  // Resume TIMEBEUNUS
+  const handleResume = async () => {
+    try {
+      const response = await fetch(`${API_BASE}/trading/timebeunus/resume`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+      const data = await response.json();
+      if (data.success) {
+        setIsActive(true);
+        setNotification({ type: 'success', message: 'TIMEBEUNUS resumed!' });
+      } else {
+        setNotification({ type: 'error', message: data.error });
+      }
+    } catch (err) {
+      setNotification({ type: 'error', message: 'Failed to resume' });
+    }
+  };
+
+  // Toggle active state
+  const handleToggleActive = async () => {
+    if (isActive) {
+      await handlePause();
+    } else {
+      await handleStart();
+    }
+  };
+
+  const handleModeChange = async (mode: DominanceMode) => {
     setDominanceMode(mode);
     setShowModeModal(false);
+
+    // Call API to change mode
+    try {
+      const response = await fetch(`${API_BASE}/trading/timebeunus/mode`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ mode }),
+      });
+      const data = await response.json();
+      if (data.success) {
+        setNotification({ type: 'success', message: `Dominance mode changed to ${mode.toUpperCase()}` });
+      }
+    } catch (err) {
+      console.error('Failed to change mode:', err);
+    }
     setNotification({ type: 'success', message: `Dominance mode changed to ${mode.toUpperCase()}` });
     setTimeout(() => setNotification(null), 4000);
   };
@@ -381,8 +485,22 @@ export default function TIMEBEUNUSPage() {
             <button onClick={() => setShowModeModal(true)} className={`flex items-center gap-2 px-4 py-2 rounded-lg border bg-gradient-to-r ${dominanceModes.find(m => m.id === dominanceMode)?.color} border-transparent text-white`}>
               <Flame className="w-4 h-4" />{dominanceMode.toUpperCase()}
             </button>
-            <button onClick={() => setIsActive(!isActive)} className={clsx('flex items-center gap-2 px-4 py-2 rounded-lg font-medium', isActive ? 'bg-green-500/20 text-green-400 border border-green-500/50' : 'bg-red-500/20 text-red-400 border border-red-500/50')}>
-              {isActive ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}{isActive ? 'Active' : 'Paused'}
+            <button
+              onClick={handleToggleActive}
+              disabled={isStarting}
+              className={clsx(
+                'flex items-center gap-2 px-4 py-2 rounded-lg font-medium',
+                isActive ? 'bg-green-500/20 text-green-400 border border-green-500/50' : 'bg-red-500/20 text-red-400 border border-red-500/50',
+                isStarting && 'opacity-50 cursor-not-allowed'
+              )}
+            >
+              {isStarting ? (
+                <><Loader2 className="w-4 h-4 animate-spin" />Starting...</>
+              ) : isActive ? (
+                <><Pause className="w-4 h-4" />Active</>
+              ) : (
+                <><Play className="w-4 h-4" />Start Auto-Trade</>
+              )}
             </button>
           </div>
         </div>
