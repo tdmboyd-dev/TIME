@@ -4940,12 +4940,20 @@ Your portfolio will be created and managed automatically. You'll receive alerts 
   app.get('/health', (req, res) => {
     const health = timeGovernor.getSystemHealth();
     const metrics = timeGovernor.getMetrics();
+    const dbStatus = databaseManager.getStatus();
 
     res.json({
       status: 'ok',
       timestamp: new Date().toISOString(),
       evolutionMode: metrics.evolutionMode,
       currentRegime: metrics.currentRegime,
+      database: {
+        mongodb: dbStatus.mongodb,
+        redis: dbStatus.redis,
+        usingMock: dbStatus.usingMock,
+        mongoError: databaseManager.lastMongoError,
+        redisError: databaseManager.lastRedisError,
+      },
       components: health.map((h) => ({
         name: h.component,
         status: h.status,

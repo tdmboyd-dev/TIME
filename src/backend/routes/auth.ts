@@ -891,17 +891,42 @@ router.post('/setup-admin', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Password must be at least 8 characters' });
     }
 
-    // Hash password and create admin user
+    // Hash password and create admin user with all required fields
     const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
+    const now = new Date();
     const adminUser = await userRepository.create({
       _id: uuidv4(),
-      email,
+      email: email.toLowerCase(),
       name,
       passwordHash,
       role: 'owner', // First admin is owner
       status: 'active',
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      createdAt: now,
+      updatedAt: now,
+      lastLogin: now,
+      lastActivity: now,
+      consent: {
+        termsAccepted: true,
+        dataLearningConsent: true,
+        riskDisclosureAccepted: true,
+        marketingConsent: false,
+        acceptedAt: now,
+      },
+      settings: {
+        timezone: 'America/Chicago',
+        currency: 'USD',
+        language: 'en',
+        theme: 'dark',
+        notifications: {
+          email: true,
+          sms: false,
+          push: true,
+          tradeAlerts: true,
+          riskAlerts: true,
+          dailySummary: true,
+        },
+      },
+      brokerConnections: [],
     } as any);
 
     // Log the admin creation
@@ -928,6 +953,79 @@ router.post('/setup-admin', async (req: Request, res: Response) => {
   } catch (error) {
     logger.error('Admin setup error:', error);
     res.status(500).json({ error: 'Failed to create admin account' });
+  }
+});
+
+/**
+ * POST /auth/fix-admin
+ * Fix missing fields on existing admin account (one-time use)
+ */
+router.post('/fix-admin', async (req: Request, res: Response) => {
+  try {
+    const { email, setupKey } = req.body;
+
+    const ADMIN_SETUP_KEY = process.env.ADMIN_SETUP_KEY || 'TIME_ADMIN_SETUP_2025';
+    if (setupKey !== ADMIN_SETUP_KEY) {
+      return res.status(403).json({ error: 'Invalid setup key' });
+    }
+
+    if (!email) {
+      return res.status(400).json({ error: 'Email required' });
+    }
+
+    const user = await userRepository.findByEmail(email.toLowerCase());
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const now = new Date();
+    const updates: any = {};
+
+    // Add missing fields
+    if (!user.lastLogin) updates.lastLogin = now;
+    if (!user.lastActivity) updates.lastActivity = now;
+    if (!user.consent) {
+      updates.consent = {
+        termsAccepted: true,
+        dataLearningConsent: true,
+        riskDisclosureAccepted: true,
+        marketingConsent: false,
+        acceptedAt: now,
+      };
+    }
+    if (!user.settings) {
+      updates.settings = {
+        timezone: 'America/Chicago',
+        currency: 'USD',
+        language: 'en',
+        theme: 'dark',
+        notifications: {
+          email: true,
+          sms: false,
+          push: true,
+          tradeAlerts: true,
+          riskAlerts: true,
+          dailySummary: true,
+        },
+      };
+    }
+    if (!user.brokerConnections) updates.brokerConnections = [];
+
+    if (Object.keys(updates).length === 0) {
+      return res.json({ success: true, message: 'User already has all required fields' });
+    }
+
+    await userRepository.update(user._id, updates);
+
+    logger.info(`Fixed admin account: ${email}`);
+    res.json({
+      success: true,
+      message: 'Admin account fixed successfully',
+      fieldsAdded: Object.keys(updates),
+    });
+  } catch (error) {
+    logger.error('Fix admin error:', error);
+    res.status(500).json({ error: 'Failed to fix admin account' });
   }
 });
 

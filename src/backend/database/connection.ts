@@ -200,6 +200,10 @@ export class DatabaseConnectionManager extends EventEmitter {
   private inMemoryCache: InMemoryCache | null = null;
   private usingMock: boolean = false;
 
+  // Store connection errors for debugging
+  public lastMongoError: string | null = null;
+  public lastRedisError: string | null = null;
+
   constructor(config?: Partial<DatabaseConfig>) {
     super();
     this.config = {
@@ -208,7 +212,7 @@ export class DatabaseConnectionManager extends EventEmitter {
         database: config?.mongodb?.database || process.env.MONGODB_DATABASE || 'time_trading',
         options: {
           maxPoolSize: 10,
-          serverSelectionTimeoutMS: 5000,
+          serverSelectionTimeoutMS: 10000,
           socketTimeoutMS: 45000,
           retryWrites: true,
           ...config?.mongodb?.options,
@@ -278,20 +282,34 @@ export class DatabaseConnectionManager extends EventEmitter {
   private async connectMongo(): Promise<void> {
     try {
       this.status.mongodb = 'connecting';
-      console.log(`[DatabaseManager] Connecting to MongoDB: ${this.config.mongodb.uri}`);
+      // Log URI safely (hide password)
+      const safeUri = this.config.mongodb.uri.replace(/:([^@]+)@/, ':***@');
+      console.log(`[DatabaseManager] Connecting to MongoDB: ${safeUri}`);
+      console.log(`[DatabaseManager] Database name: ${this.config.mongodb.database}`);
 
-      this.mongoClient = new MongoClient(this.config.mongodb.uri, this.config.mongodb.options);
+      // Merge TLS options for MongoDB Atlas connections
+      const mongoOptions: any = {
+        ...this.config.mongodb.options,
+        // TLS is required for MongoDB Atlas (mongodb+srv://)
+        tls: this.config.mongodb.uri.includes('mongodb+srv://'),
+      };
+      this.mongoClient = new MongoClient(this.config.mongodb.uri, mongoOptions);
       await this.mongoClient.connect();
+      console.log('[DatabaseManager] MongoClient connected, testing ping...');
 
       // Test connection
       await this.mongoClient.db(this.config.mongodb.database).command({ ping: 1 });
 
       this.status.mongodb = 'connected';
       this.status.lastMongoCheck = new Date();
-      console.log('[DatabaseManager] MongoDB connected successfully');
+      console.log('[DatabaseManager] MongoDB connected successfully to ' + this.config.mongodb.database);
       this.emit('mongodb:connected');
-    } catch (error) {
-      console.warn('[DatabaseManager] MongoDB connection failed, falling back to mock:', error);
+    } catch (error: any) {
+      console.error('[DatabaseManager] MongoDB connection FAILED!');
+      console.error('[DatabaseManager] Error name:', error?.name);
+      console.error('[DatabaseManager] Error message:', error?.message);
+      console.error('[DatabaseManager] Error code:', error?.code);
+      this.lastMongoError = `${error?.name}: ${error?.message} (code: ${error?.code})`;
       this.status.mongodb = 'error';
 
       // Fall back to in-memory
