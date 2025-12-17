@@ -136,32 +136,15 @@ router.get('/summary', async (req: Request, res: Response) => {
 
 /**
  * GET /portfolio/brokers/status
- * Get connection status of all brokers
+ * Get connection status of all brokers - REAL DATA ONLY, NO MOCK
  */
 router.get('/brokers/status', async (req: Request, res: Response) => {
   try {
     const brokerManager = BrokerManager.getInstance();
     const status = brokerManager.getStatus();
 
-    // If no brokers registered yet, return demo brokers
-    if (status.totalBrokers === 0) {
-      return res.json({
-        success: true,
-        data: {
-          connectedBrokers: 2,
-          totalBrokers: 4,
-          brokers: [
-            { id: 'alpaca-demo', name: 'Alpaca', type: 'alpaca', connected: true, status: 'online' },
-            { id: 'kraken-demo', name: 'Kraken', type: 'crypto', connected: true, status: 'online' },
-            { id: 'binance-demo', name: 'Binance', type: 'crypto', connected: false, status: 'offline' },
-            { id: 'oanda-demo', name: 'OANDA', type: 'forex', connected: false, status: 'offline' },
-          ],
-        },
-        demo: true,
-        timestamp: new Date().toISOString(),
-      });
-    }
-
+    // Return real broker status - no demo fallback
+    // If no brokers configured, return empty but indicate available brokers
     res.json({
       success: true,
       data: {
@@ -174,25 +157,20 @@ router.get('/brokers/status', async (req: Request, res: Response) => {
           connected: b.connected,
           status: b.connected ? 'online' : 'offline',
         })),
+        // List available broker types that can be connected
+        availableBrokers: status.totalBrokers === 0 ? [
+          { type: 'alpaca', name: 'Alpaca', description: 'US stocks and ETFs' },
+          { type: 'binance', name: 'Binance', description: 'Crypto trading' },
+          { type: 'kraken', name: 'Kraken', description: 'Crypto trading' },
+          { type: 'oanda', name: 'OANDA', description: 'Forex trading' },
+        ] : undefined,
       },
       timestamp: new Date().toISOString(),
     });
   } catch (error: any) {
-    // Even on error, return demo data for frontend
-    res.json({
-      success: true,
-      data: {
-        connectedBrokers: 2,
-        totalBrokers: 4,
-        brokers: [
-          { id: 'alpaca-demo', name: 'Alpaca', type: 'alpaca', connected: true, status: 'online' },
-          { id: 'kraken-demo', name: 'Kraken', type: 'crypto', connected: true, status: 'online' },
-          { id: 'binance-demo', name: 'Binance', type: 'crypto', connected: false, status: 'offline' },
-          { id: 'oanda-demo', name: 'OANDA', type: 'forex', connected: false, status: 'offline' },
-        ],
-      },
-      demo: true,
-      error: error.message,
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to fetch broker status',
       timestamp: new Date().toISOString(),
     });
   }

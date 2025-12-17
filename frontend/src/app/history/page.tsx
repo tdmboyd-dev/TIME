@@ -41,88 +41,7 @@ interface Trade {
   reasoning: string;
 }
 
-const mockTrades: Trade[] = [
-  {
-    id: '1',
-    symbol: 'BTC/USD',
-    direction: 'long',
-    entryPrice: 43250.00,
-    exitPrice: 44180.50,
-    quantity: 0.5,
-    pnl: 465.25,
-    pnlPercent: 2.15,
-    botName: 'Trend Follower Alpha',
-    strategyName: 'Multi-Trend Fusion',
-    entryTime: new Date(Date.now() - 7200000),
-    exitTime: new Date(Date.now() - 3600000),
-    duration: 60,
-    reasoning: 'Bullish divergence detected on 4H timeframe, momentum confirmation from RSI',
-  },
-  {
-    id: '2',
-    symbol: 'ETH/USD',
-    direction: 'long',
-    entryPrice: 2340.50,
-    exitPrice: 2298.25,
-    quantity: 2,
-    pnl: -84.50,
-    pnlPercent: -1.80,
-    botName: 'Mean Reversion Master',
-    strategyName: 'Statistical Arbitrage V2',
-    entryTime: new Date(Date.now() - 14400000),
-    exitTime: new Date(Date.now() - 10800000),
-    duration: 60,
-    reasoning: 'Price touched lower Bollinger Band, mean reversion expected',
-  },
-  {
-    id: '3',
-    symbol: 'SPY',
-    direction: 'short',
-    entryPrice: 479.25,
-    exitPrice: 477.50,
-    quantity: 50,
-    pnl: 87.50,
-    pnlPercent: 0.37,
-    botName: 'TIME Synthesis #47',
-    strategyName: 'Breakout Momentum Hybrid',
-    entryTime: new Date(Date.now() - 28800000),
-    exitTime: new Date(Date.now() - 25200000),
-    duration: 60,
-    reasoning: 'Resistance rejection with volume confirmation, market regime shift detected',
-  },
-  {
-    id: '4',
-    symbol: 'AAPL',
-    direction: 'long',
-    entryPrice: 185.50,
-    exitPrice: 188.75,
-    quantity: 100,
-    pnl: 325.00,
-    pnlPercent: 1.75,
-    botName: 'Momentum Hunter',
-    strategyName: 'Multi-Trend Fusion',
-    entryTime: new Date(Date.now() - 86400000),
-    exitTime: new Date(Date.now() - 72000000),
-    duration: 240,
-    reasoning: 'Breakout above consolidation, strong momentum indicators',
-  },
-  {
-    id: '5',
-    symbol: 'EUR/USD',
-    direction: 'short',
-    entryPrice: 1.0875,
-    exitPrice: 1.0892,
-    quantity: 10000,
-    pnl: -17.00,
-    pnlPercent: -0.16,
-    botName: 'Scalper Pro V2',
-    strategyName: 'Statistical Arbitrage V2',
-    entryTime: new Date(Date.now() - 43200000),
-    exitTime: new Date(Date.now() - 42000000),
-    duration: 20,
-    reasoning: 'Quick scalp on resistance level, stopped out on news spike',
-  },
-];
+// NO MOCK DATA - All data comes from real API endpoints
 
 export default function HistoryPage() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -200,16 +119,12 @@ export default function HistoryPage() {
         }
       }
 
-      if (allTrades.length > 0) {
-        setTrades(allTrades);
-      } else {
-        // Use mock data as fallback
-        setTrades(mockTrades);
-        setIsConnected(false);
-      }
+      // Set real trades - empty array if none found
+      setTrades(allTrades);
+      setIsConnected(allTrades.length > 0);
     } catch (error) {
       console.error('Failed to fetch trades:', error);
-      setTrades(mockTrades);
+      setTrades([]);
       setIsConnected(false);
     } finally {
       setIsLoading(false);

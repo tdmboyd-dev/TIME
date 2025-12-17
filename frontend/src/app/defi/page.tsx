@@ -49,22 +49,7 @@ interface StakingOption {
   userStaked?: number;
 }
 
-const liquidityPools: Pool[] = [
-  { id: '1', name: 'ETH/USDC', protocol: 'Uniswap V3', tokens: ['ETH', 'USDC'], tvl: 245000000, apy: 12.5, apr: 11.2, rewards: 'UNI', risk: 'low', userStaked: 5000, userRewards: 125.50 },
-  { id: '2', name: 'BTC/ETH', protocol: 'Curve', tokens: ['WBTC', 'ETH'], tvl: 180000000, apy: 8.2, apr: 7.8, rewards: 'CRV', risk: 'low', userStaked: 3200, userRewards: 65.20 },
-  { id: '3', name: 'USDC/USDT', protocol: 'Aave', tokens: ['USDC', 'USDT'], tvl: 420000000, apy: 4.5, apr: 4.2, rewards: 'AAVE', risk: 'low' },
-  { id: '4', name: 'ETH/TIME', protocol: 'TIME DEX', tokens: ['ETH', 'TIME'], tvl: 12500000, apy: 45.8, apr: 38.5, rewards: 'TIME', risk: 'medium', userStaked: 1500, userRewards: 340.00 },
-  { id: '5', name: 'SOL/USDC', protocol: 'Raydium', tokens: ['SOL', 'USDC'], tvl: 85000000, apy: 18.3, apr: 16.2, rewards: 'RAY', risk: 'medium' },
-  { id: '6', name: 'AVAX/ETH', protocol: 'TraderJoe', tokens: ['AVAX', 'ETH'], tvl: 45000000, apy: 22.1, apr: 19.5, rewards: 'JOE', risk: 'medium' },
-];
-
-const stakingOptions: StakingOption[] = [
-  { id: '1', token: 'ETH', name: 'Ethereum Staking', apy: 4.2, lockPeriod: 'Flexible', minStake: 0.1, totalStaked: 28500000, userStaked: 2.5 },
-  { id: '2', token: 'TIME', name: 'TIME Governance', apy: 25.5, lockPeriod: '30 days', minStake: 100, totalStaked: 5200000, userStaked: 500 },
-  { id: '3', token: 'MATIC', name: 'Polygon Staking', apy: 5.8, lockPeriod: '21 days', minStake: 1, totalStaked: 15800000 },
-  { id: '4', token: 'SOL', name: 'Solana Staking', apy: 7.2, lockPeriod: '2 epochs', minStake: 0.01, totalStaked: 42000000 },
-  { id: '5', token: 'ATOM', name: 'Cosmos Staking', apy: 18.5, lockPeriod: '21 days', minStake: 0.1, totalStaked: 8900000 },
-];
+// NO MOCK DATA - All data comes from real API endpoints
 
 export default function DeFiPage() {
   const [activeTab, setActiveTab] = useState<'pools' | 'staking' | 'yield'>('pools');
@@ -209,9 +194,9 @@ export default function DeFiPage() {
     setTimeout(() => setNotification(null), 5000);
   };
 
-  // Use API data if available, otherwise fallback to mock data
-  const displayPools = apiPools.length > 0 ? apiPools : liquidityPools;
-  const displayStaking = apiStaking.length > 0 ? apiStaking : stakingOptions;
+  // Use real API data only - no mock fallback
+  const displayPools = apiPools;
+  const displayStaking = apiStaking;
 
   const totalTVL = displayPools.reduce((sum, p) => sum + p.tvl, 0);
   const userTotalStaked = displayPools.reduce((sum, p) => sum + (p.userStaked || 0), 0) +

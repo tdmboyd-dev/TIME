@@ -83,24 +83,7 @@ interface LiquidityPool {
   quality: number;
 }
 
-// Mock data generators
-const generateVenues = (): Venue[] => [
-  { id: 'nasdaq', name: 'NASDAQ', type: 'lit', region: 'NA', latencyMs: 1, liquidityScore: 95, fillRate: 0.98, avgSlippage: 0.5, connected: true, darkPoolAccess: false },
-  { id: 'nyse', name: 'NYSE', type: 'lit', region: 'NA', latencyMs: 2, liquidityScore: 94, fillRate: 0.97, avgSlippage: 0.6, connected: true, darkPoolAccess: false },
-  { id: 'sigma_x', name: 'Goldman Sigma X', type: 'dark', region: 'NA', latencyMs: 2, liquidityScore: 88, fillRate: 0.92, avgSlippage: 0.3, connected: true, darkPoolAccess: true },
-  { id: 'crossfinder', name: 'CS Crossfinder', type: 'dark', region: 'NA', latencyMs: 2, liquidityScore: 85, fillRate: 0.90, avgSlippage: 0.4, connected: true, darkPoolAccess: true },
-  { id: 'liquidnet', name: 'Liquidnet', type: 'dark', region: 'GLOBAL', latencyMs: 5, liquidityScore: 82, fillRate: 0.88, avgSlippage: 0.2, connected: true, darkPoolAccess: true },
-  { id: 'binance', name: 'Binance', type: 'cex', region: 'GLOBAL', latencyMs: 10, liquidityScore: 98, fillRate: 0.99, avgSlippage: 0.8, connected: true, darkPoolAccess: false },
-  { id: 'coinbase', name: 'Coinbase Pro', type: 'cex', region: 'NA', latencyMs: 15, liquidityScore: 92, fillRate: 0.96, avgSlippage: 1.0, connected: true, darkPoolAccess: false },
-  { id: 'uniswap', name: 'Uniswap V3', type: 'dex', region: 'GLOBAL', latencyMs: 12000, liquidityScore: 75, fillRate: 0.85, avgSlippage: 1.5, connected: true, darkPoolAccess: false },
-  { id: 'lmax', name: 'LMAX Exchange', type: 'ecn', region: 'EU', latencyMs: 4, liquidityScore: 90, fillRate: 0.95, avgSlippage: 0.3, connected: true, darkPoolAccess: false },
-];
-
-const generateArbitrageOpportunities = (): ArbitrageOpportunity[] => [
-  { id: 'arb1', symbol: 'BTCUSD', buyVenue: 'Coinbase', buyPrice: 44850, sellVenue: 'Binance', sellPrice: 44920, spreadBps: 15.6, netProfitBps: 8.2, confidence: 0.85, riskScore: 25, expiresIn: '450ms' },
-  { id: 'arb2', symbol: 'ETHUSD', buyVenue: 'Kraken', buyPrice: 2485, sellVenue: 'Binance', sellPrice: 2492, spreadBps: 28.2, netProfitBps: 18.5, confidence: 0.92, riskScore: 18, expiresIn: '320ms' },
-  { id: 'arb3', symbol: 'SOLUSD', buyVenue: 'OKX', buyPrice: 98.50, sellVenue: 'Coinbase', sellPrice: 98.85, spreadBps: 35.5, netProfitBps: 22.1, confidence: 0.78, riskScore: 32, expiresIn: '280ms' },
-];
+// NO MOCK DATA - All data comes from real API endpoints
 
 export default function ExecutionPage() {
   const [venues, setVenues] = useState<Venue[]>([]);
@@ -183,9 +166,9 @@ export default function ExecutionPage() {
     } catch (error) {
       console.error('Failed to fetch backend data:', error);
       setIsConnected(false);
-      // Use mock data as fallback
-      setVenues(generateVenues());
-      setArbitrageOpps(generateArbitrageOpportunities());
+      // No mock fallback - show empty state
+      setVenues([]);
+      setArbitrageOpps([]);
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
@@ -193,33 +176,16 @@ export default function ExecutionPage() {
   }, []);
 
   useEffect(() => {
-    // Initial load
+    // Initial load from backend
     fetchBackendData();
 
-    // Set up fallback with mock data
-    setLiquidityPools([
-      { symbol: 'AAPL', totalLiquidity: 15000000, spread: 0.02, quality: 92 },
-      { symbol: 'BTCUSD', totalLiquidity: 85000000, spread: 5.50, quality: 95 },
-      { symbol: 'ETHUSD', totalLiquidity: 45000000, spread: 0.85, quality: 93 },
-      { symbol: 'EURUSD', totalLiquidity: 250000000, spread: 0.0001, quality: 98 },
-    ]);
-
-    // Real-time updates - try backend first, fallback to mock
+    // Real-time updates from backend only
     const interval = setInterval(() => {
-      if (isConnected) {
-        fetchBackendData();
-      } else {
-        setArbitrageOpps(generateArbitrageOpportunities());
-        setStats(prev => ({
-          ...prev,
-          avgLatency: 8 + Math.random() * 2,
-          profitToday: prev.profitToday + Math.floor(Math.random() * 50),
-        }));
-      }
+      fetchBackendData();
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [isConnected, fetchBackendData]);
+  }, [fetchBackendData]);
 
   const handleSmartOrder = async () => {
     setIsSubmitting(true);
