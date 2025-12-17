@@ -5,12 +5,18 @@
  * - Real broker portfolio data
  * - Aggregated positions across all connected brokers
  * - Broker connection status
+ *
+ * ALL endpoints require authentication - portfolio data is sensitive
  */
 
 import { Router, Request, Response } from 'express';
 import { BrokerManager } from '../brokers/broker_manager';
+import { authMiddleware } from './auth';
 
 const router = Router();
+
+// Apply authentication to ALL portfolio routes
+router.use(authMiddleware);
 
 /**
  * GET /portfolio/positions

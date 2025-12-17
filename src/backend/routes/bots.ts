@@ -6,12 +6,14 @@
  * - Fingerprint viewing
  * - Performance analytics
  * - Activation/deactivation
+ * - REAL TRADING via TradingExecutionService
  */
 
 import { Router, Request, Response } from 'express';
 import { authMiddleware, adminMiddleware } from './auth';
 import { botManager } from '../bots/bot_manager';
 import { botIngestion } from '../bots/bot_ingestion';
+import { tradingExecutionService } from '../services/TradingExecutionService';
 
 const router = Router();
 
@@ -472,20 +474,50 @@ router.put('/:botId', authMiddleware, (req: Request, res: Response) => {
 
 /**
  * POST /bots/:botId/activate
- * Activate a bot for trading
+ * Activate a bot for REAL trading via TradingExecutionService
  */
 router.post('/:botId/activate', authMiddleware, async (req: Request, res: Response) => {
   const { botId } = req.params;
-  const { accountId, paperMode = true } = req.body;
+  const {
+    accountId,
+    paperMode = true,
+    riskLevel = 'MEDIUM',
+    maxPositionSize = 1000,
+    maxDailyTrades = 10,
+    maxDailyLoss = 500,
+  } = req.body;
 
   try {
+    // 1. Activate in BotManager (status tracking)
     await botManager.activateBot(botId);
+
+    // 2. Enable in TradingExecutionService (REAL TRADING)
+    const tradingState = tradingExecutionService.enableBot(botId, {
+      riskLevel: riskLevel as 'LOW' | 'MEDIUM' | 'HIGH',
+      maxPositionSize,
+      maxDailyTrades,
+      maxDailyLoss,
+    });
+
+    // 3. Start the trading engine if not already running
+    const stats = tradingExecutionService.getStats();
+    if (!stats.isRunning) {
+      tradingExecutionService.start();
+    }
 
     res.json({
       success: true,
-      message: `Bot ${botId} activated`,
+      message: `Bot ${botId} activated for ${paperMode ? 'paper' : 'LIVE'} trading`,
       paperMode,
       accountId,
+      tradingState: {
+        isEnabled: tradingState.isEnabled,
+        riskLevel: tradingState.riskLevel,
+        maxPositionSize: tradingState.maxPositionSize,
+        maxDailyTrades: tradingState.maxDailyTrades,
+        maxDailyLoss: tradingState.maxDailyLoss,
+      },
+      tradingEngineRunning: true,
     });
   } catch (error: any) {
     res.status(400).json({ error: error.message });
@@ -494,21 +526,175 @@ router.post('/:botId/activate', authMiddleware, async (req: Request, res: Respon
 
 /**
  * POST /bots/:botId/deactivate
- * Deactivate a bot
+ * Deactivate a bot from trading
  */
 router.post('/:botId/deactivate', authMiddleware, async (req: Request, res: Response) => {
   const { botId } = req.params;
 
   try {
+    // 1. Pause in BotManager (status tracking)
     await botManager.pauseBot(botId);
+
+    // 2. Disable in TradingExecutionService (stop trading)
+    tradingExecutionService.disableBot(botId);
 
     res.json({
       success: true,
-      message: `Bot ${botId} deactivated`,
+      message: `Bot ${botId} deactivated - trading stopped`,
     });
   } catch (error: any) {
     res.status(400).json({ error: error.message });
   }
+});
+
+/**
+ * POST /bots/:botId/pause
+ * Pause bot trading temporarily (keeps state)
+ */
+router.post('/:botId/pause', authMiddleware, async (req: Request, res: Response) => {
+  const { botId } = req.params;
+
+  try {
+    tradingExecutionService.pauseBot(botId, true);
+
+    res.json({
+      success: true,
+      message: `Bot ${botId} trading paused`,
+    });
+  } catch (error: any) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+/**
+ * POST /bots/:botId/resume
+ * Resume bot trading
+ */
+router.post('/:botId/resume', authMiddleware, async (req: Request, res: Response) => {
+  const { botId } = req.params;
+
+  try {
+    tradingExecutionService.pauseBot(botId, false);
+
+    res.json({
+      success: true,
+      message: `Bot ${botId} trading resumed`,
+    });
+  } catch (error: any) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+/**
+ * GET /bots/:botId/trading-state
+ * Get real-time trading state for a bot
+ */
+router.get('/:botId/trading-state', authMiddleware, (req: Request, res: Response) => {
+  const { botId } = req.params;
+
+  const state = tradingExecutionService.getBotState(botId);
+
+  if (!state) {
+    return res.json({
+      success: true,
+      data: {
+        isEnabled: false,
+        message: 'Bot not enabled for trading',
+      },
+    });
+  }
+
+  res.json({
+    success: true,
+    data: {
+      isEnabled: state.isEnabled,
+      isPaused: state.isPaused,
+      riskLevel: state.riskLevel,
+      maxPositionSize: state.maxPositionSize,
+      maxDailyTrades: state.maxDailyTrades,
+      maxDailyLoss: state.maxDailyLoss,
+      currentDailyTrades: state.currentDailyTrades,
+      currentDailyPnL: state.currentDailyPnL,
+      openPositions: state.openPositions.length,
+      totalTrades: state.totalTrades,
+      winRate: state.winRate,
+      totalPnL: state.totalPnL,
+      lastSignal: state.lastSignal,
+      lastTrade: state.lastTrade,
+    },
+  });
+});
+
+/**
+ * GET /bots/:botId/trades
+ * Get trade history for a specific bot
+ */
+router.get('/:botId/trades', authMiddleware, (req: Request, res: Response) => {
+  const { botId } = req.params;
+  const { limit = '50' } = req.query;
+
+  const trades = tradingExecutionService.getTradeHistory(botId, parseInt(limit as string));
+
+  res.json({
+    success: true,
+    data: trades,
+    total: trades.length,
+  });
+});
+
+/**
+ * GET /bots/trading/stats
+ * Get overall trading statistics
+ */
+router.get('/trading/stats', authMiddleware, (req: Request, res: Response) => {
+  const stats = tradingExecutionService.getStats();
+
+  res.json({
+    success: true,
+    data: stats,
+  });
+});
+
+/**
+ * GET /bots/trading/pending-signals
+ * Get pending trading signals
+ */
+router.get('/trading/pending-signals', authMiddleware, (req: Request, res: Response) => {
+  const signals = tradingExecutionService.getPendingSignals();
+
+  res.json({
+    success: true,
+    data: signals,
+    total: signals.length,
+  });
+});
+
+/**
+ * POST /bots/trading/start
+ * Start the trading engine
+ */
+router.post('/trading/start', authMiddleware, (req: Request, res: Response) => {
+  tradingExecutionService.start();
+
+  res.json({
+    success: true,
+    message: 'Trading engine started',
+    stats: tradingExecutionService.getStats(),
+  });
+});
+
+/**
+ * POST /bots/trading/stop
+ * Stop the trading engine (admin only)
+ */
+router.post('/trading/stop', authMiddleware, adminMiddleware, (req: Request, res: Response) => {
+  tradingExecutionService.stop();
+
+  res.json({
+    success: true,
+    message: 'Trading engine stopped',
+    stats: tradingExecutionService.getStats(),
+  });
 });
 
 /**

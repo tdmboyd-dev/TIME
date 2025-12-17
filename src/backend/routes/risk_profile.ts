@@ -2,12 +2,18 @@
  * TIME AI Risk Profile API Routes
  *
  * Dynamic risk profiling with behavioral adaptation
+ *
+ * ALL endpoints require authentication - risk profiles are user-specific
  */
 
 import { Router, Request, Response } from 'express';
 import aiRiskProfiler, { QuestionnaireResponse } from '../engines/ai_risk_profiler';
+import { authMiddleware } from './auth';
 
 const router = Router();
+
+// Apply authentication to ALL risk profile routes
+router.use(authMiddleware);
 
 /**
  * POST /api/risk/profile
