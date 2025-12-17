@@ -70,6 +70,10 @@ These endpoints are LIVE and WORKING at `https://time-backend-hosting.fly.dev`:
 | Bots Page | Already working | ✅ Uses `/api/v1/bots/public` |
 | TIMEBEUNUS | Already working | ✅ Uses `/api/v1/real-market/*` |
 | Goals `/goals` | Not connected to backend | ✅ FIXED - Now uses `/api/v1/robo/*` with Live/Demo status |
+| State Store | No persistence | ✅ FIXED - Zustand persist middleware, localStorage |
+| LiveChart | toLocaleString RangeError | ✅ FIXED - fractionDigits consistency |
+| TopNav | Health endpoint 404 | ✅ FIXED - Uses root `/health` |
+| Robo | Array.reduce error | ✅ FIXED - Array.isArray check |
 
 ## AUTHENTICATION SYSTEM (FULLY WORKING)
 
