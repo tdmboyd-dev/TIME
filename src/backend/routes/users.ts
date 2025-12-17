@@ -238,31 +238,37 @@ router.get('/activity', authMiddleware, async (req: Request, res: Response) => {
 
 /**
  * GET /users/risk-profile
- * Get user's risk profile and settings
+ * Get user's risk profile and settings from database
  */
-router.get('/risk-profile', authMiddleware, (req: Request, res: Response) => {
+router.get('/risk-profile', authMiddleware, async (req: Request, res: Response) => {
   const user = (req as any).user;
 
-  // Mock risk profile
-  const riskProfile = {
-    riskTolerance: 'medium',
-    maxDailyLoss: 1000,
-    maxDailyLossPercent: 2,
-    maxPositionSize: 5000,
-    maxPositionSizePercent: 10,
-    maxOpenPositions: 10,
-    emergencyBrakeEnabled: true,
-    emergencyBrakeThreshold: 5, // 5% portfolio loss
-  };
+  try {
+    const dbUser = await userRepository.findById(user.id);
 
-  res.json({ riskProfile });
+    // Get risk profile from user document or use defaults
+    const riskProfile = (dbUser as any)?.riskProfile || {
+      riskTolerance: 'medium',
+      maxDailyLoss: 1000,
+      maxDailyLossPercent: 2,
+      maxPositionSize: 5000,
+      maxPositionSizePercent: 10,
+      maxOpenPositions: 10,
+      emergencyBrakeEnabled: true,
+      emergencyBrakeThreshold: 5, // 5% portfolio loss
+    };
+
+    res.json({ riskProfile });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
 /**
  * PUT /users/risk-profile
- * Update user's risk profile
+ * Update user's risk profile in database
  */
-router.put('/risk-profile', authMiddleware, (req: Request, res: Response) => {
+router.put('/risk-profile', authMiddleware, async (req: Request, res: Response) => {
   const user = (req as any).user;
   const updates = req.body;
 
@@ -279,20 +285,36 @@ router.put('/risk-profile', authMiddleware, (req: Request, res: Response) => {
     });
   }
 
-  // In production, save to database
-  res.json({
-    success: true,
-    riskProfile: {
-      riskTolerance: updates.riskTolerance || 'medium',
-      maxDailyLoss: updates.maxDailyLoss || 1000,
-      maxDailyLossPercent: updates.maxDailyLossPercent || 2,
-      maxPositionSize: updates.maxPositionSize || 5000,
-      maxPositionSizePercent: updates.maxPositionSizePercent || 10,
-      maxOpenPositions: updates.maxOpenPositions || 10,
-      emergencyBrakeEnabled: updates.emergencyBrakeEnabled ?? true,
-      emergencyBrakeThreshold: updates.emergencyBrakeThreshold || 5,
-    },
-  });
+  try {
+    // Get current profile from database
+    const dbUser = await userRepository.findById(user.id);
+    const currentProfile = (dbUser as any)?.riskProfile || {};
+
+    // Merge updates with current profile
+    const updatedProfile = {
+      riskTolerance: updates.riskTolerance || currentProfile.riskTolerance || 'medium',
+      maxDailyLoss: updates.maxDailyLoss ?? currentProfile.maxDailyLoss ?? 1000,
+      maxDailyLossPercent: updates.maxDailyLossPercent ?? currentProfile.maxDailyLossPercent ?? 2,
+      maxPositionSize: updates.maxPositionSize ?? currentProfile.maxPositionSize ?? 5000,
+      maxPositionSizePercent: updates.maxPositionSizePercent ?? currentProfile.maxPositionSizePercent ?? 10,
+      maxOpenPositions: updates.maxOpenPositions ?? currentProfile.maxOpenPositions ?? 10,
+      emergencyBrakeEnabled: updates.emergencyBrakeEnabled ?? currentProfile.emergencyBrakeEnabled ?? true,
+      emergencyBrakeThreshold: updates.emergencyBrakeThreshold ?? currentProfile.emergencyBrakeThreshold ?? 5,
+    };
+
+    // Save to database
+    await userRepository.update(user.id, { riskProfile: updatedProfile } as any);
+
+    // Log activity
+    await auditLogRepository.log('UserRiskProfile', 'risk_profile_updated', { fields: Object.keys(updates) }, { userId: user.id });
+
+    res.json({
+      success: true,
+      riskProfile: updatedProfile,
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
 /**

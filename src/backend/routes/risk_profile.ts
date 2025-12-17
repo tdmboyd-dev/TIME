@@ -44,10 +44,22 @@ router.post('/profile', async (req: Request, res: Response) => {
 /**
  * GET /api/risk/profile/:userId
  * Get user's risk profile
+ * Security: Users can only access their own profile (admins can access any)
  */
 router.get('/profile/:userId', (req: Request, res: Response) => {
   try {
-    const profile = aiRiskProfiler.getProfile(req.params.userId);
+    const authUser = (req as any).user;
+    const requestedUserId = req.params.userId;
+
+    // Security check: Users can only access their own profile
+    if (authUser.role !== 'admin' && authUser.role !== 'owner' && authUser.id !== requestedUserId) {
+      return res.status(403).json({
+        success: false,
+        error: 'Access denied. You can only view your own risk profile.',
+      });
+    }
+
+    const profile = aiRiskProfiler.getProfile(requestedUserId);
 
     if (!profile) {
       return res.status(404).json({
@@ -68,10 +80,22 @@ router.get('/profile/:userId', (req: Request, res: Response) => {
 /**
  * GET /api/risk/summary/:userId
  * Get simplified risk summary for UI
+ * Security: Users can only access their own summary (admins can access any)
  */
 router.get('/summary/:userId', (req: Request, res: Response) => {
   try {
-    const summary = aiRiskProfiler.getRiskSummary(req.params.userId);
+    const authUser = (req as any).user;
+    const requestedUserId = req.params.userId;
+
+    // Security check: Users can only access their own profile
+    if (authUser.role !== 'admin' && authUser.role !== 'owner' && authUser.id !== requestedUserId) {
+      return res.status(403).json({
+        success: false,
+        error: 'Access denied. You can only view your own risk summary.',
+      });
+    }
+
+    const summary = aiRiskProfiler.getRiskSummary(requestedUserId);
 
     if (!summary) {
       return res.status(404).json({
@@ -92,10 +116,22 @@ router.get('/summary/:userId', (req: Request, res: Response) => {
 /**
  * GET /api/risk/recommendations/:userId
  * Get risk-adjusted recommendations
+ * Security: Users can only access their own recommendations (admins can access any)
  */
 router.get('/recommendations/:userId', (req: Request, res: Response) => {
   try {
-    const recommendations = aiRiskProfiler.getRecommendations(req.params.userId);
+    const authUser = (req as any).user;
+    const requestedUserId = req.params.userId;
+
+    // Security check: Users can only access their own profile
+    if (authUser.role !== 'admin' && authUser.role !== 'owner' && authUser.id !== requestedUserId) {
+      return res.status(403).json({
+        success: false,
+        error: 'Access denied. You can only view your own recommendations.',
+      });
+    }
+
+    const recommendations = aiRiskProfiler.getRecommendations(requestedUserId);
 
     if (!recommendations) {
       return res.status(404).json({

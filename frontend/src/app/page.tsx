@@ -83,31 +83,31 @@ export default function Dashboard() {
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatsCard
-          title="Bots Absorbed"
-          value={metrics.totalBotsAbsorbed}
+          title="Active Bots"
+          value={bots.filter(b => b.status === 'active').length || metrics.totalBotsAbsorbed}
           icon={Bot}
-          trend={+12}
+          trend={bots.length > 0 ? bots.length : undefined}
           color="primary"
         />
         <StatsCard
           title="Trades Analyzed"
-          value={metrics.totalTradesAnalyzed}
+          value={metrics.totalTradesAnalyzed || bots.reduce((sum, b) => sum + (b.performance?.totalTrades || 0), 0)}
           icon={Activity}
-          trend={+8}
+          trend={undefined}
           color="success"
         />
         <StatsCard
           title="Insights Generated"
-          value={metrics.totalInsightsGenerated}
+          value={insights.length || metrics.totalInsightsGenerated}
           icon={Brain}
-          trend={+23}
+          trend={insights.length > 0 ? insights.length : undefined}
           color="accent"
         />
         <StatsCard
-          title="Strategies Synthesized"
-          value={metrics.totalStrategiesSynthesized}
+          title="Strategies Active"
+          value={metrics.totalStrategiesSynthesized || bots.filter(b => b.status === 'active').length}
           icon={Zap}
-          trend={+5}
+          trend={undefined}
           color="secondary"
         />
       </div>
@@ -145,22 +145,24 @@ export default function Dashboard() {
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
               <Clock className="w-4 h-4 text-slate-400" />
-              <span className="text-sm text-slate-400">Last Evolution Cycle:</span>
-              <span className="text-sm text-white">2 minutes ago</span>
+              <span className="text-sm text-slate-400">Total Bots:</span>
+              <span className="text-sm text-white">{bots.length}</span>
             </div>
             <div className="flex items-center gap-2">
               <Target className="w-4 h-4 text-slate-400" />
               <span className="text-sm text-slate-400">Active Strategies:</span>
-              <span className="text-sm text-white">7</span>
+              <span className="text-sm text-white">{bots.filter(b => b.status === 'active').length}</span>
             </div>
             <div className="flex items-center gap-2">
               <Shield className="w-4 h-4 text-slate-400" />
-              <span className="text-sm text-slate-400">Risk Status:</span>
-              <span className="text-sm text-green-400">Normal</span>
+              <span className="text-sm text-slate-400">System Status:</span>
+              <span className={`text-sm ${isConnected ? 'text-green-400' : 'text-yellow-400'}`}>
+                {isConnected ? 'Online' : 'Connecting...'}
+              </span>
             </div>
           </div>
           <div className="text-xs text-slate-500">
-            TIME is learning and evolving continuously
+            {evolutionMode === 'autonomous' ? 'TIME is trading autonomously' : 'TIME awaiting your commands'}
           </div>
         </div>
       </div>
