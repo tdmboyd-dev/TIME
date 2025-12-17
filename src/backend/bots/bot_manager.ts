@@ -7,6 +7,8 @@
  * - Absorbed public bots
  * - TIME-generated bots
  * - Ensemble bots
+ *
+ * NOW WITH MONGODB PERSISTENCE - Bots survive server restarts!
  */
 
 import { EventEmitter } from 'events';
@@ -15,6 +17,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { loggers } from '../utils/logger';
 import { TIMEComponent, timeGovernor } from '../core/time_governor';
+import { botRepository } from '../database/repositories';
 import {
   Bot,
   BotSource,
@@ -48,18 +51,113 @@ export class BotManager extends EventEmitter implements TIMEComponent {
 
   /**
    * Initialize the bot manager with pre-built bots and absorbed bots
+   * NOW LOADS FROM MONGODB FIRST!
    */
   public async initialize(): Promise<void> {
     log.info('Initializing Bot Manager...');
 
-    // Add pre-built bots that are ready for trading
-    this.initializePrebuiltBots();
+    // 1. Load bots from MongoDB (persisted state)
+    await this.loadBotsFromDatabase();
 
-    // Load absorbed bots from dropzone
+    // 2. Add pre-built bots if not already in database
+    await this.initializePrebuiltBots();
+
+    // 3. Load absorbed bots from dropzone
     await this.loadAbsorbedBots();
 
     this.status = 'online';
     log.info(`Bot Manager initialized with ${this.bots.size} bots (${this.activeBots.size} active)`);
+  }
+
+  /**
+   * Load all bots from MongoDB database
+   */
+  private async loadBotsFromDatabase(): Promise<void> {
+    try {
+      const dbBots = await botRepository.findMany({});
+      log.info(`Loading ${dbBots.length} bots from database...`);
+
+      for (const dbBot of dbBots) {
+        // Convert database schema to Bot type
+        const bot: Bot = {
+          id: dbBot._id,
+          name: dbBot.name,
+          description: dbBot.description || '',
+          source: dbBot.source as BotSource,
+          sourceUrl: dbBot.sourceUrl,
+          ownerId: dbBot.ownerId,
+          status: dbBot.status as BotStatus,
+          code: dbBot.code || '',
+          config: dbBot.config as BotConfig || {
+            symbols: [],
+            timeframes: ['1h'],
+            riskParams: { maxPositionSize: 0.02, maxDrawdown: 0.15, stopLossPercent: 2, takeProfitPercent: 4 },
+            customParams: {},
+          },
+          fingerprint: dbBot.fingerprint as BotFingerprint || this.createInitialFingerprint(),
+          performance: dbBot.performance as BotPerformance || this.createInitialPerformance(),
+          rating: dbBot.rating,
+          createdAt: dbBot.createdAt,
+          updatedAt: dbBot.updatedAt,
+          absorbedAt: dbBot.absorbedAt,
+        };
+
+        this.bots.set(bot.id, bot);
+        if (bot.status === 'active') {
+          this.activeBots.add(bot.id);
+        }
+      }
+
+      log.info(`Loaded ${dbBots.length} bots from MongoDB`);
+    } catch (error) {
+      log.warn('Failed to load bots from database, using in-memory only:', error as object);
+    }
+  }
+
+  /**
+   * Persist a bot to MongoDB
+   */
+  private async persistBot(bot: Bot): Promise<void> {
+    try {
+      const existingBot = await botRepository.findById(bot.id);
+
+      if (existingBot) {
+        // Update existing bot
+        await botRepository.update(bot.id, {
+          name: bot.name,
+          description: bot.description,
+          status: bot.status,
+          code: bot.code,
+          config: bot.config as any,
+          fingerprint: bot.fingerprint as any,
+          performance: bot.performance as any,
+          rating: bot.rating,
+          absorbedAt: bot.absorbedAt,
+        } as any);
+      } else {
+        // Create new bot
+        await botRepository.create({
+          _id: bot.id,
+          name: bot.name,
+          description: bot.description,
+          source: bot.source,
+          sourceUrl: bot.sourceUrl,
+          ownerId: bot.ownerId,
+          status: bot.status,
+          code: bot.code,
+          config: bot.config as any,
+          fingerprint: bot.fingerprint as any,
+          performance: bot.performance as any,
+          rating: bot.rating,
+          isAbsorbed: !!bot.absorbedAt,
+          absorbedAt: bot.absorbedAt,
+          createdAt: bot.createdAt,
+          updatedAt: new Date(),
+        } as any);
+      }
+    } catch (error) {
+      log.error('Failed to persist bot to database:', error as object);
+    }
   }
 
   /**
@@ -295,8 +393,12 @@ export class BotManager extends EventEmitter implements TIMEComponent {
 
   /**
    * Initialize pre-built bots ready for trading
+   * Checks if bots already exist in database to avoid duplicates
    */
-  private initializePrebuiltBots(): void {
+  private async initializePrebuiltBots(): Promise<void> {
+    // Check if we already have bots (either from DB or previously initialized)
+    const existingBotNames = new Set(Array.from(this.bots.values()).map(b => b.name));
+
     const prebuiltBots = [
       {
         name: 'Momentum Rider',
@@ -357,6 +459,12 @@ export class BotManager extends EventEmitter implements TIMEComponent {
     ];
 
     for (const botDef of prebuiltBots) {
+      // Skip if bot with this name already exists (loaded from DB)
+      if (existingBotNames.has(botDef.name)) {
+        log.debug(`Pre-built bot "${botDef.name}" already exists, skipping`);
+        continue;
+      }
+
       const bot: Bot = {
         id: uuidv4(),
         name: botDef.name,
@@ -425,7 +533,10 @@ export class BotManager extends EventEmitter implements TIMEComponent {
       this.bots.set(bot.id, bot);
       this.activeBots.add(bot.id);
 
-      log.info(`Pre-built bot initialized: ${bot.name} (${bot.id})`);
+      // Persist to MongoDB
+      await this.persistBot(bot);
+
+      log.info(`Pre-built bot initialized and saved to DB: ${bot.name} (${bot.id})`);
     }
   }
 
@@ -474,7 +585,7 @@ export class BotManager extends EventEmitter implements TIMEComponent {
   }
 
   /**
-   * Register a new bot
+   * Register a new bot - NOW PERSISTS TO MONGODB
    */
   public registerBot(
     name: string,
@@ -502,6 +613,11 @@ export class BotManager extends EventEmitter implements TIMEComponent {
     };
 
     this.bots.set(bot.id, bot);
+
+    // Persist to MongoDB (fire and forget to maintain sync interface)
+    this.persistBot(bot).catch(err => {
+      log.error('Failed to persist new bot:', err as object);
+    });
 
     log.info('Bot registered', {
       botId: bot.id,
@@ -561,9 +677,9 @@ export class BotManager extends EventEmitter implements TIMEComponent {
   }
 
   /**
-   * Activate a bot
+   * Activate a bot - NOW PERSISTS TO MONGODB
    */
-  public activateBot(botId: string): void {
+  public async activateBot(botId: string): Promise<void> {
     const bot = this.bots.get(botId);
     if (!bot) {
       throw new Error(`Bot not found: ${botId}`);
@@ -573,14 +689,17 @@ export class BotManager extends EventEmitter implements TIMEComponent {
     bot.updatedAt = new Date();
     this.activeBots.add(botId);
 
+    // Persist to MongoDB
+    await this.persistBot(bot);
+
     log.info('Bot activated', { botId, name: bot.name });
     this.emit('bot:activated', bot);
   }
 
   /**
-   * Pause a bot
+   * Pause a bot - NOW PERSISTS TO MONGODB
    */
-  public pauseBot(botId: string): void {
+  public async pauseBot(botId: string): Promise<void> {
     const bot = this.bots.get(botId);
     if (!bot) {
       throw new Error(`Bot not found: ${botId}`);
@@ -590,14 +709,17 @@ export class BotManager extends EventEmitter implements TIMEComponent {
     bot.updatedAt = new Date();
     this.activeBots.delete(botId);
 
+    // Persist to MongoDB
+    await this.persistBot(bot);
+
     log.info('Bot paused', { botId, name: bot.name });
     this.emit('bot:paused', bot);
   }
 
   /**
-   * Retire a bot
+   * Retire a bot - NOW PERSISTS TO MONGODB
    */
-  public retireBot(botId: string): void {
+  public async retireBot(botId: string): Promise<void> {
     const bot = this.bots.get(botId);
     if (!bot) {
       throw new Error(`Bot not found: ${botId}`);
@@ -607,14 +729,17 @@ export class BotManager extends EventEmitter implements TIMEComponent {
     bot.updatedAt = new Date();
     this.activeBots.delete(botId);
 
+    // Persist to MongoDB
+    await this.persistBot(bot);
+
     log.info('Bot retired', { botId, name: bot.name });
     this.emit('bot:retired', bot);
   }
 
   /**
-   * Mark bot as absorbed into TIME's core
+   * Mark bot as absorbed into TIME's core - NOW PERSISTS TO MONGODB
    */
-  public absorbBot(botId: string): void {
+  public async absorbBot(botId: string): Promise<void> {
     const bot = this.bots.get(botId);
     if (!bot) {
       throw new Error(`Bot not found: ${botId}`);
@@ -623,6 +748,9 @@ export class BotManager extends EventEmitter implements TIMEComponent {
     bot.status = 'absorbed';
     bot.absorbedAt = new Date();
     bot.updatedAt = new Date();
+
+    // Persist to MongoDB
+    await this.persistBot(bot);
 
     log.info('Bot absorbed into TIME core', { botId, name: bot.name });
 
@@ -633,9 +761,9 @@ export class BotManager extends EventEmitter implements TIMEComponent {
   }
 
   /**
-   * Update bot fingerprint
+   * Update bot fingerprint - NOW PERSISTS TO MONGODB
    */
-  public updateFingerprint(botId: string, fingerprint: Partial<BotFingerprint>): void {
+  public async updateFingerprint(botId: string, fingerprint: Partial<BotFingerprint>): Promise<void> {
     const bot = this.bots.get(botId);
     if (!bot) {
       throw new Error(`Bot not found: ${botId}`);
@@ -648,14 +776,17 @@ export class BotManager extends EventEmitter implements TIMEComponent {
     };
     bot.updatedAt = new Date();
 
+    // Persist to MongoDB
+    await this.persistBot(bot);
+
     log.debug('Bot fingerprint updated', { botId });
     this.emit('bot:fingerprint_updated', bot);
   }
 
   /**
-   * Update bot performance
+   * Update bot performance - NOW PERSISTS TO MONGODB
    */
-  public updatePerformance(botId: string, performance: Partial<BotPerformance>): void {
+  public async updatePerformance(botId: string, performance: Partial<BotPerformance>): Promise<void> {
     const bot = this.bots.get(botId);
     if (!bot) {
       throw new Error(`Bot not found: ${botId}`);
@@ -684,6 +815,9 @@ export class BotManager extends EventEmitter implements TIMEComponent {
     if (performance.avgHoldingPeriod !== undefined) {
       bot.fingerprint.avgHoldingPeriod = performance.avgHoldingPeriod;
     }
+
+    // Persist to MongoDB
+    await this.persistBot(bot);
 
     this.emit('bot:performance_updated', bot);
   }
