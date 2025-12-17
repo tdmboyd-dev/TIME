@@ -60,30 +60,47 @@ export function useRealTimeData() {
   // Fetch TIME Governor status using working endpoint: /api/v1/admin/status
   const fetchGovernorStatus = useCallback(async () => {
     try {
-      const response = await fetch(`${API_BASE}/admin/status`);
-      const data = await response.json();
+      // Fetch both admin status and real bot count
+      const [statusRes, botsRes] = await Promise.allSettled([
+        fetch(`${API_BASE}/admin/status`),
+        fetch(`${API_BASE}/bots/public`),
+      ]);
 
-      // admin/status returns: {evolution: {mode, lastModeChange}, health, components, activeComponents}
-      if (data.evolution || data.health) {
-        setEvolutionMode(data.evolution?.mode || 'controlled');
+      let evolutionMode: 'controlled' | 'autonomous' = 'controlled';
+      let botCount = 0;
 
-        // Set metrics - use component count as base for calculations
-        const componentCount = data.activeComponents || data.components || 13;
-        setMetrics({
-          totalBotsAbsorbed: 147 + componentCount,
-          totalTradesAnalyzed: 12847,
-          totalInsightsGenerated: 3421,
-          totalStrategiesSynthesized: 89,
-        });
+      // Get evolution mode
+      if (statusRes.status === 'fulfilled') {
+        const data = await statusRes.value.json();
+        if (data.evolution || data.health) {
+          const mode = data.evolution?.mode;
+          evolutionMode = mode === 'autonomous' ? 'autonomous' : 'controlled';
+        }
       }
+      setEvolutionMode(evolutionMode);
+
+      // Get REAL bot count from API
+      if (botsRes.status === 'fulfilled') {
+        const botsData = await botsRes.value.json();
+        if (botsData.success && Array.isArray(botsData.data)) {
+          botCount = botsData.data.length;
+        }
+      }
+
+      // Set metrics with REAL data - no more mock numbers
+      setMetrics({
+        totalBotsAbsorbed: botCount,
+        totalTradesAnalyzed: 0, // Will be updated when we have trade history API
+        totalInsightsGenerated: 0, // Will be updated when we have insights API
+        totalStrategiesSynthesized: 0, // Will be updated when we have strategies API
+      });
     } catch (error) {
       console.error('Failed to fetch admin status:', error);
-      // Use reasonable defaults
       setMetrics({
-        totalBotsAbsorbed: 147,
-        totalTradesAnalyzed: 12847,
-        totalInsightsGenerated: 3421,
-        totalStrategiesSynthesized: 89,
+        totalBotsAbsorbed: 0,
+        totalTradesAnalyzed: 0,
+        totalInsightsGenerated: 0,
+        totalStrategiesSynthesized: 0,
       });
     }
   }, [setEvolutionMode, setMetrics]);

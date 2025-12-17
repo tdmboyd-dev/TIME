@@ -110,17 +110,37 @@ export default function DeFiPage() {
 
       if (protocolsRes?.ok) {
         const data = await protocolsRes.json();
-        // Map API data to Pool format if available
+        // Map API data to Pool format
         if (data.protocols && Array.isArray(data.protocols)) {
-          setApiPools(data.protocols);
+          const mappedPools: Pool[] = data.protocols.map((p: any) => ({
+            id: p.id,
+            name: p.name,
+            protocol: p.id.charAt(0).toUpperCase() + p.id.slice(1), // Use ID as protocol name
+            tokens: p.name.includes('/') ? p.name.split(' ')[0].split('/') : [p.chain?.toUpperCase() || 'ETH'],
+            tvl: p.tvl || 0,
+            apy: p.apy || 0,
+            apr: (p.apy || 0) * 0.9, // Estimate APR from APY
+            rewards: p.id.toUpperCase(),
+            risk: p.risk || 'medium',
+          }));
+          setApiPools(mappedPools);
         }
       }
 
       if (yieldRes?.ok) {
         const data = await yieldRes.json();
-        // Map API data to StakingOption format if available
+        // Map API data to StakingOption format
         if (data.opportunities && Array.isArray(data.opportunities)) {
-          setApiStaking(data.opportunities);
+          const mappedStaking: StakingOption[] = data.opportunities.map((o: any) => ({
+            id: o.id,
+            token: o.token || 'ETH',
+            name: o.name,
+            apy: o.apy || 0,
+            lockPeriod: o.lockPeriod || 'Flexible',
+            minStake: o.minStake || 0,
+            totalStaked: o.totalStaked || 0,
+          }));
+          setApiStaking(mappedStaking);
         }
       }
 

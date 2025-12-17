@@ -222,9 +222,8 @@ export default function RiskProfilePage() {
 
   const handleAnswer = (questionId: string, answer: string) => {
     setAnswers(prev => ({ ...prev, [questionId]: answer }));
-    if (assessmentStep < assessmentQuestions.length - 1) {
-      setAssessmentStep(prev => prev + 1);
-    }
+    // Always advance to next step (including final submit screen)
+    setAssessmentStep(prev => prev + 1);
   };
 
   const submitAssessment = () => {

@@ -30,6 +30,7 @@ import {
 } from 'lucide-react';
 import clsx from 'clsx';
 import TradingModeToggle from '@/components/trading/TradingModeToggle';
+import { useTimeStore } from '@/store/timeStore';
 
 import { API_BASE } from '@/lib/api';
 
@@ -142,7 +143,16 @@ const initialBrokers: BrokerConnection[] = [
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<Tab>('profile');
   const [isSaving, setIsSaving] = useState(false);
-  const [theme, setTheme] = useState<'dark' | 'light' | 'system'>('dark');
+
+  // Use Zustand store for persistent theme
+  const { userPreferences, setUserPreferences } = useTimeStore();
+  const theme = userPreferences.theme;
+  const setTheme = (t: 'dark' | 'light') => {
+    setUserPreferences({ theme: t });
+    // Apply theme to document
+    document.documentElement.classList.remove('dark', 'light');
+    document.documentElement.classList.add(t);
+  };
 
   // Broker connection states
   const [brokers, setBrokers] = useState<BrokerConnection[]>(initialBrokers);
@@ -775,13 +785,12 @@ export default function SettingsPage() {
                     {[
                       { id: 'dark', icon: Moon, label: 'Dark' },
                       { id: 'light', icon: Sun, label: 'Light' },
-                      { id: 'system', icon: Monitor, label: 'System' },
                     ].map((option) => {
                       const Icon = option.icon;
                       return (
                         <button
                           key={option.id}
-                          onClick={() => setTheme(option.id as typeof theme)}
+                          onClick={() => setTheme(option.id as 'dark' | 'light')}
                           className={clsx(
                             'flex-1 flex items-center justify-center gap-2 py-3 rounded-lg border transition-all',
                             theme === option.id

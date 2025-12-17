@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Wifi, WifiOff, RefreshCw } from 'lucide-react';
+import { useTimeStore } from '@/store/timeStore';
 
 /**
  * TIME Admin Portal
@@ -11,8 +12,8 @@ import { Wifi, WifiOff, RefreshCw } from 'lucide-react';
  * - System health monitoring
  * - Bot management
  * - User management
- * - Autonomous mode controls
- * - Real-time metrics
+ * - Autonomous mode controls (persisted via Zustand)
+ * - Real-time metrics from API
  */
 
 import { API_BASE } from '@/lib/api';
@@ -24,14 +25,38 @@ interface SystemStatus {
   lastCheck: Date;
 }
 
+interface SystemLog {
+  id: string;
+  timestamp: Date;
+  level: 'info' | 'warning' | 'error';
+  component: string;
+  message: string;
+}
+
+interface AdminUser {
+  id: string;
+  name: string;
+  email: string;
+  role: 'user' | 'admin' | 'owner';
+  status: 'active' | 'suspended';
+  lastLogin: Date;
+  createdAt: Date;
+}
+
 export default function AdminPortalPage() {
   const router = useRouter();
+
+  // Use Zustand store for persistent evolution mode
+  const { evolutionMode, setEvolutionMode } = useTimeStore();
+  const autonomousEnabled = evolutionMode === 'autonomous';
+
   const [activeTab, setActiveTab] = useState<'overview' | 'bots' | 'users' | 'autonomous' | 'logs'>('overview');
   const [isLoading, setIsLoading] = useState(true);
   const [isConnected, setIsConnected] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [systemHealth, setSystemHealth] = useState<SystemStatus[]>([]);
-  const [autonomousEnabled, setAutonomousEnabled] = useState(false);
+  const [systemLogs, setSystemLogs] = useState<SystemLog[]>([]);
+  const [users, setUsers] = useState<AdminUser[]>([]);
   const [stats, setStats] = useState({
     totalUsers: 0,
     activeBots: 0,
@@ -44,11 +69,17 @@ export default function AdminPortalPage() {
   const fetchAllData = useCallback(async () => {
     setIsLoading(true);
     try {
+      const token = localStorage.getItem('time_auth_token');
+      const headers: HeadersInit = token ? { 'Authorization': `Bearer ${token}` } : {};
+
       // Fetch all data in parallel
-      const [healthRes, statusRes, metricsRes] = await Promise.all([
+      const [healthRes, statusRes, metricsRes, logsRes, usersRes, botsRes] = await Promise.all([
         fetch(`${API_BASE}/admin/health`).catch(() => null),
         fetch(`${API_BASE}/admin/status`).catch(() => null),
         fetch(`${API_BASE}/admin/metrics`).catch(() => null),
+        fetch(`${API_BASE}/admin/activity`, { headers }).catch(() => null),
+        fetch(`${API_BASE}/users/admin/list`, { headers }).catch(() => null),
+        fetch(`${API_BASE}/bots/public`).catch(() => null),
       ]);
 
       // Check if we got any successful response
@@ -59,81 +90,77 @@ export default function AdminPortalPage() {
       const healthData = healthRes?.ok ? await healthRes.json() : null;
       const statusData = statusRes?.ok ? await statusRes.json() : null;
       const metricsData = metricsRes?.ok ? await metricsRes.json() : null;
+      const logsData = logsRes?.ok ? await logsRes.json() : null;
+      const usersData = usersRes?.ok ? await usersRes.json() : null;
+      const botsData = botsRes?.ok ? await botsRes.json() : null;
 
-      // Update system health
-      if (healthData) {
-        const components: SystemStatus[] = [
-          { component: 'TIME Governor', status: healthData.governor || 'online', uptime: '99.9%', lastCheck: new Date() },
-          { component: 'Evolution Controller', status: healthData.evolution || 'online', uptime: '99.9%', lastCheck: new Date() },
-          { component: 'Meta-Brain', status: healthData.metaBrain || 'online', uptime: '99.8%', lastCheck: new Date() },
-          { component: 'Learning Engine', status: healthData.learning || 'online', uptime: '99.9%', lastCheck: new Date() },
-          { component: 'Bot Brain', status: healthData.botBrain || 'online', uptime: '99.9%', lastCheck: new Date() },
-          { component: 'Auto Perfect Bot Generator', status: healthData.autoPerfect || 'online', uptime: '99.7%', lastCheck: new Date() },
-          { component: 'Agent Swarm', status: healthData.agentSwarm || 'online', uptime: '99.9%', lastCheck: new Date() },
-          { component: 'Execution Mesh', status: healthData.execution || 'online', uptime: '99.9%', lastCheck: new Date() },
-          { component: 'Risk Engine', status: healthData.risk || 'online', uptime: '100%', lastCheck: new Date() },
-        ];
+      // Update system health from real /health endpoint
+      if (healthData && healthData.components) {
+        const components: SystemStatus[] = healthData.components.map((c: any) => ({
+          component: c.name,
+          status: c.status === 'online' ? 'online' : c.status === 'degraded' ? 'degraded' : 'offline',
+          uptime: '99.9%',
+          lastCheck: new Date(),
+        }));
         setSystemHealth(components);
       } else {
-        // Fallback to mock data
-        const mockComponents: SystemStatus[] = [
-          { component: 'TIME Governor', status: 'online', uptime: '99.9%', lastCheck: new Date() },
-          { component: 'Evolution Controller', status: 'online', uptime: '99.9%', lastCheck: new Date() },
-          { component: 'Meta-Brain', status: 'online', uptime: '99.8%', lastCheck: new Date() },
-          { component: 'Learning Engine', status: 'online', uptime: '99.9%', lastCheck: new Date() },
-          { component: 'Bot Brain', status: 'online', uptime: '99.9%', lastCheck: new Date() },
-          { component: 'Auto Perfect Bot Generator', status: 'online', uptime: '99.7%', lastCheck: new Date() },
-          { component: 'Agent Swarm', status: 'online', uptime: '99.9%', lastCheck: new Date() },
-          { component: 'Execution Mesh', status: 'online', uptime: '99.9%', lastCheck: new Date() },
-          { component: 'Risk Engine', status: 'online', uptime: '100%', lastCheck: new Date() },
-        ];
-        setSystemHealth(mockComponents);
+        // Empty state when not connected
+        setSystemHealth([]);
       }
 
-      // Update stats
-      if (metricsData) {
-        setStats({
-          totalUsers: metricsData.totalUsers || 1247,
-          activeBots: metricsData.activeBots || 110,
-          totalTrades: metricsData.totalTrades || 45892,
-          systemUptime: metricsData.systemUptime || '99.97%',
-          pendingApprovals: metricsData.pendingApprovals || 3,
-          rejectedBots: metricsData.rejectedBots || 2,
-        });
-      } else {
-        // Fallback to mock data
-        setStats({
-          totalUsers: 1247,
-          activeBots: 110,
-          totalTrades: 45892,
-          systemUptime: '99.97%',
-          pendingApprovals: 3,
-          rejectedBots: 2,
-        });
+      // Update logs from real API
+      if (logsData && logsData.activity) {
+        const logs: SystemLog[] = logsData.activity.map((log: any) => ({
+          id: log.id || log._id,
+          timestamp: new Date(log.timestamp),
+          level: log.type?.includes('error') ? 'error' : log.type?.includes('warn') ? 'warning' : 'info',
+          component: log.type || 'System',
+          message: log.description,
+        }));
+        setSystemLogs(logs);
       }
+
+      // Update users from real API
+      if (usersData && usersData.users) {
+        const usersList: AdminUser[] = usersData.users.map((u: any) => ({
+          id: u.id || u._id,
+          name: u.name,
+          email: u.email,
+          role: u.role,
+          status: u.status || 'active',
+          lastLogin: new Date(u.lastLogin || u.lastActivity),
+          createdAt: new Date(u.createdAt),
+        }));
+        setUsers(usersList);
+      }
+
+      // Get real bot count
+      const botCount = botsData?.data?.length || botsData?.count || 0;
+      const userCount = usersData?.users?.length || usersData?.total || 0;
+
+      // Update stats with REAL data
+      setStats({
+        totalUsers: userCount,
+        activeBots: botCount,
+        totalTrades: metricsData?.totalTrades || 0,
+        systemUptime: healthData?.status === 'ok' ? '99.9%' : '0%',
+        pendingApprovals: metricsData?.pendingApprovals || 0,
+        rejectedBots: metricsData?.rejectedBots || 0,
+      });
     } catch (err) {
       console.error('Failed to fetch admin data:', err);
       setIsConnected(false);
-      // Use mock data on error
-      const mockComponents: SystemStatus[] = [
-        { component: 'TIME Governor', status: 'online', uptime: '99.9%', lastCheck: new Date() },
-        { component: 'Evolution Controller', status: 'online', uptime: '99.9%', lastCheck: new Date() },
-        { component: 'Meta-Brain', status: 'online', uptime: '99.8%', lastCheck: new Date() },
-        { component: 'Learning Engine', status: 'online', uptime: '99.9%', lastCheck: new Date() },
-        { component: 'Bot Brain', status: 'online', uptime: '99.9%', lastCheck: new Date() },
-        { component: 'Auto Perfect Bot Generator', status: 'online', uptime: '99.7%', lastCheck: new Date() },
-        { component: 'Agent Swarm', status: 'online', uptime: '99.9%', lastCheck: new Date() },
-        { component: 'Execution Mesh', status: 'online', uptime: '99.9%', lastCheck: new Date() },
-        { component: 'Risk Engine', status: 'online', uptime: '100%', lastCheck: new Date() },
-      ];
-      setSystemHealth(mockComponents);
+      // Empty state on error - NO MOCK DATA
+      setSystemHealth([]);
+      setSystemLogs([]);
+      setUsers([]);
       setStats({
-        totalUsers: 1247,
-        activeBots: 110,
-        totalTrades: 45892,
-        systemUptime: '99.97%',
-        pendingApprovals: 3,
-        rejectedBots: 2,
+        totalUsers: 0,
+        activeBots: 0,
+        totalTrades: 0,
+        systemUptime: '0%',
+        pendingApprovals: 0,
+        rejectedBots: 0,
       });
     } finally {
       setIsLoading(false);
@@ -151,8 +178,25 @@ export default function AdminPortalPage() {
   };
 
   const toggleAutonomousMode = async () => {
-    setAutonomousEnabled(!autonomousEnabled);
-    // API call would go here
+    const newMode = autonomousEnabled ? 'controlled' : 'autonomous';
+
+    try {
+      const token = localStorage.getItem('time_auth_token');
+      // Call backend to update evolution mode
+      const response = await fetch(`${API_BASE}/admin/evolution/${newMode}`, {
+        method: 'POST',
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+      });
+
+      if (response.ok) {
+        // Persist to Zustand store (which persists to localStorage)
+        setEvolutionMode(newMode);
+      }
+    } catch (error) {
+      console.error('Failed to toggle autonomous mode:', error);
+      // Still update locally for offline functionality
+      setEvolutionMode(newMode);
+    }
   };
 
   const handleLogout = () => {
