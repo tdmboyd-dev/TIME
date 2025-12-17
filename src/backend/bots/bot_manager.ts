@@ -198,21 +198,44 @@ export class BotManager extends EventEmitter implements TIMEComponent {
 
   /**
    * Create a bot entry from a folder in the dropzone
+   * NOW READS _metadata.json for rich GitHub data!
    */
   private async createBotFromFolder(folderName: string, folderPath: string): Promise<Bot | null> {
     // Parse folder name for bot info (format: owner_repo or harvest#_owner_repo)
     const parts = folderName.replace(/^harvest\d+_/, '').split('_');
-    const name = parts.length > 1 ? parts.slice(1).join(' ') : folderName;
-
-    // Look for README or description
+    let name = parts.length > 1 ? parts.slice(1).join(' ') : folderName;
     let description = `Absorbed bot from ${folderName}`;
-    const readmePath = path.join(folderPath, 'README.md');
-    if (fs.existsSync(readmePath)) {
-      const readmeContent = fs.readFileSync(readmePath, 'utf-8');
-      // Extract first paragraph as description
-      const firstPara = readmeContent.split('\n\n')[0]?.replace(/^#.*\n/, '').trim();
-      if (firstPara && firstPara.length < 500) {
-        description = firstPara;
+    let sourceUrl = `https://github.com/${folderName.replace(/_/g, '/')}`;
+    let stars = 0;
+    let language = 'Unknown';
+    let license = 'Unknown';
+
+    // Try to read _metadata.json for rich data
+    const metadataPath = path.join(folderPath, '_metadata.json');
+    if (fs.existsSync(metadataPath)) {
+      try {
+        const metadata = JSON.parse(fs.readFileSync(metadataPath, 'utf-8'));
+        if (metadata.name) name = metadata.name;
+        if (metadata.description) description = metadata.description;
+        if (metadata.url) sourceUrl = metadata.url;
+        if (metadata.stars) stars = metadata.stars;
+        if (metadata.language) language = metadata.language;
+        if (metadata.license) license = metadata.license;
+        log.debug(`Read metadata for ${name}: ${stars} stars, ${language}`);
+      } catch (e) {
+        log.warn(`Failed to parse metadata for ${folderName}`);
+      }
+    }
+
+    // Fall back to README for description if no metadata
+    if (description === `Absorbed bot from ${folderName}`) {
+      const readmePath = path.join(folderPath, 'README.md');
+      if (fs.existsSync(readmePath)) {
+        const readmeContent = fs.readFileSync(readmePath, 'utf-8');
+        const firstPara = readmeContent.split('\n\n')[0]?.replace(/^#.*\n/, '').trim();
+        if (firstPara && firstPara.length < 500) {
+          description = firstPara;
+        }
       }
     }
 
@@ -222,14 +245,17 @@ export class BotManager extends EventEmitter implements TIMEComponent {
     // Count files to determine complexity
     const files = this.countBotFiles(folderPath);
 
+    // Calculate rating based on GitHub stars
+    const starRating = Math.min(5, 3 + (stars / 10000)); // 3-5 based on stars
+
     const bot: Bot = {
       id: uuidv4(),
       name: this.formatBotName(name),
       description,
       source: 'github' as BotSource,
-      sourceUrl: `https://github.com/${folderName.replace(/_/g, '/')}`,
+      sourceUrl,
       status: 'active', // Absorbed bots are ready
-      code: `// Absorbed from ${folderName}\n// ${files.total} files detected`,
+      code: `// Absorbed from ${folderName}\n// ${files.total} files detected\n// Language: ${language}\n// License: ${license}\n// GitHub Stars: ${stars}`,
       config: {
         symbols: [],
         timeframes: ['1h', '4h'],
@@ -243,6 +269,9 @@ export class BotManager extends EventEmitter implements TIMEComponent {
           absorbed: true,
           sourcePath: folderPath,
           fileCount: files.total,
+          githubStars: stars,
+          language,
+          license,
         },
       },
       fingerprint: {
@@ -279,7 +308,7 @@ export class BotManager extends EventEmitter implements TIMEComponent {
         avgHoldingPeriod: 0,
         lastUpdated: new Date(),
       },
-      rating: 4.0 + Math.random() * 0.5, // 4.0-4.5 for absorbed bots
+      rating: starRating, // Based on GitHub stars (3-5)
       createdAt: new Date(),
       updatedAt: new Date(),
       absorbedAt: new Date(),

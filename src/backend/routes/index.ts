@@ -45,6 +45,10 @@ import retirementRoutes from './retirement';
 import botBrainRoutes from './bot_brain';
 import autoPerfectBotRoutes from './auto_perfect_bot';
 
+// NEW! Bot Marketplace & Backtesting
+import marketplaceRoutes from './marketplace';
+import backtestRoutes from './backtest';
+
 const router = Router();
 
 // Mount routes
@@ -97,6 +101,10 @@ router.use('/retirement', retirementRoutes); // IRA, 401k, RMD tracking
 // BOT BRAIN & AUTO PERFECT BOT GENERATOR - Never-Before-Seen Features!
 router.use('/bot-brain', botBrainRoutes);              // Bot Intelligence: generation, placement, multi-tasking
 router.use('/auto-perfect-bot', autoPerfectBotRoutes); // Auto-watches everything, learns, generates perfect bots
+
+// NEW! Bot Marketplace & Backtesting
+router.use('/marketplace', marketplaceRoutes);  // Bot rental marketplace - rent bots from $5/day
+router.use('/backtest', backtestRoutes);        // Industry-standard backtesting with Monte Carlo
 
 export default router;
 
