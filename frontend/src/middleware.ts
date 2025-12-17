@@ -22,6 +22,19 @@ const PROTECTED_ROUTES = [
   '/autopilot',
   '/payments',
   '/transfers',
+  '/alerts',
+  '/defi',
+  '/dropzone',
+  '/goals',
+  '/invest',
+  '/retirement',
+  '/risk',
+  '/robo',
+  '/social',
+  '/tax',
+  '/timebeunus',
+  '/vision',
+  '/ai-trade-god',
 ];
 
 // Routes that require admin privileges

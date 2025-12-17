@@ -841,4 +841,119 @@ router.delete('/sessions/:sessionId', authMiddleware, async (req: Request, res: 
   res.json({ success: true, message: 'Session revoked' });
 });
 
+/**
+ * POST /auth/setup-admin
+ * One-time admin account setup (only works if no admin exists)
+ *
+ * This endpoint creates the initial admin account for the platform.
+ * It will only work ONCE - after an admin exists, it will fail.
+ */
+router.post('/setup-admin', async (req: Request, res: Response) => {
+  try {
+    const { email, password, name, setupKey } = req.body;
+
+    // Require a setup key from environment for security
+    const ADMIN_SETUP_KEY = process.env.ADMIN_SETUP_KEY || 'TIME_ADMIN_SETUP_2025';
+
+    if (setupKey !== ADMIN_SETUP_KEY) {
+      return res.status(403).json({
+        error: 'Invalid setup key',
+        hint: 'Set ADMIN_SETUP_KEY environment variable or use default'
+      });
+    }
+
+    if (!email || !password || !name) {
+      return res.status(400).json({
+        error: 'Missing required fields',
+        required: ['email', 'password', 'name', 'setupKey']
+      });
+    }
+
+    // Check if any admin already exists
+    const existingUsers = await userRepository.findMany({});
+    const adminExists = existingUsers.some((u: any) => u.role === 'admin' || u.role === 'owner');
+
+    if (adminExists) {
+      return res.status(409).json({
+        error: 'Admin already exists',
+        message: 'Use the regular login endpoint or contact existing admin'
+      });
+    }
+
+    // Check if email already registered
+    const existingUser = await userRepository.findByEmail(email);
+    if (existingUser) {
+      return res.status(409).json({ error: 'Email already registered' });
+    }
+
+    // Validate password strength
+    if (password.length < 8) {
+      return res.status(400).json({ error: 'Password must be at least 8 characters' });
+    }
+
+    // Hash password and create admin user
+    const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
+    const adminUser = await userRepository.create({
+      _id: uuidv4(),
+      email,
+      name,
+      passwordHash,
+      role: 'owner', // First admin is owner
+      status: 'active',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    } as any);
+
+    // Log the admin creation
+    await auditLogRepository.log('auth', 'admin_setup', {
+      email,
+      name,
+      role: 'owner'
+    }, { success: true, userId: adminUser._id });
+
+    logger.info(`Admin account created: ${email}`);
+
+    res.status(201).json({
+      success: true,
+      message: 'Admin account created successfully',
+      user: {
+        id: adminUser._id,
+        email: adminUser.email,
+        name: adminUser.name,
+        role: adminUser.role,
+      },
+      nextStep: 'Use /auth/login with these credentials to access admin panel'
+    });
+
+  } catch (error) {
+    logger.error('Admin setup error:', error);
+    res.status(500).json({ error: 'Failed to create admin account' });
+  }
+});
+
+/**
+ * GET /auth/admin-status
+ * Check if an admin account exists (for first-time setup flow)
+ */
+router.get('/admin-status', async (_req: Request, res: Response) => {
+  try {
+    const existingUsers = await userRepository.findMany({});
+    const adminExists = existingUsers.some((u: any) => u.role === 'admin' || u.role === 'owner');
+
+    res.json({
+      adminExists,
+      setupRequired: !adminExists,
+      message: adminExists
+        ? 'Admin account exists. Use /auth/login to access.'
+        : 'No admin exists. Use /auth/setup-admin to create one.'
+    });
+  } catch (error) {
+    res.json({
+      adminExists: false,
+      setupRequired: true,
+      error: 'Could not check admin status'
+    });
+  }
+});
+
 export default router;
