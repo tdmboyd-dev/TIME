@@ -53,6 +53,130 @@ router.get('/public', (req: Request, res: Response) => {
   });
 });
 
+/**
+ * POST /bots/register-absorbed
+ * Register an absorbed bot from external source (no auth for bulk import)
+ */
+router.post('/register-absorbed', async (req: Request, res: Response) => {
+  try {
+    const botData = req.body;
+
+    if (!botData.name || !botData.sourceUrl) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required fields: name, sourceUrl',
+      });
+    }
+
+    // Check if bot already exists by source URL
+    const existingBots = botManager.getAllBots();
+    const exists = existingBots.find(b => b.sourceUrl === botData.sourceUrl);
+
+    if (exists) {
+      return res.json({
+        success: true,
+        data: { id: exists.id, name: exists.name },
+        message: 'Bot already registered',
+        alreadyExists: true,
+      });
+    }
+
+    // Register the new bot
+    const bot = botManager.registerBot(
+      botData.name,
+      botData.description || '',
+      botData.source || 'github',
+      botData.code || '',
+      botData.config || {
+        symbols: [],
+        timeframes: ['1h'],
+        riskParams: { maxPositionSize: 0.02, maxDrawdown: 0.15, stopLossPercent: 2, takeProfitPercent: 4 },
+        customParams: { absorbed: true },
+      },
+      undefined, // ownerId
+      botData.sourceUrl
+    );
+
+    res.json({
+      success: true,
+      data: { id: bot.id, name: bot.name },
+      message: 'Bot registered successfully',
+    });
+  } catch (error) {
+    console.error('Failed to register absorbed bot:', error);
+    res.status(500).json({
+      success: false,
+      error: (error as Error).message,
+    });
+  }
+});
+
+/**
+ * POST /bots/bulk-register
+ * Bulk register multiple absorbed bots
+ */
+router.post('/bulk-register', async (req: Request, res: Response) => {
+  try {
+    const { bots } = req.body;
+
+    if (!Array.isArray(bots)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Expected array of bots',
+      });
+    }
+
+    let registered = 0;
+    let skipped = 0;
+    let failed = 0;
+
+    const existingBots = botManager.getAllBots();
+    const existingUrls = new Set(existingBots.map(b => b.sourceUrl));
+
+    for (const botData of bots) {
+      try {
+        // Skip if already exists
+        if (existingUrls.has(botData.sourceUrl)) {
+          skipped++;
+          continue;
+        }
+
+        botManager.registerBot(
+          botData.name,
+          botData.description || '',
+          botData.source || 'github',
+          botData.code || '',
+          botData.config || {
+            symbols: [],
+            timeframes: ['1h'],
+            riskParams: { maxPositionSize: 0.02, maxDrawdown: 0.15, stopLossPercent: 2, takeProfitPercent: 4 },
+            customParams: { absorbed: true, githubStars: botData.rating ? Math.round((botData.rating - 3) * 10000) : 0 },
+          },
+          undefined,
+          botData.sourceUrl
+        );
+
+        existingUrls.add(botData.sourceUrl);
+        registered++;
+      } catch (e) {
+        failed++;
+      }
+    }
+
+    res.json({
+      success: true,
+      data: { registered, skipped, failed, total: bots.length },
+      message: `Bulk registration complete: ${registered} new, ${skipped} skipped, ${failed} failed`,
+    });
+  } catch (error) {
+    console.error('Failed to bulk register bots:', error);
+    res.status(500).json({
+      success: false,
+      error: (error as Error).message,
+    });
+  }
+});
+
 // ============================================================
 // AUTHENTICATED BOT ROUTES
 // ============================================================
