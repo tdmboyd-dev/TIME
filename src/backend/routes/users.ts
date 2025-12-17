@@ -2,29 +2,16 @@
  * TIME User Routes
  *
  * Handles user profile management, settings, and preferences.
+ * NOW USES MONGODB for persistence!
  */
 
 import { Router, Request, Response } from 'express';
 import { authMiddleware, adminMiddleware, ownerMiddleware } from './auth';
 import { consentManager } from '../consent/consent_manager';
 import { revenueEngine, SubscriptionTier } from '../monetization/revenue_engine';
+import { userRepository, auditLogRepository } from '../database/repositories';
 
 const router = Router();
-
-// ============================================================
-// SUBSCRIPTION STORAGE (In-memory for now, use DB in production)
-// ============================================================
-
-interface UserSubscription {
-  tier: SubscriptionTier;
-  grantedBy?: string;
-  grantedAt?: Date;
-  expiresAt?: Date;
-  isFree: boolean;
-  reason?: string;
-}
-
-const userSubscriptions: Map<string, UserSubscription> = new Map();
 
 // ============================================================
 // TYPES
@@ -45,126 +32,131 @@ interface UserSettings {
   };
 }
 
-interface UserProfile {
-  name: string;
-  email: string;
-  phone?: string;
-  avatar?: string;
-}
-
-// Mock user data (replace with MongoDB)
-const userSettings: Map<string, UserSettings> = new Map();
-const userProfiles: Map<string, UserProfile> = new Map();
+const DEFAULT_SETTINGS: UserSettings = {
+  timezone: 'America/New_York',
+  currency: 'USD',
+  language: 'en',
+  theme: 'dark',
+  notifications: {
+    email: true,
+    sms: false,
+    push: true,
+    tradeAlerts: true,
+    riskAlerts: true,
+    dailySummary: true,
+  },
+};
 
 // ============================================================
-// ROUTES
+// ROUTES - NOW USE MONGODB
 // ============================================================
 
 /**
  * GET /users/profile
- * Get current user's profile
+ * Get current user's profile from database
  */
-router.get('/profile', authMiddleware, (req: Request, res: Response) => {
+router.get('/profile', authMiddleware, async (req: Request, res: Response) => {
   const user = (req as any).user;
-  const profile = userProfiles.get(user.id) || {
-    name: user.name,
-    email: user.email,
-  };
 
-  res.json({ profile });
+  try {
+    const dbUser = await userRepository.findById(user.id);
+
+    const profile = {
+      name: dbUser?.name || user.name,
+      email: dbUser?.email || user.email,
+      phone: dbUser?.phone,
+      avatar: dbUser?.avatar,
+    };
+
+    res.json({ profile });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
 /**
  * PUT /users/profile
- * Update current user's profile
+ * Update current user's profile in database
  */
-router.put('/profile', authMiddleware, (req: Request, res: Response) => {
+router.put('/profile', authMiddleware, async (req: Request, res: Response) => {
   const user = (req as any).user;
   const { name, phone, avatar } = req.body;
 
-  const currentProfile = userProfiles.get(user.id) || {
-    name: user.name,
-    email: user.email,
-  };
+  try {
+    const updates: any = {};
+    if (name) updates.name = name;
+    if (phone !== undefined) updates.phone = phone;
+    if (avatar !== undefined) updates.avatar = avatar;
 
-  const updatedProfile: UserProfile = {
-    ...currentProfile,
-    ...(name && { name }),
-    ...(phone !== undefined && { phone }),
-    ...(avatar !== undefined && { avatar }),
-  };
+    const updatedUser = await userRepository.update(user.id, updates);
 
-  userProfiles.set(user.id, updatedProfile);
+    // Log activity
+    await auditLogRepository.log('UserProfile', 'profile_updated', updates, { userId: user.id });
 
-  res.json({
-    success: true,
-    profile: updatedProfile,
-  });
+    res.json({
+      success: true,
+      profile: {
+        name: updatedUser?.name || user.name,
+        email: updatedUser?.email || user.email,
+        phone: updatedUser?.phone,
+        avatar: updatedUser?.avatar,
+      },
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
 /**
  * GET /users/settings
- * Get current user's settings
+ * Get current user's settings from database
  */
-router.get('/settings', authMiddleware, (req: Request, res: Response) => {
+router.get('/settings', authMiddleware, async (req: Request, res: Response) => {
   const user = (req as any).user;
 
-  const settings = userSettings.get(user.id) || {
-    timezone: 'America/New_York',
-    currency: 'USD',
-    language: 'en',
-    theme: 'dark',
-    notifications: {
-      email: true,
-      sms: false,
-      push: true,
-      tradeAlerts: true,
-      riskAlerts: true,
-      dailySummary: true,
-    },
-  };
+  try {
+    const dbUser = await userRepository.findById(user.id);
+    const settings = (dbUser as any)?.settings || DEFAULT_SETTINGS;
 
-  res.json({ settings });
+    res.json({ settings });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
 /**
  * PUT /users/settings
- * Update current user's settings
+ * Update current user's settings in database
  */
-router.put('/settings', authMiddleware, (req: Request, res: Response) => {
+router.put('/settings', authMiddleware, async (req: Request, res: Response) => {
   const user = (req as any).user;
   const updates = req.body;
 
-  const currentSettings = userSettings.get(user.id) || {
-    timezone: 'America/New_York',
-    currency: 'USD',
-    language: 'en',
-    theme: 'dark',
-    notifications: {
-      email: true,
-      sms: false,
-      push: true,
-      tradeAlerts: true,
-      riskAlerts: true,
-      dailySummary: true,
-    },
-  };
+  try {
+    const dbUser = await userRepository.findById(user.id);
+    const currentSettings = (dbUser as any)?.settings || DEFAULT_SETTINGS;
 
-  const updatedSettings: UserSettings = {
-    ...currentSettings,
-    ...updates,
-    notifications: {
-      ...currentSettings.notifications,
-      ...(updates.notifications || {}),
-    },
-  };
+    const updatedSettings: UserSettings = {
+      ...currentSettings,
+      ...updates,
+      notifications: {
+        ...currentSettings.notifications,
+        ...(updates.notifications || {}),
+      },
+    };
 
-  userSettings.set(user.id, updatedSettings);
+    await userRepository.update(user.id, { settings: updatedSettings } as any);
 
-  res.json({
-    success: true,
-    settings: updatedSettings,
-  });
+    // Log activity
+    await auditLogRepository.log('UserSettings', 'settings_updated', { fields: Object.keys(updates) }, { userId: user.id });
+
+    res.json({
+      success: true,
+      settings: updatedSettings,
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
 /**
@@ -202,39 +194,31 @@ router.put('/consent', authMiddleware, async (req: Request, res: Response) => {
 
 /**
  * GET /users/activity
- * Get user's recent activity
+ * Get user's recent activity from audit logs
  */
-router.get('/activity', authMiddleware, (req: Request, res: Response) => {
+router.get('/activity', authMiddleware, async (req: Request, res: Response) => {
   const user = (req as any).user;
   const limit = parseInt(req.query.limit as string) || 50;
 
-  // Mock activity data
-  const activity = [
-    {
-      id: '1',
-      type: 'login',
-      description: 'Logged in from Chrome on Windows',
-      timestamp: new Date(Date.now() - 3600000),
-      ip: '192.168.1.1',
-    },
-    {
-      id: '2',
-      type: 'settings_change',
-      description: 'Updated notification preferences',
-      timestamp: new Date(Date.now() - 7200000),
-    },
-    {
-      id: '3',
-      type: 'trade_executed',
-      description: 'Trade executed: BUY AAPL x 10',
-      timestamp: new Date(Date.now() - 86400000),
-    },
-  ].slice(0, limit);
+  try {
+    // Get real activity from audit logs
+    const logs = await auditLogRepository.findByUser(user.id, limit);
 
-  res.json({
-    total: activity.length,
-    activity,
-  });
+    const activity = logs.map(log => ({
+      id: log._id,
+      type: log.action,
+      description: `${log.action} on ${log.component}`,
+      timestamp: log.timestamp,
+      details: log.details,
+    }));
+
+    res.json({
+      total: activity.length,
+      activity,
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
 /**
@@ -330,85 +314,84 @@ router.delete('/account', authMiddleware, (req: Request, res: Response) => {
 
 /**
  * GET /users/admin/list
- * List all users (admin only)
+ * List all users from database (admin only)
  */
-router.get('/admin/list', authMiddleware, adminMiddleware, (req: Request, res: Response) => {
+router.get('/admin/list', authMiddleware, adminMiddleware, async (req: Request, res: Response) => {
   const page = parseInt(req.query.page as string) || 1;
   const limit = parseInt(req.query.limit as string) || 20;
   const search = req.query.search as string;
 
-  // Mock user list
-  const allUsers = [
-    {
-      id: 'user_1',
-      email: 'user1@example.com',
-      name: 'Test User 1',
-      role: 'user',
-      createdAt: new Date('2025-01-01'),
-      lastLogin: new Date('2025-12-10'),
-      status: 'active',
-    },
-    {
-      id: 'user_2',
-      email: 'user2@example.com',
-      name: 'Test User 2',
-      role: 'user',
-      createdAt: new Date('2025-02-15'),
-      lastLogin: new Date('2025-12-11'),
-      status: 'active',
-    },
-  ];
+  try {
+    // Get all users from database
+    let allUsers = await userRepository.findMany({});
 
-  const filtered = search
-    ? allUsers.filter(u =>
-        u.email.includes(search) || u.name.toLowerCase().includes(search.toLowerCase())
-      )
-    : allUsers;
+    // Filter by search if provided
+    if (search) {
+      const searchLower = search.toLowerCase();
+      allUsers = allUsers.filter(u =>
+        u.email.toLowerCase().includes(searchLower) ||
+        (u.name && u.name.toLowerCase().includes(searchLower))
+      );
+    }
 
-  const start = (page - 1) * limit;
-  const paginated = filtered.slice(start, start + limit);
+    const start = (page - 1) * limit;
+    const paginated = allUsers.slice(start, start + limit);
 
-  res.json({
-    total: filtered.length,
-    page,
-    limit,
-    users: paginated,
-  });
+    res.json({
+      total: allUsers.length,
+      page,
+      limit,
+      users: paginated.map(u => ({
+        id: u._id,
+        email: u.email,
+        name: u.name,
+        role: u.role,
+        createdAt: u.createdAt,
+        lastLogin: u.lastActivity,
+        status: (u as any).status || 'active',
+      })),
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
 /**
  * GET /users/admin/:userId
- * Get specific user details (admin only)
+ * Get specific user details from database (admin only)
  */
-router.get('/admin/:userId', authMiddleware, adminMiddleware, (req: Request, res: Response) => {
+router.get('/admin/:userId', authMiddleware, adminMiddleware, async (req: Request, res: Response) => {
   const { userId } = req.params;
 
-  // Mock user details
-  res.json({
-    user: {
-      id: userId,
-      email: 'user@example.com',
-      name: 'Example User',
-      role: 'user',
-      createdAt: new Date('2025-01-01'),
-      lastLogin: new Date('2025-12-11'),
-      status: 'active',
-      consent: {
-        termsAccepted: true,
-        dataLearningConsent: true,
-        riskDisclosureAccepted: true,
-        marketingConsent: false,
-        acceptedAt: new Date('2025-01-01'),
+  try {
+    const dbUser = await userRepository.findById(userId);
+
+    if (!dbUser) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.json({
+      user: {
+        id: dbUser._id,
+        email: dbUser.email,
+        name: dbUser.name,
+        role: dbUser.role,
+        createdAt: dbUser.createdAt,
+        lastLogin: dbUser.lastActivity,
+        status: (dbUser as any).status || 'active',
+        consent: dbUser.consent,
+        stats: {
+          totalTrades: 0, // Would need to fetch from trade repository
+          winRate: 0,
+          totalPnL: 0,
+          activeBots: 0,
+          activeStrategies: 0,
+        },
       },
-      stats: {
-        totalTrades: 150,
-        winRate: 62.5,
-        totalPnL: 12500,
-        activeBots: 3,
-        activeStrategies: 2,
-      },
-    },
-  });
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
 /**

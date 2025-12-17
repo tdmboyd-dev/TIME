@@ -236,33 +236,33 @@ router.get('/metrics', authMiddleware, adminMiddleware, (req: Request, res: Resp
 
 /**
  * GET /admin/activity
- * Get recent system activity
+ * Get recent system activity from audit logs
  */
-router.get('/activity', authMiddleware, adminMiddleware, (req: Request, res: Response) => {
+router.get('/activity', authMiddleware, adminMiddleware, async (req: Request, res: Response) => {
   const { limit = '100' } = req.query;
 
-  // Mock activity log - in production, fetch from database
-  const activity = [
-    {
-      id: 'act_1',
-      type: 'evolution',
-      action: 'proposal_generated',
-      description: 'New ensemble strategy proposed',
-      timestamp: new Date(Date.now() - 3600000),
-    },
-    {
-      id: 'act_2',
-      type: 'learning',
-      action: 'pattern_discovered',
-      description: 'New market pattern identified in EURUSD',
-      timestamp: new Date(Date.now() - 7200000),
-    },
-  ].slice(0, parseInt(limit as string));
+  try {
+    // Get real activity from audit logs
+    const logs = await auditLogRepository.getRecentLogs(parseInt(limit as string));
 
-  res.json({
-    total: activity.length,
-    activity,
-  });
+    const activity = logs.map(log => ({
+      id: log._id,
+      type: log.component,
+      action: log.action,
+      description: `${log.action} on ${log.component}`,
+      details: log.details,
+      userId: log.userId,
+      timestamp: log.timestamp,
+      success: log.success,
+    }));
+
+    res.json({
+      total: activity.length,
+      activity,
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
 // ============================================================
