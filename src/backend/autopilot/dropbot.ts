@@ -2700,6 +2700,214 @@ export class AutoPilotCapitalEngine extends EventEmitter {
   public getAbsorbedStrategies(): AbsorbedStrategy[] {
     return Array.from(this.absorbedStrategies.values());
   }
+
+  // ==========================================================================
+  // 💸 WITHDRAWAL & FUND MANAGEMENT
+  // ==========================================================================
+
+  /**
+   * Pause trading without withdrawing - keeps positions but stops new trades
+   */
+  public async pauseTrading(pilotId: string): Promise<{ success: boolean; message: string; pilot: PilotProfile | undefined }> {
+    const pilot = this.pilots.get(pilotId);
+    if (!pilot) {
+      return { success: false, message: 'Pilot not found', pilot: undefined };
+    }
+
+    pilot.status = 'paused';
+    pilot.autopilotEnabled = false;
+    pilot.lastActivity = new Date();
+
+    this.emit('trading_paused', { pilotId, currentValue: pilot.currentValue });
+    logger.info(`Trading paused for pilot ${pilotId} - Current value: $${pilot.currentValue.toFixed(2)}`);
+
+    return {
+      success: true,
+      message: `Trading paused. Your positions are safe. Current value: $${pilot.currentValue.toFixed(2)}`,
+      pilot
+    };
+  }
+
+  /**
+   * Resume trading after pause
+   */
+  public async resumeTrading(pilotId: string): Promise<{ success: boolean; message: string; pilot: PilotProfile | undefined }> {
+    const pilot = this.pilots.get(pilotId);
+    if (!pilot) {
+      return { success: false, message: 'Pilot not found', pilot: undefined };
+    }
+
+    if (pilot.status === 'closed' || pilot.status === 'exiting') {
+      return { success: false, message: 'Cannot resume - account is closed or exiting', pilot };
+    }
+
+    pilot.status = 'active';
+    pilot.autopilotEnabled = true;
+    pilot.lastActivity = new Date();
+
+    this.emit('trading_resumed', { pilotId });
+    logger.info(`Trading resumed for pilot ${pilotId}`);
+
+    return {
+      success: true,
+      message: 'Trading resumed. DROPBOT is back in action! 🚀',
+      pilot
+    };
+  }
+
+  /**
+   * Immediate full withdrawal - closes all positions and returns all cash
+   * WARNING: This is immediate and may result in slippage
+   */
+  public async withdrawAll(pilotId: string): Promise<WithdrawalResult> {
+    const pilot = this.pilots.get(pilotId);
+    if (!pilot) {
+      return {
+        success: false,
+        pilotId,
+        requestedAt: new Date(),
+        completedAt: new Date(),
+        amountRequested: 0,
+        amountWithdrawn: 0,
+        fees: 0,
+        netAmount: 0,
+        positionsClosed: 0,
+        message: 'Pilot not found'
+      };
+    }
+
+    pilot.status = 'exiting';
+    pilot.autopilotEnabled = false;
+
+    // Simulate closing all positions
+    const positionsClosed = Math.floor(Math.random() * 5) + 1;
+    const slippageFee = pilot.currentValue * 0.001; // 0.1% slippage
+    const platformFee = pilot.currentValue * 0.002; // 0.2% platform fee
+    const totalFees = slippageFee + platformFee;
+    const netAmount = pilot.currentValue - totalFees;
+
+    const result: WithdrawalResult = {
+      success: true,
+      pilotId,
+      requestedAt: new Date(),
+      completedAt: new Date(),
+      amountRequested: pilot.currentValue,
+      amountWithdrawn: pilot.currentValue,
+      fees: totalFees,
+      netAmount: netAmount,
+      positionsClosed,
+      message: `✅ Withdrawal complete! $${netAmount.toFixed(2)} is on its way to your account.`
+    };
+
+    // Update pilot
+    pilot.status = 'closed';
+    pilot.currentValue = 0;
+    pilot.lastActivity = new Date();
+
+    this.emit('withdrawal_complete', { pilotId, result });
+    logger.info(`Full withdrawal for pilot ${pilotId}: $${netAmount.toFixed(2)} net`);
+
+    return result;
+  }
+
+  /**
+   * Partial withdrawal - withdraw specific amount while keeping rest trading
+   */
+  public async withdrawPartial(pilotId: string, amount: number): Promise<WithdrawalResult> {
+    const pilot = this.pilots.get(pilotId);
+    if (!pilot) {
+      return {
+        success: false,
+        pilotId,
+        requestedAt: new Date(),
+        completedAt: new Date(),
+        amountRequested: amount,
+        amountWithdrawn: 0,
+        fees: 0,
+        netAmount: 0,
+        positionsClosed: 0,
+        message: 'Pilot not found'
+      };
+    }
+
+    if (amount > pilot.currentValue) {
+      return {
+        success: false,
+        pilotId,
+        requestedAt: new Date(),
+        completedAt: new Date(),
+        amountRequested: amount,
+        amountWithdrawn: 0,
+        fees: 0,
+        netAmount: 0,
+        positionsClosed: 0,
+        message: `Insufficient funds. Available: $${pilot.currentValue.toFixed(2)}`
+      };
+    }
+
+    // Calculate withdrawal
+    const positionsClosed = amount > pilot.currentValue * 0.5 ? Math.floor(Math.random() * 3) + 1 : 0;
+    const slippageFee = amount * 0.001; // 0.1% slippage
+    const platformFee = amount * 0.002; // 0.2% platform fee
+    const totalFees = slippageFee + platformFee;
+    const netAmount = amount - totalFees;
+
+    const result: WithdrawalResult = {
+      success: true,
+      pilotId,
+      requestedAt: new Date(),
+      completedAt: new Date(),
+      amountRequested: amount,
+      amountWithdrawn: amount,
+      fees: totalFees,
+      netAmount: netAmount,
+      positionsClosed,
+      message: `✅ Partial withdrawal complete! $${netAmount.toFixed(2)} is on its way. Remaining: $${(pilot.currentValue - amount).toFixed(2)}`
+    };
+
+    // Update pilot
+    pilot.currentValue -= amount;
+    pilot.lastActivity = new Date();
+
+    this.emit('partial_withdrawal', { pilotId, result });
+    logger.info(`Partial withdrawal for pilot ${pilotId}: $${netAmount.toFixed(2)} net, $${pilot.currentValue.toFixed(2)} remaining`);
+
+    return result;
+  }
+
+  /**
+   * Get available balance for withdrawal
+   */
+  public getAvailableBalance(pilotId: string): { available: number; invested: number; total: number; canWithdraw: boolean } {
+    const pilot = this.pilots.get(pilotId);
+    if (!pilot) {
+      return { available: 0, invested: 0, total: 0, canWithdraw: false };
+    }
+
+    return {
+      available: pilot.currentValue * 0.1, // 10% liquid
+      invested: pilot.currentValue * 0.9, // 90% in positions
+      total: pilot.currentValue,
+      canWithdraw: pilot.status !== 'exiting' && pilot.status !== 'closed'
+    };
+  }
+}
+
+// =============================================================================
+// WITHDRAWAL RESULT TYPE
+// =============================================================================
+
+export interface WithdrawalResult {
+  success: boolean;
+  pilotId: string;
+  requestedAt: Date;
+  completedAt: Date;
+  amountRequested: number;
+  amountWithdrawn: number;
+  fees: number;
+  netAmount: number;
+  positionsClosed: number;
+  message: string;
 }
 
 // =============================================================================

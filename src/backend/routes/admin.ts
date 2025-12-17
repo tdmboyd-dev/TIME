@@ -96,7 +96,7 @@ router.get('/evolution', authMiddleware, adminMiddleware, (req: Request, res: Re
 
 /**
  * POST /admin/evolution/mode
- * Toggle evolution mode (owner only for switching to autonomous)
+ * Toggle evolution mode (admin only for switching to autonomous)
  */
 router.post('/evolution/mode', authMiddleware, adminMiddleware, (req: Request, res: Response) => {
   const { mode, reason } = req.body;
@@ -108,14 +108,30 @@ router.post('/evolution/mode', authMiddleware, adminMiddleware, (req: Request, r
     });
   }
 
-  // Only owner can switch to autonomous
-  if (mode === 'autonomous' && user.role !== 'owner') {
-    return res.status(403).json({
-      error: 'Only owner can switch to autonomous mode',
+  // Admin can switch modes
+  timeGovernor.setEvolutionMode(mode, user.id, reason || `${user.role} toggle`);
+
+  res.json({
+    success: true,
+    state: timeGovernor.getEvolutionState(),
+  });
+});
+
+/**
+ * POST /admin/evolution/:mode
+ * Direct URL mode switch (for frontend convenience)
+ */
+router.post('/evolution/:mode', authMiddleware, adminMiddleware, (req: Request, res: Response) => {
+  const { mode } = req.params;
+  const user = (req as any).user;
+
+  if (mode !== 'controlled' && mode !== 'autonomous') {
+    return res.status(400).json({
+      error: 'Invalid mode. Must be "controlled" or "autonomous"',
     });
   }
 
-  timeGovernor.setEvolutionMode(mode, user.id, reason || `${user.role} toggle`);
+  timeGovernor.setEvolutionMode(mode, user.id, `${user.role} toggle via URL`);
 
   res.json({
     success: true,

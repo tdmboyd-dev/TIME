@@ -494,4 +494,131 @@ router.post('/quick/stop-all', authMiddleware, async (req: Request, res: Respons
   });
 });
 
+// ============================================
+// DROPBOT / AUTOPILOT ENDPOINTS
+// ============================================
+
+import { autoPilotCapital } from '../autopilot/dropbot';
+
+/**
+ * GET /trading/autopilot/:pilotId/balance
+ * Get available balance for withdrawal
+ * SECURITY: Requires authentication
+ */
+router.get('/autopilot/:pilotId/balance', authMiddleware, (req: Request, res: Response) => {
+  const { pilotId } = req.params;
+  const balance = autoPilotCapital.getAvailableBalance(pilotId);
+
+  res.json({
+    success: true,
+    data: balance,
+  });
+});
+
+/**
+ * POST /trading/autopilot/:pilotId/pause
+ * Pause trading without withdrawing
+ * SECURITY: Requires authentication
+ */
+router.post('/autopilot/:pilotId/pause', authMiddleware, async (req: Request, res: Response) => {
+  const { pilotId } = req.params;
+  const result = await autoPilotCapital.pauseTrading(pilotId);
+
+  res.json(result);
+});
+
+/**
+ * POST /trading/autopilot/:pilotId/resume
+ * Resume trading after pause
+ * SECURITY: Requires authentication
+ */
+router.post('/autopilot/:pilotId/resume', authMiddleware, async (req: Request, res: Response) => {
+  const { pilotId } = req.params;
+  const result = await autoPilotCapital.resumeTrading(pilotId);
+
+  res.json(result);
+});
+
+/**
+ * POST /trading/autopilot/:pilotId/withdraw-all
+ * Withdraw all funds - closes all positions
+ * SECURITY: Requires authentication
+ */
+router.post('/autopilot/:pilotId/withdraw-all', authMiddleware, async (req: Request, res: Response) => {
+  const { pilotId } = req.params;
+  const result = await autoPilotCapital.withdrawAll(pilotId);
+
+  res.json(result);
+});
+
+/**
+ * POST /trading/autopilot/:pilotId/withdraw
+ * Partial withdrawal - specify amount
+ * SECURITY: Requires authentication
+ */
+router.post('/autopilot/:pilotId/withdraw', authMiddleware, async (req: Request, res: Response) => {
+  const { pilotId } = req.params;
+  const { amount } = req.body;
+
+  if (!amount || amount <= 0) {
+    return res.status(400).json({
+      success: false,
+      message: 'Invalid amount. Please specify a positive amount to withdraw.',
+    });
+  }
+
+  const result = await autoPilotCapital.withdrawPartial(pilotId, amount);
+
+  res.json(result);
+});
+
+/**
+ * POST /trading/autopilot/:pilotId/exit
+ * Start exit ramp - gradual exit from all positions
+ * SECURITY: Requires authentication
+ */
+router.post('/autopilot/:pilotId/exit', authMiddleware, async (req: Request, res: Response) => {
+  const { pilotId } = req.params;
+  const { strategy = 'optimal' } = req.body;
+
+  try {
+    const exitRamp = await autoPilotCapital.initiateExitRamp(pilotId, strategy);
+    res.json({
+      success: true,
+      data: exitRamp,
+    });
+  } catch (error: any) {
+    res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+});
+
+/**
+ * GET /trading/autopilot/:pilotId
+ * Get pilot status and snapshot
+ * SECURITY: Requires authentication
+ */
+router.get('/autopilot/:pilotId', authMiddleware, (req: Request, res: Response) => {
+  const { pilotId } = req.params;
+  const pilot = autoPilotCapital.getPilot(pilotId);
+  const snapshot = autoPilotCapital.getSnapshot(pilotId);
+
+  if (!pilot) {
+    return res.status(404).json({
+      success: false,
+      message: 'Pilot not found',
+    });
+  }
+
+  res.json({
+    success: true,
+    data: {
+      pilot,
+      snapshot,
+    },
+  });
+});
+
 export default router;
