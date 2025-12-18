@@ -94,7 +94,7 @@ export default function RoboAdvisorPage() {
             allocation: value.allocation || [],
             isActive: false,
             autoRebalance: false,
-            lastRebalance: null,
+            lastRebalance: '',
             monthlyDeposit: 0,
             isModel: true, // Mark as model portfolio for UI
           }));

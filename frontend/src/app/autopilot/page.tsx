@@ -268,8 +268,8 @@ export default function AutoPilotPage() {
     // Clear interval if pausing
     if (pilot.autopilotEnabled && (window as any).autoPilotInterval) {
       clearInterval((window as any).autoPilotInterval);
-    } else if (!pilot.autopilotEnabled) {
-      startDemoTrading(pilot);
+    } else if (!pilot.autopilotEnabled && pilot.id) {
+      startRealTradePolling(pilot.id);
     }
   };
 
