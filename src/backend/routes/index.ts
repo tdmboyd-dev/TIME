@@ -49,6 +49,9 @@ import autoPerfectBotRoutes from './auto_perfect_bot';
 import marketplaceRoutes from './marketplace';
 import backtestRoutes from './backtest';
 
+// ML TRAINING PIPELINE - Pattern Recognition & Model Training
+import mlRoutes from './ml';
+
 // LIVE DeFi Data - Real yields from DefiLlama!
 import defiLiveRoutes from './defi_live';
 
@@ -117,6 +120,9 @@ router.use('/auto-perfect-bot', autoPerfectBotRoutes); // Auto-watches everythin
 // NEW! Bot Marketplace & Backtesting
 router.use('/marketplace', marketplaceRoutes);  // Bot rental marketplace - rent bots from $5/day
 router.use('/backtest', backtestRoutes);        // Industry-standard backtesting with Monte Carlo
+
+// ML TRAINING PIPELINE - Pattern Recognition & Model Training
+router.use('/ml', mlRoutes);  // 50+ patterns, model training, historical data collection
 
 export default router;
 

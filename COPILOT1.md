@@ -2,14 +2,60 @@
 
 ## COMPLETE PLATFORM DOCUMENTATION FOR AI ASSISTANTS
 
-**Version:** 16.0.0 - FULL MULTI-BROKER EDITION
+**Version:** 17.0.0 - ML TRAINING PIPELINE EDITION
 **Last Updated:** 2025-12-18
-**Status:** 93% READY - Multi-broker, multi-asset trading live
+**Status:** 95% READY - ML Training Pipeline + Multi-broker trading live
 **Purpose:** Complete platform understanding for Copilot, Claude, and all AI assistants
 
 ---
 
 # HONEST STATUS REPORT (December 18, 2025)
+
+## ✅ NEW IN v17.0.0 - ML TRAINING PIPELINE EDITION
+
+### COMPLETE ML INFRASTRUCTURE
+
+**ML Training Pipeline (src/backend/ml/training_pipeline.ts):**
+- 1,200+ lines of production ML code
+- Historical data collection with feature engineering
+- 30+ pattern templates (reversal, continuation, breakout, harmonic)
+- 6 model types supported
+
+**Model Types:**
+| Model | Description |
+|-------|-------------|
+| Random Forest | Ensemble of decision trees |
+| Gradient Boosting | Sequential tree boosting |
+| LSTM | Long Short-Term Memory networks |
+| Transformer | Attention-based neural network |
+| Ensemble | Multiple model combination |
+| Reinforcement Learning | Q-learning, policy gradient |
+
+**30+ Pattern Templates:**
+| Category | Count | Examples |
+|----------|-------|----------|
+| Reversal | 12 | Doji, Hammer, Engulfing, Head & Shoulders |
+| Continuation | 5 | Triangles, Flags |
+| Breakout | 3 | BB Squeeze, BB Breakout |
+| Momentum | 4 | Golden Cross, MACD Cross |
+| Volume | 2 | Volume Spike, Dry Up |
+| Harmonic | 4 | Gartley, Bat, Butterfly |
+
+**ML API Endpoints:**
+- GET `/api/v1/ml/health` - Pipeline health
+- GET `/api/v1/ml/patterns/default` - 30 patterns with breakdown
+- POST `/api/v1/ml/datasets/collect` - Start data collection
+- POST `/api/v1/ml/jobs/train` - Start training job
+
+**Technical Indicators (Auto-Calculated):**
+- SMA (20, 50, 200)
+- RSI (14)
+- MACD (12, 26, 9)
+- Bollinger Bands (20, 2)
+- ATR (14)
+- Momentum (10)
+
+---
 
 ## ✅ NEW IN v16.0.0 - FULL MULTI-BROKER EDITION
 
