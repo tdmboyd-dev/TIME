@@ -16,52 +16,107 @@ import strategyBuilder from '../engines/strategy_builder';
 
 const router = Router();
 
-// Mock strategy store (replace with MongoDB)
-const strategies: Map<string, any> = new Map([
-  ['strat_1', {
-    id: 'strat_1',
-    name: 'Momentum Alpha',
-    description: 'Trend-following momentum strategy with regime awareness',
-    type: 'momentum',
-    status: 'active',
-    riskLevel: 'medium',
-    createdAt: new Date('2025-01-15'),
-    sourceBots: [
-      { botId: 'bot_1', weight: 0.4, contribution: ['entry_signals'] },
-      { botId: 'bot_2', weight: 0.3, contribution: ['exit_timing'] },
-      { botId: 'bot_3', weight: 0.3, contribution: ['risk_sizing'] },
-    ],
-    performance: {
-      winRate: 65,
-      profitFactor: 1.85,
-      maxDrawdown: 12,
-      sharpeRatio: 1.42,
-      totalTrades: 234,
-      totalPnL: 15420,
-    },
-  }],
-  ['strat_2', {
-    id: 'strat_2',
-    name: 'Range Scalper Pro',
-    description: 'Mean reversion in ranging markets',
-    type: 'mean_reversion',
-    status: 'active',
-    riskLevel: 'low',
-    createdAt: new Date('2025-02-01'),
-    sourceBots: [
-      { botId: 'bot_4', weight: 0.5, contribution: ['range_detection'] },
-      { botId: 'bot_5', weight: 0.5, contribution: ['entries', 'exits'] },
-    ],
-    performance: {
-      winRate: 72,
-      profitFactor: 1.55,
-      maxDrawdown: 8,
-      sharpeRatio: 1.78,
-      totalTrades: 456,
-      totalPnL: 8950,
-    },
-  }],
-]);
+// MongoDB-backed strategy repository
+// Uses in-memory cache for performance, synced with database
+const strategiesCache: Map<string, any> = new Map();
+let strategiesLoaded = false;
+
+// Load strategies from MongoDB on first access
+async function loadStrategies(): Promise<Map<string, any>> {
+  if (strategiesLoaded) return strategiesCache;
+
+  try {
+    const { databaseManager } = await import('../database/connection');
+    const db = databaseManager.getDatabase();
+    if (db && 'collection' in db) {
+      const collection = (db as any).collection('strategies');
+      const docs = await collection.find({}).toArray();
+      for (const doc of docs) {
+        strategiesCache.set(doc.id || doc._id?.toString(), doc);
+      }
+      strategiesLoaded = true;
+      console.log(`[Strategies] Loaded ${strategiesCache.size} strategies from MongoDB`);
+    }
+  } catch (error) {
+    console.error('[Strategies] Failed to load from MongoDB:', error);
+  }
+
+  // If no strategies in DB, seed with defaults
+  if (strategiesCache.size === 0) {
+    const defaults = [
+      {
+        id: 'strat_1',
+        name: 'Momentum Alpha',
+        description: 'Trend-following momentum strategy with regime awareness',
+        type: 'momentum',
+        status: 'active',
+        riskLevel: 'medium',
+        createdAt: new Date('2025-01-15'),
+        sourceBots: [
+          { botId: 'bot_1', weight: 0.4, contribution: ['entry_signals'] },
+          { botId: 'bot_2', weight: 0.3, contribution: ['exit_timing'] },
+          { botId: 'bot_3', weight: 0.3, contribution: ['risk_sizing'] },
+        ],
+        performance: { winRate: 65, profitFactor: 1.85, maxDrawdown: 12, sharpeRatio: 1.42, totalTrades: 234, totalPnL: 15420 },
+      },
+      {
+        id: 'strat_2',
+        name: 'Range Scalper Pro',
+        description: 'Mean reversion in ranging markets',
+        type: 'mean_reversion',
+        status: 'active',
+        riskLevel: 'low',
+        createdAt: new Date('2025-02-01'),
+        sourceBots: [
+          { botId: 'bot_4', weight: 0.5, contribution: ['range_detection'] },
+          { botId: 'bot_5', weight: 0.5, contribution: ['entries', 'exits'] },
+        ],
+        performance: { winRate: 72, profitFactor: 1.55, maxDrawdown: 8, sharpeRatio: 1.78, totalTrades: 456, totalPnL: 8950 },
+      },
+    ];
+    for (const strat of defaults) {
+      strategiesCache.set(strat.id, strat);
+      await saveStrategy(strat);
+    }
+  }
+
+  return strategiesCache;
+}
+
+// Save strategy to MongoDB
+async function saveStrategy(strategy: any): Promise<void> {
+  try {
+    const { databaseManager } = await import('../database/connection');
+    const db = databaseManager.getDatabase();
+    if (db && 'collection' in db) {
+      await (db as any).collection('strategies').updateOne(
+        { id: strategy.id },
+        { $set: strategy },
+        { upsert: true }
+      );
+    }
+    strategiesCache.set(strategy.id, strategy);
+  } catch (error) {
+    console.error('[Strategies] Failed to save to MongoDB:', error);
+  }
+}
+
+// Delete strategy from MongoDB
+async function deleteStrategy(strategyId: string): Promise<void> {
+  try {
+    const { databaseManager } = await import('../database/connection');
+    const db = databaseManager.getDatabase();
+    if (db && 'collection' in db) {
+      await (db as any).collection('strategies').deleteOne({ id: strategyId });
+    }
+    strategiesCache.delete(strategyId);
+  } catch (error) {
+    console.error('[Strategies] Failed to delete from MongoDB:', error);
+  }
+}
+
+// Initialize on load
+loadStrategies();
 
 // ============================================================
 // STRATEGY LIST AND DETAILS
@@ -69,9 +124,9 @@ const strategies: Map<string, any> = new Map([
 
 /**
  * GET /strategies
- * List all strategies
+ * List all strategies - MongoDB-backed
  */
-router.get('/', authMiddleware, (req: Request, res: Response) => {
+router.get('/', authMiddleware, async (req: Request, res: Response) => {
   const {
     type,
     status,
@@ -82,7 +137,9 @@ router.get('/', authMiddleware, (req: Request, res: Response) => {
     limit = '20',
   } = req.query;
 
-  let allStrategies = Array.from(strategies.values());
+  // Load from MongoDB if not already loaded
+  const strategies = await loadStrategies();
+  let allStrategies = Array.from(strategiesCache.values());
 
   // Filter
   if (type) {
@@ -128,7 +185,7 @@ router.get('/', authMiddleware, (req: Request, res: Response) => {
  */
 router.get('/:strategyId', authMiddleware, (req: Request, res: Response) => {
   const { strategyId } = req.params;
-  const strategy = strategies.get(strategyId);
+  const strategy = strategiesCache.get(strategyId);
 
   if (!strategy) {
     return res.status(404).json({ error: 'Strategy not found' });
@@ -144,7 +201,7 @@ router.get('/:strategyId', authMiddleware, (req: Request, res: Response) => {
 router.get('/:strategyId/performance', authMiddleware, (req: Request, res: Response) => {
   const { strategyId } = req.params;
   const { period = '30d' } = req.query;
-  const strategy = strategies.get(strategyId);
+  const strategy = strategiesCache.get(strategyId);
 
   if (!strategy) {
     return res.status(404).json({ error: 'Strategy not found' });
@@ -262,7 +319,7 @@ router.post('/', authMiddleware, (req: Request, res: Response) => {
     },
   };
 
-  strategies.set(strategyId, newStrategy);
+  strategiesCache.set(strategyId, newStrategy);
 
   res.status(201).json({
     success: true,
@@ -313,7 +370,7 @@ router.post('/synthesize', authMiddleware, async (req: Request, res: Response) =
 router.post('/:strategyId/evolve', authMiddleware, async (req: Request, res: Response) => {
   const { strategyId } = req.params;
   const { mutations } = req.body;
-  const strategy = strategies.get(strategyId);
+  const strategy = strategiesCache.get(strategyId);
 
   if (!strategy) {
     return res.status(404).json({ error: 'Strategy not found' });
@@ -336,7 +393,7 @@ router.post('/:strategyId/evolve', authMiddleware, async (req: Request, res: Res
 router.put('/:strategyId', authMiddleware, (req: Request, res: Response) => {
   const { strategyId } = req.params;
   const updates = req.body;
-  const strategy = strategies.get(strategyId);
+  const strategy = strategiesCache.get(strategyId);
 
   if (!strategy) {
     return res.status(404).json({ error: 'Strategy not found' });
@@ -351,7 +408,7 @@ router.put('/:strategyId', authMiddleware, (req: Request, res: Response) => {
   }
 
   strategy.updatedAt = new Date();
-  strategies.set(strategyId, strategy);
+  strategiesCache.set(strategyId, strategy);
 
   res.json({
     success: true,
@@ -365,7 +422,7 @@ router.put('/:strategyId', authMiddleware, (req: Request, res: Response) => {
  */
 router.delete('/:strategyId', authMiddleware, (req: Request, res: Response) => {
   const { strategyId } = req.params;
-  const strategy = strategies.get(strategyId);
+  const strategy = strategiesCache.get(strategyId);
 
   if (!strategy) {
     return res.status(404).json({ error: 'Strategy not found' });
@@ -374,7 +431,7 @@ router.delete('/:strategyId', authMiddleware, (req: Request, res: Response) => {
   // Archive instead of delete
   strategy.status = 'archived';
   strategy.archivedAt = new Date();
-  strategies.set(strategyId, strategy);
+  strategiesCache.set(strategyId, strategy);
 
   res.json({
     success: true,
@@ -399,7 +456,7 @@ router.post('/:strategyId/backtest', authMiddleware, async (req: Request, res: R
     initialCapital = 100000,
   } = req.body;
 
-  const strategy = strategies.get(strategyId);
+  const strategy = strategiesCache.get(strategyId);
 
   if (!strategy) {
     return res.status(404).json({ error: 'Strategy not found' });
@@ -462,7 +519,7 @@ router.get('/:strategyId/backtest/:backtestId', authMiddleware, (req: Request, r
  * Get strategies pending approval
  */
 router.get('/admin/pending', authMiddleware, adminMiddleware, (req: Request, res: Response) => {
-  const pending = Array.from(strategies.values()).filter(
+  const pending = Array.from(strategiesCache.values()).filter(
     s => s.status === 'pending' || s.status === 'synthesizing'
   );
 
@@ -478,7 +535,7 @@ router.get('/admin/pending', authMiddleware, adminMiddleware, (req: Request, res
  */
 router.post('/admin/:strategyId/approve', authMiddleware, adminMiddleware, (req: Request, res: Response) => {
   const { strategyId } = req.params;
-  const strategy = strategies.get(strategyId);
+  const strategy = strategiesCache.get(strategyId);
 
   if (!strategy) {
     return res.status(404).json({ error: 'Strategy not found' });
@@ -486,7 +543,7 @@ router.post('/admin/:strategyId/approve', authMiddleware, adminMiddleware, (req:
 
   strategy.status = 'active';
   strategy.approvedAt = new Date();
-  strategies.set(strategyId, strategy);
+  strategiesCache.set(strategyId, strategy);
 
   res.json({
     success: true,

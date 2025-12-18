@@ -342,12 +342,46 @@ router.post('/signals/:signalId/execute', authMiddleware, async (req: Request, r
  * Reject/cancel a pending signal
  * SECURITY: Requires authentication
  */
-router.delete('/signals/:signalId', authMiddleware, (req: Request, res: Response) => {
-  // TODO: Implement signal rejection
-  res.json({
-    success: true,
-    message: 'Signal rejected',
-  });
+router.delete('/signals/:signalId', authMiddleware, async (req: Request, res: Response) => {
+  const { signalId } = req.params;
+  const userId = (req as any).user?.id || 'system';
+
+  try {
+    // Get the signal from trading state
+    const { tradingStateRepository } = await import('../database/repositories');
+    const signals = await tradingStateRepository.getPendingSignals();
+    const signal = signals.find((s: any) => s.id === signalId);
+
+    if (!signal) {
+      return res.status(404).json({
+        success: false,
+        error: 'Signal not found or already processed',
+      });
+    }
+
+    // Cancel/reject the signal by marking it as CANCELLED
+    await tradingStateRepository.saveSignal(signalId, {
+      ...signal,
+      status: 'CANCELLED',
+      cancelledAt: new Date(),
+      cancelledBy: userId,
+    } as any);
+
+    res.json({
+      success: true,
+      message: 'Signal rejected successfully',
+      data: {
+        signalId,
+        status: 'rejected',
+        rejectedAt: new Date(),
+      },
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to reject signal',
+    });
+  }
 });
 
 // ============================================
@@ -813,16 +847,73 @@ router.get('/broker-status', (req: Request, res: Response) => {
 // TIMEBEUNUS AUTO-TRADE CONTROL
 // ============================================
 
-// In-memory state for TIMEBEUNUS (can be moved to DB later)
-let timebeunusState = {
+// TIMEBEUNUS state - Now persisted to MongoDB!
+interface TimebeunusStateType {
+  isActive: boolean;
+  dominanceMode: string;
+  autoTradeEnabled: boolean;
+  startedAt: Date | null;
+  totalTrades: number;
+  totalPnL: number;
+  enabledStrategies: string[];
+}
+
+// Default state (will be overwritten from DB)
+let timebeunusState: TimebeunusStateType = {
   isActive: false,
-  dominanceMode: 'balanced' as string,
+  dominanceMode: 'balanced',
   autoTradeEnabled: false,
-  startedAt: null as Date | null,
+  startedAt: null,
   totalTrades: 0,
   totalPnL: 0,
-  enabledStrategies: [] as string[],
+  enabledStrategies: [],
 };
+
+// Load TIMEBEUNUS state from MongoDB on startup
+async function loadTimebeunusState(): Promise<void> {
+  try {
+    const { databaseManager } = await import('../database/connection');
+    const db = databaseManager.getDatabase();
+    if (db && 'collection' in db) {
+      const savedState = await (db as any).collection('timebeunus_state').findOne({ _id: 'global' });
+      if (savedState) {
+        timebeunusState = {
+          isActive: savedState.isActive ?? false,
+          dominanceMode: savedState.dominanceMode ?? 'balanced',
+          autoTradeEnabled: savedState.autoTradeEnabled ?? false,
+          startedAt: savedState.startedAt ? new Date(savedState.startedAt) : null,
+          totalTrades: savedState.totalTrades ?? 0,
+          totalPnL: savedState.totalPnL ?? 0,
+          enabledStrategies: savedState.enabledStrategies ?? [],
+        };
+        console.log('[TIMEBEUNUS] State loaded from MongoDB:', timebeunusState);
+      }
+    }
+  } catch (error) {
+    console.error('[TIMEBEUNUS] Failed to load state from MongoDB:', error);
+  }
+}
+
+// Save TIMEBEUNUS state to MongoDB
+async function saveTimebeunusState(): Promise<void> {
+  try {
+    const { databaseManager } = await import('../database/connection');
+    const db = databaseManager.getDatabase();
+    if (db && 'collection' in db) {
+      await (db as any).collection('timebeunus_state').updateOne(
+        { _id: 'global' },
+        { $set: { ...timebeunusState, updatedAt: new Date() } },
+        { upsert: true }
+      );
+      console.log('[TIMEBEUNUS] State saved to MongoDB');
+    }
+  } catch (error) {
+    console.error('[TIMEBEUNUS] Failed to save state to MongoDB:', error);
+  }
+}
+
+// Load state on module init
+loadTimebeunusState();
 
 /**
  * GET /trading/timebeunus/status
@@ -888,6 +979,9 @@ router.post('/timebeunus/start', authMiddleware, async (req: Request, res: Respo
       enabledStrategies: enabledBots,
     };
 
+    // Persist to MongoDB
+    await saveTimebeunusState();
+
     res.json({
       success: true,
       message: 'TIMEBEUNUS auto-trading ACTIVATED!',
@@ -924,6 +1018,9 @@ router.post('/timebeunus/pause', authMiddleware, async (req: Request, res: Respo
 
   timebeunusState.isActive = false;
   timebeunusState.autoTradeEnabled = false;
+
+  // Persist to MongoDB
+  await saveTimebeunusState();
 
   res.json({
     success: true,

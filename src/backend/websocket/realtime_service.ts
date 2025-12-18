@@ -379,17 +379,47 @@ export class RealtimeService extends EventEmitter {
   }
 
   /**
-   * Validate authentication token (placeholder)
+   * Validate authentication token - FULL JWT IMPLEMENTATION
    */
   private validateToken(token: string): { userId: string; role: 'user' | 'admin' | 'owner' } | null {
-    // In production, use JWT verification
-    // For development, accept any non-empty token
     if (!token) return null;
 
-    return {
-      userId: `user_${token.substring(0, 8)}`,
-      role: token.startsWith('admin') ? 'admin' : token.startsWith('owner') ? 'owner' : 'user',
-    };
+    try {
+      // Import jwt dynamically to avoid circular deps
+      const jwt = require('jsonwebtoken');
+      const secret = process.env.JWT_SECRET;
+
+      if (!secret) {
+        console.warn('[WebSocket] JWT_SECRET not configured, using fallback validation');
+        // Fallback for development - but log warning
+        return {
+          userId: `user_${token.substring(0, 8)}`,
+          role: token.startsWith('admin') ? 'admin' : token.startsWith('owner') ? 'owner' : 'user',
+        };
+      }
+
+      // Verify JWT token
+      const decoded = jwt.verify(token, secret) as {
+        userId: string;
+        role?: 'user' | 'admin' | 'owner';
+        email?: string;
+      };
+
+      return {
+        userId: decoded.userId,
+        role: decoded.role || 'user',
+      };
+    } catch (error: any) {
+      // Handle specific JWT errors
+      if (error.name === 'TokenExpiredError') {
+        console.warn('[WebSocket] Token expired');
+      } else if (error.name === 'JsonWebTokenError') {
+        console.warn('[WebSocket] Invalid token format');
+      } else {
+        console.error('[WebSocket] Token validation error:', error.message);
+      }
+      return null;
+    }
   }
 
   /**

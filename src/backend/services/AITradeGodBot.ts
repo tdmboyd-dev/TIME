@@ -679,16 +679,62 @@ export class AITradeGodBot extends EventEmitter {
   }
 
   /**
-   * Execute a trade
+   * Execute a trade - REAL IMPLEMENTATION
+   * Connects to BrokerManager for actual execution
    */
   private async executeTrade(bot: BotConfig, trade: Trade): Promise<void> {
-    console.log(`[AITradeGod] Executing trade for ${bot.name}:`);
+    console.log(`[AITradeGod] Executing REAL trade for ${bot.name}:`);
     console.log(`  ${trade.side} ${trade.quantity} ${trade.symbol}`);
     console.log(`  Strategy: ${trade.strategy}`);
     console.log(`  Reasoning: ${trade.reasoning}`);
 
-    // In production: Execute via exchange API
-    trade.status = 'FILLED';
+    try {
+      // REAL EXECUTION via BrokerManager
+      const { BrokerManager } = await import('../brokers/broker_manager');
+      const brokerManager = BrokerManager.getInstance();
+      const connectedBrokers = brokerManager.getConnectedBrokerIds();
+
+      const tradeAny = trade as any;
+      if (connectedBrokers.length === 0) {
+        console.warn('[AITradeGod] No brokers connected - storing trade for later execution');
+        trade.status = 'PENDING';
+        tradeAny.statusReason = 'No brokers connected';
+      } else {
+        // Get the primary broker
+        const brokerId = connectedBrokers[0];
+        const broker = brokerManager.getBroker(brokerId);
+
+        if (broker) {
+          // Submit real order
+          const order = await broker.submitOrder({
+            symbol: trade.symbol,
+            side: trade.side.toLowerCase() as 'buy' | 'sell',
+            type: 'market',
+            quantity: trade.quantity,
+            timeInForce: 'day'
+          });
+
+          if (order && order.id) {
+            trade.status = 'FILLED';
+            tradeAny.orderId = order.id;
+            tradeAny.executedPrice = (order as any).averageFilledPrice || (order as any).filledPrice;
+            tradeAny.executedAt = new Date();
+            tradeAny.brokerId = brokerId;
+            console.log(`[AITradeGod] REAL order executed: ${order.id} @ ${tradeAny.executedPrice}`);
+          } else {
+            trade.status = 'FAILED';
+            tradeAny.statusReason = 'Broker rejected order';
+          }
+        } else {
+          trade.status = 'PENDING';
+          tradeAny.statusReason = 'Broker unavailable';
+        }
+      }
+    } catch (error) {
+      console.error('[AITradeGod] Trade execution error:', error);
+      trade.status = 'FAILED';
+      (trade as any).statusReason = (error as Error).message;
+    }
 
     // Store trade
     const botTrades = this.trades.get(bot.id) || [];

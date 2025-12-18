@@ -507,39 +507,65 @@ router.get('/:botId/performance', authMiddleware, (req: Request, res: Response) 
 
 /**
  * GET /bots/:botId/signals
- * Get recent signals from bot
+ * Get recent signals from bot - REAL IMPLEMENTATION
+ * Fetches signals from MongoDB trading state
  */
-router.get('/:botId/signals', authMiddleware, (req: Request, res: Response) => {
+router.get('/:botId/signals', authMiddleware, async (req: Request, res: Response) => {
   const { botId } = req.params;
   const { limit = '50' } = req.query;
 
-  // Mock signals - in production, fetch from database
-  const signals = [
-    {
-      id: 'sig_1',
-      symbol: 'EURUSD',
-      direction: 'long',
-      strength: 0.85,
-      timestamp: new Date(Date.now() - 3600000),
-      executed: true,
-      outcome: 'win',
-    },
-    {
-      id: 'sig_2',
-      symbol: 'GBPUSD',
-      direction: 'short',
-      strength: 0.72,
-      timestamp: new Date(Date.now() - 7200000),
-      executed: true,
-      outcome: 'loss',
-    },
-  ].slice(0, parseInt(limit as string));
+  try {
+    // Get REAL signals from database
+    const { tradingStateRepository } = await import('../database/repositories');
+    const allSignals = await tradingStateRepository.getPendingSignals();
 
-  res.json({
-    botId,
-    total: signals.length,
-    signals,
-  });
+    // Filter signals for this specific bot
+    const botSignals = allSignals
+      .filter((s: any) => s.botId === botId || s.sourceBot === botId)
+      .slice(0, parseInt(limit as string))
+      .map((s: any) => ({
+        id: s.signalId || s._id,
+        symbol: s.symbol,
+        direction: s.side === 'buy' ? 'long' : 'short',
+        strength: s.confidence || 0.75,
+        timestamp: s.createdAt || new Date(),
+        executed: s.status === 'FILLED' || s.status === 'executed',
+        outcome: s.pnl > 0 ? 'win' : s.pnl < 0 ? 'loss' : 'pending',
+        price: s.price,
+        pnl: s.pnl,
+      }));
+
+    // Also get historical trades for this bot
+    const trades = await tradingStateRepository.getTrades(botId);
+    const tradeSignals = trades.slice(0, parseInt(limit as string) - botSignals.length).map((t: any) => ({
+      id: t.orderId || t._id,
+      symbol: t.symbol,
+      direction: t.side === 'buy' ? 'long' : 'short',
+      strength: t.confidence || 0.75,
+      timestamp: t.entryTime || t.createdAt,
+      executed: true,
+      outcome: t.pnl > 0 ? 'win' : t.pnl < 0 ? 'loss' : 'pending',
+      price: t.entryPrice,
+      pnl: t.pnl,
+    }));
+
+    const signals = [...botSignals, ...tradeSignals].slice(0, parseInt(limit as string));
+
+    res.json({
+      botId,
+      total: signals.length,
+      signals,
+      source: 'database',
+    });
+  } catch (error) {
+    console.error('[Bots] Error fetching signals:', error);
+    res.json({
+      botId,
+      total: 0,
+      signals: [],
+      error: 'Failed to fetch signals',
+    });
+  }
 });
 
 // ============================================================

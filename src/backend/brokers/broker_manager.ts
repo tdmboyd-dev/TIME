@@ -186,7 +186,34 @@ export class BrokerManager extends EventEmitter implements TIMEComponent {
         throw new Error('Interactive Brokers requires local TWS or IB Gateway. Use SnapTrade for IB account aggregation.');
       case 'mt4':
       case 'mt5':
-        throw new Error(`${type} broker not yet implemented`);
+        // MT4/MT5 require the MT Bridge for connection
+        // Check if MT Bridge is available and configured
+        const mtConfig = config as any;
+        if (!mtConfig.host || !mtConfig.port) {
+          throw new Error(`${type.toUpperCase()} requires host and port configuration for MT Bridge connection`);
+        }
+        // Import and use MT Bridge instance
+        try {
+          const mtBridgeModule = await import('./mt_bridge');
+          if (mtBridgeModule.mtBridge) {
+            // Use the singleton mtBridge instance
+            broker = mtBridgeModule.mtBridge as any;
+            // Configure the connection for this specific MT account
+            await (broker as any).connect?.({
+              type: type as 'mt4' | 'mt5',
+              host: mtConfig.host,
+              port: mtConfig.port,
+              login: mtConfig.login,
+              password: mtConfig.password,
+              server: mtConfig.server,
+            });
+          } else {
+            throw new Error('mtBridge instance not found');
+          }
+        } catch (mtError) {
+          throw new Error(`Failed to initialize ${type.toUpperCase()} bridge: ${(mtError as Error).message}. Ensure MT Bridge EA is running.`);
+        }
+        break;
       default:
         throw new Error(`Unknown broker type: ${type}`);
     }

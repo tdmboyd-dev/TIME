@@ -538,7 +538,7 @@ export class TradingExecutionService extends EventEmitter {
 
         orderId = orderResult.order.id;
         entryPrice = orderResult.order.averageFilledPrice || signal.price || 0;
-        broker = orderResult.broker || 'alpaca';
+        broker = orderResult.brokerId || 'alpaca';
         logger.info(`REAL order executed via ${broker}: ${orderId} @ ${entryPrice}`);
       } catch (brokerError) {
         logger.error('BROKER EXECUTION FAILED - Trade NOT executed:', brokerError as object);

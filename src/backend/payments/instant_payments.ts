@@ -405,8 +405,84 @@ class InstantPaymentsEngine extends EventEmitter {
   }
 
   private generateQRPlaceholder(data: string): string {
-    // In production, generate actual QR code
-    return Buffer.from(`QR:${data}`).toString('base64');
+    // Generate a simple QR-like data URI
+    // In production with a real QR library, this would create an actual scannable QR
+    // For now, generate a deterministic pattern that encodes the data
+
+    const encoded = Buffer.from(data).toString('base64');
+    const size = 200;
+    const cellSize = 8;
+
+    // Create SVG-based QR representation
+    const svg = this.generateQRSVG(encoded, size, cellSize);
+    return Buffer.from(svg).toString('base64');
+  }
+
+  /**
+   * Generate a QR-like SVG pattern
+   * This creates a visual representation - for real scanning, use a proper QR library
+   */
+  private generateQRSVG(data: string, size: number, cellSize: number): string {
+    const gridSize = Math.floor(size / cellSize);
+    const cells: boolean[][] = [];
+
+    // Initialize grid
+    for (let i = 0; i < gridSize; i++) {
+      cells[i] = [];
+      for (let j = 0; j < gridSize; j++) {
+        cells[i][j] = false;
+      }
+    }
+
+    // Add finder patterns (corners)
+    this.addFinderPattern(cells, 0, 0);
+    this.addFinderPattern(cells, gridSize - 7, 0);
+    this.addFinderPattern(cells, 0, gridSize - 7);
+
+    // Add data pattern (deterministic based on input)
+    const hash = this.simpleHash(data);
+    for (let i = 8; i < gridSize - 8; i++) {
+      for (let j = 8; j < gridSize - 8; j++) {
+        const index = (i * gridSize + j) % data.length;
+        const charCode = data.charCodeAt(index);
+        cells[i][j] = ((charCode + hash + i + j) % 3) === 0;
+      }
+    }
+
+    // Generate SVG
+    let svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}">`;
+    svg += `<rect width="${size}" height="${size}" fill="white"/>`;
+
+    for (let i = 0; i < gridSize; i++) {
+      for (let j = 0; j < gridSize; j++) {
+        if (cells[i][j]) {
+          svg += `<rect x="${j * cellSize}" y="${i * cellSize}" width="${cellSize}" height="${cellSize}" fill="black"/>`;
+        }
+      }
+    }
+
+    svg += '</svg>';
+    return svg;
+  }
+
+  private addFinderPattern(cells: boolean[][], startX: number, startY: number): void {
+    // 7x7 finder pattern
+    for (let i = 0; i < 7; i++) {
+      for (let j = 0; j < 7; j++) {
+        const isEdge = i === 0 || i === 6 || j === 0 || j === 6;
+        const isCenter = i >= 2 && i <= 4 && j >= 2 && j <= 4;
+        cells[startY + i][startX + j] = isEdge || isCenter;
+      }
+    }
+  }
+
+  private simpleHash(str: string): number {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      hash = ((hash << 5) - hash) + str.charCodeAt(i);
+      hash = hash & hash;
+    }
+    return Math.abs(hash);
   }
 
   async payPaymentLink(linkId: string, payerAddress: string, chain: Chain): Promise<Payment> {
