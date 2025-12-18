@@ -55,6 +55,9 @@ import defiLiveRoutes from './defi_live';
 // Wealth Management - Dynasty Trusts & Family Legacy AI
 import wealthRoutes from './wealth';
 
+// Gift Access System - Admin chatbot & tier management
+import giftAccessRoutes from './gift_access';
+
 const router = Router();
 
 // Mount routes
@@ -69,6 +72,7 @@ router.use('/market', marketDataRoutes);
 router.use('/defi', defiMasteryRoutes);
 router.use('/defi-live', defiLiveRoutes);  // LIVE DeFi data from DefiLlama!
 router.use('/wealth', wealthRoutes);       // Dynasty Trust & Family Legacy AI!
+router.use('/gift-access', giftAccessRoutes); // Admin gift system & chatbot!
 router.use('/risk', riskProfileRoutes);
 router.use('/fetcher', fetcherRoutes);
 router.use('/payments', paymentsRoutes);
