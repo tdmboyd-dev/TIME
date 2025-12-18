@@ -1,226 +1,324 @@
-# TIME_TODO.md — Master Task Tracker
-## Last Updated: 2025-12-18
-
-## Priority Legend
-- 🔴 Critical — Must be done immediately
-- 🟠 High — Should be done soon
-- 🟡 Medium — Important but can wait
-- 🟢 Low — Nice to have
-- ✅ Done (ACTUALLY WORKING)
-- ⚠️ Exists but needs improvement
-- ❌ Not implemented
+# TIME_TODO.md — Production Readiness Audit
+## Last Updated: 2025-12-18 (Comprehensive Platform Audit)
 
 ---
 
-## STATUS SUMMARY
+# EXECUTIVE SUMMARY
 
-| Component | Status | Notes |
-|-----------|--------|-------|
-| Backend API | ✅ LIVE | 14 components online |
-| Market Data | ✅ REAL | TwelveData, Finnhub, Alpha Vantage |
-| Trading Bots | ✅ REAL | 48+ bots with performance |
-| Broker Integrations | ✅ REAL | Alpaca, Binance, Kraken, OANDA |
-| Authentication | ✅ REAL | JWT + WebAuthn + OAuth |
-| ACATS Transfers | ✅ REAL | 92+ brokers, MongoDB persistence |
-| Risk Engine | ✅ REAL | Limits enforced |
-| Wealth Management | ✅ REAL | Dynasty trusts, tax harvesting |
-| DeFi Integration | ✅ REAL | DefiLlama, Aave, Compound yields |
+**Overall Production Readiness: 65% - NOT READY FOR PRODUCTION**
 
----
-
-## Phase 1: Foundation ✅ COMPLETE
-
-### Core Infrastructure
-- ✅ Project setup (package.json, tsconfig)
-- ✅ Environment configuration
-- ✅ Database schemas (MongoDB)
-- ✅ API server setup (Express)
-- ✅ Backend deployed to Fly.io
-- ✅ Frontend deployed to Vercel
-
-### Core Modules
-- ✅ TIME Governor (`time_governor.ts`)
-- ✅ Evolution Controller (`evolution_controller.ts`)
-- ✅ Inactivity Monitor (`inactivity_monitor.ts`)
+| Area | Status | Ready |
+|------|--------|-------|
+| Frontend Pages | NEEDS WORK | 15% |
+| Backend Routes | PARTIAL | 70% |
+| Backend Services | PARTIAL | 60% |
+| Security | CRITICAL ISSUES | 40% |
+| Database Layer | GOOD | 85% |
+| External APIs | PARTIAL | 70% |
+| Trading Execution | SIMULATED | 30% |
 
 ---
 
-## Phase 2: Broker Integrations ✅ COMPLETE
+# CRITICAL ISSUES (Must Fix Before Production)
 
-- ✅ Alpaca Broker - REAL API (Paper + Live)
-- ✅ OANDA Broker - REAL API integration
-- ✅ Binance Futures - REAL with HMAC signing
-- ✅ Kraken - REAL API integration
-- ✅ MT4/MT5 Bridge - REAL TCP socket
-- ✅ Broker Manager - REAL routing
-- ✅ Order Execution - CAN send real orders
+## 1. SECURITY - EXPOSED API KEYS
+**Severity:** CRITICAL
+**Files:** `.env` file
 
----
+**Issue:** Production API keys exposed in repository:
+- Binance Live Trading keys
+- Kraken API keys
+- Alpaca API keys
+- MongoDB Atlas credentials
+- OpenAI API key
+- GitHub Token
+- Alchemy API key
 
-## Phase 3: Security & Transfers ✅ COMPLETE
-
-### Authentication v10.0.0
-- ✅ JWT authentication
-- ✅ WebAuthn/Passkeys (Face ID, Touch ID, YubiKey)
-- ✅ OAuth (Google, GitHub)
-- ✅ Admin authentication
-- ✅ Tier-based access control
-
-### ACATS v2.0.0
-- ✅ 92+ supported brokers
-- ✅ MongoDB persistence
-- ✅ Background processing
-- ✅ Status notifications
-- ✅ Document management
+**Action Required:**
+- [ ] IMMEDIATELY REVOKE all exposed API keys
+- [ ] Regenerate all credentials in production accounts
+- [ ] Add `.env` to `.gitignore`
+- [ ] Use secrets management (AWS Secrets Manager, Vault)
 
 ---
 
-## Phase 4: Risk Management ✅ COMPLETE
+## 2. SECURITY - HARDCODED SECRETS
+**Severity:** CRITICAL
+**Files:** `src/backend/config/index.ts`, `src/backend/routes/auth.ts`
 
-- ✅ Risk Engine - REAL limits enforced
-- ✅ Daily loss limits
-- ✅ Position limits
-- ✅ Emergency brake
-- ✅ Correlation limits
+**Issues:**
+- JWT Secret fallback: `'change-me-in-production'`
+- Admin Setup Key fallback: `'TIME_ADMIN_SETUP_2025'`
 
----
-
-## Phase 5: Market Data ✅ COMPLETE
-
-- ✅ TwelveData integration - stocks, forex
-- ✅ Finnhub integration - real-time quotes
-- ✅ Alpha Vantage integration - fundamentals
-- ✅ FMP integration - financial modeling
-- ✅ FRED integration - economic data
-- ✅ Binance/Kraken - crypto prices
-- ✅ CoinGecko - crypto data
-
-### Verified Working:
-```
-GET /api/v1/market/quote/AAPL
-{"success":true,"quote":{"symbol":"AAPL","provider":"twelvedata","price":178.5}}
-```
+**Action Required:**
+- [ ] Remove all hardcoded secret fallbacks
+- [ ] Require explicit environment variables
+- [ ] Throw error if secrets not provided in production
 
 ---
 
-## Phase 6: Bot Strategies ✅ COMPLETE
+## 3. AUTONOMOUS MODE AUTO-ACTIVATION
+**Severity:** CRITICAL
+**File:** `src/backend/core/inactivity_monitor.ts`
 
-### Real Strategy Engine (`real_strategy_engine.ts`)
-- ✅ RSI Strategy (14-period)
-- ✅ MACD Strategy (12,26,9)
-- ✅ Moving Average Crossover
-- ✅ Bollinger Bands
-- ✅ Momentum indicators
-- ✅ Volume profile analysis
+**Issue:** System auto-switches to autonomous mode after 5 days inactivity without human approval.
 
-### Bot Library (48+ bots)
-- ✅ 8 TIME-generated bots (active)
-- ✅ 40+ absorbed GitHub bots
-- ✅ Real backtested performance
-- ✅ Strategy fingerprinting
+**Action Required:**
+- [ ] Remove automatic mode switch
+- [ ] Require explicit approval for autonomous mode
+- [ ] Add backup confirmation mechanism
 
 ---
 
-## Phase 7: Wealth Management ✅ COMPLETE
+## 4. TRADING EXECUTION IS SIMULATED
+**Severity:** CRITICAL
+**Files:** `src/backend/services/TradingExecutionService.ts`, all broker files
 
-### Dynasty Trust Engine
-- ✅ Trust analysis (GRAT, ILIT, SLAT, FLP, CLAT)
-- ✅ 2025 tax constants
-- ✅ Estate tax projections
-- ✅ Jurisdiction recommendations
+**Issue:** All trades execute locally without actual broker API connections. Falls back to simulation silently.
 
-### Tax Optimization
-- ✅ Tax-loss harvesting
-- ✅ Gift strategy generation
-- ✅ Annual gift tracking
-
-### Family Legacy
-- ✅ Family profiles
-- ✅ AI recommendations
-- ✅ Multi-generational planning
+**Action Required:**
+- [ ] Implement real broker API connections
+- [ ] Remove silent fallback to simulation
+- [ ] Add clear error when broker unavailable
 
 ---
 
-## Phase 8: DeFi Integration ✅ COMPLETE
+# HIGH PRIORITY ISSUES
 
-- ✅ DefiLlama API integration
-- ✅ Aave yields
-- ✅ Compound yields
-- ✅ Uniswap pools
-- ✅ Yearn vaults
-- ✅ TVL tracking
+## Frontend (16 pages need work)
 
----
+### Console.error Statements to Remove:
+| Page | Lines |
+|------|-------|
+| admin/page.tsx | 110 |
+| ai-trade-god/page.tsx | 75, 87, 119 |
+| autopilot/page.tsx | 141 |
+| bots/page.tsx | 157 |
+| brokers/page.tsx | 274 |
+| charts/page.tsx | 194 |
+| defi/page.tsx | 153 |
+| dropzone/page.tsx | 239 |
+| execution/page.tsx | 181 |
+| goals/page.tsx | 95, 119, 153, 201 |
+| history/page.tsx | 126 |
+| invest/page.tsx | 420, 431 |
+| learn/page.tsx | 123 |
+| live-trading/page.tsx | 131 |
+| markets/page.tsx | 85, 117, 177, 214 |
 
-## Phase 9: Frontend Pages ⚠️ NEEDS REVIEW
+### Mock Data to Remove:
+- [ ] `invest/page.tsx` lines 63-369: 18 hardcoded tokenized assets
+- [ ] `admin/page.tsx` lines 42-48: Hardcoded mock events
+- [ ] `autopilot/page.tsx` lines 189-203: Demo data fallback
+- [ ] `brokers/page.tsx` lines 277-291: Demo broker fallback
+- [ ] `charts/page.tsx` lines 195-206: Demo candles generator
+- [ ] `dropzone/page.tsx` lines 250-294: Sample data generator
 
-### Working Pages
-- ✅ Dashboard - real metrics from backend
-- ✅ Bots page - real bot list from API
-- ✅ Portfolio - real broker positions
-- ✅ Markets - real price data
-- ✅ Settings - persisted to database
-- ✅ Admin Portal - real logs/users
-
-### Pages to Verify
-- ⚠️ TIMEBEUNUS - verify all data flows
-- ⚠️ DROPBOT AutoPilot - verify backend sync
-- ⚠️ DeFi page - verify live yields
-- ⚠️ Strategies - verify real data
-- ⚠️ Learn page - verify lessons
-- ⚠️ Goals page - verify persistence
-
----
-
-## Phase 10: Notifications ✅ COMPLETE
-
-- ✅ SendGrid email (real delivery)
-- ✅ Twilio SMS (real delivery)
-- ✅ In-app notifications
-- ✅ Transfer status updates
-- ✅ Risk alerts
+### TODO Comments to Implement:
+- [ ] `login/page.tsx` line 149: Implement WebAuthn authentication
+- [ ] `login/page.tsx` line 165: Implement OAuth flow
 
 ---
 
-## API Keys Status
+## Backend Security
 
-| API | Has Key | Connected | Working |
-|-----|---------|-----------|---------|
-| Alpaca | ✅ | ✅ | ✅ |
-| Binance | ✅ | ✅ | ✅ |
-| Kraken | ✅ | ✅ | ✅ |
-| OANDA | ✅ | ✅ | ✅ |
-| TwelveData | ✅ | ✅ | ✅ |
-| Finnhub | ✅ | ✅ | ✅ |
-| Alpha Vantage | ✅ | ✅ | ✅ |
-| FMP | ✅ | ✅ | ✅ |
-| FRED | ✅ | ✅ | ✅ |
-| Alchemy | ✅ | ✅ | ✅ |
-| OpenAI | ✅ | ⚠️ | Pending |
-| SendGrid | ⚠️ | ⚠️ | Needs key |
-| Twilio | ⚠️ | ⚠️ | Needs key |
+### Password Validation (auth.ts:335-339)
+- [ ] Add complexity requirements (uppercase, lowercase, numbers, special chars)
+- [ ] Check against common password dictionary
+- [ ] Minimum 12 characters
 
----
+### CORS Configuration (config/index.ts:153)
+- [ ] Remove localhost from production CORS origins
+- [ ] Implement strict whitelist validation
 
-## NEXT PRIORITIES
+### Content Security Policy (index.ts:269-286)
+- [ ] Remove `'unsafe-eval'` if possible
+- [ ] Implement nonce-based CSP for TradingView
 
-### Immediate
-1. ⚠️ Verify all frontend pages work with real data
-2. ⚠️ Add SendGrid/Twilio API keys for real notifications
-3. ⚠️ Test live trading with small amounts
+### Rate Limiting (auth.ts:54, security.ts:18)
+- [ ] Use Redis for distributed rate limiting (currently in-memory)
+- [ ] Implement per-IP, per-user, per-endpoint limits
 
-### Short-term
-1. Add more absorbed bots from GitHub
-2. Improve backtesting accuracy
-3. Add mobile responsiveness
-
-### Long-term
-1. Mobile app
-2. Social trading features
-3. Advanced ML strategies
+### Session Storage (webauthn_service.ts:44, oauth_service.ts:66)
+- [ ] Store WebAuthn challenges in Redis (currently in-memory)
+- [ ] Store OAuth states in Redis (currently in-memory)
 
 ---
 
-*Last updated: 2025-12-18*
-*v17.0.0 — ACATS v2.0 + WebAuthn + OAuth*
-*Built by Timebeunus Boyd with Claude*
+## Backend Services
+
+### Stub/Incomplete Engines (src/backend/engines/):
+All 15 engine files are mostly stubs:
+- [ ] learning_engine.ts - <10% implemented
+- [ ] regime_detector.ts - <10% implemented
+- [ ] market_vision_engine.ts - <10% implemented
+- [ ] risk_engine.ts - <10% implemented
+- [ ] teaching_engine.ts - stub
+- [ ] attribution_engine.ts - stub
+- [ ] recursive_synthesis_engine.ts - stub
+
+### BigMovesAlertService.ts - Stub Methods:
+- [ ] monitorWhaleTransactions() - commented out
+- [ ] monitorGovernmentNews() - no implementation
+- [ ] monitorInstitutionalFilings() - no implementation
+- [ ] monitorDeFiOpportunities() - no implementation
+
+### AITradeGodBot.ts - Mock Data:
+- [ ] fetchMarketData() lines 633-652: Returns hardcoded prices
+- [ ] Strategy execute() methods return quantity=0
+
+### Evolution Controller - Incomplete:
+- [ ] identifyImprovementOpportunities() returns empty array
+- [ ] executeChange() unimplemented
+
+---
+
+## Data Layer
+
+### Missing Database Features:
+- [ ] Add MongoDB transaction support for atomic operations
+- [ ] Add pagination to all repository findMany() methods
+- [ ] Add TTL indexes for ephemeral data
+- [ ] Add composite indexes for high-frequency queries
+
+### API Rate Limiting Issues:
+- [ ] Finnhub: No rate limiting implemented
+- [ ] Polygon.io: No rate limiting implemented
+- [ ] Binance: No rate limiting implemented
+
+### Missing Error Handling:
+- [ ] Add retry logic with exponential backoff
+- [ ] Implement circuit breaker pattern
+- [ ] Add data freshness tracking
+
+### Market Data Providers Mock Fallback:
+- [ ] Remove mock fallback in `market_data_providers.ts:573-576`
+- [ ] Throw error if no API keys configured
+
+---
+
+# MEDIUM PRIORITY ISSUES
+
+## Security
+- [ ] Add CSRF token validation on state-changing operations
+- [ ] Set SameSite='strict' for auth cookies
+- [ ] Add HTTPS redirect middleware
+- [ ] Add HSTS header enforcement
+- [ ] Implement session fingerprinting (IP + User-Agent)
+- [ ] Add audit logging for all sensitive operations
+
+## Backend
+- [ ] Replace Math.random() usage in production code:
+  - AITradeGodBot strategy weights (line 325)
+  - BotGovernor autoVote (line 325)
+- [ ] Implement proper logging (replace console.log with pino/winston)
+- [ ] Add request timeouts to all API calls
+- [ ] Implement batch operations for efficiency
+
+## Frontend
+- [ ] Implement unified error handling strategy
+- [ ] Add proper error boundaries
+- [ ] Implement retry logic with exponential backoff
+- [ ] Add request timeouts
+
+---
+
+# LOW PRIORITY ISSUES
+
+## Security Headers
+- [ ] Add Referrer-Policy header
+- [ ] Add Permissions-Policy header
+- [ ] Enhance X-Frame-Options
+
+## Code Quality
+- [ ] Wrap all JSON.parse() in try-catch
+- [ ] Validate data schema after parsing
+- [ ] Add structured error types
+- [ ] Implement dead letter queue for failed operations
+
+---
+
+# WHAT'S WORKING WELL
+
+## Production Ready Components:
+- Database connection management (proper fallbacks, health checks)
+- Database schemas (15+ comprehensive, well-indexed)
+- Repository pattern (11 classes, proper CRUD)
+- TradingModeService (proper safety checks)
+- RealStrategyExtractor (100% complete, production-ready)
+- RealBotPerformance (100% complete, excellent backtesting)
+- BotMarketplace (100% complete, full business logic)
+- GiftAccessService (100% complete, subscription management)
+- TIME Governor (proper singleton, component management)
+- ACATS Transfer System v2.0 (92+ brokers, MongoDB persistence)
+
+## Connected External APIs:
+- Alpha Vantage - Connected, rate limited
+- Finnhub - Connected (needs rate limiting)
+- Polygon.io - Connected (needs rate limiting)
+- CoinGecko - Connected, free unlimited
+- Binance - Connected (needs rate limiting)
+- FMP - Connected, 250/day limit
+- FRED - Connected, unlimited
+- TwelveData - Connected, proper rate limiting
+
+## Recent Accomplishments:
+- ACATS v2.0 with MongoDB persistence
+- WebAuthn/Passkeys authentication
+- OAuth (Google, GitHub)
+- Live bot trading tests successful
+- DeFi yields from DefiLlama
+- 133 bots with real performance data
+
+---
+
+# ACTION PLAN
+
+## Phase 1: Critical Security (1-2 days)
+1. Revoke and regenerate all exposed API keys
+2. Remove hardcoded secret fallbacks
+3. Fix autonomous mode auto-activation
+4. Add proper input validation
+
+## Phase 2: Frontend Cleanup (2-3 days)
+1. Remove all console.error statements
+2. Remove all mock/hardcoded data
+3. Implement TODO features (WebAuthn, OAuth in login)
+4. Add proper error handling
+
+## Phase 3: Backend Hardening (3-5 days)
+1. Implement real broker connections
+2. Add Redis-based rate limiting
+3. Add retry logic and circuit breakers
+4. Complete stub engine implementations
+
+## Phase 4: Data Layer (2-3 days)
+1. Add MongoDB transactions
+2. Add pagination
+3. Remove market data mock fallbacks
+4. Add proper caching
+
+## Phase 5: Testing & Polish (2-3 days)
+1. End-to-end testing
+2. Security testing
+3. Load testing
+4. Documentation update
+
+---
+
+# ESTIMATED EFFORT
+
+| Phase | Effort | Priority |
+|-------|--------|----------|
+| Critical Security | 8-16 hours | IMMEDIATE |
+| Frontend Cleanup | 16-24 hours | HIGH |
+| Backend Hardening | 24-40 hours | HIGH |
+| Data Layer | 16-24 hours | MEDIUM |
+| Testing & Polish | 16-24 hours | MEDIUM |
+| **Total** | **80-128 hours** | |
+
+---
+
+*Last Updated: 2025-12-18*
+*Audit performed by Claude Code*
+*Built by Timebeunus Boyd*
