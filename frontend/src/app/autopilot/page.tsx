@@ -104,24 +104,33 @@ export default function AutoPilotPage() {
     }
   }, [pilot, watchMode]);
 
+  // Helper to get auth headers
+  const getAuthHeaders = () => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('time_auth_token') : null;
+    return {
+      'Content-Type': 'application/json',
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+    };
+  };
+
   const fetchRealData = async () => {
     try {
-      // Fetch health status
-      const healthResponse = await fetch(`${API_BASE}/health`);
+      // Fetch health status (root endpoint without /api/v1)
+      const healthResponse = await fetch('https://time-backend-hosting.fly.dev/health');
       if (healthResponse.ok) {
         const healthData = await healthResponse.json();
         setHealthStatus(healthData);
       }
 
       // Fetch public bots
-      const botsResponse = await fetch(`${API_BASE}/api/v1/bots/public`);
+      const botsResponse = await fetch(`${API_BASE}/bots/public`);
       if (botsResponse.ok) {
         const botsData = await botsResponse.json();
         setActiveBots(botsData.bots || []);
       }
 
       // Fetch real market status
-      const marketResponse = await fetch(`${API_BASE}/api/v1/real-market/status`);
+      const marketResponse = await fetch(`${API_BASE}/real-market/status`);
       if (marketResponse.ok) {
         const marketData = await marketResponse.json();
         // Use market data to enhance display
@@ -148,7 +157,7 @@ export default function AutoPilotPage() {
       // Create pilot via real API
       const response = await fetch(`${API_BASE}/trading/autopilot/create`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify({
           riskProfile: selectedRisk,
           initialCapital: amount,

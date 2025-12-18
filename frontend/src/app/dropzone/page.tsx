@@ -31,6 +31,15 @@ import clsx from 'clsx';
 
 import { API_BASE } from '@/lib/api';
 
+// Helper to get auth headers
+const getAuthHeaders = () => {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('time_auth_token') : null;
+  return {
+    'Content-Type': 'application/json',
+    ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+  };
+};
+
 // Bot Card Component - Visual representation with symbol
 function BotCard({ bot, onSelect, isSelected }: { bot: AutoGenBot; onSelect: () => void; isSelected: boolean }) {
   // Generate unique color gradient based on personality
@@ -299,7 +308,7 @@ export default function DropzonePage() {
   const handleApprove = async (fileId: string) => {
     setActionLoading(fileId);
     try {
-      const res = await fetch(`${API_BASE}/bot-brain/approve/${fileId}`, { method: 'POST' });
+      const res = await fetch(`${API_BASE}/bot-brain/approve/${fileId}`, { method: 'POST', headers: getAuthHeaders() });
       if (res.ok) {
         setPendingBots(prev => prev.filter(b => b.fileId !== fileId));
         setNotification({ type: 'success', message: 'Bot approved and absorbed!' });
@@ -315,7 +324,7 @@ export default function DropzonePage() {
   const handleReject = async (fileId: string) => {
     setActionLoading(fileId);
     try {
-      const res = await fetch(`${API_BASE}/bot-brain/reject/${fileId}`, { method: 'POST' });
+      const res = await fetch(`${API_BASE}/bot-brain/reject/${fileId}`, { method: 'POST', headers: getAuthHeaders() });
       if (res.ok) {
         setPendingBots(prev => prev.filter(b => b.fileId !== fileId));
         setNotification({ type: 'success', message: 'Bot rejected' });
@@ -331,7 +340,7 @@ export default function DropzonePage() {
   const handleCreateFromBlueprint = async (blueprintId: string) => {
     setActionLoading(blueprintId);
     try {
-      const res = await fetch(`${API_BASE}/auto-perfect-bot/blueprints/${blueprintId}/create-bot`, { method: 'POST' });
+      const res = await fetch(`${API_BASE}/auto-perfect-bot/blueprints/${blueprintId}/create-bot`, { method: 'POST', headers: getAuthHeaders() });
       const data = await res.json();
       if (data.success) {
         setNotification({ type: 'success', message: `Perfect bot "${data.bot.name}" created!` });
@@ -348,7 +357,7 @@ export default function DropzonePage() {
   const handleForceGenerateBlueprint = async () => {
     setActionLoading('generate-blueprint');
     try {
-      const res = await fetch(`${API_BASE}/auto-perfect-bot/force-generate-blueprint`, { method: 'POST' });
+      const res = await fetch(`${API_BASE}/auto-perfect-bot/force-generate-blueprint`, { method: 'POST', headers: getAuthHeaders() });
       const data = await res.json();
       if (data.success) {
         setNotification({ type: 'success', message: `Blueprint "${data.blueprint.name}" generated!` });
@@ -365,7 +374,7 @@ export default function DropzonePage() {
   const handleForceGenerateBot = async () => {
     setActionLoading('generate-bot');
     try {
-      const res = await fetch(`${API_BASE}/auto-perfect-bot/force-generate-bot`, { method: 'POST' });
+      const res = await fetch(`${API_BASE}/auto-perfect-bot/force-generate-bot`, { method: 'POST', headers: getAuthHeaders() });
       const data = await res.json();
       if (data.success) {
         setNotification({ type: 'success', message: `Perfect bot "${data.bot.name}" auto-generated!` });

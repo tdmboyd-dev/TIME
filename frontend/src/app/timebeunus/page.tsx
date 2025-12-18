@@ -12,6 +12,15 @@ import clsx from 'clsx';
 
 const API_BASE = 'https://time-backend-hosting.fly.dev/api/v1';
 
+// Helper to get auth headers
+const getAuthHeaders = () => {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('time_auth_token') : null;
+  return {
+    'Content-Type': 'application/json',
+    ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+  };
+};
+
 type DominanceMode = 'stealth' | 'aggressive' | 'defensive' | 'balanced' | 'competition' | 'destroy';
 
 interface AlphaSignal {
@@ -295,8 +304,7 @@ export default function TIMEBEUNUSPage() {
     try {
       const response = await fetch(`${API_BASE}/trading/timebeunus/start`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
+        headers: getAuthHeaders(),
         body: JSON.stringify({ dominanceMode, enableTopBots: 5 }),
       });
       const data = await response.json();
@@ -317,7 +325,7 @@ export default function TIMEBEUNUSPage() {
     try {
       const response = await fetch(`${API_BASE}/trading/timebeunus/pause`, {
         method: 'POST',
-        credentials: 'include',
+        headers: getAuthHeaders(),
       });
       const data = await response.json();
       if (data.success) {
