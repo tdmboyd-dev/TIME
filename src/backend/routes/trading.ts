@@ -621,6 +621,64 @@ router.get('/autopilot/:pilotId', authMiddleware, (req: Request, res: Response) 
   });
 });
 
+/**
+ * POST /trading/autopilot/:pilotId/live-trading
+ * Enable/disable REAL trading for a pilot
+ * SECURITY: Requires authentication
+ * WARNING: When enabled, trades will execute on REAL brokers!
+ */
+router.post('/autopilot/:pilotId/live-trading', authMiddleware, (req: Request, res: Response) => {
+  const { pilotId } = req.params;
+  const { enabled } = req.body;
+
+  const pilot = autoPilotCapital.getPilot(pilotId);
+  if (!pilot) {
+    return res.status(404).json({
+      success: false,
+      message: 'Pilot not found',
+    });
+  }
+
+  // Check broker status before enabling live trading
+  const brokerManager = BrokerManager.getInstance();
+  const brokerStatus = brokerManager.getStatus();
+
+  if (enabled && brokerStatus.connectedBrokers === 0) {
+    return res.status(400).json({
+      success: false,
+      message: 'Cannot enable live trading - no brokers connected',
+      brokerStatus,
+    });
+  }
+
+  // Toggle live trading
+  pilot.liveTrading = !!enabled;
+
+  res.json({
+    success: true,
+    message: enabled ? '🔴 LIVE TRADING ENABLED - Real orders will be placed!' : '📝 Paper trading mode enabled',
+    data: {
+      pilotId,
+      liveTrading: pilot.liveTrading,
+      brokerStatus,
+    },
+  });
+});
+
+/**
+ * GET /trading/broker-status
+ * Get status of all connected brokers
+ */
+router.get('/broker-status', (req: Request, res: Response) => {
+  const brokerManager = BrokerManager.getInstance();
+  const status = brokerManager.getStatus();
+
+  res.json({
+    success: true,
+    data: status,
+  });
+});
+
 // ============================================
 // TIMEBEUNUS AUTO-TRADE CONTROL
 // ============================================

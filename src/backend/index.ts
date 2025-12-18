@@ -59,6 +59,9 @@ import { autoPerfectBotGenerator } from './bots/auto_perfect_bot_generator';
 // MetaTrader Bridge
 import { mtBridge } from './brokers/mt_bridge';
 
+// Broker Manager - Real Order Execution
+import { BrokerManager } from './brokers/broker_manager';
+
 // Opportunity Scout (Legitimate Earnings System)
 import { opportunityScout } from './scout/opportunity_scout';
 
@@ -193,9 +196,66 @@ async function initializeTIME(): Promise<void> {
   // Initialize TIME Governor (this initializes all components)
   await timeGovernor.initialize();
 
+  // ===============================================
+  // REAL BROKER CONNECTIONS - FOR REAL TRADING
+  // ===============================================
+  log.info('Initializing Real Broker Connections...');
+  const brokerManager = BrokerManager.getInstance();
+  await brokerManager.initialize();
+
+  let brokersConnected = 0;
+
+  // Connect Alpaca (Stocks & Crypto)
+  if (config.brokers.alpaca.apiKey && config.brokers.alpaca.secretKey) {
+    try {
+      log.info('Adding Alpaca broker...');
+      await brokerManager.addBroker('alpaca', 'alpaca', {
+        apiKey: config.brokers.alpaca.apiKey,
+        apiSecret: config.brokers.alpaca.secretKey,
+        isPaper: config.brokers.alpaca.paper,
+      }, { isPrimary: true, name: 'Alpaca (US Stocks & Crypto)' });
+      await brokerManager.connectBroker('alpaca');
+      brokersConnected++;
+      log.info(`✅ Alpaca connected (${config.brokers.alpaca.paper ? 'PAPER' : 'LIVE'} mode)`);
+    } catch (error) {
+      log.warn('⚠️ Alpaca connection failed:', { error });
+    }
+  } else {
+    log.warn('⚠️ Alpaca credentials not configured - skipping');
+  }
+
+  // Connect OANDA (Forex)
+  if (config.brokers.oanda.apiKey && config.brokers.oanda.accountId) {
+    try {
+      log.info('Adding OANDA broker...');
+      await brokerManager.addBroker('oanda', 'oanda', {
+        apiKey: config.brokers.oanda.apiKey,
+        apiSecret: config.brokers.oanda.apiKey,  // OANDA uses same key
+        accountId: config.brokers.oanda.accountId,
+        isPaper: config.brokers.oanda.practice,
+      }, { name: 'OANDA (Forex)' });
+      await brokerManager.connectBroker('oanda');
+      brokersConnected++;
+      log.info(`✅ OANDA connected (${config.brokers.oanda.practice ? 'PRACTICE' : 'LIVE'} mode)`);
+    } catch (error) {
+      log.warn('⚠️ OANDA connection failed:', { error });
+    }
+  } else {
+    log.info('ℹ️ OANDA credentials not configured - skipping');
+  }
+
+  const brokerStatus = brokerManager.getStatus();
+  log.info(`Brokers: ${brokerStatus.connectedBrokers}/${brokerStatus.totalBrokers} connected`);
+  if (brokerStatus.connectedBrokers === 0) {
+    log.warn('⚠️ NO BROKERS CONNECTED - Trading will be simulated only!');
+  } else {
+    log.info('🎉 REAL TRADING ENABLED - Orders will execute on connected brokers');
+  }
+
   log.info('='.repeat(60));
   log.info('TIME initialization complete');
   log.info(`Evolution Mode: ${timeGovernor.getEvolutionMode().toUpperCase()}`);
+  log.info(`Brokers Connected: ${brokersConnected}`);
   log.info('='.repeat(60));
 }
 

@@ -39,6 +39,7 @@
 
 import { EventEmitter } from 'events';
 import { createComponentLogger } from '../utils/logger';
+import { BrokerManager } from '../brokers/broker_manager';
 
 const logger = createComponentLogger('DROPBOT');
 
@@ -125,6 +126,9 @@ export interface PilotProfile {
   // Status
   status: 'active' | 'paused' | 'exiting' | 'closed';
   autopilotEnabled: boolean;
+
+  // REAL TRADING MODE
+  liveTrading: boolean;  // true = REAL orders via broker, false = paper/simulated
 }
 
 // Real-time trade with plain English
@@ -2024,7 +2028,10 @@ export class AutoPilotCapitalEngine extends EventEmitter {
 
       // Status
       status: 'active',
-      autopilotEnabled: true
+      autopilotEnabled: true,
+
+      // REAL TRADING - Default OFF (paper trading)
+      liveTrading: false
     };
 
     this.pilots.set(pilot.id, pilot);
@@ -2378,6 +2385,41 @@ export class AutoPilotCapitalEngine extends EventEmitter {
     const watchStream = this.watchStreams.get(pilotId);
     if (!pilot) return;
 
+    // =========================================================================
+    // REAL BROKER EXECUTION - When liveTrading is enabled and brokers connected
+    // =========================================================================
+    let realOrderId: string | undefined;
+    let executionMode: 'LIVE' | 'PAPER' = 'PAPER';
+
+    if (pilot.liveTrading) {
+      const brokerManager = BrokerManager.getInstance();
+      const brokerStatus = brokerManager.getStatus();
+
+      if (brokerStatus.connectedBrokers > 0) {
+        try {
+          logger.info(`🔴 LIVE TRADE: Submitting ${trade.side} ${trade.quantity} ${trade.asset} via broker`);
+
+          const orderResult = await brokerManager.submitOrder({
+            symbol: trade.asset,
+            side: trade.side,
+            type: 'market',
+            quantity: trade.quantity,
+          });
+
+          realOrderId = orderResult.order.id;
+          trade.price = orderResult.order.averageFilledPrice || trade.price;
+          executionMode = 'LIVE';
+
+          logger.info(`🔴 LIVE ORDER FILLED: ${realOrderId} @ $${trade.price}`);
+        } catch (brokerError) {
+          logger.error(`❌ Broker order failed, falling back to paper:`, brokerError as object);
+          // Fall through to paper trading
+        }
+      } else {
+        logger.warn(`⚠️ Live trading enabled but no brokers connected - using paper mode`);
+      }
+    }
+
     trade.status = 'executed';
 
     // Record trade
@@ -2393,9 +2435,10 @@ export class AutoPilotCapitalEngine extends EventEmitter {
         watchStream.recentTrades = watchStream.recentTrades.slice(0, 20);
       }
 
+      const modeIndicator = executionMode === 'LIVE' ? '🔴 LIVE' : '📝 PAPER';
       watchStream.liveCommentary.push({
         timestamp: new Date(),
-        message: `✅ EXECUTED: ${trade.plainEnglish[pilot.plainEnglishLevel]}`,
+        message: `${modeIndicator} ✅ EXECUTED: ${trade.plainEnglish[pilot.plainEnglishLevel]}`,
         type: 'trade'
       });
 
@@ -2411,8 +2454,8 @@ export class AutoPilotCapitalEngine extends EventEmitter {
     // Update global stats
     this.globalStats.totalTrades++;
 
-    logger.info(`Trade executed for pilot ${pilotId}: ${trade.asset} ${trade.side}`);
-    this.emit('trade_executed', { pilotId, trade });
+    logger.info(`Trade executed for pilot ${pilotId}: ${trade.asset} ${trade.side} [${executionMode}]`);
+    this.emit('trade_executed', { pilotId, trade, executionMode, realOrderId });
   }
 
   // ==========================================================================
