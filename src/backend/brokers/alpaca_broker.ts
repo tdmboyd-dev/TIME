@@ -611,11 +611,19 @@ export class AlpacaBroker extends BrokerInterface {
 
         this.wsConnection.on('close', (code, reason) => {
           logger.warn(`WebSocket closed: ${code} - ${reason.toString()}`);
-          this.emit('disconnected', reason.toString() || 'WebSocket closed');
 
-          // Only attempt reconnection if not a connection limit error
-          // Error 406 = connection limit exceeded - don't retry
-          if (code !== 1006) {
+          // WebSocket is optional - don't mark broker as disconnected if REST API is working
+          // Only emit 'disconnected' for a full connection loss, not just WebSocket
+          // Error code 1006 = abnormal closure (connection limit exceeded)
+          if (code === 1006) {
+            logger.info('WebSocket connection limit reached - REST API still available for trading');
+            // Don't emit disconnected - REST API is still working
+          } else if (!this.isConnected) {
+            // Only emit disconnected if the broker was intentionally disconnected
+            this.emit('disconnected', reason.toString() || 'WebSocket closed');
+          } else {
+            // WebSocket closed for other reason but REST API might still work
+            // Attempt reconnection
             setTimeout(() => {
               if (this.isConnected) {
                 logger.info('Attempting WebSocket reconnection...');
@@ -624,8 +632,6 @@ export class AlpacaBroker extends BrokerInterface {
                 });
               }
             }, 5000);
-          } else {
-            logger.info('WebSocket connection limit reached - using REST API only for trading');
           }
         });
 

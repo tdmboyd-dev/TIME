@@ -912,4 +912,107 @@ router.post('/timebeunus/stop', authMiddleware, async (req: Request, res: Respon
   }
 });
 
+// ============================================
+// TEST ORDER ENDPOINT (Admin only)
+// ============================================
+
+/**
+ * POST /trading/test-order
+ * Submit a test order to verify broker connectivity
+ * PAPER MODE ONLY - requires admin authentication
+ */
+router.post('/test-order', authMiddleware, adminMiddleware, async (req: Request, res: Response) => {
+  try {
+    const { symbol = 'AAPL', side = 'buy', quantity = 1, broker = 'alpaca' } = req.body;
+
+    const brokerManager = BrokerManager.getInstance();
+    const status = brokerManager.getStatus();
+
+    // Check if requested broker is connected
+    const brokerInfo = status.brokers.find(b => b.id === broker);
+    if (!brokerInfo || !brokerInfo.connected) {
+      return res.status(400).json({
+        success: false,
+        error: `Broker ${broker} is not connected`,
+        brokerStatus: status,
+      });
+    }
+
+    // Submit test order
+    const orderResult = await brokerManager.submitOrder({
+      symbol,
+      side: side as 'buy' | 'sell',
+      type: 'market',
+      quantity: Number(quantity),
+    }, broker);
+
+    res.json({
+      success: true,
+      message: `Test order submitted successfully to ${broker}`,
+      data: {
+        order: orderResult.order,
+        broker: broker,
+        brokerStatus: status,
+      },
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to submit test order',
+    });
+  }
+});
+
+/**
+ * GET /trading/account
+ * Get broker account information
+ */
+router.get('/account', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const brokerManager = BrokerManager.getInstance();
+    const portfolio = await brokerManager.getAggregatedPortfolio();
+
+    res.json({
+      success: true,
+      data: portfolio,
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to get account info',
+    });
+  }
+});
+
+/**
+ * GET /trading/positions
+ * Get all positions across brokers
+ */
+router.get('/positions', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const brokerManager = BrokerManager.getInstance();
+    const portfolio = await brokerManager.getAggregatedPortfolio();
+
+    // Convert positions Map to array
+    const positionsArray: any[] = [];
+    portfolio.positions.forEach((pos) => {
+      positionsArray.push(pos);
+    });
+
+    res.json({
+      success: true,
+      data: {
+        positions: positionsArray,
+        totalEquity: portfolio.totalEquity,
+        totalCash: portfolio.totalCash,
+      },
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to get positions',
+    });
+  }
+});
+
 export default router;
