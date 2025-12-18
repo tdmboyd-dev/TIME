@@ -20,6 +20,8 @@ import { notificationService } from '../notifications/notification_service';
 import { userRepository, auditLogRepository } from '../database/repositories';
 import { databaseManager } from '../database/connection';
 import { mfaService } from '../security/mfa_service';
+import { webAuthnService, WebAuthnCredential } from '../security/webauthn_service';
+import { oAuthService, OAuthProvider } from '../security/oauth_service';
 import { logger } from '../utils/logger';
 
 const router = Router();
@@ -1051,6 +1053,589 @@ router.get('/admin-status', async (_req: Request, res: Response) => {
       setupRequired: true,
       error: 'Could not check admin status'
     });
+  }
+});
+
+// ============================================================
+// WEBAUTHN / PASSKEY ROUTES
+// ============================================================
+
+/**
+ * POST /auth/webauthn/register/begin
+ * Begin WebAuthn registration (generate challenge)
+ */
+router.post('/webauthn/register/begin', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const user = (req as any).user;
+    const { friendlyName } = req.body;
+
+    // Get existing credentials
+    const existingCredentials: WebAuthnCredential[] = user.webauthnCredentials || [];
+
+    // Generate registration options
+    const options = await webAuthnService.generateRegistrationOptions(
+      user._id,
+      user.email,
+      user.name,
+      existingCredentials
+    );
+
+    await auditLogRepository.log('auth', 'webauthn_register_begin', {
+      userId: user._id,
+      email: user.email,
+    }, { success: true, userId: user._id });
+
+    res.json({
+      success: true,
+      options,
+      sessionId: (options as any).extensions?.sessionId,
+    });
+  } catch (error: any) {
+    logger.error('WebAuthn register begin error:', error);
+    res.status(500).json({ error: error.message || 'Failed to begin registration' });
+  }
+});
+
+/**
+ * POST /auth/webauthn/register/complete
+ * Complete WebAuthn registration (verify and store credential)
+ */
+router.post('/webauthn/register/complete', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const user = (req as any).user;
+    const { sessionId, response, friendlyName } = req.body;
+
+    if (!sessionId || !response) {
+      return res.status(400).json({ error: 'Missing sessionId or response' });
+    }
+
+    const result = await webAuthnService.verifyRegistration(
+      sessionId,
+      response,
+      friendlyName || 'Passkey'
+    );
+
+    if (!result.success || !result.credential) {
+      return res.status(400).json({ error: result.error || 'Registration failed' });
+    }
+
+    // Add credential to user
+    const credentials = user.webauthnCredentials || [];
+    credentials.push(result.credential);
+
+    await userRepository.update(user._id, {
+      webauthnCredentials: credentials,
+    });
+
+    await auditLogRepository.log('auth', 'webauthn_register_complete', {
+      userId: user._id,
+      credentialId: result.credential.id,
+      deviceType: result.credential.deviceType,
+    }, { success: true, userId: user._id });
+
+    res.json({
+      success: true,
+      message: 'Passkey registered successfully',
+      credential: {
+        id: result.credential.id,
+        friendlyName: result.credential.friendlyName,
+        deviceType: result.credential.deviceType,
+        backedUp: result.credential.backedUp,
+        createdAt: result.credential.createdAt,
+      },
+    });
+  } catch (error: any) {
+    logger.error('WebAuthn register complete error:', error);
+    res.status(500).json({ error: error.message || 'Failed to complete registration' });
+  }
+});
+
+/**
+ * POST /auth/webauthn/login/begin
+ * Begin WebAuthn authentication (for existing users)
+ */
+router.post('/webauthn/login/begin', async (req: Request, res: Response) => {
+  try {
+    const { email } = req.body;
+
+    let credentials: WebAuthnCredential[] = [];
+    let userId: string | undefined;
+
+    if (email) {
+      const user = await userRepository.findByEmail(email.toLowerCase());
+      if (user && user.webauthnCredentials && user.webauthnCredentials.length > 0) {
+        credentials = user.webauthnCredentials;
+        userId = user._id;
+      }
+    }
+
+    // Generate authentication options
+    const options = await webAuthnService.generateAuthenticationOptions(credentials, userId);
+
+    res.json({
+      success: true,
+      options,
+      sessionId: options.sessionId,
+      hasPasskeys: credentials.length > 0,
+    });
+  } catch (error: any) {
+    logger.error('WebAuthn login begin error:', error);
+    res.status(500).json({ error: error.message || 'Failed to begin authentication' });
+  }
+});
+
+/**
+ * POST /auth/webauthn/login/complete
+ * Complete WebAuthn authentication
+ */
+router.post('/webauthn/login/complete', async (req: Request, res: Response) => {
+  try {
+    const { sessionId, response, email } = req.body;
+
+    if (!sessionId || !response) {
+      return res.status(400).json({ error: 'Missing sessionId or response' });
+    }
+
+    // Find user with this credential
+    const credentialId = response.id;
+    let user: any = null;
+
+    if (email) {
+      user = await userRepository.findByEmail(email.toLowerCase());
+    }
+
+    if (!user) {
+      // Search all users for this credential (discoverable credentials)
+      const allUsers = await userRepository.findMany({});
+      for (const u of allUsers) {
+        if (u.webauthnCredentials?.some((c: any) => c.credentialId === credentialId)) {
+          user = u;
+          break;
+        }
+      }
+    }
+
+    if (!user) {
+      return res.status(401).json({ error: 'No account found with this passkey' });
+    }
+
+    // Find the credential
+    const credential = user.webauthnCredentials?.find((c: any) => c.credentialId === credentialId);
+    if (!credential) {
+      return res.status(401).json({ error: 'Credential not found' });
+    }
+
+    // Verify authentication
+    const result = await webAuthnService.verifyAuthentication(sessionId, response, credential);
+
+    if (!result.success) {
+      await auditLogRepository.log('auth', 'webauthn_login_failed', {
+        email: user.email,
+        error: result.error,
+      }, { success: false });
+      return res.status(401).json({ error: result.error || 'Authentication failed' });
+    }
+
+    // Update credential counter
+    if (result.newCounter !== undefined) {
+      const updatedCredentials = user.webauthnCredentials.map((c: any) => {
+        if (c.credentialId === credentialId) {
+          return { ...c, counter: result.newCounter, lastUsedAt: new Date() };
+        }
+        return c;
+      });
+      await userRepository.update(user._id, { webauthnCredentials: updatedCredentials });
+    }
+
+    // Create session
+    const sessionToken = generateToken();
+    const session: SessionData = {
+      userId: user._id,
+      email: user.email,
+      role: user.role,
+      mfaVerified: true, // WebAuthn counts as MFA
+      expiresAt: new Date(Date.now() + SESSION_DURATION_MS),
+      createdAt: new Date(),
+      ipAddress: req.ip,
+      userAgent: req.get('User-Agent'),
+    };
+
+    // Store session
+    const redis = databaseManager.getRedis();
+    await redis.set(`session:${sessionToken}`, JSON.stringify(session), 'EX', SESSION_DURATION_DAYS * 24 * 60 * 60);
+
+    // Update last login
+    await userRepository.update(user._id, { lastLogin: new Date(), lastActivity: new Date() });
+
+    // Set cookie
+    res.cookie('time_auth', sessionToken, COOKIE_OPTIONS);
+
+    await auditLogRepository.log('auth', 'webauthn_login', {
+      email: user.email,
+      credentialId: credential.id,
+    }, { success: true, userId: user._id });
+
+    res.json({
+      success: true,
+      token: sessionToken,
+      user: {
+        id: user._id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+      },
+    });
+  } catch (error: any) {
+    logger.error('WebAuthn login complete error:', error);
+    res.status(500).json({ error: error.message || 'Failed to complete authentication' });
+  }
+});
+
+/**
+ * GET /auth/webauthn/credentials
+ * List user's registered passkeys
+ */
+router.get('/webauthn/credentials', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const user = (req as any).user;
+    const credentials = user.webauthnCredentials || [];
+
+    res.json({
+      success: true,
+      credentials: credentials.map((c: WebAuthnCredential) => ({
+        id: c.id,
+        friendlyName: c.friendlyName,
+        deviceType: c.deviceType,
+        backedUp: c.backedUp,
+        createdAt: c.createdAt,
+        lastUsedAt: c.lastUsedAt,
+      })),
+    });
+  } catch (error: any) {
+    logger.error('Get WebAuthn credentials error:', error);
+    res.status(500).json({ error: 'Failed to get credentials' });
+  }
+});
+
+/**
+ * DELETE /auth/webauthn/credentials/:credentialId
+ * Remove a passkey
+ */
+router.delete('/webauthn/credentials/:credentialId', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const user = (req as any).user;
+    const { credentialId } = req.params;
+
+    const credentials = user.webauthnCredentials || [];
+    const updatedCredentials = credentials.filter((c: WebAuthnCredential) => c.id !== credentialId);
+
+    if (credentials.length === updatedCredentials.length) {
+      return res.status(404).json({ error: 'Credential not found' });
+    }
+
+    await userRepository.update(user._id, { webauthnCredentials: updatedCredentials });
+
+    await auditLogRepository.log('auth', 'webauthn_credential_removed', {
+      userId: user._id,
+      credentialId,
+    }, { success: true, userId: user._id });
+
+    res.json({
+      success: true,
+      message: 'Passkey removed successfully',
+    });
+  } catch (error: any) {
+    logger.error('Remove WebAuthn credential error:', error);
+    res.status(500).json({ error: 'Failed to remove credential' });
+  }
+});
+
+// ============================================================
+// OAUTH ROUTES
+// ============================================================
+
+/**
+ * GET /auth/oauth/providers
+ * List available OAuth providers
+ */
+router.get('/oauth/providers', (_req: Request, res: Response) => {
+  const providers = oAuthService.getAvailableProviders();
+  res.json({
+    success: true,
+    providers,
+  });
+});
+
+/**
+ * GET /auth/oauth/:provider/authorize
+ * Redirect to OAuth provider for authorization
+ */
+router.get('/oauth/:provider/authorize', (req: Request, res: Response) => {
+  try {
+    const { provider } = req.params;
+    const { returnUrl, linkToUserId } = req.query;
+
+    if (provider !== 'google' && provider !== 'github' && provider !== 'apple') {
+      return res.status(400).json({ error: 'Invalid provider' });
+    }
+
+    if (!oAuthService.isProviderConfigured(provider)) {
+      return res.status(400).json({ error: `${provider} OAuth not configured` });
+    }
+
+    const { url, state } = oAuthService.generateAuthUrl(provider, {
+      returnUrl: returnUrl as string,
+      linkToUserId: linkToUserId as string,
+    });
+
+    // For API usage, return the URL. For browser, redirect.
+    if (req.headers.accept?.includes('application/json')) {
+      res.json({ success: true, url, state });
+    } else {
+      res.redirect(url);
+    }
+  } catch (error: any) {
+    logger.error('OAuth authorize error:', error);
+    res.status(500).json({ error: error.message || 'Failed to generate OAuth URL' });
+  }
+});
+
+/**
+ * GET /auth/oauth/:provider/callback
+ * Handle OAuth callback from provider
+ */
+router.get('/oauth/:provider/callback', async (req: Request, res: Response) => {
+  try {
+    const { provider } = req.params;
+    const { code, state, error: oauthError } = req.query;
+
+    if (oauthError) {
+      return res.redirect(`/login?error=${encodeURIComponent(oauthError as string)}`);
+    }
+
+    if (!code || !state) {
+      return res.redirect('/login?error=Missing+authorization+code');
+    }
+
+    if (provider !== 'google' && provider !== 'github') {
+      return res.redirect('/login?error=Invalid+provider');
+    }
+
+    // Validate state (CSRF protection)
+    const stateValidation = oAuthService.validateState(state as string);
+    if (!stateValidation.valid) {
+      return res.redirect(`/login?error=${encodeURIComponent(stateValidation.error || 'Invalid+state')}`);
+    }
+
+    // Exchange code for tokens and get user info
+    const result = await oAuthService.handleCallback(provider, code as string);
+    if (!result.success || !result.userInfo) {
+      return res.redirect(`/login?error=${encodeURIComponent(result.error || 'OAuth+failed')}`);
+    }
+
+    const { providerId, email, name, avatar, accessToken, refreshToken } = result.userInfo;
+
+    // Check if linking to existing account
+    if (stateValidation.linkToUserId) {
+      const user = await userRepository.findById(stateValidation.linkToUserId);
+      if (!user) {
+        return res.redirect('/login?error=User+not+found');
+      }
+
+      // Add OAuth provider to existing account
+      const providers = user.oauthProviders || [];
+      if (providers.some((p: OAuthProvider) => p.provider === provider)) {
+        return res.redirect('/settings?error=Provider+already+linked');
+      }
+
+      providers.push(oAuthService.createProviderLink(provider, result.userInfo));
+      await userRepository.update(user._id, { oauthProviders: providers });
+
+      await auditLogRepository.log('auth', 'oauth_linked', {
+        userId: user._id,
+        provider,
+        providerId,
+      }, { success: true, userId: user._id });
+
+      return res.redirect(stateValidation.returnUrl || '/settings?success=OAuth+linked');
+    }
+
+    // Check if user exists with this OAuth provider
+    let user = await userRepository.findByEmail(email.toLowerCase());
+    let isNewUser = false;
+
+    if (!user) {
+      // Check if OAuth provider ID is already linked to another account
+      const allUsers = await userRepository.findMany({});
+      for (const u of allUsers) {
+        if (u.oauthProviders?.some((p: OAuthProvider) => p.provider === provider && p.providerId === providerId)) {
+          user = u;
+          break;
+        }
+      }
+    }
+
+    if (!user) {
+      // Create new user from OAuth
+      isNewUser = true;
+      const now = new Date();
+      const newUser = await userRepository.create({
+        _id: uuidv4(),
+        email: email.toLowerCase(),
+        name: name || email.split('@')[0],
+        passwordHash: '', // No password for OAuth-only users
+        role: 'user',
+        avatar,
+        createdAt: now,
+        lastLogin: now,
+        lastActivity: now,
+        consent: {
+          termsAccepted: true, // OAuth users accept terms by signing up
+          dataLearningConsent: true,
+          riskDisclosureAccepted: true,
+          marketingConsent: false,
+          acceptedAt: now,
+        },
+        settings: {
+          timezone: 'America/Chicago',
+          currency: 'USD',
+          language: 'en',
+          theme: 'dark',
+          notifications: {
+            email: true,
+            sms: false,
+            push: true,
+            tradeAlerts: true,
+            riskAlerts: true,
+            dailySummary: true,
+          },
+        },
+        brokerConnections: [],
+        oauthProviders: [oAuthService.createProviderLink(provider, result.userInfo)],
+      } as any);
+      user = newUser;
+    } else {
+      // Update existing user's OAuth provider
+      const providers = user.oauthProviders || [];
+      const existingProvider = providers.find((p: OAuthProvider) => p.provider === provider);
+      if (existingProvider) {
+        existingProvider.lastUsedAt = new Date();
+      } else {
+        providers.push(oAuthService.createProviderLink(provider, result.userInfo));
+      }
+      await userRepository.update(user._id, {
+        oauthProviders: providers,
+        lastLogin: new Date(),
+        lastActivity: new Date(),
+        avatar: avatar || user.avatar,
+      });
+    }
+
+    // Create session
+    const sessionToken = generateToken();
+    const session: SessionData = {
+      userId: user._id,
+      email: user.email,
+      role: user.role,
+      mfaVerified: true, // OAuth counts as verified
+      expiresAt: new Date(Date.now() + SESSION_DURATION_MS),
+      createdAt: new Date(),
+      ipAddress: req.ip,
+      userAgent: req.get('User-Agent'),
+    };
+
+    const redis = databaseManager.getRedis();
+    await redis.set(`session:${sessionToken}`, JSON.stringify(session), 'EX', SESSION_DURATION_DAYS * 24 * 60 * 60);
+
+    // Set cookie
+    res.cookie('time_auth', sessionToken, COOKIE_OPTIONS);
+
+    await auditLogRepository.log('auth', isNewUser ? 'oauth_register' : 'oauth_login', {
+      email: user.email,
+      provider,
+      providerId,
+    }, { success: true, userId: user._id });
+
+    // Redirect to return URL or dashboard
+    const returnUrl = stateValidation.returnUrl || '/';
+    res.redirect(`${returnUrl}${returnUrl.includes('?') ? '&' : '?'}token=${sessionToken}`);
+  } catch (error: any) {
+    logger.error('OAuth callback error:', error);
+    res.redirect(`/login?error=${encodeURIComponent(error.message || 'OAuth+failed')}`);
+  }
+});
+
+/**
+ * GET /auth/oauth/linked
+ * Get user's linked OAuth providers
+ */
+router.get('/oauth/linked', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const user = (req as any).user;
+    const providers = user.oauthProviders || [];
+
+    res.json({
+      success: true,
+      providers: providers.map((p: OAuthProvider) => ({
+        provider: p.provider,
+        email: p.email,
+        name: p.name,
+        avatar: p.avatar,
+        linkedAt: p.linkedAt,
+        lastUsedAt: p.lastUsedAt,
+      })),
+    });
+  } catch (error: any) {
+    logger.error('Get OAuth providers error:', error);
+    res.status(500).json({ error: 'Failed to get OAuth providers' });
+  }
+});
+
+/**
+ * DELETE /auth/oauth/:provider
+ * Unlink OAuth provider from account
+ */
+router.delete('/oauth/:provider', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const user = (req as any).user;
+    const { provider } = req.params;
+
+    if (provider !== 'google' && provider !== 'github' && provider !== 'apple') {
+      return res.status(400).json({ error: 'Invalid provider' });
+    }
+
+    const providers = user.oauthProviders || [];
+    const updatedProviders = providers.filter((p: OAuthProvider) => p.provider !== provider);
+
+    if (providers.length === updatedProviders.length) {
+      return res.status(404).json({ error: 'Provider not linked' });
+    }
+
+    // Ensure user has another way to login
+    const hasPassword = !!user.passwordHash;
+    const hasOtherOAuth = updatedProviders.length > 0;
+    const hasPasskeys = (user.webauthnCredentials || []).length > 0;
+
+    if (!hasPassword && !hasOtherOAuth && !hasPasskeys) {
+      return res.status(400).json({
+        error: 'Cannot unlink last login method. Add a password or another OAuth provider first.',
+      });
+    }
+
+    await userRepository.update(user._id, { oauthProviders: updatedProviders });
+
+    await auditLogRepository.log('auth', 'oauth_unlinked', {
+      userId: user._id,
+      provider,
+    }, { success: true, userId: user._id });
+
+    res.json({
+      success: true,
+      message: `${provider} unlinked successfully`,
+    });
+  } catch (error: any) {
+    logger.error('Unlink OAuth provider error:', error);
+    res.status(500).json({ error: 'Failed to unlink provider' });
   }
 });
 

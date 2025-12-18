@@ -48,6 +48,8 @@ export interface UserSchema {
       riskAlerts: boolean;
       dailySummary: boolean;
     };
+    mfaEnabled?: boolean;
+    mfaSecret?: string;
   };
   brokerConnections: Array<{
     brokerId: string;
@@ -57,6 +59,31 @@ export interface UserSchema {
     connectedAt: Date;
     lastSync: Date;
     status: 'active' | 'disconnected' | 'error';
+  }>;
+
+  // WebAuthn/Passkey credentials
+  webauthnCredentials?: Array<{
+    id: string;
+    credentialId: string;
+    publicKey: string;
+    counter: number;
+    deviceType: 'singleDevice' | 'multiDevice';
+    backedUp: boolean;
+    transports?: string[];
+    createdAt: Date;
+    lastUsedAt: Date;
+    friendlyName: string;
+  }>;
+
+  // OAuth provider links
+  oauthProviders?: Array<{
+    provider: 'google' | 'github' | 'apple';
+    providerId: string;
+    email: string;
+    name?: string;
+    avatar?: string;
+    linkedAt: Date;
+    lastUsedAt: Date;
   }>;
 }
 
