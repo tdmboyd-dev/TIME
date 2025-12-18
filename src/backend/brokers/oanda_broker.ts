@@ -32,10 +32,29 @@ interface OANDAConfig extends BrokerConfig {
   environment?: 'practice' | 'live';
 }
 
+/**
+ * OANDA Supported Instruments:
+ *
+ * FOREX (70+ pairs):
+ * - Majors: EUR_USD, GBP_USD, USD_JPY, USD_CHF, AUD_USD, NZD_USD, USD_CAD
+ * - Minors: EUR_GBP, EUR_JPY, GBP_JPY, AUD_JPY, EUR_AUD, GBP_AUD
+ * - Exotics: USD_MXN, USD_ZAR, EUR_TRY, USD_HKD, USD_SGD
+ *
+ * COMMODITIES (Precious Metals & Energy):
+ * - XAU_USD (Gold), XAG_USD (Silver), XPT_USD (Platinum), XPD_USD (Palladium)
+ * - BCO_USD (Brent Crude), WTICO_USD (WTI Crude), NATGAS_USD (Natural Gas)
+ * - XCU_USD (Copper)
+ *
+ * CFDs (Indices & Bonds):
+ * - SPX500_USD (S&P 500), NAS100_USD (NASDAQ 100), US30_USD (Dow Jones)
+ * - UK100_GBP (FTSE 100), DE30_EUR (DAX 30), JP225_USD (Nikkei)
+ * - USB02Y_USD, USB05Y_USD, USB10Y_USD, USB30Y_USD (US Treasuries)
+ * - DE10YB_EUR (German Bund)
+ */
 export class OANDABroker extends BrokerInterface {
   public readonly name = 'OANDA';
   public readonly capabilities: BrokerCapabilities = {
-    assetClasses: ['forex'],
+    assetClasses: ['forex', 'commodities', 'cfds', 'bonds'],
     orderTypes: ['market', 'limit', 'stop', 'stop_limit'],
     supportsStreaming: true,
     supportsPaperTrading: true,

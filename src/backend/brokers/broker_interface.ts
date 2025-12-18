@@ -16,7 +16,25 @@ export type TimeInForce = 'day' | 'gtc' | 'ioc' | 'fok';
 
 // Account types
 export type AccountType = 'cash' | 'margin' | 'paper';
-export type AssetClass = 'stock' | 'crypto' | 'forex' | 'futures' | 'options';
+export type AssetClass = 'stock' | 'crypto' | 'forex' | 'futures' | 'options' | 'commodities' | 'cfds' | 'bonds';
+
+/**
+ * Supported Trading Instruments:
+ *
+ * FOREX PAIRS (via OANDA, MT4/MT5):
+ * - Major: EUR/USD, GBP/USD, USD/JPY, USD/CHF, AUD/USD, NZD/USD, USD/CAD
+ * - Cross: EUR/GBP, EUR/JPY, GBP/JPY, AUD/JPY, etc.
+ * - Exotic: USD/MXN, USD/ZAR, EUR/TRY, etc.
+ *
+ * COMMODITIES (via OANDA CFDs, MT4/MT5):
+ * - Precious Metals: XAU/USD (Gold), XAG/USD (Silver), XPT/USD (Platinum)
+ * - Energy: WTICO/USD (WTI Oil), BRENT/USD (Brent Oil), NATGAS/USD (Natural Gas)
+ * - Agriculture: CORN, WHEAT, SOYBN, SUGAR (via futures)
+ *
+ * CFDs (via OANDA, IG Markets):
+ * - Indices: SPX500, NAS100, UK100, DE30, JP225
+ * - Bonds: BUND, TBOND
+ */
 
 // Market data types
 export interface Quote {

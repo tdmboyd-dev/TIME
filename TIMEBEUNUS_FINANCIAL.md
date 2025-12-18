@@ -1,6 +1,65 @@
 # TIMEBEUNUS FINANCIAL KNOWLEDGE BASE
 ## Complete Financial Markets Master Reference
-### Version 3.0.0 | Last Updated: December 17, 2025 (TOP 10 BOTS + THEOTRADE + COMPETITOR ANALYSIS)
+### Version 4.0.0 | Last Updated: December 18, 2025 (COMMODITY APIs + MULTI-BROKER RESEARCH)
+
+---
+
+# 🆕 COMMODITY TRADING API RESEARCH (December 18, 2025)
+
+## BEST COMMODITY APIs FOR REAL-TIME DATA
+
+| API | Coverage | Key Features | Pricing |
+|-----|----------|--------------|---------|
+| **[Twelve Data](https://twelvedata.com/commodities)** | Gold, Silver, Platinum, Oil, Gas | 99.9% uptime, low latency, already integrated! | Free tier available |
+| **[Metals-API](https://metals-api.com/)** | Precious metals only | 6+ years history, millisecond response | Free tier |
+| **[Commodities-API](https://commodities-api.com/)** | All commodities | Simple, lightweight | Free tier |
+| **[Metals.Dev](https://metals.dev/)** | Precious + Industrial metals | LBMA, LME, MCX sources | Paid |
+| **[FMP Commodities](https://site.financialmodelingprep.com/datasets/commodity)** | Full coverage | Already integrated in TIME! | Paid |
+| **[API Ninjas](https://api-ninjas.com/api/commodityprice)** | All commodities | OHLCV historical data | Free tier |
+| **[Tradefeeds](https://tradefeeds.com/commodities-prices-api/)** | 15 years history | Manufacturing + Energy | Paid |
+
+## COMMODITIES WE CAN TRADE (via OANDA + MT4/MT5)
+
+### Precious Metals
+| Symbol | Name | Broker |
+|--------|------|--------|
+| XAU/USD | Gold | OANDA, MT4, MT5 |
+| XAG/USD | Silver | OANDA, MT4, MT5 |
+| XPT/USD | Platinum | OANDA |
+| XPD/USD | Palladium | OANDA |
+| XCU/USD | Copper | OANDA |
+
+### Energy
+| Symbol | Name | Broker |
+|--------|------|--------|
+| WTICO/USD | WTI Crude Oil | OANDA |
+| BCO/USD | Brent Crude Oil | OANDA |
+| NATGAS/USD | Natural Gas | OANDA |
+
+### Agriculture (via Futures)
+| Symbol | Name | Broker |
+|--------|------|--------|
+| CORN | Corn Futures | IB, TradeStation |
+| WHEAT | Wheat Futures | IB, TradeStation |
+| SOYBN | Soybean Futures | IB, TradeStation |
+| SUGAR | Sugar Futures | IB, TradeStation |
+| COFFEE | Coffee Futures | IB, TradeStation |
+
+## COMMODITY TRADING STRATEGIES
+
+### 1. Gold-Dollar Inverse Correlation
+- When USD weakens, gold strengthens
+- Monitor DXY (Dollar Index) for signals
+- Trade XAU/USD on OANDA
+
+### 2. Oil Inventory Play
+- Trade around EIA inventory reports (Wednesdays)
+- WTICO/USD via OANDA or CL futures via IB
+
+### 3. Precious Metals Ratio
+- Gold/Silver ratio normally 60-80
+- When above 80: Buy silver, sell gold
+- When below 60: Buy gold, sell silver
 
 ---
 

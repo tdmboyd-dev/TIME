@@ -96,6 +96,9 @@ export class BrokerManager extends EventEmitter implements TIMEComponent {
     this.routingPreferences.set('forex', { assetClass: 'forex' });
     this.routingPreferences.set('futures', { assetClass: 'futures' });
     this.routingPreferences.set('options', { assetClass: 'options' });
+    this.routingPreferences.set('commodities', { assetClass: 'commodities' }); // XAU/USD, XAG/USD, Oil
+    this.routingPreferences.set('cfds', { assetClass: 'cfds' }); // Indices, Bonds
+    this.routingPreferences.set('bonds', { assetClass: 'bonds' }); // Treasury bonds
   }
 
   public async initialize(): Promise<void> {
