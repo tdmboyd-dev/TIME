@@ -1,8 +1,8 @@
 # TIMEBEUNUS — THE MASTER AI GUIDE
 ## For Copilot, Claude, and All AI Assistants
 
-**Version:** 23.1.0 - USER AUTHENTICATION UI EDITION
-**Last Updated:** 2025-12-18 (User Dropdown + Logout UI Complete)
+**Version:** 23.2.0 - BROKER PERSISTENCE EDITION
+**Last Updated:** 2025-12-18 (40+ Brokers + MongoDB Persistence)
 **Creator:** Timebeunus Boyd
 **Purpose:** Complete platform understanding for AI assistants to provide proper guidance
 
@@ -10,6 +10,48 @@
 
 > **"Never get left out again. The big boys' playbook is now YOUR playbook."**
 > — TIMEBEUNUS
+
+---
+
+# 🚀 NEW IN v23.2.0 - BROKER PERSISTENCE EDITION
+
+## ✅ BROKER CONNECTIONS PERSIST TO MONGODB
+
+**Date:** December 18, 2025
+
+### BROKER PERSISTENCE FEATURES:
+
+| Feature | Description | Status |
+|---------|-------------|--------|
+| **MongoDB Storage** | Broker connections saved to user document | ✅ LIVE |
+| **Per-User Storage** | Each user has their own broker connections | ✅ LIVE |
+| **Survives Refresh** | Connections persist across page refreshes | ✅ LIVE |
+| **40+ Brokers** | Traditional, crypto, forex, retirement, mobile | ✅ LIVE |
+
+### NEW BROKER API ENDPOINTS:
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/v1/brokers/connections` | GET | Get user's saved broker connections |
+| `/api/v1/brokers/connect` | POST | Save broker to MongoDB |
+| `/api/v1/brokers/disconnect/:id` | DELETE | Remove broker connection |
+| `/api/v1/brokers/:id/sync` | PUT | Update last sync time |
+
+### 40+ SUPPORTED BROKERS:
+
+**Traditional:** Vanguard, Fidelity, Charles Schwab, Merrill Edge, Morgan Stanley, J.P. Morgan, Wells Fargo, UBS, Goldman Sachs
+
+**Mobile/Robo:** Cash App, Stash, Acorns, Betterment, Wealthfront, M1 Finance, Ally Invest, moomoo
+
+**Retirement:** TIAA, Principal Financial, Empower Retirement, Voya Financial
+
+**Crypto:** Coinbase, Binance, Kraken, Gemini
+
+**Forex:** OANDA, FOREX.com, IG
+
+**International:** DEGIRO, Saxo Bank, Trading 212
+
+**And More:** Robinhood, Webull, TD Ameritrade, Interactive Brokers, TradeStation, tastytrade, etc.
 
 ---
 

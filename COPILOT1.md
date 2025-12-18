@@ -2,14 +2,36 @@
 
 ## COMPLETE PLATFORM DOCUMENTATION FOR AI ASSISTANTS
 
-**Version:** 17.1.0 - USER AUTHENTICATION UI EDITION
+**Version:** 17.2.0 - BROKER PERSISTENCE EDITION
 **Last Updated:** 2025-12-18
-**Status:** 96% READY - User Dropdown + Logout UI Complete
+**Status:** 97% READY - 40+ Brokers + MongoDB Persistence
 **Purpose:** Complete platform understanding for Copilot, Claude, and all AI assistants
 
 ---
 
 # HONEST STATUS REPORT (December 18, 2025)
+
+## ✅ NEW IN v17.2.0 - BROKER PERSISTENCE EDITION
+
+### BROKER CONNECTIONS PERSIST TO MONGODB
+
+**New Broker API Routes (src/backend/routes/brokers.ts):**
+- GET `/api/v1/brokers/connections` - Fetch user's saved connections
+- POST `/api/v1/brokers/connect` - Save broker to MongoDB
+- DELETE `/api/v1/brokers/disconnect/:id` - Remove connection
+- PUT `/api/v1/brokers/:id/sync` - Update last sync time
+
+**40+ Brokers Added to UI:**
+- Traditional: Vanguard, Fidelity, Schwab, Merrill, Morgan Stanley, J.P. Morgan, Wells Fargo, UBS, Goldman
+- Mobile/Robo: Cash App, Stash, Acorns, Betterment, Wealthfront, M1 Finance, Ally, moomoo
+- Retirement: TIAA, Principal, Empower, Voya
+- Crypto: Coinbase, Binance, Kraken, Gemini
+- Forex: OANDA, FOREX.com, IG
+
+**BEFORE:** Connections lost on page refresh (in-memory only)
+**AFTER:** Connections persist to MongoDB per-user
+
+---
 
 ## ✅ NEW IN v17.1.0 - USER AUTHENTICATION UI EDITION
 
