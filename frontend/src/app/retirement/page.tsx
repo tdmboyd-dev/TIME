@@ -171,7 +171,7 @@ export default function RetirementPage() {
       setIsConnected(false);
 
     } catch (error) {
-      console.error('Failed to fetch retirement plans:', error);
+      // Error handled - uses fallback data
       setPlans(getMockData());
       setIsConnected(false);
     } finally {

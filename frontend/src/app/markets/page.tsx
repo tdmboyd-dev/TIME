@@ -82,7 +82,7 @@ export default function MarketsPage() {
           });
         }
       } catch (err) {
-        console.error(`Failed to fetch ${symbol}:`, err);
+        // Error handled - symbol skipped
       }
     }
 
@@ -114,7 +114,7 @@ export default function MarketsPage() {
           });
         }
       } catch (err) {
-        console.error(`Failed to fetch ${symbol}:`, err);
+        // Error handled - symbol skipped
       }
     }
 
@@ -174,7 +174,7 @@ export default function MarketsPage() {
         });
       }
     } catch (err) {
-      console.error('Failed to fetch market movers:', err);
+      // Error handled - movers unavailable
     }
 
     return results;
@@ -211,7 +211,7 @@ export default function MarketsPage() {
         setIsConnected(false);
       }
     } catch (err) {
-      console.error('Failed to fetch market data:', err);
+      // Error handled - shows error to user
       setError('Failed to connect to market data');
       setIsConnected(false);
     } finally {

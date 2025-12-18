@@ -276,7 +276,7 @@ export default function PortfolioPage() {
       }
 
     } catch (error: any) {
-      console.error('Failed to fetch portfolio data:', error);
+      // Error handled - shows error state to user
       setError('Portfolio endpoints not yet deployed');
       setPortfolioAvailable(false);
     } finally {

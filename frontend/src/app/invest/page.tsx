@@ -417,7 +417,7 @@ export default function InvestPage() {
               }
             }
           } catch (error) {
-            console.error(`Error fetching ${symbol}:`, error);
+            // Error handled - symbol skipped
           }
         }
 
@@ -428,7 +428,7 @@ export default function InvestPage() {
         setLiveAssets([]);
       }
     } catch (error) {
-      console.error('Error fetching live data:', error);
+      // Error handled - shows empty state
       setIsConnected(false);
       setLiveAssets([]);
     } finally {

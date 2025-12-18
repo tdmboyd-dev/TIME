@@ -191,7 +191,7 @@ export default function ChartsPage() {
         throw new Error('No data returned');
       }
     } catch (error) {
-      console.error('Failed to fetch chart data:', error);
+      // API unavailable - falling back to demo visualization
       // Fallback to demo data
       const basePrice = selectedSymbol.type === 'crypto' ? 43000 :
                        selectedSymbol.type === 'forex' ? 1.08 :

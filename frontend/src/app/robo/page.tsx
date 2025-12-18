@@ -115,8 +115,7 @@ export default function RoboAdvisorPage() {
         console.log('No portfolios - create one to get started');
       }
     } catch (error) {
-      // Network error - show empty state
-      console.error('Failed to fetch portfolios:', error);
+      // Error handled - shows empty state
       setIsConnected(false);
       setPortfolios([]);
     } finally {

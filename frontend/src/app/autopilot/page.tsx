@@ -138,7 +138,7 @@ export default function AutoPilotPage() {
 
       setIsLoading(false);
     } catch (error) {
-      console.error('Error fetching real data:', error);
+      // Error handled - shows default state
       setIsLoading(false);
     }
   };
@@ -198,7 +198,7 @@ export default function AutoPilotPage() {
         setTimeout(() => setNotification(null), 5000);
       }
     } catch (error) {
-      console.error('AutoPilot creation failed:', error);
+      // Error handled - notification shown to user
       setNotification({
         type: 'error',
         message: 'Network error. Please check your connection.'
@@ -251,7 +251,7 @@ export default function AutoPilotPage() {
           }
         }
       } catch (error) {
-        console.error('Trade polling error:', error);
+        // Polling error handled silently - will retry
       }
     }, 10000); // Poll every 10 seconds
 

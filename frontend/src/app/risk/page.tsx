@@ -150,7 +150,7 @@ export default function RiskProfilePage() {
         });
       }
     } catch (error) {
-      console.error('Failed to fetch risk profile:', error);
+      // Error handled - uses fallback data
       setIsConnected(false);
       // Fallback to mock data
       setProfile({

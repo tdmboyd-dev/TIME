@@ -131,7 +131,7 @@ export default function VisionPage() {
         return true;
       }
     } catch (error) {
-      console.error('Failed to fetch market status:', error);
+      // Error handled - shows demo mode
       setIsConnected(false);
     }
     return false;
@@ -157,11 +157,11 @@ export default function VisionPage() {
         setMarketData(data);
         setIsConnected(true);
       } else {
-        console.warn('Failed to fetch market data, using mock data');
+        // No data - use mock data
         setIsConnected(false);
       }
     } catch (error) {
-      console.error('Error fetching market data:', error);
+      // Error handled - uses mock data
       setIsConnected(false);
       setMarketData(null);
     } finally {

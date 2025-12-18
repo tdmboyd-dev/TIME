@@ -154,7 +154,7 @@ export default function BotsPage() {
         throw new Error('Invalid API response format');
       }
     } catch (error: any) {
-      console.error('Failed to fetch bots:', error);
+      // Error handled - shows error state to user
       setError(error.message || 'Failed to connect to backend');
       setIsConnected(false);
       setBots([]);

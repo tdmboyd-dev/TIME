@@ -186,7 +186,7 @@ export default function PaymentsPage() {
         ]);
       }
     } catch (error) {
-      console.error('Payment data fetch error:', error);
+      // Error handled - shows disconnected state
       setIsConnected(false);
     } finally {
       setIsLoading(false);

@@ -271,7 +271,7 @@ export default function BrokersPage() {
         }
       }
     } catch (error) {
-      console.error('Failed to fetch broker status:', error);
+      // Error handled - falling back to demo mode
       setIsConnected(false);
       // Use demo data as fallback
       setConnections([
@@ -337,7 +337,7 @@ export default function BrokersPage() {
         }
       }
     } catch (error) {
-      console.error('Failed to connect broker:', error);
+      // Error handled - falling back to demo connection
     }
 
     // Fallback to demo connection if API fails
@@ -368,7 +368,7 @@ export default function BrokersPage() {
         headers: getAuthHeaders(),
       });
     } catch (error) {
-      console.error('Failed to disconnect broker:', error);
+      // Error handled - proceeding with local disconnect
     }
     setConnections(prev => prev.filter(c => c.id !== connectionId));
   };

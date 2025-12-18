@@ -123,7 +123,7 @@ export default function HistoryPage() {
       setTrades(allTrades);
       setIsConnected(allTrades.length > 0);
     } catch (error) {
-      console.error('Failed to fetch trades:', error);
+      // Error handled - shows empty state
       setTrades([]);
       setIsConnected(false);
     } finally {

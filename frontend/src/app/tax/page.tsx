@@ -108,8 +108,7 @@ export default function TaxPage() {
         throw new Error('Invalid response format');
       }
     } catch (error) {
-      console.error('Failed to fetch data from backend, using mock data:', error);
-      // Fallback to mock data
+      // Error handled - uses fallback mock data
       setYearlySummary(mockYearlySummary);
       setWashSaleCalendar(mockWashSaleCalendar);
       setIsConnected(false);
@@ -165,9 +164,8 @@ export default function TaxPage() {
         throw new Error('Invalid response format');
       }
     } catch (error) {
-      console.error('Failed to scan, backend may be unavailable:', error);
+      // Error handled - shows empty opportunities
       setIsConnected(false);
-      // Keep opportunities empty if scan fails
     } finally {
       setIsScanning(false);
     }
@@ -191,7 +189,7 @@ export default function TaxPage() {
         throw new Error('Invalid response format');
       }
     } catch (error) {
-      console.error('Failed to execute harvest:', error);
+      // Error handled - shows alert
       setIsConnected(false);
       alert('Failed to execute harvest. Backend may be unavailable.');
     }

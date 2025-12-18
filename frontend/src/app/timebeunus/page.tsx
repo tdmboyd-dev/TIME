@@ -150,13 +150,13 @@ export default function TIMEBEUNUSPage() {
             }
           }
         } catch (err) {
-          console.error(`Error fetching signal for ${symbol}:`, err);
+          // Error handled - skip symbol
         }
       }
 
       setAlphaSignals(signals);
     } catch (err) {
-      console.error('Error fetching signals:', err);
+      // Error handled - sets error message
       setError('Failed to fetch trading signals');
     }
   };
@@ -172,7 +172,7 @@ export default function TIMEBEUNUSPage() {
         }
       }
     } catch (err) {
-      console.error('Error fetching trades:', err);
+      // Error handled - keeps empty trades
     }
   };
 
@@ -213,7 +213,7 @@ export default function TIMEBEUNUSPage() {
         }
       }
     } catch (err) {
-      console.error('Error fetching performance:', err);
+      // Error handled - keeps default performance
     }
   };
 
@@ -236,7 +236,7 @@ export default function TIMEBEUNUSPage() {
         }
       }
     } catch (err) {
-      console.error('Error fetching strategies:', err);
+      // Error handled - keeps empty strategies
     }
   };
 
@@ -294,7 +294,7 @@ export default function TIMEBEUNUSPage() {
         }
       }
     } catch (err) {
-      console.error('Error fetching TIMEBEUNUS status:', err);
+      // Error handled - keeps default status
     }
   };
 
@@ -384,7 +384,7 @@ export default function TIMEBEUNUSPage() {
         setNotification({ type: 'success', message: `Dominance mode changed to ${mode.toUpperCase()}` });
       }
     } catch (err) {
-      console.error('Failed to change mode:', err);
+      // Error handled - notification still shows
     }
     setNotification({ type: 'success', message: `Dominance mode changed to ${mode.toUpperCase()}` });
     setTimeout(() => setNotification(null), 4000);

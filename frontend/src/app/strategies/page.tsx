@@ -143,7 +143,7 @@ export default function StrategiesPage() {
         setIsConnected(true);
       }
     } catch (error: any) {
-      console.error('Failed to fetch strategies:', error);
+      // Error handled - shows empty state
       setError(error.message || 'Failed to connect');
       setIsConnected(false);
       // No mock fallback - show empty state

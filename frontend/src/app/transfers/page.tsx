@@ -87,7 +87,7 @@ export default function TransfersPage() {
         setIsConnected(true);
       }
     } catch (error) {
-      console.error('Failed to fetch brokers from API, using mock data:', error);
+      // Error handled - uses mock data
       setBrokers(MOCK_BROKERS);
       setIsConnected(false);
     }
@@ -104,7 +104,7 @@ export default function TransfersPage() {
         setIsConnected(true);
       }
     } catch (error) {
-      console.error('Failed to fetch transfers from API, using mock data:', error);
+      // Error handled - uses mock data
       setTransfers(MOCK_TRANSFERS);
       setIsConnected(false);
     } finally {
@@ -157,7 +157,7 @@ export default function TransfersPage() {
         fetchTransfers();
       }
     } catch (error) {
-      console.error('Failed to initiate transfer:', error);
+      // Error handled - shows alert
       alert('Failed to initiate transfer. Please try again.');
     }
   };

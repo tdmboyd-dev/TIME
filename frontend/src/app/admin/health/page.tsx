@@ -88,7 +88,7 @@ export default function SystemHealthPage() {
       setHealthData(healthResponse);
 
     } catch (err: any) {
-      console.error('Failed to fetch health data:', err);
+      // Error handled - shows error state to user
       setError(err.message);
     }
   };
@@ -106,7 +106,7 @@ export default function SystemHealthPage() {
       setStatusData(statusResponse);
 
     } catch (err: any) {
-      console.error('Failed to fetch status data:', err);
+      // Error handled - shows error state to user
       // Don't overwrite health error
       if (!error) {
         setError(err.message);

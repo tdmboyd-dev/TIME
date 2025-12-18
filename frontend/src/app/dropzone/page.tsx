@@ -236,7 +236,7 @@ export default function DropzonePage() {
 
       setIsConnected(true);
     } catch (error) {
-      console.error('Failed to fetch data:', error);
+      // Error handled - falls back to sample data
       setIsConnected(false);
       // Generate sample data
       generateSampleData();

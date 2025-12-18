@@ -178,7 +178,7 @@ export default function ExecutionPage() {
       }
 
     } catch (error) {
-      console.error('Failed to fetch backend data:', error);
+      // Error handled - shows empty state
       setIsConnected(false);
       // No mock fallback - show empty state
       setVenues([]);

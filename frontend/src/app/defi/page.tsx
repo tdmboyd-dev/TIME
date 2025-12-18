@@ -150,7 +150,7 @@ export default function DeFiPage() {
 
       setIsConnected(true);
     } catch (error) {
-      console.error('Failed to fetch DeFi data:', error);
+      // Error handled - shows empty state
       setIsConnected(false);
     } finally {
       // Ensure loading indicator shows for at least 500ms

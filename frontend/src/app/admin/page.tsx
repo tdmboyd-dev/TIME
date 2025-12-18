@@ -107,7 +107,7 @@ export default function AdminPage() {
         }
       }
     } catch (error) {
-      console.error('Failed to fetch admin data:', error);
+      // Error handled silently - data will show as loading/empty
     } finally {
       setIsLoading(false);
     }

@@ -120,7 +120,7 @@ export default function LearnPage() {
         }
       }
     } catch (error) {
-      console.error('Failed to fetch courses:', error);
+      // Error handled - shows empty state
       setIsConnected(false);
     } finally {
       setIsLoading(false);

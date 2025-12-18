@@ -151,7 +151,7 @@ export default function AdminPortalPage() {
         rejectedBots: metricsData?.rejectedBots || 0,
       });
     } catch (err) {
-      console.error('Failed to fetch admin data:', err);
+      // Error handled - shows empty state, no mock data
       setIsConnected(false);
       // Empty state on error - NO MOCK DATA
       setSystemHealth([]);

@@ -72,7 +72,7 @@ export default function AITradeGodPage() {
         }
       }
     } catch (error) {
-      console.error('Failed to fetch bots:', error);
+      // Error handled silently - UI shows empty state
     }
   };
 
@@ -84,7 +84,7 @@ export default function AITradeGodPage() {
         setTrades(data.data);
       }
     } catch (error) {
-      console.error('Failed to fetch trades:', error);
+      // Error handled silently - UI shows empty state
     }
   };
 
@@ -104,7 +104,7 @@ export default function AITradeGodPage() {
         fetchBots();
       }
     } catch (error) {
-      console.error('Failed to create bot:', error);
+      // Error handled silently - creation failed
     }
     setLoading(false);
   };
@@ -116,7 +116,7 @@ export default function AITradeGodPage() {
       });
       fetchBots();
     } catch (error) {
-      console.error(`Failed to ${action} bot:`, error);
+      // Error handled silently - action failed
     }
   };
 
@@ -152,7 +152,7 @@ export default function AITradeGodPage() {
       });
       fetchBots();
     } catch (error) {
-      console.error('Failed to list bot:', error);
+      // Error handled silently - listing failed
     }
   };
 

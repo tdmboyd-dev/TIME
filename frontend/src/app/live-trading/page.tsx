@@ -128,7 +128,7 @@ export default function LiveTradingPage() {
       if (signalsData.success) setPendingSignals(signalsData.data);
       if (tradesData.success) setRecentTrades(tradesData.data);
     } catch (error) {
-      console.error('Failed to fetch trading data:', error);
+      // Error handled - shows empty state
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);

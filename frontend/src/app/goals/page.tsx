@@ -92,7 +92,7 @@ export default function GoalsPage() {
         throw new Error('Invalid response format');
       }
     } catch (error) {
-      console.error('Failed to fetch goals from API:', error);
+      // Error handled - shows empty state
       setGoals([]);
       setIsConnected(false);
     } finally {
@@ -116,7 +116,7 @@ export default function GoalsPage() {
         throw new Error('Invalid response format');
       }
     } catch (error) {
-      console.error('Failed to fetch questions from API:', error);
+      // Error handled - shows empty state
       setQuestions([]);
     }
   }, []);
@@ -150,7 +150,7 @@ export default function GoalsPage() {
         throw new Error('Invalid response format');
       }
     } catch (error) {
-      console.error('Failed to calculate risk profile:', error);
+      // Error handled - using fallback calculation
       // Fallback to basic profile
       const avgScore = Object.values(riskAnswers).reduce((a, b) => a + b, 0) / Object.values(riskAnswers).length;
       const score = Math.round((avgScore / 7) * 100);
@@ -198,7 +198,7 @@ export default function GoalsPage() {
         throw new Error('Invalid response format');
       }
     } catch (error) {
-      console.error('Failed to create goal:', error);
+      // Error handled - alert shown to user
       alert('Failed to create goal. Please try again.');
     }
   };
