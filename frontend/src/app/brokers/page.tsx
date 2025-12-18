@@ -27,6 +27,15 @@ import {
 
 import { API_BASE } from '@/lib/api';
 
+// Helper for auth headers
+const getAuthHeaders = () => {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('time_auth_token') : null;
+  return {
+    'Content-Type': 'application/json',
+    ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+  };
+};
+
 // Broker types
 interface BrokerConnection {
   id: string;
@@ -219,9 +228,9 @@ export default function BrokersPage() {
   const fetchBrokerStatus = useCallback(async () => {
     try {
       const [brokerResponse, venueResponse, summaryResponse] = await Promise.all([
-        fetch(`${API_BASE}/portfolio/brokers/status`),
-        fetch(`${API_BASE}/advanced-broker/venues`),
-        fetch(`${API_BASE}/portfolio/summary`),
+        fetch(`${API_BASE}/portfolio/brokers/status`, { headers: getAuthHeaders() }),
+        fetch(`${API_BASE}/advanced-broker/venues`, { headers: getAuthHeaders() }),
+        fetch(`${API_BASE}/portfolio/summary`, { headers: getAuthHeaders() }),
       ]);
 
       // Parse broker status
@@ -310,13 +319,9 @@ export default function BrokersPage() {
     setConnecting(broker.id);
 
     try {
-      const token = localStorage.getItem('time_auth_token');
       const response = await fetch(`${API_BASE}/brokers/connect`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-        },
+        headers: getAuthHeaders(),
         body: JSON.stringify({
           brokerId: broker.id,
           brokerName: broker.name,
@@ -358,12 +363,9 @@ export default function BrokersPage() {
   // Disconnect broker
   const disconnectBroker = async (connectionId: string) => {
     try {
-      const token = localStorage.getItem('time_auth_token');
       await fetch(`${API_BASE}/brokers/disconnect/${connectionId}`, {
         method: 'DELETE',
-        headers: {
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-        },
+        headers: getAuthHeaders(),
       });
     } catch (error) {
       console.error('Failed to disconnect broker:', error);

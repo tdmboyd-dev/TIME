@@ -32,6 +32,15 @@ import clsx from 'clsx';
 
 import { API_BASE } from '@/lib/api';
 
+// Helper for auth headers
+const getAuthHeaders = () => {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('time_auth_token') : null;
+  return {
+    'Content-Type': 'application/json',
+    ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+  };
+};
+
 interface BotData {
   id: string;
   name: string;
@@ -110,9 +119,7 @@ export default function BotsPage() {
       setError(null);
       const response = await fetch(`${API_BASE}/bots/public`, {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: getAuthHeaders(),
       });
 
       if (!response.ok) {
@@ -181,9 +188,7 @@ export default function BotsPage() {
     try {
       const response = await fetch(`${API_BASE}/bots/upload`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: getAuthHeaders(),
         body: JSON.stringify({
           name: `Imported Bot from ${importSource}`,
           description: `Bot imported from ${importUrl}`,
@@ -231,9 +236,7 @@ export default function BotsPage() {
     try {
       const response = await fetch(`${API_BASE}/bots/quick-add`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: getAuthHeaders(),
         body: JSON.stringify({
           name: newBotName,
           description: newBotDescription || `Custom ${newBotStrategy.replace('_', ' ')} bot`,
@@ -274,9 +277,7 @@ export default function BotsPage() {
     try {
       const response = await fetch(`${API_BASE}/bots/${botId}/activate`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: getAuthHeaders(),
         body: JSON.stringify({
           paperMode: true,
         }),
@@ -306,9 +307,7 @@ export default function BotsPage() {
     try {
       const response = await fetch(`${API_BASE}/bots/${botId}/deactivate`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: getAuthHeaders(),
       });
 
       const result: ApiResponse = await response.json();

@@ -28,6 +28,15 @@ import {
 
 import { API_BASE } from '@/lib/api';
 
+// Helper for auth headers
+const getAuthHeaders = () => {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('time_auth_token') : null;
+  return {
+    'Content-Type': 'application/json',
+    ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+  };
+};
+
 interface Position {
   id: string;
   symbol: string;
@@ -183,7 +192,9 @@ export default function PortfolioPage() {
   // Fetch provider status (this endpoint exists)
   const fetchProviderStatus = async () => {
     try {
-      const res = await fetch(`${API_BASE}/real-market/status`);
+      const res = await fetch(`${API_BASE}/real-market/status`, {
+        headers: getAuthHeaders(),
+      });
       if (res.ok) {
         const data = await res.json();
         if (data.providers) {
@@ -208,10 +219,10 @@ export default function PortfolioPage() {
 
       // Try to fetch real portfolio data
       const [positionsRes, summaryRes, brokersRes, tradesRes] = await Promise.all([
-        fetch(`${API_BASE}/portfolio/positions`).catch(() => null),
-        fetch(`${API_BASE}/portfolio/summary`).catch(() => null),
-        fetch(`${API_BASE}/portfolio/brokers/status`).catch(() => null),
-        fetch(`${API_BASE}/portfolio/trades?limit=20`).catch(() => null),
+        fetch(`${API_BASE}/portfolio/positions`, { headers: getAuthHeaders() }).catch(() => null),
+        fetch(`${API_BASE}/portfolio/summary`, { headers: getAuthHeaders() }).catch(() => null),
+        fetch(`${API_BASE}/portfolio/brokers/status`, { headers: getAuthHeaders() }).catch(() => null),
+        fetch(`${API_BASE}/portfolio/trades?limit=20`, { headers: getAuthHeaders() }).catch(() => null),
       ]);
 
       // Check if any endpoint returned successfully

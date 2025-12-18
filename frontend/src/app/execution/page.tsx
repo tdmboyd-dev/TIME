@@ -34,8 +34,16 @@ import {
 } from 'lucide-react';
 import clsx from 'clsx';
 
-// API Configuration
-const API_BASE = 'https://time-backend-hosting.fly.dev/api/v1';
+import { API_BASE } from '@/lib/api';
+
+// Helper for auth headers
+const getAuthHeaders = () => {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('time_auth_token') : null;
+  return {
+    'Content-Type': 'application/json',
+    ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+  };
+};
 
 // Types
 interface Venue {
@@ -132,7 +140,9 @@ export default function ExecutionPage() {
       setIsRefreshing(true);
 
       // Fetch venues
-      const venuesResponse = await fetch(`${API_BASE}/advanced-broker/venues`);
+      const venuesResponse = await fetch(`${API_BASE}/advanced-broker/venues`, {
+        headers: getAuthHeaders(),
+      });
       if (venuesResponse.ok) {
         const venuesData = await venuesResponse.json();
         if (venuesData && Array.isArray(venuesData)) {
@@ -142,7 +152,9 @@ export default function ExecutionPage() {
       }
 
       // Fetch active orders
-      const ordersResponse = await fetch(`${API_BASE}/advanced-broker/smart-orders`);
+      const ordersResponse = await fetch(`${API_BASE}/advanced-broker/smart-orders`, {
+        headers: getAuthHeaders(),
+      });
       if (ordersResponse.ok) {
         const ordersData = await ordersResponse.json();
         if (ordersData && Array.isArray(ordersData)) {
@@ -151,7 +163,9 @@ export default function ExecutionPage() {
       }
 
       // Fetch execution analytics
-      const analyticsResponse = await fetch(`${API_BASE}/advanced-broker/analytics/executions`);
+      const analyticsResponse = await fetch(`${API_BASE}/advanced-broker/analytics/executions`, {
+        headers: getAuthHeaders(),
+      });
       if (analyticsResponse.ok) {
         const analyticsData = await analyticsResponse.json();
         if (analyticsData) {

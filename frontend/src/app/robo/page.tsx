@@ -25,7 +25,16 @@ import {
 } from 'lucide-react';
 import clsx from 'clsx';
 
-const API_BASE = 'https://time-backend-hosting.fly.dev/api/v1';
+import { API_BASE } from '@/lib/api';
+
+// Helper for auth headers
+const getAuthHeaders = () => {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('time_auth_token') : null;
+  return {
+    'Content-Type': 'application/json',
+    ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+  };
+};
 
 interface Portfolio {
   id: string;
@@ -69,9 +78,7 @@ export default function RoboAdvisorPage() {
     try {
       const response = await fetch(`${API_BASE}/robo/portfolios`, {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: getAuthHeaders(),
       });
 
       const data = await response.json();

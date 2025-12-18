@@ -24,7 +24,16 @@ import {
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useWallet } from '@/hooks/useWallet';
 
-const API_BASE = 'https://time-backend-hosting.fly.dev/api/v1';
+import { API_BASE } from '@/lib/api';
+
+// Helper for auth headers
+const getAuthHeaders = () => {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('time_auth_token') : null;
+  return {
+    'Content-Type': 'application/json',
+    ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+  };
+};
 
 interface Pool {
   id: string;
@@ -93,9 +102,9 @@ export default function DeFiPage() {
 
     try {
       const [protocolsRes, yieldRes, portfolioRes] = await Promise.all([
-        fetch(`${API_BASE}/defi/protocols`).catch(() => null),
-        fetch(`${API_BASE}/defi/yield-opportunities`).catch(() => null),
-        fetch(`${API_BASE}/defi/portfolio`).catch(() => null),
+        fetch(`${API_BASE}/defi/protocols`, { headers: getAuthHeaders() }).catch(() => null),
+        fetch(`${API_BASE}/defi/yield-opportunities`, { headers: getAuthHeaders() }).catch(() => null),
+        fetch(`${API_BASE}/defi/portfolio`, { headers: getAuthHeaders() }).catch(() => null),
       ]);
 
       if (protocolsRes?.ok) {

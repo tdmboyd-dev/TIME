@@ -25,6 +25,15 @@ import {
 
 import { API_BASE } from '@/lib/api';
 
+// Helper for auth headers
+const getAuthHeaders = () => {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('time_auth_token') : null;
+  return {
+    'Content-Type': 'application/json',
+    ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+  };
+};
+
 interface BotTradingState {
   botId: string;
   botName: string;
@@ -101,10 +110,10 @@ export default function LiveTradingPage() {
   const fetchData = useCallback(async () => {
     try {
       const [statsRes, botsRes, signalsRes, tradesRes] = await Promise.all([
-        fetch(`${API_BASE}/trading/stats`),
-        fetch(`${API_BASE}/trading/bots/available`),
-        fetch(`${API_BASE}/trading/signals/pending`),
-        fetch(`${API_BASE}/trading/trades?limit=20`),
+        fetch(`${API_BASE}/trading/stats`, { headers: getAuthHeaders() }),
+        fetch(`${API_BASE}/trading/bots/available`, { headers: getAuthHeaders() }),
+        fetch(`${API_BASE}/trading/signals/pending`, { headers: getAuthHeaders() }),
+        fetch(`${API_BASE}/trading/trades?limit=20`, { headers: getAuthHeaders() }),
       ]);
 
       const [statsData, botsData, signalsData, tradesData] = await Promise.all([
@@ -145,7 +154,7 @@ export default function LiveTradingPage() {
   // Trading controls
   const startTrading = async () => {
     try {
-      const res = await fetch(`${API_BASE}/trading/start`, { method: 'POST' });
+      const res = await fetch(`${API_BASE}/trading/start`, { method: 'POST', headers: getAuthHeaders() });
       const data = await res.json();
       if (data.success) {
         showNotification('success', 'Trading started!');
@@ -158,7 +167,7 @@ export default function LiveTradingPage() {
 
   const stopTrading = async () => {
     try {
-      const res = await fetch(`${API_BASE}/trading/stop`, { method: 'POST' });
+      const res = await fetch(`${API_BASE}/trading/stop`, { method: 'POST', headers: getAuthHeaders() });
       const data = await res.json();
       if (data.success) {
         showNotification('success', 'Trading stopped');
@@ -173,7 +182,7 @@ export default function LiveTradingPage() {
     try {
       const res = await fetch(`${API_BASE}/trading/bot/${botId}/enable`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify({ riskLevel: 'MEDIUM', maxPositionSize: 1000 }),
       });
       const data = await res.json();
@@ -188,7 +197,7 @@ export default function LiveTradingPage() {
 
   const disableBot = async (botId: string) => {
     try {
-      const res = await fetch(`${API_BASE}/trading/bot/${botId}/disable`, { method: 'POST' });
+      const res = await fetch(`${API_BASE}/trading/bot/${botId}/disable`, { method: 'POST', headers: getAuthHeaders() });
       const data = await res.json();
       if (data.success) {
         showNotification('success', 'Bot disabled');
@@ -201,7 +210,7 @@ export default function LiveTradingPage() {
 
   const executeSignal = async (signalId: string) => {
     try {
-      const res = await fetch(`${API_BASE}/trading/signals/${signalId}/execute`, { method: 'POST' });
+      const res = await fetch(`${API_BASE}/trading/signals/${signalId}/execute`, { method: 'POST', headers: getAuthHeaders() });
       const data = await res.json();
       if (data.success) {
         showNotification('success', 'Signal executed!');
@@ -216,7 +225,7 @@ export default function LiveTradingPage() {
     try {
       const res = await fetch(`${API_BASE}/trading/quick/enable-top-bots`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify({ count: 5, riskLevel: 'MEDIUM' }),
       });
       const data = await res.json();
@@ -370,7 +379,7 @@ export default function LiveTradingPage() {
           </button>
           <button
             onClick={async () => {
-              await fetch(`${API_BASE}/trading/quick/stop-all`, { method: 'POST' });
+              await fetch(`${API_BASE}/trading/quick/stop-all`, { method: 'POST', headers: getAuthHeaders() });
               showNotification('success', 'All trading stopped');
               fetchData();
             }}
