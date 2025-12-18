@@ -570,10 +570,12 @@ export class MarketDataManager extends EventEmitter {
       console.log('[MarketData] Polygon provider initialized');
     }
 
-    // Add mock providers for testing if no real providers available
+    // CRITICAL: Require at least one real market data provider
     if (this.providers.size === 0) {
-      this.providers.set('twelvedata', new TwelveDataProvider(''));
-      console.log('[MarketData] Using mock TwelveData provider (no API keys)');
+      console.error('[MarketData] CRITICAL: No market data providers configured!');
+      console.error('[MarketData] Set TWELVE_DATA_API_KEY or POLYGON_API_KEY environment variable');
+      // Do NOT add mock provider - trading requires real market data
+      throw new Error('No market data providers configured. Set TWELVE_DATA_API_KEY or POLYGON_API_KEY.');
     }
 
     console.log(`[MarketData] Initialized with ${this.providers.size} providers, preferred: ${this.preferredProvider}`);

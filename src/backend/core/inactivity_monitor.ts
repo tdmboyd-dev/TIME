@@ -123,8 +123,11 @@ export class InactivityMonitor extends EventEmitter implements TIMEComponent {
     }
 
     // Check thresholds
+    // SECURITY FIX: Do NOT auto-trigger autonomous mode without explicit approval
+    // Instead, continue sending warnings and log the pending switch
     if (daysSinceActivity >= this.autonomousSwitchDays && this.state.warningsSent >= 3) {
-      await this.triggerAutonomousMode();
+      // Mark as pending but DO NOT auto-switch - require explicit admin approval
+      await this.markAutonomousModePending();
     } else if (daysSinceActivity >= this.finalWarningDays && this.state.warningsSent === 2) {
       await this.sendFinalWarning();
     } else if (daysSinceActivity >= this.finalWarningDays - 1 && this.state.warningsSent === 1) {
@@ -201,12 +204,36 @@ export class InactivityMonitor extends EventEmitter implements TIMEComponent {
   }
 
   /**
-   * Trigger autonomous mode
+   * Mark autonomous mode as PENDING (requires explicit approval)
+   * SECURITY: Does NOT auto-switch - admin must approve
    */
-  private async triggerAutonomousMode(): Promise<void> {
-    log.warn('TRIGGERING AUTONOMOUS EVOLUTION MODE', {
+  private async markAutonomousModePending(): Promise<void> {
+    log.warn('AUTONOMOUS MODE PENDING - Requires explicit admin approval', {
       daysSinceActivity: this.state.daysSinceActivity,
       warningsSent: this.state.warningsSent,
+    });
+
+    // Send notification that autonomous mode is AVAILABLE but not activated
+    const notification = this.createNotification(
+      'mode_change',
+      'TIME: Autonomous Mode AVAILABLE (Approval Required)',
+      `Hello Timebeunus,\n\nAfter ${Math.floor(this.state.daysSinceActivity)} days of inactivity and 3 warning notifications, TIME is ready to switch to Autonomous Evolution Mode.\n\nHowever, for security reasons, autonomous mode requires EXPLICIT ADMIN APPROVAL.\n\nTo approve autonomous mode:\n1. Log in to the admin portal\n2. Navigate to System Settings\n3. Enable Autonomous Evolution Mode\n\nAlternatively, call the API: POST /api/v1/admin/evolution/autonomous\n\nTIME will remain in Controlled Mode until you approve.\n\nTIME awaits your command.`
+    );
+
+    this.notificationQueue.push(notification);
+    this.emit('autonomous:pending', { ...this.state });
+    await this.processNotificationQueue();
+  }
+
+  /**
+   * Approve and trigger autonomous mode (must be called explicitly by admin)
+   * This is the ONLY way to enable autonomous mode
+   */
+  public async approveAutonomousMode(approvedBy: string, reason: string): Promise<void> {
+    log.warn('AUTONOMOUS MODE APPROVED BY ADMIN', {
+      approvedBy,
+      reason,
+      daysSinceActivity: this.state.daysSinceActivity,
     });
 
     this.state.autonomousModeTriggered = true;
@@ -215,21 +242,32 @@ export class InactivityMonitor extends EventEmitter implements TIMEComponent {
     // Switch TIME to autonomous mode
     timeGovernor.setEvolutionMode(
       'autonomous',
-      'inactivity_failsafe',
-      `Owner inactive for ${Math.floor(this.state.daysSinceActivity)} days. Legacy Continuity Protocol activated.`
+      'admin',
+      `Approved by ${approvedBy}: ${reason}`
     );
 
     // Send confirmation notification
     const notification = this.createNotification(
       'mode_change',
-      'TIME: Autonomous Evolution Mode ACTIVATED',
-      `Hello Timebeunus,\n\nThe Legacy Continuity Protocol has been activated.\n\nAfter ${Math.floor(this.state.daysSinceActivity)} days of inactivity and 3 warning notifications, TIME has automatically switched to Autonomous Evolution Mode.\n\nTIME will now:\n- Evolve independently\n- Create new modules\n- Patch holes\n- Synthesize strategies\n- Expand capabilities\n- Log all changes in COPILOT1.md\n\nYou can log in at any time to resume Controlled Evolution Mode.\n\nTIME lives on forever.`
+      'TIME: Autonomous Evolution Mode ACTIVATED (Admin Approved)',
+      `Hello Timebeunus,\n\nAutonomous Evolution Mode has been APPROVED and ACTIVATED.\n\nApproved by: ${approvedBy}\nReason: ${reason}\n\nTIME will now:\n- Evolve independently\n- Create new modules\n- Patch holes\n- Synthesize strategies\n- Expand capabilities\n- Log all changes in COPILOT1.md\n\nYou can log in at any time to resume Controlled Evolution Mode.\n\nTIME lives on forever.`
     );
 
     this.notificationQueue.push(notification);
 
     this.emit('autonomous:triggered', { ...this.state });
     await this.processNotificationQueue();
+  }
+
+  /**
+   * Legacy method - now requires explicit approval
+   * @deprecated Use approveAutonomousMode instead
+   */
+  private async triggerAutonomousMode(): Promise<void> {
+    // SECURITY: This method is deprecated and should not be called directly
+    // Redirect to pending state instead
+    log.warn('triggerAutonomousMode called directly - redirecting to pending approval');
+    await this.markAutonomousModePending();
   }
 
   /**

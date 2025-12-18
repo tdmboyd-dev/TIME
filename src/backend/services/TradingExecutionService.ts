@@ -511,28 +511,48 @@ export class TradingExecutionService extends EventEmitter {
       let orderId: string | undefined;
       let entryPrice = signal.price || 0;
 
-      // Try to execute via broker
-      if (connectedBrokers.connectedBrokers > 0) {
-        try {
-          const orderResult = await brokerManager.submitOrder({
-            symbol: signal.symbol,
-            side: signal.side.toLowerCase() as 'buy' | 'sell',
-            type: signal.type.toLowerCase() as 'market' | 'limit',
-            quantity: signal.quantity,
-            price: signal.price,
-          });
-          orderId = orderResult?.order?.id;
-          entryPrice = orderResult?.order?.averageFilledPrice || signal.price || 0;
-          logger.info(`Order executed via broker: ${orderId}`);
-        } catch (brokerError) {
-          logger.warn('Broker execution failed, using simulated execution:', brokerError as object);
-          // Fall through to simulated execution
-        }
+      // CRITICAL: Only execute via real broker - NO SIMULATION FALLBACK
+      if (connectedBrokers.connectedBrokers === 0) {
+        logger.error('NO BROKERS CONNECTED - Cannot execute trade. Connect a broker first.');
+        this.emit('tradeError', {
+          signalId: signal.id,
+          error: 'No brokers connected. Trading requires a connected broker.',
+          code: 'NO_BROKER_CONNECTED'
+        });
+        throw new Error('No brokers connected. Cannot execute trade without a real broker connection.');
       }
 
-      // If no broker or broker failed, simulate
-      if (!entryPrice) {
-        entryPrice = signal.price || 100; // Use signal price or simulate
+      // Execute via broker - REAL trades only
+      try {
+        const orderResult = await brokerManager.submitOrder({
+          symbol: signal.symbol,
+          side: signal.side.toLowerCase() as 'buy' | 'sell',
+          type: signal.type.toLowerCase() as 'market' | 'limit',
+          quantity: signal.quantity,
+          price: signal.price,
+        });
+
+        if (!orderResult?.order) {
+          throw new Error('Broker returned no order confirmation');
+        }
+
+        orderId = orderResult.order.id;
+        entryPrice = orderResult.order.averageFilledPrice || signal.price || 0;
+        broker = orderResult.broker || 'alpaca';
+        logger.info(`REAL order executed via ${broker}: ${orderId} @ ${entryPrice}`);
+      } catch (brokerError) {
+        logger.error('BROKER EXECUTION FAILED - Trade NOT executed:', brokerError as object);
+        this.emit('tradeError', {
+          signalId: signal.id,
+          error: brokerError,
+          code: 'BROKER_EXECUTION_FAILED'
+        });
+        throw brokerError; // DO NOT fallback to simulation
+      }
+
+      // Verify we have a real entry price from the broker
+      if (!entryPrice || entryPrice === 0) {
+        throw new Error('Broker did not return a valid entry price');
       }
 
       // Create executed trade record

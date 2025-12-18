@@ -854,13 +854,20 @@ router.post('/setup-admin', async (req: Request, res: Response) => {
   try {
     const { email, password, name, setupKey } = req.body;
 
-    // Require a setup key from environment for security
-    const ADMIN_SETUP_KEY = process.env.ADMIN_SETUP_KEY || 'TIME_ADMIN_SETUP_2025';
+    // CRITICAL: Require setup key from environment - NO FALLBACK ALLOWED
+    const ADMIN_SETUP_KEY = process.env.ADMIN_SETUP_KEY;
+
+    if (!ADMIN_SETUP_KEY) {
+      return res.status(500).json({
+        error: 'Server configuration error',
+        message: 'ADMIN_SETUP_KEY environment variable must be set'
+      });
+    }
 
     if (setupKey !== ADMIN_SETUP_KEY) {
       return res.status(403).json({
         error: 'Invalid setup key',
-        hint: 'Set ADMIN_SETUP_KEY environment variable or use default'
+        message: 'The provided setup key does not match'
       });
     }
 
@@ -966,7 +973,11 @@ router.post('/fix-admin', async (req: Request, res: Response) => {
   try {
     const { email, setupKey } = req.body;
 
-    const ADMIN_SETUP_KEY = process.env.ADMIN_SETUP_KEY || 'TIME_ADMIN_SETUP_2025';
+    // CRITICAL: Require setup key from environment - NO FALLBACK ALLOWED
+    const ADMIN_SETUP_KEY = process.env.ADMIN_SETUP_KEY;
+    if (!ADMIN_SETUP_KEY) {
+      return res.status(500).json({ error: 'ADMIN_SETUP_KEY not configured' });
+    }
     if (setupKey !== ADMIN_SETUP_KEY) {
       return res.status(403).json({ error: 'Invalid setup key' });
     }

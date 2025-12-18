@@ -25,7 +25,8 @@ export const config = {
 
   // Authentication
   jwt: {
-    secret: process.env.JWT_SECRET || 'change-me-in-production',
+    // CRITICAL: No fallback - JWT_SECRET MUST be set in environment
+    secret: process.env.JWT_SECRET || '',
     expiresIn: process.env.JWT_EXPIRES_IN || '7d',
   },
   bcrypt: {
@@ -172,13 +173,9 @@ export function validateConfig(): void {
   const errors: string[] = [];
   const warnings: string[] = [];
 
-  // Always validate JWT secret (not just production)
-  if (config.jwt.secret === 'change-me-in-production') {
-    if (config.nodeEnv === 'production') {
-      errors.push('CRITICAL: JWT_SECRET must be set in production - refusing to start');
-    } else {
-      warnings.push('WARNING: Using default JWT_SECRET - set a secure secret for production');
-    }
+  // CRITICAL: Always validate JWT secret - NO FALLBACKS ALLOWED
+  if (!config.jwt.secret || config.jwt.secret.length === 0) {
+    errors.push('CRITICAL: JWT_SECRET environment variable must be set - refusing to start');
   } else if (config.jwt.secret.length < 32) {
     errors.push('JWT_SECRET must be at least 32 characters long');
   }
