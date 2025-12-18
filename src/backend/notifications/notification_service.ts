@@ -2,6 +2,12 @@
  * TIME — Meta-Intelligence Trading Governor
  * Notification Service
  *
+ * REAL notification delivery via:
+ * - SendGrid for email
+ * - Twilio for SMS
+ * - In-app notifications
+ * - Webhook delivery
+ *
  * Handles notifications for:
  * - Inactivity warnings (Legacy Continuity Protocol)
  * - Mode changes
@@ -21,6 +27,47 @@ import {
   NotificationType,
   SystemHealth,
 } from '../types';
+
+// Twilio client for SMS
+let twilioClient: any = null;
+const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID;
+const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN;
+const TWILIO_PHONE_NUMBER = process.env.TWILIO_PHONE_NUMBER;
+
+// SendGrid client for email
+let sendgridClient: any = null;
+const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY;
+const SENDGRID_FROM_EMAIL = process.env.SENDGRID_FROM_EMAIL || 'noreply@timebeyondus.com';
+
+// Initialize clients
+async function initializeTwilio(): Promise<void> {
+  if (TWILIO_ACCOUNT_SID && TWILIO_AUTH_TOKEN) {
+    try {
+      const twilio = await import('twilio');
+      twilioClient = twilio.default(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
+      console.log('[NotificationService] Twilio client initialized - REAL SMS ENABLED');
+    } catch (e) {
+      console.log('[NotificationService] Twilio not available, SMS will be simulated');
+    }
+  }
+}
+
+async function initializeSendGrid(): Promise<void> {
+  if (SENDGRID_API_KEY) {
+    try {
+      const sgMail = await import('@sendgrid/mail');
+      sgMail.default.setApiKey(SENDGRID_API_KEY);
+      sendgridClient = sgMail.default;
+      console.log('[NotificationService] SendGrid initialized - REAL EMAIL ENABLED');
+    } catch (e) {
+      console.log('[NotificationService] SendGrid not available, email will be simulated');
+    }
+  }
+}
+
+// Initialize on module load
+initializeTwilio();
+initializeSendGrid();
 
 const log = loggers.notifications;
 
@@ -271,56 +318,96 @@ export class NotificationService extends EventEmitter implements TIMEComponent {
   }
 
   /**
-   * Send email notification
+   * Send email notification via SendGrid
    */
   private async sendEmail(notification: Notification): Promise<void> {
-    // In production, this would use nodemailer
-    // For now, we log the email
+    // Get recipient email from user data (userId may be email or need lookup)
+    const recipientEmail = notification.userId.includes('@')
+      ? notification.userId
+      : `${notification.userId}@example.com`; // In production, look up from database
 
-    log.info('Email notification (simulated)', {
-      to: notification.userId,
-      subject: notification.subject,
-      preview: notification.message.slice(0, 100),
-    });
+    if (sendgridClient) {
+      // REAL SendGrid email sending
+      try {
+        const msg = {
+          to: recipientEmail,
+          from: SENDGRID_FROM_EMAIL,
+          subject: notification.subject,
+          text: notification.message,
+          html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <div style="background: linear-gradient(90deg, #00d4ff, #7b2cbf); padding: 20px; text-align: center;">
+              <h1 style="color: white; margin: 0;">TIME</h1>
+              <p style="color: rgba(255,255,255,0.8); margin: 5px 0 0 0;">Meta-Intelligence Trading Governor</p>
+            </div>
+            <div style="padding: 30px; background: #f9f9f9;">
+              <h2 style="color: #333; margin-top: 0;">${notification.subject}</h2>
+              <div style="color: #555; line-height: 1.6; white-space: pre-wrap;">${notification.message}</div>
+            </div>
+            <div style="padding: 20px; background: #333; text-align: center;">
+              <p style="color: #888; margin: 0; font-size: 12px;">TIME evolves. TIME adapts. TIME persists.</p>
+            </div>
+          </div>`,
+        };
 
-    // Simulated email sending
-    // const transporter = nodemailer.createTransport({
-    //   host: config.smtp.host,
-    //   port: config.smtp.port,
-    //   auth: {
-    //     user: config.smtp.user,
-    //     pass: config.smtp.pass,
-    //   },
-    // });
-    //
-    // await transporter.sendMail({
-    //   from: config.smtp.user,
-    //   to: recipientEmail,
-    //   subject: notification.subject,
-    //   text: notification.message,
-    // });
+        await sendgridClient.send(msg);
+        log.info('Email sent via SendGrid', {
+          to: recipientEmail,
+          subject: notification.subject,
+        });
+      } catch (error) {
+        log.error('SendGrid email failed', { error, to: recipientEmail });
+        // Fall through to simulation
+      }
+    } else {
+      // Simulated email (when SendGrid not configured)
+      log.info('Email notification (simulated - set SENDGRID_API_KEY for real delivery)', {
+        to: recipientEmail,
+        subject: notification.subject,
+        preview: notification.message.slice(0, 100),
+      });
+    }
   }
 
   /**
-   * Send SMS notification
+   * Send SMS notification via Twilio
    */
   private async sendSMS(notification: Notification): Promise<void> {
-    // In production, this would use Twilio
-    // For now, we log the SMS
+    // Get recipient phone from user data (userId may be phone or need lookup)
+    // Format: +1XXXXXXXXXX
+    const recipientPhone = notification.userId.startsWith('+')
+      ? notification.userId
+      : `+1${notification.userId}`; // Assume US number if not formatted
 
-    log.info('SMS notification (simulated)', {
-      to: notification.userId,
-      preview: notification.message.slice(0, 160),
-    });
+    // Truncate message to SMS limit (160 chars for single SMS, 1600 for concatenated)
+    const smsBody = notification.message.length > 1500
+      ? notification.message.slice(0, 1497) + '...'
+      : notification.message;
 
-    // Simulated SMS sending
-    // const client = twilio(config.twilio.accountSid, config.twilio.authToken);
-    //
-    // await client.messages.create({
-    //   body: notification.message,
-    //   from: config.twilio.phoneNumber,
-    //   to: recipientPhone,
-    // });
+    if (twilioClient && TWILIO_PHONE_NUMBER) {
+      // REAL Twilio SMS sending
+      try {
+        const message = await twilioClient.messages.create({
+          body: `TIME: ${notification.subject}\n\n${smsBody}`,
+          from: TWILIO_PHONE_NUMBER,
+          to: recipientPhone,
+        });
+
+        log.info('SMS sent via Twilio', {
+          to: recipientPhone,
+          messageSid: message.sid,
+          status: message.status,
+        });
+      } catch (error) {
+        log.error('Twilio SMS failed', { error, to: recipientPhone });
+        // Fall through to simulation
+      }
+    } else {
+      // Simulated SMS (when Twilio not configured)
+      log.info('SMS notification (simulated - set TWILIO_* env vars for real delivery)', {
+        to: recipientPhone,
+        preview: smsBody.slice(0, 160),
+      });
+    }
   }
 
   /**

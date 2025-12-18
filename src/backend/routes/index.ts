@@ -49,6 +49,12 @@ import autoPerfectBotRoutes from './auto_perfect_bot';
 import marketplaceRoutes from './marketplace';
 import backtestRoutes from './backtest';
 
+// LIVE DeFi Data - Real yields from DefiLlama!
+import defiLiveRoutes from './defi_live';
+
+// Wealth Management - Dynasty Trusts & Family Legacy AI
+import wealthRoutes from './wealth';
+
 const router = Router();
 
 // Mount routes
@@ -61,6 +67,8 @@ router.use('/social', socialRoutes);
 router.use('/assets', assetsRoutes);
 router.use('/market', marketDataRoutes);
 router.use('/defi', defiMasteryRoutes);
+router.use('/defi-live', defiLiveRoutes);  // LIVE DeFi data from DefiLlama!
+router.use('/wealth', wealthRoutes);       // Dynasty Trust & Family Legacy AI!
 router.use('/risk', riskProfileRoutes);
 router.use('/fetcher', fetcherRoutes);
 router.use('/payments', paymentsRoutes);

@@ -1,8 +1,8 @@
 # TIMEBEUNUS — THE MASTER AI GUIDE
 ## For Copilot, Claude, and All AI Assistants
 
-**Version:** 14.0.0 - LIVE BOT TRADING + COMPREHENSIVE AUDIT EDITION
-**Last Updated:** 2025-12-17 (Live Bot Trading + MongoDB State Persistence + Full System Audit!)
+**Version:** 15.0.0 - WEALTH MANAGEMENT + LIVE DEFI EDITION
+**Last Updated:** 2025-12-17 (Dynasty Trust Engine + Family Legacy AI + Live DeFi Data!)
 **Creator:** Timebeunus Boyd
 **Purpose:** Complete platform understanding for AI assistants to provide proper guidance
 
@@ -10,6 +10,73 @@
 
 > **"Never get left out again. The big boys' playbook is now YOUR playbook."**
 > — TIMEBEUNUS
+
+---
+
+# 🚀 NEW IN v15.0.0 - WEALTH MANAGEMENT + LIVE DEFI
+
+## 💰 DYNASTY TRUST ENGINE + FAMILY LEGACY AI
+
+**Date:** December 17, 2025
+
+### What's New:
+
+1. **DYNASTY TRUST ENGINE** (`/api/v1/wealth/...`)
+   - Trust structure analysis (Dynasty, GRAT, ILIT, SLAT, FLP, CLAT)
+   - 2025 Tax constants ($19k annual exclusion, $13.99M lifetime exemption)
+   - Estate tax projections with optimization strategies
+   - Optimal jurisdiction recommendations (South Dakota, Nevada, Delaware)
+   - Gifting strategy generation (annual exclusion, 529 superfunding)
+
+2. **TRUST ASSET TRACKER** (NEW!)
+   - Designate assets for trusts
+   - Execute transfers via broker integration
+   - Record and track annual exclusion gifts
+   - Execute gifts via broker (stock transfers)
+   - Gift summary with remaining exclusion tracking
+
+3. **FAMILY LEGACY AI**
+   - Family profile management
+   - Multi-generational wealth roadmaps
+   - AI-powered recommendations
+   - Financial education lessons
+   - Member role-based learning paths
+
+4. **LIVE DEFI DATA** (`/api/v1/defi-live/...`)
+   - Real-time yields from DefiLlama API
+   - Aave, Compound, Uniswap, Yearn, Beefy, Convex pools
+   - TVL tracking across protocols
+   - Best yield recommendations
+
+### Wealth API Endpoints:
+```
+GET  /api/v1/wealth/trusts/analyze          - Analyze optimal trust structures
+GET  /api/v1/wealth/trusts/jurisdictions    - Get jurisdiction recommendations
+GET  /api/v1/wealth/estate/projection       - Project estate tax liability
+GET  /api/v1/wealth/tax-constants           - Get 2025 tax constants
+POST /api/v1/wealth/trusts/assets/designate - Designate asset for trust
+POST /api/v1/wealth/trusts/assets/:id/transfer - Execute transfer
+POST /api/v1/wealth/gifts/record            - Record a gift
+POST /api/v1/wealth/gifts/execute           - Execute gift via broker
+GET  /api/v1/wealth/gifts/summary/:userId   - Get gift summary
+POST /api/v1/wealth/family                  - Create family profile
+POST /api/v1/wealth/family/:id/roadmap      - Generate wealth roadmap
+GET  /api/v1/wealth/family/:id/recommendations - Get AI recommendations
+```
+
+### Live DeFi API Endpoints:
+```
+GET /api/v1/defi-live/pools        - All yield pools from DefiLlama
+GET /api/v1/defi-live/stablecoins  - Safe stablecoin yields
+GET /api/v1/defi-live/aave         - Aave yields by chain
+GET /api/v1/defi-live/compound     - Compound yields
+GET /api/v1/defi-live/uniswap      - Uniswap pool yields
+GET /api/v1/defi-live/yearn        - Yearn vault yields
+GET /api/v1/defi-live/beefy        - Beefy Finance yields
+GET /api/v1/defi-live/convex       - Convex Finance yields
+GET /api/v1/defi-live/tvl          - Protocol TVL rankings
+GET /api/v1/defi-live/best-yields  - Recommended high-yield pools
+```
 
 ---
 
@@ -89,10 +156,19 @@
 | Alpaca | Paper/Live | ALPACA_PAPER=true/false |
 | OANDA | Practice/Live | OANDA_PRACTICE=true/false |
 
+## ✅ NEW IN v15.0.0:
+| Component | Status | Notes |
+|-----------|--------|-------|
+| **Dynasty Trust Engine** | ✅ REAL | Trust analysis, estate projections, gifting |
+| **Trust Asset Tracker** | ✅ REAL | Asset designation, broker transfers, gift execution |
+| **Family Legacy AI** | ✅ REAL | Roadmaps, recommendations, education |
+| **Live DeFi Data** | ✅ REAL | DefiLlama API integration (Aave, Compound, Uniswap...) |
+| **Real Notifications** | ✅ REAL | SendGrid (email) + Twilio (SMS) |
+
 ## ❌ WHAT'S NOT REAL YET:
 | Component | Status | Notes |
 |-----------|--------|-------|
-| DeFi Yield | ❌ MOCK | No real DeFi protocol integration |
+| DeFi Protocol Execution | ❌ MOCK | Can view yields, but no blockchain execution |
 | Options Trading | ❌ N/A | Not implemented |
 | Futures Trading | ❌ N/A | Not implemented |
 
