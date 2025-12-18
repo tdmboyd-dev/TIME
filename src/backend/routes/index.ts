@@ -101,6 +101,10 @@ router.use('/trading', tradingRoutes);  // Start/stop bots, execute signals, tra
 // PORTFOLIO - Real positions and broker data
 router.use('/portfolio', portfolioRoutes);  // Real portfolio positions, broker status, trades
 
+// BROKER CONNECTIONS - Connect/disconnect brokers with MongoDB persistence
+import brokerConnectionRoutes from './brokers';
+router.use('/brokers', brokerConnectionRoutes);  // Connect/disconnect brokers, persist to MongoDB
+
 // NEW! VANGUARD-LEVEL SYSTEMS - Rivaling Major Brokerages
 router.use('/security', securityRoutes);  // MFA, API keys, audit logging
 router.use('/tax', taxRoutes);            // Tax-loss harvesting, wash sale tracking
