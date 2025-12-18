@@ -111,15 +111,15 @@ GET /api/v1/defi-live/best-yields  - Recommended high-yield pools
 | STARTER | $24.99 | $239.88 ($19.99/mo) | Live trading, 1 bot, $10K cap |
 | PRO | $79 | $758.40 ($63.20/mo) | 5 bots, $100K cap, tax harvest |
 | UNLIMITED | $149 | $1,430 ($119.20/mo) | Unlimited, Dynasty Trust, AI |
-| ENTERPRISE | **$250** | $2,400 ($200/mo) | White-label, API, dedicated support |
+| ENTERPRISE | **$499** | $4,790 ($399/mo) | White-label, API, dedicated support |
 
 **Example Revenue:**
 - 10,000 FREE users → $0 (but converts to paid)
 - 2,000 STARTER × $24.99 = **$49,980/mo**
 - 1,000 PRO × $79 = **$79,000/mo**
 - 500 UNLIMITED × $149 = **$74,500/mo**
-- 100 ENTERPRISE × $250 = **$25,000/mo**
-- **Total Subscription MRR: $228,480**
+- 100 ENTERPRISE × $499 = **$49,900/mo**
+- **Total Subscription MRR: $253,380**
 
 ---
 

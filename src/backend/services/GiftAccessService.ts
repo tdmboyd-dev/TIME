@@ -200,8 +200,8 @@ class GiftAccessService extends EventEmitter {
         limits: { maxBots: -1, maxCapital: -1, maxTrades: -1 },
       },
       ENTERPRISE: {
-        monthlyPrice: 250,
-        annualPrice: 2400, // $200/mo billed annually (20% off)
+        monthlyPrice: 499,
+        annualPrice: 4790.40, // $399.20/mo billed annually (20% off)
         features: ['White-label', 'API access', 'Custom strategies', 'Account manager', 'SLA guarantee'],
         limits: { maxBots: -1, maxCapital: -1, maxTrades: -1 },
       },

@@ -53,7 +53,7 @@ TOTAL: $661K/mo = $7.93M/year
 | STARTER | $24.99 | $239.90 | Live trading, 3 bots, real-time data |
 | PRO | $79 | $758.40 | 10 bots, tax-loss harvesting, AutoPilot |
 | UNLIMITED | $149 | $1,430.40 | Unlimited bots, Dynasty Trust, Family Legacy |
-| ENTERPRISE | $250 | $2,400 | White-label, API, custom strategies, SLA |
+| ENTERPRISE | $499 | $4,790.40 | White-label, API, custom strategies, SLA |
 
 ### NEW GIFT ACCESS ENDPOINTS:
 ```
