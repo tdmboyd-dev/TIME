@@ -544,6 +544,61 @@ export interface AuditLogSchema {
 }
 
 // ============================================================
+// TRADING STATE SCHEMAS (For shared state across machines)
+// ============================================================
+
+export interface TradingStateSchema {
+  _id: string;
+  type: 'bot_state' | 'signal' | 'trade' | 'global_config';
+
+  // For bot_state type
+  botId?: string;
+  botName?: string;
+  isEnabled?: boolean;
+  isPaused?: boolean;
+  riskLevel?: 'LOW' | 'MEDIUM' | 'HIGH';
+  maxPositionSize?: number;
+  maxDailyTrades?: number;
+  maxDailyLoss?: number;
+  currentDailyTrades?: number;
+  currentDailyPnL?: number;
+  totalTrades?: number;
+  winRate?: number;
+  totalPnL?: number;
+
+  // For signal type
+  signalId?: string;
+  symbol?: string;
+  side?: 'BUY' | 'SELL';
+  signalType?: 'MARKET' | 'LIMIT' | 'STOP';
+  quantity?: number;
+  price?: number;
+  confidence?: number;
+  reasoning?: string;
+
+  // For trade type
+  tradeId?: string;
+  entryPrice?: number;
+  exitPrice?: number;
+  status?: 'OPEN' | 'CLOSED' | 'STOPPED_OUT' | 'TAKE_PROFIT' | 'CANCELLED';
+  pnl?: number;
+  pnlPercent?: number;
+  broker?: string;
+  orderId?: string;
+
+  // For global_config type
+  isRunning?: boolean;
+  globalMaxDailyLoss?: number;
+  globalMaxPositionSize?: number;
+  globalMaxOpenPositions?: number;
+  requireApproval?: boolean;
+
+  // Timestamps
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// ============================================================
 // DATABASE INDEXES
 // ============================================================
 
@@ -601,5 +656,12 @@ export const indexes = {
   regimeHistory: [
     { symbol: 1, startTime: -1 },
     { regime: 1 },
+  ],
+  tradingState: [
+    { type: 1, botId: 1 },
+    { type: 1, signalId: 1 },
+    { type: 1, tradeId: 1 },
+    { type: 1 },
+    { updatedAt: -1 },
   ],
 };

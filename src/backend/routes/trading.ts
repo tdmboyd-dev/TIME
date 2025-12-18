@@ -1137,4 +1137,284 @@ router.get('/positions', authMiddleware, async (req: Request, res: Response) => 
   }
 });
 
+// ============================================
+// BOT TRADING TEST ENDPOINTS (Admin Test Key)
+// ============================================
+
+/**
+ * GET /trading/test-bots
+ * Get all bots and their trading states
+ * Uses admin test key for quick testing
+ */
+router.get('/test-bots', async (req: Request, res: Response) => {
+  try {
+    const adminKey = req.headers['x-admin-key'] as string;
+    if (adminKey !== ADMIN_TEST_KEY) {
+      return res.status(401).json({
+        success: false,
+        error: 'Invalid admin test key. Set x-admin-key header.',
+      });
+    }
+
+    const allBots = botManager.getAllBots();
+    const enabledBots = tradingExecutionService.getEnabledBots();
+    const stats = tradingExecutionService.getStats();
+
+    res.json({
+      success: true,
+      data: {
+        totalBots: allBots.length,
+        enabledForTrading: enabledBots.length,
+        bots: allBots.slice(0, 20).map(bot => ({
+          id: bot.id,
+          name: bot.name,
+          source: bot.source,
+          status: bot.status,
+          strategies: bot.fingerprint?.strategyType || [],
+          tradingEnabled: enabledBots.some(e => e.botId === bot.id),
+        })),
+        tradingStats: stats,
+      },
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to get bots',
+    });
+  }
+});
+
+/**
+ * POST /trading/test-bot-enable
+ * Enable a bot for trading
+ * Uses admin test key for quick testing
+ */
+router.post('/test-bot-enable', async (req: Request, res: Response) => {
+  try {
+    const adminKey = req.headers['x-admin-key'] as string;
+    if (adminKey !== ADMIN_TEST_KEY) {
+      return res.status(401).json({
+        success: false,
+        error: 'Invalid admin test key. Set x-admin-key header.',
+      });
+    }
+
+    const { botId, maxPositionSize = 500, maxDailyTrades = 5 } = req.body;
+
+    if (!botId) {
+      return res.status(400).json({
+        success: false,
+        error: 'botId is required',
+      });
+    }
+
+    // Enable the bot for trading
+    const state = tradingExecutionService.enableBot(botId, {
+      maxPositionSize,
+      maxDailyTrades,
+      riskLevel: 'LOW',
+    });
+
+    res.json({
+      success: true,
+      message: `Bot ${state.botName} enabled for trading!`,
+      data: state,
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to enable bot',
+    });
+  }
+});
+
+/**
+ * POST /trading/test-bot-signal
+ * Have a bot submit a test trade signal
+ * Uses admin test key for quick testing
+ */
+router.post('/test-bot-signal', async (req: Request, res: Response) => {
+  try {
+    const adminKey = req.headers['x-admin-key'] as string;
+    if (adminKey !== ADMIN_TEST_KEY) {
+      return res.status(401).json({
+        success: false,
+        error: 'Invalid admin test key. Set x-admin-key header.',
+      });
+    }
+
+    const { botId, symbol = 'AAPL', side = 'BUY', quantity = 1, confidence = 85 } = req.body;
+
+    if (!botId) {
+      return res.status(400).json({
+        success: false,
+        error: 'botId is required',
+      });
+    }
+
+    const bot = botManager.getBot(botId);
+    if (!bot) {
+      return res.status(404).json({
+        success: false,
+        error: `Bot ${botId} not found`,
+      });
+    }
+
+    // Submit a signal from this bot
+    const signal = tradingExecutionService.submitSignal({
+      botId,
+      botName: bot.name,
+      symbol,
+      side: side.toUpperCase() as 'BUY' | 'SELL',
+      type: 'MARKET',
+      quantity,
+      confidence,
+      reasoning: 'Test signal submitted via admin endpoint',
+    });
+
+    res.json({
+      success: true,
+      message: `Signal submitted from ${bot.name}`,
+      data: {
+        signal,
+        botState: tradingExecutionService.getBotState(botId),
+      },
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to submit signal',
+    });
+  }
+});
+
+/**
+ * POST /trading/test-bot-trade
+ * Complete end-to-end bot trade test: enable bot, submit signal, execute
+ * Uses admin test key for quick testing
+ */
+router.post('/test-bot-trade', async (req: Request, res: Response) => {
+  try {
+    const adminKey = req.headers['x-admin-key'] as string;
+    if (adminKey !== ADMIN_TEST_KEY) {
+      return res.status(401).json({
+        success: false,
+        error: 'Invalid admin test key. Set x-admin-key header.',
+      });
+    }
+
+    const { botId, symbol = 'AAPL', side = 'BUY', quantity = 1 } = req.body;
+
+    // Get first bot if none specified
+    let targetBotId = botId;
+    if (!targetBotId) {
+      const allBots = botManager.getAllBots();
+      if (allBots.length === 0) {
+        return res.status(400).json({
+          success: false,
+          error: 'No bots available. Create some bots first.',
+        });
+      }
+      targetBotId = allBots[0].id;
+    }
+
+    const bot = botManager.getBot(targetBotId);
+    if (!bot) {
+      return res.status(404).json({
+        success: false,
+        error: `Bot ${targetBotId} not found`,
+      });
+    }
+
+    // Step 1: Enable bot for trading
+    const state = tradingExecutionService.enableBot(targetBotId, {
+      maxPositionSize: 1000,
+      maxDailyTrades: 10,
+      riskLevel: 'LOW',
+    });
+
+    // Step 2: Start the execution service
+    tradingExecutionService.start();
+
+    // Step 3: Submit signal (will auto-execute because requireApproval is false)
+    const signal = tradingExecutionService.submitSignal({
+      botId: targetBotId,
+      botName: bot.name,
+      symbol,
+      side: side.toUpperCase() as 'BUY' | 'SELL',
+      type: 'MARKET',
+      quantity,
+      confidence: 90,
+      reasoning: `Test ${side} order from ${bot.name} via admin endpoint`,
+    });
+
+    // Get trading stats
+    const stats = tradingExecutionService.getStats();
+    const botState = tradingExecutionService.getBotState(targetBotId);
+
+    res.json({
+      success: true,
+      message: `Bot ${bot.name} submitted ${side} signal for ${quantity} ${symbol}`,
+      data: {
+        bot: {
+          id: bot.id,
+          name: bot.name,
+          source: bot.source,
+        },
+        signal,
+        botState,
+        tradingStats: stats,
+      },
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to execute bot trade',
+    });
+  }
+});
+
+/**
+ * GET /trading/test-bot-trades
+ * Get all executed trades from bots
+ * Uses admin test key for quick testing
+ */
+router.get('/test-bot-trades', async (req: Request, res: Response) => {
+  try {
+    const adminKey = req.headers['x-admin-key'] as string;
+    if (adminKey !== ADMIN_TEST_KEY) {
+      return res.status(401).json({
+        success: false,
+        error: 'Invalid admin test key. Set x-admin-key header.',
+      });
+    }
+
+    const stats = tradingExecutionService.getStats();
+    const enabledBots = tradingExecutionService.getEnabledBots();
+
+    res.json({
+      success: true,
+      data: {
+        stats,
+        enabledBots: enabledBots.map(b => ({
+          botId: b.botId,
+          botName: b.botName,
+          isEnabled: b.isEnabled,
+          totalTrades: b.totalTrades,
+          openPositions: b.openPositions.length,
+          totalPnL: b.totalPnL,
+          winRate: b.winRate,
+          lastSignal: b.lastSignal,
+          lastTrade: b.lastTrade,
+        })),
+      },
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to get bot trades',
+    });
+  }
+});
+
 export default router;

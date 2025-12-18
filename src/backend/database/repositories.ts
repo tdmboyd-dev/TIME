@@ -17,6 +17,7 @@ import {
   InsightSchema,
   NotificationSchema,
   AuditLogSchema,
+  TradingStateSchema,
 } from './schemas';
 
 // ============================================================================
@@ -512,6 +513,106 @@ export class AuditLogRepository extends BaseRepository<AuditLogSchema> {
 }
 
 // ============================================================================
+// Trading State Repository (For shared state across machines)
+// ============================================================================
+
+class TradingStateRepository extends BaseRepository<TradingStateSchema> {
+  constructor() {
+    super('trading_state', 'trading_state', 60); // 60 second cache
+  }
+
+  // Get or create global config
+  async getGlobalConfig(): Promise<TradingStateSchema | null> {
+    const configs = await this.findMany({ type: 'global_config' } as any);
+    return configs[0] || null;
+  }
+
+  async saveGlobalConfig(config: Partial<TradingStateSchema>): Promise<TradingStateSchema> {
+    const existing = await this.getGlobalConfig();
+    if (existing) {
+      return this.update(existing._id, { ...config, updatedAt: new Date() }) as Promise<TradingStateSchema>;
+    }
+    return this.create({
+      type: 'global_config',
+      ...config,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    } as any);
+  }
+
+  // Bot state management
+  async getBotState(botId: string): Promise<TradingStateSchema | null> {
+    const states = await this.findMany({ type: 'bot_state', botId } as any);
+    return states[0] || null;
+  }
+
+  async saveBotState(botId: string, state: Partial<TradingStateSchema>): Promise<TradingStateSchema> {
+    const existing = await this.getBotState(botId);
+    if (existing) {
+      return this.update(existing._id, { ...state, updatedAt: new Date() }) as Promise<TradingStateSchema>;
+    }
+    return this.create({
+      _id: `bot_state_${botId}`,
+      type: 'bot_state',
+      botId,
+      ...state,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    } as any);
+  }
+
+  async getAllBotStates(): Promise<TradingStateSchema[]> {
+    return this.findMany({ type: 'bot_state' } as any);
+  }
+
+  async getEnabledBotStates(): Promise<TradingStateSchema[]> {
+    return this.findMany({ type: 'bot_state', isEnabled: true } as any);
+  }
+
+  // Signal management
+  async saveSignal(signalId: string, signal: Partial<TradingStateSchema>): Promise<TradingStateSchema> {
+    return this.create({
+      _id: `signal_${signalId}`,
+      type: 'signal',
+      signalId,
+      ...signal,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    } as any);
+  }
+
+  async getPendingSignals(): Promise<TradingStateSchema[]> {
+    return this.findMany({ type: 'signal', status: { $ne: 'EXECUTED' } } as any);
+  }
+
+  // Trade management
+  async saveTrade(tradeId: string, trade: Partial<TradingStateSchema>): Promise<TradingStateSchema> {
+    const existing = await this.findOne({ _id: `trade_${tradeId}` } as any);
+    if (existing) {
+      return this.update(`trade_${tradeId}`, { ...trade, updatedAt: new Date() }) as Promise<TradingStateSchema>;
+    }
+    return this.create({
+      _id: `trade_${tradeId}`,
+      type: 'trade',
+      tradeId,
+      ...trade,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    } as any);
+  }
+
+  async getOpenTrades(): Promise<TradingStateSchema[]> {
+    return this.findMany({ type: 'trade', status: 'OPEN' } as any);
+  }
+
+  async getTrades(botId?: string): Promise<TradingStateSchema[]> {
+    const filter: any = { type: 'trade' };
+    if (botId) filter.botId = botId;
+    return this.findMany(filter);
+  }
+}
+
+// ============================================================================
 // Export Repository Instances
 // ============================================================================
 
@@ -524,3 +625,4 @@ export const learningEventRepository = new LearningEventRepository();
 export const insightRepository = new InsightRepository();
 export const notificationRepository = new NotificationRepository();
 export const auditLogRepository = new AuditLogRepository();
+export const tradingStateRepository = new TradingStateRepository();
