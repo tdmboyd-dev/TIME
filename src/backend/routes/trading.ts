@@ -16,6 +16,7 @@ import { botManager } from '../bots/bot_manager';
 import { authMiddleware, adminMiddleware } from './auth';
 import { BrokerManager } from '../brokers/broker_manager';
 import { config } from '../config';
+import { requireFeature, requireTier, checkTradeLimit, calculateTradeFee } from '../middleware/tierAccess';
 
 const router = Router();
 
@@ -504,9 +505,9 @@ import { tradingStateRepository } from '../database/repositories';
 /**
  * POST /trading/autopilot/create
  * Create a new AutoPilot pilot
- * SECURITY: Requires authentication
+ * SECURITY: Requires authentication + PRO tier (autopilot feature)
  */
-router.post('/autopilot/create', authMiddleware, async (req: Request, res: Response) => {
+router.post('/autopilot/create', authMiddleware, requireFeature('autopilot'), async (req: Request, res: Response) => {
   const { riskProfile, initialCapital } = req.body;
   const userId = (req as any).user?.id || 'anonymous';
 

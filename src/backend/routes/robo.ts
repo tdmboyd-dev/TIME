@@ -7,6 +7,8 @@
 import { Router, Request, Response } from 'express';
 import { roboAdvisor, RISK_QUESTIONS } from '../robo/robo_advisor';
 import { logger } from '../utils/logger';
+import { authMiddleware } from './auth';
+import { requireFeature } from '../middleware/tierAccess';
 
 const router = Router();
 
@@ -274,8 +276,9 @@ router.post('/goals/:goalId/rebalance/check', (req: Request, res: Response) => {
 /**
  * POST /api/v1/robo/goals/:goalId/rebalance/execute
  * Execute rebalancing with REAL broker integration
+ * REQUIRES: STARTER+ tier (robo_advisor feature)
  */
-router.post('/goals/:goalId/rebalance/execute', async (req: Request, res: Response) => {
+router.post('/goals/:goalId/rebalance/execute', authMiddleware, requireFeature('robo_advisor'), async (req: Request, res: Response) => {
   try {
     const { recommendation, brokerId } = req.body;
 

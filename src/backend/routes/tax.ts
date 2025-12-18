@@ -7,14 +7,17 @@
 import { Router, Request, Response } from 'express';
 import { taxLossHarvester, REPLACEMENT_SECURITIES } from '../tax/tax_loss_harvester';
 import { logger } from '../utils/logger';
+import { authMiddleware } from './auth';
+import { requireFeature } from '../middleware/tierAccess';
 
 const router = Router();
 
 /**
  * POST /api/v1/tax/harvest/opportunities
  * Find tax-loss harvesting opportunities
+ * REQUIRES: PRO tier (tax_harvesting feature)
  */
-router.post('/harvest/opportunities', async (req: Request, res: Response) => {
+router.post('/harvest/opportunities', authMiddleware, requireFeature('tax_harvesting'), async (req: Request, res: Response) => {
   try {
     const { positions, taxLots, options } = req.body;
 

@@ -14,6 +14,8 @@ import { Router, Request, Response } from 'express';
 import { dynastyTrustEngine, trustAssetTracker } from '../wealth/dynasty_trust_engine';
 import { familyLegacyAI } from '../wealth/family_legacy_ai';
 import { logger } from '../utils/logger';
+import { authMiddleware } from './auth';
+import { requireFeature } from '../middleware/tierAccess';
 
 const router = Router();
 
@@ -24,8 +26,9 @@ const router = Router();
 /**
  * GET /api/v1/wealth/trusts/analyze
  * Analyze optimal trust structures for wealth profile
+ * REQUIRES: UNLIMITED tier (dynasty_trust feature)
  */
-router.get('/trusts/analyze', async (req: Request, res: Response) => {
+router.get('/trusts/analyze', authMiddleware, requireFeature('dynasty_trust'), async (req: Request, res: Response) => {
   try {
     const netWorth = parseFloat(req.query.netWorth as string) || 1000000;
     const familySize = parseInt(req.query.familySize as string) || 4;
