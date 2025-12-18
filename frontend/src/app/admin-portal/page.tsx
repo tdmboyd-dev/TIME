@@ -37,11 +37,34 @@ interface AdminUser {
   id: string;
   name: string;
   email: string;
-  role: 'user' | 'admin' | 'owner';
-  status: 'active' | 'suspended';
+  role: 'user' | 'admin' | 'co-admin' | 'owner';
+  status: 'active' | 'blocked' | 'suspended' | 'pending';
+  statusReason?: string;
+  customPosition?: string;
+  permissions: string[];
   lastLogin: Date;
   createdAt: Date;
 }
+
+// All available permissions
+const ALL_PERMISSIONS = [
+  { id: 'trading', label: 'Trading', description: 'Execute trades' },
+  { id: 'bots', label: 'Bots', description: 'Use/manage bots' },
+  { id: 'strategies', label: 'Strategies', description: 'Create/edit strategies' },
+  { id: 'portfolio', label: 'Portfolio', description: 'View portfolio' },
+  { id: 'analytics', label: 'Analytics', description: 'View analytics' },
+  { id: 'defi', label: 'DeFi', description: 'Access DeFi features' },
+  { id: 'transfers', label: 'Transfers', description: 'Make transfers' },
+  { id: 'tax', label: 'Tax', description: 'Access tax features' },
+  { id: 'retirement', label: 'Retirement', description: 'Retirement planning' },
+  { id: 'wealth', label: 'Wealth', description: 'Wealth management' },
+  { id: 'marketplace', label: 'Marketplace', description: 'Bot marketplace' },
+  { id: 'ml', label: 'ML', description: 'ML training' },
+  { id: 'admin_users', label: 'Admin Users', description: 'Manage users' },
+  { id: 'admin_bots', label: 'Admin Bots', description: 'Manage all bots' },
+  { id: 'admin_system', label: 'Admin System', description: 'System settings' },
+  { id: 'admin_billing', label: 'Admin Billing', description: 'Billing management' },
+];
 
 export default function AdminPortalPage() {
   const router = useRouter();
@@ -60,6 +83,24 @@ export default function AdminPortalPage() {
   const [systemHealth, setSystemHealth] = useState<SystemStatus[]>([]);
   const [systemLogs, setSystemLogs] = useState<SystemLog[]>([]);
   const [users, setUsers] = useState<AdminUser[]>([]);
+  const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showBlockModal, setShowBlockModal] = useState(false);
+  const [userActionLoading, setUserActionLoading] = useState(false);
+  const [userNotification, setUserNotification] = useState<{type: 'success' | 'error', message: string} | null>(null);
+
+  // New user form state
+  const [newUser, setNewUser] = useState({
+    email: '',
+    password: '',
+    name: '',
+    role: 'user' as 'user' | 'admin' | 'co-admin',
+    customPosition: '',
+    permissions: [] as string[],
+  });
+
+  const [blockReason, setBlockReason] = useState('');
   const [stats, setStats] = useState({
     totalUsers: 0,
     activeBots: 0,
@@ -81,7 +122,7 @@ export default function AdminPortalPage() {
         fetch(`${API_BASE}/admin/status`).catch(() => null),
         fetch(`${API_BASE}/admin/metrics`).catch(() => null),
         fetch(`${API_BASE}/admin/activity`, { headers }).catch(() => null),
-        fetch(`${API_BASE}/users/admin/list`, { headers }).catch(() => null),
+        fetch(`${API_BASE}/admin/users`, { headers }).catch(() => null),
         fetch(`${API_BASE}/bots/public`).catch(() => null),
       ]);
 
@@ -213,6 +254,181 @@ export default function AdminPortalPage() {
     router.push('/admin-login');
   };
 
+  // User Management Functions
+  const createUser = async () => {
+    setUserActionLoading(true);
+    try {
+      const token = getTokenFromCookie();
+      const response = await fetch(`${API_BASE}/admin/users/create`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(newUser),
+      });
+
+      const data = await response.json();
+      if (response.ok && data.success) {
+        setUserNotification({ type: 'success', message: `User ${newUser.email} created successfully!` });
+        setShowCreateModal(false);
+        setNewUser({ email: '', password: '', name: '', role: 'user', customPosition: '', permissions: [] });
+        fetchAllData();
+      } else {
+        throw new Error(data.error || 'Failed to create user');
+      }
+    } catch (error: any) {
+      setUserNotification({ type: 'error', message: error.message });
+    } finally {
+      setUserActionLoading(false);
+      setTimeout(() => setUserNotification(null), 4000);
+    }
+  };
+
+  const blockUser = async () => {
+    if (!selectedUser) return;
+    setUserActionLoading(true);
+    try {
+      const token = getTokenFromCookie();
+      const response = await fetch(`${API_BASE}/admin/users/${selectedUser.id}/block`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ reason: blockReason }),
+      });
+
+      const data = await response.json();
+      if (response.ok && data.success) {
+        setUserNotification({ type: 'success', message: `User ${selectedUser.email} blocked` });
+        setShowBlockModal(false);
+        setBlockReason('');
+        setSelectedUser(null);
+        fetchAllData();
+      } else {
+        throw new Error(data.error || 'Failed to block user');
+      }
+    } catch (error: any) {
+      setUserNotification({ type: 'error', message: error.message });
+    } finally {
+      setUserActionLoading(false);
+      setTimeout(() => setUserNotification(null), 4000);
+    }
+  };
+
+  const unblockUser = async (user: AdminUser) => {
+    setUserActionLoading(true);
+    try {
+      const token = getTokenFromCookie();
+      const response = await fetch(`${API_BASE}/admin/users/${user.id}/unblock`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+      if (response.ok && data.success) {
+        setUserNotification({ type: 'success', message: `User ${user.email} unblocked` });
+        fetchAllData();
+      } else {
+        throw new Error(data.error || 'Failed to unblock user');
+      }
+    } catch (error: any) {
+      setUserNotification({ type: 'error', message: error.message });
+    } finally {
+      setUserActionLoading(false);
+      setTimeout(() => setUserNotification(null), 4000);
+    }
+  };
+
+  const updateUserRole = async (user: AdminUser, newRole: string) => {
+    setUserActionLoading(true);
+    try {
+      const token = getTokenFromCookie();
+      const response = await fetch(`${API_BASE}/admin/users/${user.id}/role`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ role: newRole }),
+      });
+
+      const data = await response.json();
+      if (response.ok && data.success) {
+        setUserNotification({ type: 'success', message: `User role updated to ${newRole}` });
+        fetchAllData();
+      } else {
+        throw new Error(data.error || 'Failed to update role');
+      }
+    } catch (error: any) {
+      setUserNotification({ type: 'error', message: error.message });
+    } finally {
+      setUserActionLoading(false);
+      setTimeout(() => setUserNotification(null), 4000);
+    }
+  };
+
+  const updateUserPermissions = async (user: AdminUser, permissions: string[]) => {
+    setUserActionLoading(true);
+    try {
+      const token = getTokenFromCookie();
+      const response = await fetch(`${API_BASE}/admin/users/${user.id}/permissions`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ permissions }),
+      });
+
+      const data = await response.json();
+      if (response.ok && data.success) {
+        setUserNotification({ type: 'success', message: `Permissions updated for ${user.email}` });
+        setShowEditModal(false);
+        setSelectedUser(null);
+        fetchAllData();
+      } else {
+        throw new Error(data.error || 'Failed to update permissions');
+      }
+    } catch (error: any) {
+      setUserNotification({ type: 'error', message: error.message });
+    } finally {
+      setUserActionLoading(false);
+      setTimeout(() => setUserNotification(null), 4000);
+    }
+  };
+
+  const deleteUser = async (user: AdminUser) => {
+    if (!confirm(`Are you sure you want to DELETE user ${user.email}? This cannot be undone.`)) return;
+
+    setUserActionLoading(true);
+    try {
+      const token = getTokenFromCookie();
+      const response = await fetch(`${API_BASE}/admin/users/${user.id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+      if (response.ok && data.success) {
+        setUserNotification({ type: 'success', message: `User ${user.email} deleted` });
+        fetchAllData();
+      } else {
+        throw new Error(data.error || 'Failed to delete user');
+      }
+    } catch (error: any) {
+      setUserNotification({ type: 'error', message: error.message });
+    } finally {
+      setUserActionLoading(false);
+      setTimeout(() => setUserNotification(null), 4000);
+    }
+  };
+
   return (
     <div className="min-h-screen">
       {/* Top Bar */}
@@ -280,6 +496,17 @@ export default function AdminPortalPage() {
             <div className="flex items-center gap-2 px-3 py-2 bg-emerald-500/10 rounded-lg border border-emerald-500/20">
               <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
               <span className="text-sm text-emerald-400">All Systems Online</span>
+            </div>
+
+            {/* Current User Badge */}
+            <div className="flex items-center gap-3 px-4 py-2 bg-yellow-500/10 rounded-lg border border-yellow-500/20">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-yellow-500 to-orange-600 flex items-center justify-center text-white font-bold text-sm">
+                CEO
+              </div>
+              <div>
+                <div className="text-white font-medium text-sm">Time Beyond Admin</div>
+                <div className="text-yellow-400 text-xs">Owner &bull; CEO</div>
+              </div>
             </div>
 
             {/* Logout */}
@@ -546,11 +773,348 @@ export default function AdminPortalPage() {
             </div>
           )}
 
-          {/* Other tabs would go here */}
+          {/* User Management Tab */}
           {activeTab === 'users' && (
             <div className="space-y-6">
-              <h2 className="text-2xl font-bold text-white">User Management</h2>
-              <p className="text-white/40">User management interface coming soon...</p>
+              {/* User Notification */}
+              {userNotification && (
+                <div className={`fixed top-4 right-4 z-50 px-6 py-4 rounded-lg shadow-lg ${
+                  userNotification.type === 'success' ? 'bg-emerald-500' : 'bg-red-500'
+                } text-white`}>
+                  {userNotification.message}
+                </div>
+              )}
+
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold text-white">User Management</h2>
+                <button
+                  onClick={() => setShowCreateModal(true)}
+                  className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-purple-600 text-white rounded-lg font-medium hover:opacity-90 transition-opacity flex items-center gap-2"
+                >
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                  Create User
+                </button>
+              </div>
+
+              {/* Stats Cards */}
+              <div className="grid grid-cols-4 gap-4">
+                <div className="bg-slate-900/50 border border-white/5 rounded-xl p-4">
+                  <div className="text-white/40 text-sm">Total Users</div>
+                  <div className="text-2xl font-bold text-white">{users.length}</div>
+                </div>
+                <div className="bg-slate-900/50 border border-white/5 rounded-xl p-4">
+                  <div className="text-white/40 text-sm">Active</div>
+                  <div className="text-2xl font-bold text-emerald-400">{users.filter(u => u.status === 'active').length}</div>
+                </div>
+                <div className="bg-slate-900/50 border border-white/5 rounded-xl p-4">
+                  <div className="text-white/40 text-sm">Blocked</div>
+                  <div className="text-2xl font-bold text-red-400">{users.filter(u => u.status === 'blocked').length}</div>
+                </div>
+                <div className="bg-slate-900/50 border border-white/5 rounded-xl p-4">
+                  <div className="text-white/40 text-sm">Admins/Co-Admins</div>
+                  <div className="text-2xl font-bold text-purple-400">{users.filter(u => u.role === 'admin' || u.role === 'co-admin').length}</div>
+                </div>
+              </div>
+
+              {/* Users List */}
+              <div className="bg-slate-900/50 border border-white/5 rounded-xl overflow-hidden">
+                <div className="grid grid-cols-7 gap-4 p-4 bg-slate-800/50 border-b border-white/5 font-medium text-white/60 text-sm">
+                  <div>User</div>
+                  <div>Role</div>
+                  <div>Position</div>
+                  <div>Status</div>
+                  <div>Permissions</div>
+                  <div>Last Login</div>
+                  <div>Actions</div>
+                </div>
+
+                {users.length === 0 ? (
+                  <div className="p-8 text-center text-white/40">
+                    {isLoading ? 'Loading users...' : 'No users found'}
+                  </div>
+                ) : (
+                  users.map((user) => (
+                    <div key={user.id} className="grid grid-cols-7 gap-4 p-4 border-b border-white/5 items-center hover:bg-white/5">
+                      <div>
+                        <div className="text-white font-medium">{user.name}</div>
+                        <div className="text-white/40 text-sm">{user.email}</div>
+                      </div>
+                      <div>
+                        <select
+                          value={user.role}
+                          onChange={(e) => updateUserRole(user, e.target.value)}
+                          disabled={user.role === 'owner' || userActionLoading}
+                          className={`px-2 py-1 rounded text-xs font-medium bg-slate-800 border border-white/10 ${
+                            user.role === 'owner' ? 'text-yellow-400 cursor-not-allowed' :
+                            user.role === 'admin' ? 'text-purple-400' :
+                            user.role === 'co-admin' ? 'text-blue-400' :
+                            'text-white/60'
+                          }`}
+                        >
+                          <option value="user">User</option>
+                          <option value="co-admin">Co-Admin</option>
+                          <option value="admin">Admin</option>
+                          {user.role === 'owner' && <option value="owner">Owner</option>}
+                        </select>
+                      </div>
+                      <div className="text-white/60 text-sm">{user.role === 'owner' ? 'CEO' : user.customPosition || '-'}</div>
+                      <div>
+                        <span className={`px-2 py-1 rounded text-xs font-medium ${
+                          user.status === 'active' ? 'bg-emerald-500/20 text-emerald-400' :
+                          user.status === 'blocked' ? 'bg-red-500/20 text-red-400' :
+                          user.status === 'suspended' ? 'bg-orange-500/20 text-orange-400' :
+                          'bg-gray-500/20 text-gray-400'
+                        }`}>
+                          {user.status}
+                        </span>
+                      </div>
+                      <div className="text-white/60 text-sm">
+                        {user.permissions?.length || 0} permissions
+                      </div>
+                      <div className="text-white/40 text-sm">
+                        {user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : 'Never'}
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => { setSelectedUser(user); setShowEditModal(true); }}
+                          className="p-1 hover:bg-white/10 rounded"
+                          title="Edit Permissions"
+                        >
+                          <svg className="w-4 h-4 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          </svg>
+                        </button>
+                        {user.status === 'blocked' ? (
+                          <button
+                            onClick={() => unblockUser(user)}
+                            className="p-1 hover:bg-white/10 rounded"
+                            title="Unblock User"
+                          >
+                            <svg className="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+                            </svg>
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => { setSelectedUser(user); setShowBlockModal(true); }}
+                            className="p-1 hover:bg-white/10 rounded"
+                            title="Block User"
+                            disabled={user.role === 'owner'}
+                          >
+                            <svg className={`w-4 h-4 ${user.role === 'owner' ? 'text-gray-600 cursor-not-allowed' : 'text-orange-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                            </svg>
+                          </button>
+                        )}
+                        <button
+                          onClick={() => deleteUser(user)}
+                          className="p-1 hover:bg-white/10 rounded"
+                          title="Delete User"
+                          disabled={user.role === 'owner'}
+                        >
+                          <svg className={`w-4 h-4 ${user.role === 'owner' ? 'text-gray-600 cursor-not-allowed' : 'text-red-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {/* Create User Modal */}
+              {showCreateModal && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                  <div className="bg-slate-900 border border-white/10 rounded-2xl p-6 w-full max-w-lg">
+                    <h3 className="text-xl font-bold text-white mb-6">Create New User</h3>
+
+                    <div className="space-y-4">
+                      <div>
+                        <label className="text-white/60 text-sm mb-1 block">Email *</label>
+                        <input
+                          type="email"
+                          value={newUser.email}
+                          onChange={(e) => setNewUser({...newUser, email: e.target.value})}
+                          className="w-full px-4 py-2 bg-slate-800 border border-white/10 rounded-lg text-white"
+                          placeholder="user@example.com"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-white/60 text-sm mb-1 block">Password *</label>
+                        <input
+                          type="password"
+                          value={newUser.password}
+                          onChange={(e) => setNewUser({...newUser, password: e.target.value})}
+                          className="w-full px-4 py-2 bg-slate-800 border border-white/10 rounded-lg text-white"
+                          placeholder="Min 8 characters"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-white/60 text-sm mb-1 block">Full Name *</label>
+                        <input
+                          type="text"
+                          value={newUser.name}
+                          onChange={(e) => setNewUser({...newUser, name: e.target.value})}
+                          className="w-full px-4 py-2 bg-slate-800 border border-white/10 rounded-lg text-white"
+                          placeholder="John Doe"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-white/60 text-sm mb-1 block">Role</label>
+                        <select
+                          value={newUser.role}
+                          onChange={(e) => setNewUser({...newUser, role: e.target.value as any})}
+                          className="w-full px-4 py-2 bg-slate-800 border border-white/10 rounded-lg text-white"
+                        >
+                          <option value="user">User</option>
+                          <option value="co-admin">Co-Admin</option>
+                          <option value="admin">Admin</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="text-white/60 text-sm mb-1 block">Custom Position</label>
+                        <input
+                          type="text"
+                          value={newUser.customPosition}
+                          onChange={(e) => setNewUser({...newUser, customPosition: e.target.value})}
+                          className="w-full px-4 py-2 bg-slate-800 border border-white/10 rounded-lg text-white"
+                          placeholder="e.g., Senior Trader, Support Lead"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-white/60 text-sm mb-2 block">Permissions</label>
+                        <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto">
+                          {ALL_PERMISSIONS.map(perm => (
+                            <label key={perm.id} className="flex items-center gap-2 p-2 bg-slate-800/50 rounded cursor-pointer hover:bg-slate-800">
+                              <input
+                                type="checkbox"
+                                checked={newUser.permissions.includes(perm.id)}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setNewUser({...newUser, permissions: [...newUser.permissions, perm.id]});
+                                  } else {
+                                    setNewUser({...newUser, permissions: newUser.permissions.filter(p => p !== perm.id)});
+                                  }
+                                }}
+                                className="rounded border-white/20"
+                              />
+                              <span className="text-white text-sm">{perm.label}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end gap-3 mt-6">
+                      <button
+                        onClick={() => setShowCreateModal(false)}
+                        className="px-4 py-2 bg-slate-800 text-white/60 rounded-lg hover:bg-slate-700"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={createUser}
+                        disabled={!newUser.email || !newUser.password || !newUser.name || userActionLoading}
+                        className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-purple-600 text-white rounded-lg font-medium hover:opacity-90 disabled:opacity-50"
+                      >
+                        {userActionLoading ? 'Creating...' : 'Create User'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Edit Permissions Modal */}
+              {showEditModal && selectedUser && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                  <div className="bg-slate-900 border border-white/10 rounded-2xl p-6 w-full max-w-lg">
+                    <h3 className="text-xl font-bold text-white mb-2">Edit Permissions</h3>
+                    <p className="text-white/40 mb-6">{selectedUser.email}</p>
+
+                    <div className="grid grid-cols-2 gap-2 max-h-80 overflow-y-auto">
+                      {ALL_PERMISSIONS.map(perm => (
+                        <label key={perm.id} className="flex items-center gap-2 p-3 bg-slate-800/50 rounded cursor-pointer hover:bg-slate-800">
+                          <input
+                            type="checkbox"
+                            checked={selectedUser.permissions?.includes(perm.id) || false}
+                            onChange={(e) => {
+                              const newPerms = e.target.checked
+                                ? [...(selectedUser.permissions || []), perm.id]
+                                : (selectedUser.permissions || []).filter(p => p !== perm.id);
+                              setSelectedUser({...selectedUser, permissions: newPerms});
+                            }}
+                            className="rounded border-white/20"
+                          />
+                          <div>
+                            <span className="text-white text-sm">{perm.label}</span>
+                            <p className="text-white/40 text-xs">{perm.description}</p>
+                          </div>
+                        </label>
+                      ))}
+                    </div>
+
+                    <div className="flex justify-end gap-3 mt-6">
+                      <button
+                        onClick={() => { setShowEditModal(false); setSelectedUser(null); }}
+                        className="px-4 py-2 bg-slate-800 text-white/60 rounded-lg hover:bg-slate-700"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={() => updateUserPermissions(selectedUser, selectedUser.permissions || [])}
+                        disabled={userActionLoading}
+                        className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-purple-600 text-white rounded-lg font-medium hover:opacity-90 disabled:opacity-50"
+                      >
+                        {userActionLoading ? 'Saving...' : 'Save Permissions'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Block User Modal */}
+              {showBlockModal && selectedUser && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                  <div className="bg-slate-900 border border-white/10 rounded-2xl p-6 w-full max-w-md">
+                    <h3 className="text-xl font-bold text-white mb-2">Block User</h3>
+                    <p className="text-white/40 mb-6">Blocking {selectedUser.email}</p>
+
+                    <div>
+                      <label className="text-white/60 text-sm mb-1 block">Reason for blocking</label>
+                      <textarea
+                        value={blockReason}
+                        onChange={(e) => setBlockReason(e.target.value)}
+                        className="w-full px-4 py-2 bg-slate-800 border border-white/10 rounded-lg text-white h-24"
+                        placeholder="e.g., Violation of terms, suspicious activity..."
+                      />
+                    </div>
+
+                    <div className="flex justify-end gap-3 mt-6">
+                      <button
+                        onClick={() => { setShowBlockModal(false); setSelectedUser(null); setBlockReason(''); }}
+                        className="px-4 py-2 bg-slate-800 text-white/60 rounded-lg hover:bg-slate-700"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={blockUser}
+                        disabled={userActionLoading}
+                        className="px-4 py-2 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 disabled:opacity-50"
+                      >
+                        {userActionLoading ? 'Blocking...' : 'Block User'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
