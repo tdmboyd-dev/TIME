@@ -546,7 +546,7 @@ export class MarketDataManager extends EventEmitter {
   private providers: Map<DataProvider, BaseDataProvider> = new Map();
   private cache: Map<string, { quote: Quote; expires: Date }> = new Map();
   private subscriptions: Map<string, StreamSubscription[]> = new Map();
-  private preferredProvider: DataProvider = 'polygon';
+  private preferredProvider: DataProvider = 'twelvedata'; // Default to TwelveData (free tier available)
 
   // Cache TTL in milliseconds
   private readonly CACHE_TTL = 5000; // 5 seconds for real-time
@@ -559,21 +559,24 @@ export class MarketDataManager extends EventEmitter {
   }) {
     super();
 
-    // Initialize providers
-    if (config?.polygonKey) {
-      this.providers.set('polygon', new PolygonProvider(config.polygonKey));
-    }
+    // Initialize providers (order matters - first available becomes preferred if polygon missing)
     if (config?.twelveDataKey) {
       this.providers.set('twelvedata', new TwelveDataProvider(config.twelveDataKey));
+      console.log('[MarketData] TwelveData provider initialized');
+    }
+    if (config?.polygonKey) {
+      this.providers.set('polygon', new PolygonProvider(config.polygonKey));
+      this.preferredProvider = 'polygon'; // Prefer Polygon if available
+      console.log('[MarketData] Polygon provider initialized');
     }
 
-    // Add mock providers for testing
+    // Add mock providers for testing if no real providers available
     if (this.providers.size === 0) {
-      this.providers.set('polygon', new PolygonProvider(''));
       this.providers.set('twelvedata', new TwelveDataProvider(''));
+      console.log('[MarketData] Using mock TwelveData provider (no API keys)');
     }
 
-    console.log(`[MarketData] Initialized with ${this.providers.size} providers`);
+    console.log(`[MarketData] Initialized with ${this.providers.size} providers, preferred: ${this.preferredProvider}`);
   }
 
   // ============================================================================

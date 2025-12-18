@@ -21,6 +21,8 @@ import {
   Loader2,
   RefreshCw
 } from 'lucide-react';
+import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { useWallet } from '@/hooks/useWallet';
 
 const API_BASE = 'https://time-backend-hosting.fly.dev/api/v1';
 
@@ -56,13 +58,25 @@ export default function DeFiPage() {
   const [selectedPool, setSelectedPool] = useState<Pool | null>(null);
   const [showStakeModal, setShowStakeModal] = useState(false);
   const [stakeAmount, setStakeAmount] = useState('');
-  const [showWalletModal, setShowWalletModal] = useState(false);
   const [showDepositModal, setShowDepositModal] = useState(false);
-  const [walletConnected, setWalletConnected] = useState(false);
-  const [walletAddress, setWalletAddress] = useState('');
-  const [isConnecting, setIsConnecting] = useState(false);
   const [depositAmount, setDepositAmount] = useState('');
+  const [isDepositing, setIsDepositing] = useState(false);
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  // Real Web3 wallet connection
+  const {
+    isConnected: walletConnected,
+    isConnecting,
+    address: walletAddress,
+    shortAddress,
+    chainName,
+    balanceFormatted,
+    balanceSymbol,
+    isWrongNetwork,
+    connect: connectWallet,
+    disconnect: disconnectWallet,
+    openChainModal,
+  } = useWallet();
 
   // API connection state
   const [isLoading, setIsLoading] = useState(true);
@@ -71,15 +85,6 @@ export default function DeFiPage() {
   const [apiPools, setApiPools] = useState<Pool[]>([]);
   const [apiStaking, setApiStaking] = useState<StakingOption[]>([]);
   const [apiPortfolio, setApiPortfolio] = useState<any>(null);
-
-  const wallets = [
-    { id: 'metamask', name: 'MetaMask', icon: '🦊', popular: true },
-    { id: 'coinbase', name: 'Coinbase Wallet', icon: '🔵', popular: true },
-    { id: 'walletconnect', name: 'WalletConnect', icon: '🔗', popular: true },
-    { id: 'phantom', name: 'Phantom', icon: '👻', popular: false },
-    { id: 'trust', name: 'Trust Wallet', icon: '🛡️', popular: false },
-    { id: 'rainbow', name: 'Rainbow', icon: '🌈', popular: false },
-  ];
 
   // Fetch DeFi data from API
   const fetchDeFiData = useCallback(async () => {
@@ -159,25 +164,7 @@ export default function DeFiPage() {
     fetchDeFiData();
   };
 
-  const connectWallet = async (walletId: string) => {
-    setIsConnecting(true);
-    // Simulate wallet connection
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    const mockAddress = '0x' + Math.random().toString(16).slice(2, 10) + '...' + Math.random().toString(16).slice(2, 6);
-    setWalletAddress(mockAddress);
-    setWalletConnected(true);
-    setIsConnecting(false);
-    setShowWalletModal(false);
-    setNotification({ type: 'success', message: `Connected to ${wallets.find(w => w.id === walletId)?.name}!` });
-    setTimeout(() => setNotification(null), 3000);
-  };
-
-  const disconnectWallet = () => {
-    setWalletConnected(false);
-    setWalletAddress('');
-    setNotification({ type: 'success', message: 'Wallet disconnected' });
-    setTimeout(() => setNotification(null), 3000);
-  };
+  // Note: connectWallet and disconnectWallet now come from useWallet hook
 
   const handleDeposit = async () => {
     if (!depositAmount || parseFloat(depositAmount) <= 0) {
@@ -185,9 +172,9 @@ export default function DeFiPage() {
       setTimeout(() => setNotification(null), 3000);
       return;
     }
-    setIsConnecting(true);
+    setIsDepositing(true);
     await new Promise(resolve => setTimeout(resolve, 2000));
-    setIsConnecting(false);
+    setIsDepositing(false);
     setShowDepositModal(false);
     setDepositAmount('');
     setNotification({ type: 'success', message: `Successfully deposited $${depositAmount} to TIME Yield Optimizer!` });
@@ -276,28 +263,101 @@ export default function DeFiPage() {
             <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
             {isRefreshing ? 'Refreshing...' : 'Refresh'}
           </button>
-          {walletConnected ? (
-            <>
-              <div className="flex items-center gap-2 px-3 py-2 bg-green-500/20 border border-green-500/30 rounded-lg">
-                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                <span className="text-sm text-green-400 font-mono">{walletAddress}</span>
-              </div>
-              <button
-                onClick={disconnectWallet}
-                className="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-white font-medium transition-colors"
-              >
-                Disconnect
-              </button>
-            </>
-          ) : (
-            <button
-              onClick={() => setShowWalletModal(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-time-primary hover:bg-time-primary/80 rounded-lg text-white font-medium transition-colors"
-            >
-              <Wallet className="w-4 h-4" />
-              Connect Wallet
-            </button>
-          )}
+          {/* RainbowKit Wallet Connection */}
+          <ConnectButton.Custom>
+            {({
+              account,
+              chain,
+              openAccountModal,
+              openChainModal,
+              openConnectModal,
+              mounted,
+            }) => {
+              const connected = mounted && account && chain;
+
+              return (
+                <div
+                  {...(!mounted && {
+                    'aria-hidden': true,
+                    style: {
+                      opacity: 0,
+                      pointerEvents: 'none',
+                      userSelect: 'none',
+                    },
+                  })}
+                >
+                  {(() => {
+                    if (!connected) {
+                      return (
+                        <button
+                          onClick={openConnectModal}
+                          className="flex items-center gap-2 px-4 py-2 bg-time-primary hover:bg-time-primary/80 rounded-lg text-white font-medium transition-colors"
+                        >
+                          <Wallet className="w-4 h-4" />
+                          Connect Wallet
+                        </button>
+                      );
+                    }
+
+                    if (chain.unsupported) {
+                      return (
+                        <button
+                          onClick={openChainModal}
+                          className="flex items-center gap-2 px-4 py-2 bg-red-500/20 border border-red-500/30 rounded-lg text-red-400 font-medium"
+                        >
+                          <AlertTriangle className="w-4 h-4" />
+                          Wrong Network
+                        </button>
+                      );
+                    }
+
+                    return (
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={openChainModal}
+                          className="flex items-center gap-2 px-3 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-white text-sm"
+                        >
+                          {chain.hasIcon && (
+                            <div
+                              style={{
+                                background: chain.iconBackground,
+                                width: 16,
+                                height: 16,
+                                borderRadius: 999,
+                                overflow: 'hidden',
+                              }}
+                            >
+                              {chain.iconUrl && (
+                                <img
+                                  alt={chain.name ?? 'Chain icon'}
+                                  src={chain.iconUrl}
+                                  style={{ width: 16, height: 16 }}
+                                />
+                              )}
+                            </div>
+                          )}
+                          {chain.name}
+                        </button>
+
+                        <button
+                          onClick={openAccountModal}
+                          className="flex items-center gap-2 px-3 py-2 bg-green-500/20 border border-green-500/30 rounded-lg"
+                        >
+                          <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                          <span className="text-sm text-green-400 font-mono">
+                            {account.displayName}
+                          </span>
+                          <span className="text-xs text-slate-400">
+                            {account.displayBalance}
+                          </span>
+                        </button>
+                      </div>
+                    );
+                  })()}
+                </div>
+              );
+            }}
+          </ConnectButton.Custom>
         </div>
       </div>
 
@@ -556,7 +616,7 @@ export default function DeFiPage() {
 
             <div className="flex gap-3">
               <button
-                onClick={() => walletConnected ? setShowDepositModal(true) : setShowWalletModal(true)}
+                onClick={() => walletConnected ? setShowDepositModal(true) : connectWallet()}
                 className="flex-1 py-3 bg-time-primary hover:bg-time-primary/80 rounded-lg text-white font-medium transition-colors"
               >
                 {walletConnected ? 'Deposit & Start Earning' : 'Connect Wallet to Deposit'}
@@ -637,63 +697,7 @@ export default function DeFiPage() {
         </div>
       )}
 
-      {/* Connect Wallet Modal */}
-      {showWalletModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-slate-900 border border-slate-700 rounded-xl p-6 max-w-md w-full mx-4">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-bold text-white">Connect Wallet</h3>
-              <button onClick={() => setShowWalletModal(false)} className="text-slate-400 hover:text-white">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {isConnecting ? (
-              <div className="text-center py-8">
-                <Loader2 className="w-12 h-12 text-time-primary mx-auto animate-spin mb-4" />
-                <p className="text-white font-medium">Connecting...</p>
-                <p className="text-sm text-slate-400 mt-1">Please approve the connection in your wallet</p>
-              </div>
-            ) : (
-              <>
-                <p className="text-sm text-slate-400 mb-4">Select a wallet to connect to TIME DeFi</p>
-
-                <div className="space-y-2 mb-4">
-                  <p className="text-xs text-slate-500 uppercase tracking-wider">Popular</p>
-                  {wallets.filter(w => w.popular).map(wallet => (
-                    <button
-                      key={wallet.id}
-                      onClick={() => connectWallet(wallet.id)}
-                      className="w-full flex items-center gap-3 p-3 bg-slate-800/50 hover:bg-slate-800 border border-slate-700/50 hover:border-time-primary/50 rounded-lg transition-colors"
-                    >
-                      <span className="text-2xl">{wallet.icon}</span>
-                      <span className="text-white font-medium">{wallet.name}</span>
-                    </button>
-                  ))}
-                </div>
-
-                <div className="space-y-2">
-                  <p className="text-xs text-slate-500 uppercase tracking-wider">More Options</p>
-                  {wallets.filter(w => !w.popular).map(wallet => (
-                    <button
-                      key={wallet.id}
-                      onClick={() => connectWallet(wallet.id)}
-                      className="w-full flex items-center gap-3 p-3 bg-slate-800/50 hover:bg-slate-800 border border-slate-700/50 hover:border-time-primary/50 rounded-lg transition-colors"
-                    >
-                      <span className="text-2xl">{wallet.icon}</span>
-                      <span className="text-white font-medium">{wallet.name}</span>
-                    </button>
-                  ))}
-                </div>
-
-                <p className="text-xs text-slate-500 text-center mt-4">
-                  By connecting, you agree to TIME&apos;s Terms of Service and Privacy Policy
-                </p>
-              </>
-            )}
-          </div>
-        </div>
-      )}
+      {/* Wallet Modal handled by RainbowKit */}
 
       {/* Deposit Modal */}
       {showDepositModal && (
@@ -706,7 +710,7 @@ export default function DeFiPage() {
               </button>
             </div>
 
-            {isConnecting ? (
+            {isDepositing ? (
               <div className="text-center py-8">
                 <Loader2 className="w-12 h-12 text-time-primary mx-auto animate-spin mb-4" />
                 <p className="text-white font-medium">Processing Deposit...</p>
@@ -721,7 +725,7 @@ export default function DeFiPage() {
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-slate-400">Your Wallet</span>
-                    <span className="text-white font-mono text-xs">{walletAddress}</span>
+                    <span className="text-white font-mono text-xs">{shortAddress || 'Not connected'}</span>
                   </div>
                 </div>
 

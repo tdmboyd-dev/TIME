@@ -5,3 +5,4 @@
 export * from './useWebSocket';
 export * from './useTradingMode';
 export * from './useRealTimeData';
+export * from './useWallet';
