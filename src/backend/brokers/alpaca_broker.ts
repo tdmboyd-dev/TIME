@@ -102,8 +102,13 @@ export class AlpacaBroker extends BrokerInterface {
       this.isConnected = true;
       this.emit('connected');
 
-      // Start WebSocket connection for real-time data
-      await this.connectWebSocket();
+      // Start WebSocket connection for real-time data (optional - don't fail if it doesn't connect)
+      try {
+        await this.connectWebSocket();
+      } catch (wsError) {
+        logger.warn('WebSocket connection failed (REST API still works for order execution):', wsError as object);
+        // Don't throw - REST API is enough for trading
+      }
     } catch (error) {
       logger.error('Failed to connect to Alpaca:', error as object);
       this.emit('error', error as Error);
@@ -608,15 +613,20 @@ export class AlpacaBroker extends BrokerInterface {
           logger.warn(`WebSocket closed: ${code} - ${reason.toString()}`);
           this.emit('disconnected', reason.toString() || 'WebSocket closed');
 
-          // Attempt reconnection after 5 seconds
-          setTimeout(() => {
-            if (this.isConnected) {
-              logger.info('Attempting WebSocket reconnection...');
-              this.connectWebSocket().catch(err => {
-                logger.error('WebSocket reconnection failed:', err as object);
-              });
-            }
-          }, 5000);
+          // Only attempt reconnection if not a connection limit error
+          // Error 406 = connection limit exceeded - don't retry
+          if (code !== 1006) {
+            setTimeout(() => {
+              if (this.isConnected) {
+                logger.info('Attempting WebSocket reconnection...');
+                this.connectWebSocket().catch(err => {
+                  logger.error('WebSocket reconnection failed:', err as object);
+                });
+              }
+            }, 5000);
+          } else {
+            logger.info('WebSocket connection limit reached - using REST API only for trading');
+          }
         });
 
         // Set a timeout for initial connection
