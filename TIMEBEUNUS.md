@@ -64,16 +64,41 @@ All engines are FULLY IMPLEMENTED (previous audit was incorrect):
 - ALL 6 ENGINE FILES (fully implemented)
 - Live trading via Alpaca (tested successfully)
 
-### Remaining Work:
-- ~~Frontend console.error cleanup~~ ✅ DONE
-- Redis rate limiting (2-4 hours)
-- Login page OAuth/WebAuthn wiring (2-4 hours)
-- ~~Phase 2: Frontend Cleanup~~ ✅ DONE
-- Phase 3: Backend Hardening (3-5 days)
-- Phase 4: Data Layer (2-3 days)
-- Phase 5: Testing & Polish (2-3 days)
+### Phase Roadmap:
+| Phase | Description | Status |
+|-------|-------------|--------|
+| 1 | Security Hardening | ✅ COMPLETE |
+| 2 | Frontend Cleanup (29 pages) | ✅ COMPLETE |
+| 3 | Backend Hardening | ⏳ PENDING |
+| 4 | Data Layer | ⏳ PENDING |
+| 5 | Testing & Polish | ⏳ PENDING |
+| 6 | Stub Elimination + Login Wiring | ⏳ PENDING |
 
-**Total Remaining Effort: 60-100 hours**
+### Phase 6 Details (15 engine files ALL COMPLETE):
+| Engine | Size | Status |
+|--------|------|--------|
+| defi_mastery_engine.ts | 40KB | ✅ Complete |
+| strategy_builder.ts | 34KB | ✅ Complete |
+| social_trading_engine.ts | 31KB | ✅ Complete |
+| ux_innovation_engine.ts | 26KB | ✅ Complete |
+| signal_conflict_resolver.ts | 26KB | ✅ Complete |
+| ai_risk_profiler.ts | 23KB | ✅ Complete |
+| recursive_synthesis_engine.ts | 21KB | ✅ Complete |
+| teaching_engine.ts | 21KB | ✅ Complete |
+| ensemble_harmony_detector.ts | 20KB | ✅ Complete |
+| learning_velocity_tracker.ts | 20KB | ✅ Complete |
+| market_vision_engine.ts | 19KB | ✅ Complete |
+| learning_engine.ts | 18KB | ✅ Complete |
+| regime_detector.ts | 16KB | ✅ Complete |
+| risk_engine.ts | 15KB | ✅ Complete |
+| attribution_engine.ts | 13KB | ✅ Complete |
+
+### Phase 6 Remaining Tasks:
+- Login OAuth/WebAuthn button wiring
+- Remove mock fallbacks from market_data_providers.ts
+- Complete broker placeholder adapters
+
+**Total Remaining Effort: 40-60 hours**
 
 See `TIME_TODO.md` for complete audit details.
 
