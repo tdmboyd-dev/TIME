@@ -737,4 +737,565 @@ router.delete('/database/clear/:collection', authMiddleware, ownerMiddleware, as
   });
 });
 
+// ============================================================
+// MASTER ADMIN PANEL - USER MANAGEMENT
+// ============================================================
+
+/**
+ * GET /admin/users
+ * Get all users with filtering
+ */
+router.get('/users', authMiddleware, adminMiddleware, async (req: Request, res: Response) => {
+  const { page = '1', limit = '50', role, status, search } = req.query;
+
+  try {
+    // Get all users
+    let users = await userRepository.findMany({});
+
+    // Apply filters
+    if (role) {
+      users = users.filter((u: any) => u.role === role);
+    }
+    if (status) {
+      users = users.filter((u: any) => u.status === status);
+    }
+    if (search) {
+      const searchLower = (search as string).toLowerCase();
+      users = users.filter((u: any) =>
+        u.email.toLowerCase().includes(searchLower) ||
+        u.name.toLowerCase().includes(searchLower)
+      );
+    }
+
+    // Pagination
+    const pageNum = parseInt(page as string);
+    const limitNum = parseInt(limit as string);
+    const start = (pageNum - 1) * limitNum;
+    const paginatedUsers = users.slice(start, start + limitNum);
+
+    // Remove sensitive data
+    const safeUsers = paginatedUsers.map(u => ({
+      id: u._id,
+      email: u.email,
+      name: u.name,
+      role: u.role,
+      customRole: (u as any).customRole,
+      customPosition: (u as any).customPosition,
+      status: (u as any).status || 'active',
+      permissions: (u as any).permissions || [],
+      createdAt: u.createdAt,
+      lastLogin: u.lastLogin,
+      lastActivity: u.lastActivity,
+    }));
+
+    res.json({
+      success: true,
+      total: users.length,
+      page: pageNum,
+      limit: limitNum,
+      totalPages: Math.ceil(users.length / limitNum),
+      users: safeUsers,
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * GET /admin/users/:userId
+ * Get single user details
+ */
+router.get('/users/:userId', authMiddleware, adminMiddleware, async (req: Request, res: Response) => {
+  const { userId } = req.params;
+
+  try {
+    const user = await userRepository.findById(userId);
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'User not found' });
+    }
+
+    res.json({
+      success: true,
+      user: {
+        id: user._id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+        customRole: (user as any).customRole,
+        customPosition: (user as any).customPosition,
+        status: (user as any).status || 'active',
+        statusReason: (user as any).statusReason,
+        permissions: (user as any).permissions || [],
+        phone: user.phone,
+        createdAt: user.createdAt,
+        createdBy: (user as any).createdBy,
+        lastLogin: user.lastLogin,
+        lastActivity: user.lastActivity,
+        brokerConnections: user.brokerConnections?.length || 0,
+        settings: user.settings,
+      },
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * POST /admin/users/create
+ * Create a new user (admin-created)
+ */
+router.post('/users/create', authMiddleware, adminMiddleware, async (req: Request, res: Response) => {
+  const { email, name, password, role = 'user', permissions = [], customPosition } = req.body;
+  const adminUser = (req as any).user;
+
+  if (!email || !name || !password) {
+    return res.status(400).json({ success: false, error: 'Email, name, and password required' });
+  }
+
+  try {
+    // Check if email already exists
+    const existing = await userRepository.findByEmail(email);
+    if (existing) {
+      return res.status(400).json({ success: false, error: 'Email already registered' });
+    }
+
+    // Hash password
+    const bcrypt = require('bcryptjs');
+    const passwordHash = await bcrypt.hash(password, 12);
+
+    // Default permissions based on role
+    let defaultPermissions = ['portfolio', 'analytics'];
+    if (role === 'admin' || role === 'co-admin') {
+      defaultPermissions = ['trading', 'bots', 'strategies', 'portfolio', 'analytics', 'defi', 'transfers'];
+    }
+
+    const newUser = await userRepository.create({
+      email,
+      name,
+      passwordHash,
+      role,
+      customPosition,
+      status: 'active',
+      permissions: permissions.length > 0 ? permissions : defaultPermissions,
+      createdAt: new Date(),
+      createdBy: adminUser.id,
+      lastLogin: new Date(),
+      lastActivity: new Date(),
+      consent: {
+        termsAccepted: true,
+        dataLearningConsent: true,
+        riskDisclosureAccepted: true,
+        marketingConsent: false,
+        acceptedAt: new Date(),
+      },
+      settings: {
+        timezone: 'America/New_York',
+        currency: 'USD',
+        language: 'en',
+        theme: 'dark',
+        notifications: {
+          email: true,
+          sms: false,
+          push: true,
+          tradeAlerts: true,
+          riskAlerts: true,
+          dailySummary: true,
+        },
+      },
+      brokerConnections: [],
+    } as any);
+
+    // Log the action
+    await auditLogRepository.log('AdminPanel', 'user_created', {
+      createdUserId: newUser._id,
+      createdUserEmail: email,
+      createdBy: adminUser.id,
+      role,
+    });
+
+    res.json({
+      success: true,
+      message: 'User created successfully',
+      user: {
+        id: newUser._id,
+        email: newUser.email,
+        name: newUser.name,
+        role: newUser.role,
+      },
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * PUT /admin/users/:userId/role
+ * Update user role (promote to admin/co-admin, demote, etc.)
+ */
+router.put('/users/:userId/role', authMiddleware, adminMiddleware, async (req: Request, res: Response) => {
+  const { userId } = req.params;
+  const { role, customPosition } = req.body;
+  const adminUser = (req as any).user;
+
+  if (!role) {
+    return res.status(400).json({ success: false, error: 'Role is required' });
+  }
+
+  // Only owner can create other admins
+  if ((role === 'admin' || role === 'owner') && adminUser.role !== 'owner') {
+    return res.status(403).json({ success: false, error: 'Only owner can assign admin/owner roles' });
+  }
+
+  try {
+    const user = await userRepository.findById(userId);
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'User not found' });
+    }
+
+    // Prevent demoting self
+    if (userId === adminUser.id && role !== adminUser.role) {
+      return res.status(400).json({ success: false, error: 'Cannot change your own role' });
+    }
+
+    await userRepository.update(userId, {
+      role,
+      customPosition: customPosition || (user as any).customPosition,
+    });
+
+    await auditLogRepository.log('AdminPanel', 'user_role_changed', {
+      targetUserId: userId,
+      oldRole: user.role,
+      newRole: role,
+      changedBy: adminUser.id,
+    });
+
+    res.json({
+      success: true,
+      message: `User role updated to ${role}`,
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * PUT /admin/users/:userId/permissions
+ * Update user permissions
+ */
+router.put('/users/:userId/permissions', authMiddleware, adminMiddleware, async (req: Request, res: Response) => {
+  const { userId } = req.params;
+  const { permissions } = req.body;
+  const adminUser = (req as any).user;
+
+  if (!Array.isArray(permissions)) {
+    return res.status(400).json({ success: false, error: 'Permissions must be an array' });
+  }
+
+  try {
+    const user = await userRepository.findById(userId);
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'User not found' });
+    }
+
+    await userRepository.update(userId, { permissions });
+
+    await auditLogRepository.log('AdminPanel', 'user_permissions_changed', {
+      targetUserId: userId,
+      oldPermissions: (user as any).permissions,
+      newPermissions: permissions,
+      changedBy: adminUser.id,
+    });
+
+    res.json({
+      success: true,
+      message: 'User permissions updated',
+      permissions,
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * PUT /admin/users/:userId/block
+ * Block a user
+ */
+router.put('/users/:userId/block', authMiddleware, adminMiddleware, async (req: Request, res: Response) => {
+  const { userId } = req.params;
+  const { reason } = req.body;
+  const adminUser = (req as any).user;
+
+  try {
+    const user = await userRepository.findById(userId);
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'User not found' });
+    }
+
+    // Prevent blocking self
+    if (userId === adminUser.id) {
+      return res.status(400).json({ success: false, error: 'Cannot block yourself' });
+    }
+
+    // Prevent blocking owner
+    if (user.role === 'owner') {
+      return res.status(403).json({ success: false, error: 'Cannot block owner' });
+    }
+
+    // Only owner can block admins
+    if (user.role === 'admin' && adminUser.role !== 'owner') {
+      return res.status(403).json({ success: false, error: 'Only owner can block admins' });
+    }
+
+    await userRepository.update(userId, {
+      status: 'blocked',
+      statusReason: reason || 'Blocked by admin',
+      statusChangedAt: new Date(),
+      statusChangedBy: adminUser.id,
+    });
+
+    await auditLogRepository.log('AdminPanel', 'user_blocked', {
+      targetUserId: userId,
+      reason,
+      blockedBy: adminUser.id,
+    });
+
+    res.json({
+      success: true,
+      message: 'User blocked',
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * PUT /admin/users/:userId/unblock
+ * Unblock a user
+ */
+router.put('/users/:userId/unblock', authMiddleware, adminMiddleware, async (req: Request, res: Response) => {
+  const { userId } = req.params;
+  const adminUser = (req as any).user;
+
+  try {
+    const user = await userRepository.findById(userId);
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'User not found' });
+    }
+
+    await userRepository.update(userId, {
+      status: 'active',
+      statusReason: undefined,
+      statusChangedAt: new Date(),
+      statusChangedBy: adminUser.id,
+    });
+
+    await auditLogRepository.log('AdminPanel', 'user_unblocked', {
+      targetUserId: userId,
+      unblockedBy: adminUser.id,
+    });
+
+    res.json({
+      success: true,
+      message: 'User unblocked',
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * DELETE /admin/users/:userId
+ * Delete a user (owner only)
+ */
+router.delete('/users/:userId', authMiddleware, ownerMiddleware, async (req: Request, res: Response) => {
+  const { userId } = req.params;
+  const { confirmation } = req.body;
+  const adminUser = (req as any).user;
+
+  if (confirmation !== 'DELETE_USER') {
+    return res.status(400).json({ success: false, error: 'Must confirm with "DELETE_USER"' });
+  }
+
+  if (userId === adminUser.id) {
+    return res.status(400).json({ success: false, error: 'Cannot delete yourself' });
+  }
+
+  try {
+    const user = await userRepository.findById(userId);
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'User not found' });
+    }
+
+    await userRepository.delete(userId);
+
+    await auditLogRepository.log('AdminPanel', 'user_deleted', {
+      deletedUserId: userId,
+      deletedUserEmail: user.email,
+      deletedBy: adminUser.id,
+    });
+
+    res.json({
+      success: true,
+      message: 'User deleted',
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * GET /admin/permissions
+ * Get all available permissions
+ */
+router.get('/permissions', authMiddleware, adminMiddleware, (req: Request, res: Response) => {
+  const permissions = [
+    { id: 'trading', name: 'Trading', description: 'Can execute trades', category: 'Trading' },
+    { id: 'bots', name: 'Bots', description: 'Can use and manage bots', category: 'Trading' },
+    { id: 'strategies', name: 'Strategies', description: 'Can create and edit strategies', category: 'Trading' },
+    { id: 'portfolio', name: 'Portfolio', description: 'Can view portfolio', category: 'Core' },
+    { id: 'analytics', name: 'Analytics', description: 'Can view analytics and charts', category: 'Core' },
+    { id: 'defi', name: 'DeFi', description: 'Can access DeFi features', category: 'Advanced' },
+    { id: 'transfers', name: 'Transfers', description: 'Can make ACATS transfers', category: 'Advanced' },
+    { id: 'tax', name: 'Tax', description: 'Can access tax features', category: 'Advanced' },
+    { id: 'retirement', name: 'Retirement', description: 'Can access retirement planning', category: 'Advanced' },
+    { id: 'wealth', name: 'Wealth', description: 'Can access wealth management', category: 'Advanced' },
+    { id: 'marketplace', name: 'Marketplace', description: 'Can access bot marketplace', category: 'Advanced' },
+    { id: 'ml', name: 'ML Training', description: 'Can access ML training pipeline', category: 'Advanced' },
+    { id: 'admin_users', name: 'Manage Users', description: 'Co-admin: Can manage users', category: 'Admin' },
+    { id: 'admin_bots', name: 'Manage All Bots', description: 'Co-admin: Can manage all bots', category: 'Admin' },
+    { id: 'admin_system', name: 'System Settings', description: 'Co-admin: Can access system settings', category: 'Admin' },
+    { id: 'admin_billing', name: 'Billing', description: 'Co-admin: Can manage billing', category: 'Admin' },
+    { id: 'owner_full', name: 'Full Access', description: 'Owner: Full platform access', category: 'Owner' },
+  ];
+
+  res.json({
+    success: true,
+    permissions,
+    categories: ['Core', 'Trading', 'Advanced', 'Admin', 'Owner'],
+  });
+});
+
+/**
+ * GET /admin/roles
+ * Get all custom roles
+ */
+router.get('/roles', authMiddleware, adminMiddleware, async (req: Request, res: Response) => {
+  // For now, return predefined roles. In production, fetch from database.
+  const roles = [
+    {
+      id: 'trader',
+      name: 'Trader',
+      description: 'Can trade and manage own portfolio',
+      permissions: ['trading', 'portfolio', 'analytics', 'bots', 'strategies'],
+      isSystem: true,
+    },
+    {
+      id: 'analyst',
+      name: 'Analyst',
+      description: 'Can view and analyze but not trade',
+      permissions: ['portfolio', 'analytics', 'ml'],
+      isSystem: true,
+    },
+    {
+      id: 'bot_developer',
+      name: 'Bot Developer',
+      description: 'Can create and test bots',
+      permissions: ['bots', 'strategies', 'ml', 'marketplace'],
+      isSystem: true,
+    },
+    {
+      id: 'wealth_manager',
+      name: 'Wealth Manager',
+      description: 'Full wealth management access',
+      permissions: ['portfolio', 'analytics', 'wealth', 'retirement', 'tax', 'transfers'],
+      isSystem: true,
+    },
+    {
+      id: 'co_admin',
+      name: 'Co-Admin',
+      description: 'Admin with limited user management',
+      permissions: ['trading', 'bots', 'strategies', 'portfolio', 'analytics', 'admin_users', 'admin_bots'],
+      isSystem: true,
+    },
+  ];
+
+  res.json({
+    success: true,
+    roles,
+  });
+});
+
+/**
+ * POST /admin/roles
+ * Create a custom role
+ */
+router.post('/roles', authMiddleware, ownerMiddleware, async (req: Request, res: Response) => {
+  const { name, description, permissions } = req.body;
+  const adminUser = (req as any).user;
+
+  if (!name || !permissions || !Array.isArray(permissions)) {
+    return res.status(400).json({ success: false, error: 'Name and permissions array required' });
+  }
+
+  const role = {
+    id: `custom_${Date.now()}`,
+    name,
+    description: description || '',
+    permissions,
+    isSystem: false,
+    createdAt: new Date(),
+    createdBy: adminUser.id,
+  };
+
+  // In production, save to database
+
+  await auditLogRepository.log('AdminPanel', 'custom_role_created', {
+    roleId: role.id,
+    roleName: name,
+    createdBy: adminUser.id,
+  });
+
+  res.json({
+    success: true,
+    message: 'Custom role created',
+    role,
+  });
+});
+
+/**
+ * GET /admin/stats/users
+ * Get user statistics
+ */
+router.get('/stats/users', authMiddleware, adminMiddleware, async (req: Request, res: Response) => {
+  try {
+    const users = await userRepository.findMany({});
+
+    const stats = {
+      total: users.length,
+      byRole: {
+        owner: users.filter((u: any) => u.role === 'owner').length,
+        admin: users.filter((u: any) => u.role === 'admin').length,
+        'co-admin': users.filter((u: any) => u.role === 'co-admin').length,
+        user: users.filter((u: any) => u.role === 'user').length,
+      },
+      byStatus: {
+        active: users.filter((u: any) => u.status === 'active' || !u.status).length,
+        blocked: users.filter((u: any) => u.status === 'blocked').length,
+        suspended: users.filter((u: any) => u.status === 'suspended').length,
+        pending: users.filter((u: any) => u.status === 'pending').length,
+      },
+      recentLogins: users.filter((u: any) => {
+        const lastLogin = new Date(u.lastLogin);
+        const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+        return lastLogin > dayAgo;
+      }).length,
+      withBrokers: users.filter((u: any) => u.brokerConnections && u.brokerConnections.length > 0).length,
+    };
+
+    res.json({ success: true, stats });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 export default router;

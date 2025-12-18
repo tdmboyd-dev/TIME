@@ -22,7 +22,7 @@ import {
   Loader2
 } from 'lucide-react';
 
-import { API_BASE } from '@/lib/api';
+import { API_BASE, getTokenFromCookie } from '@/lib/api';
 
 interface Asset {
   symbol: string;
@@ -232,9 +232,7 @@ export default function TradePage() {
         headers: {
           'Content-Type': 'application/json',
           // Include auth token if user is logged in
-          ...(typeof window !== 'undefined' && localStorage.getItem('time_auth_token')
-            ? { 'Authorization': `Bearer ${localStorage.getItem('time_auth_token')}` }
-            : {}),
+          ...(getTokenFromCookie() ? { 'Authorization': `Bearer ${getTokenFromCookie()}` } : {}),
         },
         body: JSON.stringify({
           symbol: selectedAsset.symbol.replace('/USD', ''),  // Clean symbol for API

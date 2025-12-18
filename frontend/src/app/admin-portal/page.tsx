@@ -16,7 +16,7 @@ import { useTimeStore, useHydration } from '@/store/timeStore';
  * - Real-time metrics from API
  */
 
-import { API_BASE } from '@/lib/api';
+import { API_BASE, getTokenFromCookie } from '@/lib/api';
 
 interface SystemStatus {
   component: string;
@@ -72,7 +72,7 @@ export default function AdminPortalPage() {
   const fetchAllData = useCallback(async () => {
     setIsLoading(true);
     try {
-      const token = localStorage.getItem('time_auth_token');
+      const token = getTokenFromCookie();
       const headers: HeadersInit = token ? { 'Authorization': `Bearer ${token}` } : {};
 
       // Fetch all data in parallel
@@ -189,7 +189,7 @@ export default function AdminPortalPage() {
 
     // Then try to sync with backend
     try {
-      const token = localStorage.getItem('time_auth_token');
+      const token = getTokenFromCookie();
       if (token) {
         const response = await fetch(`${API_BASE}/admin/evolution/${newMode}`, {
           method: 'POST',

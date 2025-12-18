@@ -24,7 +24,7 @@ import {
 } from 'lucide-react';
 import clsx from 'clsx';
 
-import { API_BASE } from '@/lib/api';
+import { API_BASE, getTokenFromCookie } from '@/lib/api';
 
 type ExplanationMode = 'plain_english' | 'beginner' | 'intermediate' | 'pro' | 'quant' | 'story';
 
@@ -95,7 +95,7 @@ export default function LearnPage() {
   // Fetch courses from backend
   const fetchCourses = useCallback(async () => {
     try {
-      const token = localStorage.getItem('time_auth_token');
+      const token = getTokenFromCookie();
       const response = await fetch(`${API_BASE}/learn/courses`, {
         headers: token ? { 'Authorization': `Bearer ${token}` } : {},
       });

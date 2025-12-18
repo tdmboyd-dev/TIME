@@ -368,6 +368,8 @@ router.post('/register', async (req: Request, res: Response) => {
       name,
       passwordHash,
       role: 'user',
+      status: 'active',
+      permissions: ['portfolio', 'analytics'] as any,  // Default user permissions
       createdAt: new Date(),
       lastLogin: new Date(),
       lastActivity: new Date(),

@@ -27,7 +27,7 @@ import {
 } from 'lucide-react';
 import clsx from 'clsx';
 
-import { API_BASE } from '@/lib/api';
+import { API_BASE, getTokenFromCookie } from '@/lib/api';
 
 type EvolutionMode = 'controlled' | 'autonomous';
 
@@ -64,7 +64,7 @@ export default function AdminPage() {
   // Fetch admin data from backend
   const fetchAdminData = useCallback(async () => {
     try {
-      const token = localStorage.getItem('time_auth_token');
+      const token = getTokenFromCookie();
       if (!token) {
         setIsLoading(false);
         return;
@@ -122,7 +122,7 @@ export default function AdminPage() {
   const handleStartAllBots = async () => {
     setNotification({ type: 'success', message: 'Starting all bots...' });
     try {
-      const token = localStorage.getItem('time_auth_token');
+      const token = getTokenFromCookie();
       const response = await fetch(`${API_BASE}/trading/start-all`, {
         method: 'POST',
         headers: { ...(token ? { 'Authorization': `Bearer ${token}` } : {}) },
@@ -142,7 +142,7 @@ export default function AdminPage() {
   const handlePauseAllBots = async () => {
     setNotification({ type: 'warning', message: 'Pausing all bots...' });
     try {
-      const token = localStorage.getItem('time_auth_token');
+      const token = getTokenFromCookie();
       const response = await fetch(`${API_BASE}/admin/emergency/pause-all`, {
         method: 'POST',
         headers: { ...(token ? { 'Authorization': `Bearer ${token}` } : {}) },
@@ -163,7 +163,7 @@ export default function AdminPage() {
     setIsSyncing(true);
     setNotification({ type: 'success', message: 'Syncing with all connected brokers...' });
     try {
-      const token = localStorage.getItem('time_auth_token');
+      const token = getTokenFromCookie();
       await fetch(`${API_BASE}/portfolio/brokers/status`, {
         headers: { ...(token ? { 'Authorization': `Bearer ${token}` } : {}) },
       });

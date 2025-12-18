@@ -32,7 +32,7 @@ import clsx from 'clsx';
 import TradingModeToggle from '@/components/trading/TradingModeToggle';
 import { useTimeStore } from '@/store/timeStore';
 
-import { API_BASE } from '@/lib/api';
+import { API_BASE, getTokenFromCookie } from '@/lib/api';
 
 type Tab = 'profile' | 'notifications' | 'security' | 'brokers' | 'trading-mode' | 'preferences';
 
@@ -203,7 +203,7 @@ export default function SettingsPage() {
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        const token = localStorage.getItem('time_auth_token');
+        const token = getTokenFromCookie();
         if (!token) return;
 
         const response = await fetch(`${API_BASE}/users/settings`, {
@@ -232,7 +232,7 @@ export default function SettingsPage() {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      const token = localStorage.getItem('time_auth_token');
+      const token = getTokenFromCookie();
 
       const response = await fetch(`${API_BASE}/users/settings`, {
         method: 'PUT',

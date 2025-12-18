@@ -65,6 +65,28 @@ export async function apiFetch<T>(
 }
 
 /**
+ * Get auth token from cookie
+ * The login page stores token in a non-httpOnly cookie for API auth headers
+ */
+export function getTokenFromCookie(): string | null {
+  if (typeof window === 'undefined') return null;
+  const match = document.cookie.match(/time_auth_token=([^;]+)/);
+  return match ? match[1] : null;
+}
+
+/**
+ * Get auth headers for API requests
+ * Reads token from cookie and returns proper Authorization header
+ */
+export function getAuthHeaders(): Record<string, string> {
+  const token = getTokenFromCookie();
+  return {
+    'Content-Type': 'application/json',
+    ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+  };
+}
+
+/**
  * Get auth token from cookie (for backward compatibility)
  * Note: httpOnly cookies are not accessible via JavaScript by design
  * This function returns the user info stored in localStorage

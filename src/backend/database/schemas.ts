@@ -17,15 +17,53 @@
 // USER SCHEMAS
 // ============================================================
 
+// All available feature permissions
+export type FeaturePermission =
+  | 'trading'           // Can execute trades
+  | 'bots'              // Can use/manage bots
+  | 'strategies'        // Can create/edit strategies
+  | 'portfolio'         // Can view portfolio
+  | 'analytics'         // Can view analytics
+  | 'defi'              // Can access DeFi features
+  | 'transfers'         // Can make transfers
+  | 'tax'               // Can access tax features
+  | 'retirement'        // Can access retirement planning
+  | 'wealth'            // Can access wealth management
+  | 'marketplace'       // Can access bot marketplace
+  | 'ml'                // Can access ML training
+  | 'admin_users'       // Can manage users (co-admin)
+  | 'admin_bots'        // Can manage all bots (co-admin)
+  | 'admin_system'      // Can access system settings (co-admin)
+  | 'admin_billing'     // Can manage billing (co-admin)
+  | 'owner_full';       // Full owner access
+
+// Custom role/position definition
+export interface CustomRole {
+  id: string;
+  name: string;
+  description: string;
+  permissions: FeaturePermission[];
+  createdAt: Date;
+  createdBy: string;
+}
+
 export interface UserSchema {
   _id: string;
   email: string;
   name: string;
   passwordHash: string;
-  role: 'user' | 'admin' | 'owner';
+  role: 'user' | 'admin' | 'co-admin' | 'owner';
+  customRole?: string;           // Custom role/position ID
+  customPosition?: string;       // Custom title like "Trading Manager", "Bot Developer"
+  status: 'active' | 'blocked' | 'suspended' | 'pending';
+  statusReason?: string;         // Reason for block/suspend
+  statusChangedAt?: Date;
+  statusChangedBy?: string;
+  permissions: FeaturePermission[];  // Specific feature permissions
   phone?: string;
   avatar?: string;
   createdAt: Date;
+  createdBy?: string;            // Who created this user (for admin-created users)
   lastLogin: Date;
   lastActivity: Date;
   consent: {

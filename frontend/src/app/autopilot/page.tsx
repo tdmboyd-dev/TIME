@@ -9,7 +9,7 @@ import {
   CheckCircle, AlertCircle, X, Info
 } from 'lucide-react';
 import clsx from 'clsx';
-import { API_BASE } from '@/lib/api';
+import { API_BASE, getAuthHeaders } from '@/lib/api';
 
 type RiskDNA = 'ultra_safe' | 'careful' | 'balanced' | 'growth' | 'aggressive' | 'yolo';
 
@@ -104,14 +104,7 @@ export default function AutoPilotPage() {
     }
   }, [pilot, watchMode]);
 
-  // Helper to get auth headers
-  const getAuthHeaders = () => {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('time_auth_token') : null;
-    return {
-      'Content-Type': 'application/json',
-      ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-    };
-  };
+  // Using centralized getAuthHeaders from @/lib/api
 
   const fetchRealData = async () => {
     try {

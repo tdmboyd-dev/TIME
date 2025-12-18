@@ -27,7 +27,7 @@ import {
 } from 'lucide-react';
 import clsx from 'clsx';
 
-import { API_BASE } from '@/lib/api';
+import { API_BASE, getTokenFromCookie } from '@/lib/api';
 
 interface Strategy {
   id: string;
@@ -102,7 +102,7 @@ export default function StrategiesPage() {
   const fetchStrategies = useCallback(async () => {
     try {
       setError(null);
-      const token = localStorage.getItem('time_auth_token');
+      const token = getTokenFromCookie();
 
       const response = await fetch(`${API_BASE}/strategies`, {
         method: 'GET',
@@ -193,7 +193,7 @@ export default function StrategiesPage() {
     setIsSynthesizing(true);
 
     try {
-      const token = localStorage.getItem('time_auth_token');
+      const token = getTokenFromCookie();
       const response = await fetch(`${API_BASE}/strategies/synthesize`, {
         method: 'POST',
         headers: {
@@ -256,7 +256,7 @@ export default function StrategiesPage() {
     setIsSynthesizing(true);
 
     try {
-      const token = localStorage.getItem('time_auth_token');
+      const token = getTokenFromCookie();
       const response = await fetch(`${API_BASE}/strategies`, {
         method: 'POST',
         headers: {

@@ -10,16 +10,7 @@ import {
 } from 'lucide-react';
 import clsx from 'clsx';
 
-const API_BASE = 'https://time-backend-hosting.fly.dev/api/v1';
-
-// Helper to get auth headers
-const getAuthHeaders = () => {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('time_auth_token') : null;
-  return {
-    'Content-Type': 'application/json',
-    ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-  };
-};
+import { API_BASE, getAuthHeaders } from '@/lib/api';
 
 type DominanceMode = 'stealth' | 'aggressive' | 'defensive' | 'balanced' | 'competition' | 'destroy';
 

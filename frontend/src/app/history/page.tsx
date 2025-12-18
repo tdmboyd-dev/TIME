@@ -22,7 +22,7 @@ import {
 } from 'lucide-react';
 import clsx from 'clsx';
 
-import { API_BASE } from '@/lib/api';
+import { API_BASE, getTokenFromCookie } from '@/lib/api';
 
 interface Trade {
   id: string;
@@ -58,7 +58,7 @@ export default function HistoryPage() {
   // Fetch trades from backend
   const fetchTrades = useCallback(async () => {
     try {
-      const token = localStorage.getItem('time_auth_token');
+      const token = getTokenFromCookie();
       const [tradingResponse, portfolioResponse] = await Promise.all([
         fetch(`${API_BASE}/trading/trades?limit=100`, {
           headers: token ? { 'Authorization': `Bearer ${token}` } : {},
