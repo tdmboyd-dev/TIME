@@ -2,14 +2,33 @@
 
 ## COMPLETE PLATFORM DOCUMENTATION FOR AI ASSISTANTS
 
-**Version:** 17.0.0 - ML TRAINING PIPELINE EDITION
+**Version:** 17.1.0 - USER AUTHENTICATION UI EDITION
 **Last Updated:** 2025-12-18
-**Status:** 95% READY - ML Training Pipeline + Multi-broker trading live
+**Status:** 96% READY - User Dropdown + Logout UI Complete
 **Purpose:** Complete platform understanding for Copilot, Claude, and all AI assistants
 
 ---
 
 # HONEST STATUS REPORT (December 18, 2025)
+
+## ✅ NEW IN v17.1.0 - USER AUTHENTICATION UI EDITION
+
+### USER DROPDOWN + LOGOUT FUNCTIONALITY
+
+**TopNav User Menu (frontend/src/components/layout/TopNav.tsx):**
+- Clickable user area with chevron indicator
+- Settings link navigates to /settings
+- Logout clears auth cookies and redirects to /login
+- Click outside to close dropdown
+- Uses js-cookie for cookie management
+
+**Cookies Cleared on Logout:**
+- `token` - JWT auth token
+- `refreshToken` - Session renewal token
+- `user` - User profile data
+- `userRole` - Admin/user role
+
+---
 
 ## ✅ NEW IN v17.0.0 - ML TRAINING PIPELINE EDITION
 
