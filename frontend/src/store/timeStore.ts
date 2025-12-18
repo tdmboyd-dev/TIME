@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import { useEffect, useState } from 'react';
 
 interface Bot {
   id: string;
@@ -156,6 +157,48 @@ export const useTimeStore = create<TimeState>()(
         evolutionMode: state.evolutionMode,
         userPreferences: state.userPreferences,
       }),
+      // Add onRehydrateStorage to log when hydration completes
+      onRehydrateStorage: () => (state) => {
+        console.log('TIME Store hydrated:', state?.evolutionMode, state?.userPreferences);
+      },
     }
   )
 );
+
+// Hook to ensure hydration is complete before using persisted values
+// This prevents the flash of default values on page load
+export const useHydration = () => {
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    // Check if we're on client side
+    const unsubFinishHydration = useTimeStore.persist.onFinishHydration(() => {
+      setHydrated(true);
+    });
+
+    // Check if already hydrated
+    if (useTimeStore.persist.hasHydrated()) {
+      setHydrated(true);
+    }
+
+    return () => {
+      unsubFinishHydration();
+    };
+  }, []);
+
+  return hydrated;
+};
+
+// Direct access to persisted state (useful for debugging)
+export const getPersistedState = () => {
+  if (typeof window === 'undefined') return null;
+  const stored = localStorage.getItem('time-storage');
+  if (stored) {
+    try {
+      return JSON.parse(stored);
+    } catch {
+      return null;
+    }
+  }
+  return null;
+};

@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Wifi, WifiOff, RefreshCw } from 'lucide-react';
-import { useTimeStore } from '@/store/timeStore';
+import { useTimeStore, useHydration } from '@/store/timeStore';
 
 /**
  * TIME Admin Portal
@@ -48,7 +48,10 @@ export default function AdminPortalPage() {
 
   // Use Zustand store for persistent evolution mode
   const { evolutionMode, setEvolutionMode } = useTimeStore();
-  const autonomousEnabled = evolutionMode === 'autonomous';
+  const hydrated = useHydration();
+
+  // Only read evolutionMode after hydration to prevent flash of wrong value
+  const autonomousEnabled = hydrated ? evolutionMode === 'autonomous' : false;
 
   const [activeTab, setActiveTab] = useState<'overview' | 'bots' | 'users' | 'autonomous' | 'logs'>('overview');
   const [isLoading, setIsLoading] = useState(true);
@@ -180,41 +183,29 @@ export default function AdminPortalPage() {
   const toggleAutonomousMode = async () => {
     const newMode = autonomousEnabled ? 'controlled' : 'autonomous';
 
+    // ALWAYS update locally first for instant feedback and persistence
+    setEvolutionMode(newMode);
+    console.log(`[TIME] Evolution mode saved to localStorage: ${newMode}`);
+
+    // Then try to sync with backend
     try {
       const token = localStorage.getItem('time_auth_token');
-
-      if (!token) {
-        // If no token, just update locally
-        setEvolutionMode(newMode);
-        return;
-      }
-
-      // Call backend to update evolution mode
-      const response = await fetch(`${API_BASE}/admin/evolution/${newMode}`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-      });
-
-      if (response.ok) {
-        // Persist to Zustand store (which persists to localStorage)
-        setEvolutionMode(newMode);
-        console.log(`Evolution mode changed to: ${newMode}`);
-      } else if (response.status === 401 || response.status === 403) {
-        // Auth issue - update locally anyway since admin is viewing
-        console.warn('Auth issue but updating locally');
-        setEvolutionMode(newMode);
-      } else {
-        console.error('Failed to update evolution mode on backend');
-        // Still update locally for persistence
-        setEvolutionMode(newMode);
+      if (token) {
+        const response = await fetch(`${API_BASE}/admin/evolution/${newMode}`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+        });
+        if (response.ok) {
+          console.log(`[TIME] Backend synced: ${newMode}`);
+        } else {
+          console.warn(`[TIME] Backend sync failed (${response.status}), but local state saved`);
+        }
       }
     } catch (error) {
-      console.error('Failed to toggle autonomous mode:', error);
-      // Update locally for offline functionality
-      setEvolutionMode(newMode);
+      console.warn('[TIME] Backend unreachable, but local state saved');
     }
   };
 
