@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Bell, User, TrendingUp, TrendingDown, Minus, RefreshCw } from 'lucide-react';
 import { useTimeStore } from '@/store/timeStore';
 import { GlobalSearchBar } from '@/components/search/GlobalSearchBar';
+import { TradingModeIndicator } from '@/components/TradingModeIndicator';
 
 // Health endpoint is at root level, not under /api/v1
 const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 'https://time-backend-hosting.fly.dev';
@@ -95,6 +96,9 @@ export function TopNav() {
 
       {/* Right Section */}
       <div className="flex items-center gap-4">
+        {/* Trading Mode Indicator - Paper/Live */}
+        <TradingModeIndicator compact showToggle />
+
         {/* Connection Status with Reconnect Button */}
         <div className="flex items-center gap-2">
           <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></span>
