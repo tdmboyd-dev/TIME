@@ -2,16 +2,104 @@
 
 ## COMPLETE PLATFORM DOCUMENTATION FOR AI ASSISTANTS
 
-**Version:** 9.0.0 - GIFT ACCESS + MONETIZATION EDITION
+**Version:** 10.0.0 - WEBAUTHN + OAUTH EDITION
 **Last Updated:** 2025-12-18
-**Status:** PRODUCTION - Gift Access System + Admin Chatbot + Revenue Model + 133 bots
+**Status:** PRODUCTION - Passwordless Auth + OAuth + 133 bots
 **Purpose:** Complete platform understanding for Copilot, Claude, and all AI assistants
 
 ---
 
 # HONEST STATUS REPORT (December 18, 2025)
 
-## 🚀 NEW IN v9.0.0 - GIFT ACCESS + MONETIZATION
+## 🚀 NEW IN v10.0.0 - WEBAUTHN + OAUTH AUTHENTICATION
+
+### PASSWORDLESS AUTHENTICATION (WebAuthn/Passkeys)
+**File:** `src/backend/security/webauthn_service.ts`
+
+Full FIDO2/WebAuthn implementation for passwordless login:
+- **Face ID** (macOS/iOS)
+- **Touch ID** (macOS)
+- **Windows Hello** (Windows)
+- **Hardware Security Keys** (YubiKey, Titan, etc.)
+
+**How It Works:**
+1. User clicks "Add Passkey" in security settings
+2. Browser prompts for biometric/device auth
+3. Public key stored on server, private key stays on device
+4. Future logins: just tap Face ID/Touch ID - no password needed!
+
+**WebAuthn Credential Interface:**
+```typescript
+interface WebAuthnCredential {
+  id: string;
+  credentialId: string;
+  publicKey: string; // Base64 encoded
+  counter: number;
+  deviceType: 'singleDevice' | 'multiDevice';
+  backedUp: boolean;
+  transports?: string[];
+  createdAt: Date;
+  lastUsedAt: Date;
+  friendlyName: string;
+}
+```
+
+### OAUTH SOCIAL LOGIN
+**File:** `src/backend/security/oauth_service.ts`
+
+One-click login with social accounts:
+- **Google Sign-In** (configured)
+- **GitHub Login** (configured)
+- **Apple Sign-In** (future)
+
+**Features:**
+- Account linking (connect OAuth to existing account)
+- Auto-registration (create account from OAuth)
+- Multiple providers per account
+- CSRF protection with state tokens
+
+**OAuth Provider Interface:**
+```typescript
+interface OAuthProvider {
+  provider: 'google' | 'github' | 'apple';
+  providerId: string;
+  email: string;
+  name?: string;
+  avatar?: string;
+  linkedAt: Date;
+  lastUsedAt: Date;
+  accessToken?: string;
+  refreshToken?: string;
+}
+```
+
+### NEW WEBAUTHN ENDPOINTS:
+```
+POST /api/v1/auth/webauthn/register/begin      - Start passkey registration
+POST /api/v1/auth/webauthn/register/complete   - Complete passkey registration
+POST /api/v1/auth/webauthn/login/begin         - Start passkey login
+POST /api/v1/auth/webauthn/login/complete      - Complete passkey login
+GET  /api/v1/auth/webauthn/credentials         - List user's passkeys
+DELETE /api/v1/auth/webauthn/credentials/:id   - Remove a passkey
+```
+
+### NEW OAUTH ENDPOINTS:
+```
+GET  /api/v1/auth/oauth/providers              - List available providers
+GET  /api/v1/auth/oauth/:provider/authorize    - Start OAuth flow
+GET  /api/v1/auth/oauth/:provider/callback     - Handle OAuth callback
+GET  /api/v1/auth/oauth/linked                 - List linked accounts
+DELETE /api/v1/auth/oauth/:provider            - Unlink OAuth provider
+```
+
+### USER SCHEMA UPDATES:
+Added to UserSchema in `database/schemas.ts`:
+- `webauthnCredentials` - Array of registered passkeys
+- `oauthProviders` - Array of linked OAuth accounts
+
+---
+
+## 🚀 v9.0.0 - GIFT ACCESS + MONETIZATION
 
 ### ADMIN GIFT ACCESS SYSTEM (GiftAccessService.ts)
 Gift any tier or feature to any user at any time:
@@ -213,12 +301,29 @@ These endpoints are LIVE and WORKING at `https://time-backend-hosting.fly.dev`:
 ## AUTHENTICATION SYSTEM (FULLY WORKING)
 
 The backend has a complete authentication system at `/api/v1/auth/*`:
+
+### Traditional Auth:
 - `POST /api/v1/auth/register` - Create new user with bcrypt, consent collection
 - `POST /api/v1/auth/login` - Login with JWT tokens, MFA support, rate limiting
 - `POST /api/v1/auth/logout` - Invalidate session
 - `GET /api/v1/auth/me` - Get current user info
 - `POST /api/v1/auth/mfa/setup` - Setup MFA with TOTP
 - `POST /api/v1/auth/mfa/verify` - Verify MFA code
+
+### WebAuthn/Passkeys (NEW v10.0.0):
+- `POST /api/v1/auth/webauthn/register/begin` - Start passkey registration
+- `POST /api/v1/auth/webauthn/register/complete` - Complete passkey registration
+- `POST /api/v1/auth/webauthn/login/begin` - Start passkey login
+- `POST /api/v1/auth/webauthn/login/complete` - Complete passkey login
+- `GET /api/v1/auth/webauthn/credentials` - List user's passkeys
+- `DELETE /api/v1/auth/webauthn/credentials/:id` - Remove a passkey
+
+### OAuth Social Login (NEW v10.0.0):
+- `GET /api/v1/auth/oauth/providers` - List available providers (Google, GitHub)
+- `GET /api/v1/auth/oauth/:provider/authorize` - Start OAuth flow
+- `GET /api/v1/auth/oauth/:provider/callback` - Handle OAuth callback
+- `GET /api/v1/auth/oauth/linked` - List linked OAuth accounts
+- `DELETE /api/v1/auth/oauth/:provider` - Unlink OAuth provider
 
 Session management via Redis with 7-day expiry.
 
@@ -1781,7 +1886,7 @@ Real-time settlement system.
 
 ---
 
-# SECURITY SYSTEMS (3)
+# SECURITY SYSTEMS (5)
 
 ## 63. API Key Manager
 **File:** `src/backend/security/api_key_manager.ts`
@@ -1800,7 +1905,35 @@ Complete audit trail of all actions.
 ## 65. MFA Service
 **File:** `src/backend/security/mfa_service.ts`
 
-Multi-factor authentication.
+Multi-factor authentication (TOTP).
+
+---
+
+## 66. WebAuthn Service (NEW v10.0.0)
+**File:** `src/backend/security/webauthn_service.ts`
+
+Passwordless authentication with biometrics and hardware keys.
+
+**Key Features:**
+- Face ID, Touch ID, Windows Hello support
+- Hardware security key support (YubiKey)
+- Challenge-response authentication
+- Credential counter tracking (replay protection)
+- Multi-device passkey support
+
+---
+
+## 67. OAuth Service (NEW v10.0.0)
+**File:** `src/backend/security/oauth_service.ts`
+
+Social login with Google, GitHub, Apple.
+
+**Key Features:**
+- OAuth 2.0 authorization code flow
+- CSRF protection with state tokens
+- Account linking to existing users
+- Auto-registration for new users
+- Multiple providers per account
 
 ---
 
@@ -2248,6 +2381,41 @@ curl https://time-backend-hosting.fly.dev/health
 ---
 
 # CHANGELOG
+
+## v10.0.0 (2025-12-18) - WEBAUTHN + OAUTH AUTHENTICATION
+- **NEW: WebAuthn/Passkeys** - Passwordless authentication with biometrics
+  - Face ID, Touch ID, Windows Hello support
+  - Hardware security keys (YubiKey, Titan)
+  - `@simplewebauthn/server` integration
+  - Credential storage with counter tracking
+  - Multi-device passkey support (synced via iCloud/Google)
+- **NEW: OAuth Social Login** - One-click login with social accounts
+  - Google Sign-In (OAuth 2.0)
+  - GitHub Login (OAuth 2.0)
+  - Apple Sign-In (future)
+  - CSRF protection with state tokens
+  - Account linking to existing accounts
+  - Auto-registration for new users
+- **UserSchema Updates:**
+  - Added `webauthnCredentials` array for passkeys
+  - Added `oauthProviders` array for linked OAuth accounts
+- **New Files Created:**
+  - `src/backend/security/webauthn_service.ts` (284 lines)
+  - `src/backend/security/oauth_service.ts` (385 lines)
+- **Dependencies Added:**
+  - `@simplewebauthn/server: ^11.0.0`
+
+## v9.0.0 (2025-12-18) - GIFT ACCESS + MONETIZATION
+- Gift Access System with admin chatbot
+- 10-stream revenue model documentation
+- Pricing tiers (FREE to ENTERPRISE at $499/mo)
+- Promo calendar integration
+
+## v8.0.0 (2025-12-18) - WEALTH MANAGEMENT + LIVE DEFI
+- Dynasty Trust Engine with 2025 tax constants
+- Family Legacy AI for multi-generational planning
+- Live DeFi data from DefiLlama API
+- Real notifications via SendGrid and Twilio
 
 ## v7.0.0 (2025-12-17) - LIVE BOT TRADING + COMPREHENSIVE AUDIT
 - ✅ **LIVE BOT TRADING SYSTEM** - All 133 bots can now execute real trades

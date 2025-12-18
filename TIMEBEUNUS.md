@@ -1,8 +1,8 @@
 # TIMEBEUNUS — THE MASTER AI GUIDE
 ## For Copilot, Claude, and All AI Assistants
 
-**Version:** 15.0.0 - WEALTH MANAGEMENT + LIVE DEFI EDITION
-**Last Updated:** 2025-12-17 (Dynasty Trust Engine + Family Legacy AI + Live DeFi Data!)
+**Version:** 16.0.0 - WEBAUTHN + OAUTH + UNIVERSAL AUTH EDITION
+**Last Updated:** 2025-12-18 (Passwordless Auth + Google/GitHub OAuth!)
 **Creator:** Timebeunus Boyd
 **Purpose:** Complete platform understanding for AI assistants to provide proper guidance
 
@@ -13,7 +13,50 @@
 
 ---
 
-# 🚀 NEW IN v15.0.0 - WEALTH MANAGEMENT + LIVE DEFI
+# 🚀 NEW IN v16.0.0 - WEBAUTHN + OAUTH AUTHENTICATION
+
+## 🔐 PASSWORDLESS AUTHENTICATION (WebAuthn/Passkeys)
+
+**Date:** December 18, 2025
+
+### What's New:
+
+1. **WEBAUTHN / PASSKEYS** (`/api/v1/auth/webauthn/...`)
+   - Face ID, Touch ID, Windows Hello support
+   - Hardware security key support (YubiKey, etc.)
+   - Discoverable credentials (true passwordless)
+   - Multi-credential per user (multiple devices)
+
+   **Endpoints:**
+   - `POST /auth/webauthn/register/begin` - Start passkey registration
+   - `POST /auth/webauthn/register/complete` - Complete registration
+   - `POST /auth/webauthn/login/begin` - Start passkey login
+   - `POST /auth/webauthn/login/complete` - Complete login
+   - `GET /auth/webauthn/credentials` - List user's passkeys
+   - `DELETE /auth/webauthn/credentials/:id` - Remove passkey
+
+2. **OAUTH 2.0 (Google + GitHub)** (`/api/v1/auth/oauth/...`)
+   - Sign in with Google
+   - Sign in with GitHub
+   - Account linking (add OAuth to existing account)
+   - Auto-registration from OAuth
+
+   **Endpoints:**
+   - `GET /auth/oauth/providers` - List available providers
+   - `GET /auth/oauth/:provider/authorize` - Start OAuth flow
+   - `GET /auth/oauth/:provider/callback` - Handle callback
+   - `GET /auth/oauth/linked` - List linked providers
+   - `DELETE /auth/oauth/:provider` - Unlink provider
+
+3. **SECURITY FEATURES**
+   - WebAuthn counts as MFA (no separate 2FA needed)
+   - OAuth counts as verified (no email verification needed)
+   - Users can have multiple login methods simultaneously
+   - Can't unlink last login method (safety check)
+
+---
+
+# 🚀 IN v15.0.0 - WEALTH MANAGEMENT + LIVE DEFI
 
 ## 💰 DYNASTY TRUST ENGINE + FAMILY LEGACY AI
 
