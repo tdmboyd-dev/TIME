@@ -411,7 +411,8 @@ export type NotificationType =
   | 'risk_alert'
   | 'trade_executed'
   | 'performance_update'
-  | 'system_update';
+  | 'system_update'
+  | 'transfer_update';
 
 export interface Notification {
   id: string;

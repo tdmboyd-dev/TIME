@@ -626,6 +626,130 @@ export interface TradingStateSchema {
 }
 
 // ============================================================
+// ACATS TRANSFER SCHEMAS
+// ============================================================
+
+export type ACATSTransferStatus =
+  | 'draft'
+  | 'pending_validation'
+  | 'submitted'
+  | 'received_by_delivering'
+  | 'in_review'
+  | 'approved'
+  | 'in_progress'
+  | 'partial_complete'
+  | 'completed'
+  | 'rejected'
+  | 'cancelled'
+  | 'failed';
+
+export interface ACATSTransferSchema {
+  _id: string;
+  userId: string;
+  requestNumber: string; // ACATS control number
+
+  // Transfer type
+  transferType: 'full' | 'partial';
+  assetTransferType: 'in_kind' | 'cash';
+
+  // Delivering broker (where assets come from)
+  deliveringBroker: {
+    brokerId: string;
+    brokerName: string;
+    dtcNumber: string;
+    accountNumber: string;
+    accountTitle: string;
+  };
+
+  // Receiving account (TIME account)
+  receivingAccount: {
+    accountId: string;
+    accountNumber: string;
+    accountTitle: string;
+  };
+
+  // Identity verification
+  identity: {
+    fullName: string;
+    ssnLast4: string;
+    dateOfBirth: string;
+    address: {
+      street: string;
+      city: string;
+      state: string;
+      zipCode: string;
+      country: string;
+    };
+  };
+
+  // Assets to transfer
+  assets: Array<{
+    symbol: string;
+    cusip?: string;
+    description: string;
+    quantity: number;
+    estimatedValue: number;
+    transferType: 'in_kind' | 'cash';
+    status: 'pending' | 'transferred' | 'failed' | 'partial';
+    notes?: string;
+  }>;
+  totalEstimatedValue: number;
+
+  // Status tracking
+  status: ACATSTransferStatus;
+  statusHistory: Array<{
+    status: ACATSTransferStatus;
+    timestamp: Date;
+    message: string;
+    details?: Record<string, any>;
+  }>;
+
+  // Dates
+  createdAt: Date;
+  updatedAt: Date;
+  submittedAt: Date | null;
+  expectedCompletionDate: Date | null;
+  completedAt: Date | null;
+
+  // Issues
+  rejectionReason: string | null;
+  issues: Array<{
+    type: 'warning' | 'error';
+    message: string;
+    resolvedAt: Date | null;
+  }>;
+
+  // Documents
+  documents: Array<{
+    type: 'transfer_form' | 'account_statement' | 'signature' | 'identity';
+    fileName: string;
+    uploadedAt: Date;
+    verified: boolean;
+    verifiedAt?: Date;
+    verifiedBy?: string;
+  }>;
+
+  // Fees
+  fees: Array<{
+    type: string;
+    amount: number;
+    waived: boolean;
+    waivedReason?: string;
+  }>;
+
+  // Notes
+  userNotes: string | null;
+  internalNotes: string | null;
+
+  // Notifications sent
+  notificationsSent: Array<{
+    type: 'initiated' | 'submitted' | 'approved' | 'in_progress' | 'completed' | 'rejected' | 'warning';
+    sentAt: Date;
+    channel: 'email' | 'sms' | 'push';
+  }>;
+}
+
+// ============================================================
 // DATABASE INDEXES
 // ============================================================
 
@@ -690,5 +814,13 @@ export const indexes = {
     { type: 1, tradeId: 1 },
     { type: 1 },
     { updatedAt: -1 },
+  ],
+  acatsTransfers: [
+    { userId: 1, createdAt: -1 },
+    { requestNumber: 1, unique: true },
+    { status: 1, createdAt: -1 },
+    { 'deliveringBroker.brokerId': 1 },
+    { submittedAt: -1 },
+    { completedAt: -1 },
   ],
 };

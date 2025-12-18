@@ -18,6 +18,8 @@ import {
   NotificationSchema,
   AuditLogSchema,
   TradingStateSchema,
+  ACATSTransferSchema,
+  ACATSTransferStatus,
 } from './schemas';
 
 // ============================================================================
@@ -613,6 +615,215 @@ class TradingStateRepository extends BaseRepository<TradingStateSchema> {
 }
 
 // ============================================================================
+// ACATS Transfer Repository
+// ============================================================================
+
+export class ACATSTransferRepository extends BaseRepository<ACATSTransferSchema> {
+  constructor() {
+    super('acats_transfers', 'acats', 120); // 2 minute cache
+  }
+
+  /**
+   * Find all transfers for a user
+   */
+  async findByUser(userId: string): Promise<ACATSTransferSchema[]> {
+    const transfers = await this.findMany({ userId } as any);
+    return transfers.sort((a, b) =>
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+  }
+
+  /**
+   * Find transfer by control number
+   */
+  async findByControlNumber(requestNumber: string): Promise<ACATSTransferSchema | null> {
+    return this.findOne({ requestNumber } as any);
+  }
+
+  /**
+   * Find transfers by status
+   */
+  async findByStatus(status: ACATSTransferStatus): Promise<ACATSTransferSchema[]> {
+    const transfers = await this.findMany({ status } as any);
+    return transfers.sort((a, b) =>
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+  }
+
+  /**
+   * Find active transfers (not completed, cancelled, or failed)
+   */
+  async findActiveTransfers(): Promise<ACATSTransferSchema[]> {
+    const allTransfers = await this.findMany({} as any);
+    const inactiveStatuses: ACATSTransferStatus[] = ['completed', 'cancelled', 'failed', 'rejected'];
+    return allTransfers
+      .filter(t => !inactiveStatuses.includes(t.status))
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }
+
+  /**
+   * Find transfers pending processing (for background job)
+   */
+  async findPendingProcessing(): Promise<ACATSTransferSchema[]> {
+    const processingStatuses: ACATSTransferStatus[] = [
+      'pending_validation',
+      'submitted',
+      'received_by_delivering',
+      'in_review',
+      'approved',
+      'in_progress',
+    ];
+    const allTransfers = await this.findMany({} as any);
+    return allTransfers.filter(t => processingStatuses.includes(t.status));
+  }
+
+  /**
+   * Update transfer status with history
+   */
+  async updateStatus(
+    transferId: string,
+    status: ACATSTransferStatus,
+    message: string,
+    details?: Record<string, any>
+  ): Promise<ACATSTransferSchema | null> {
+    const transfer = await this.findById(transferId);
+    if (!transfer) return null;
+
+    const statusHistory = transfer.statusHistory || [];
+    statusHistory.push({
+      status,
+      timestamp: new Date(),
+      message,
+      details,
+    });
+
+    const updates: Partial<ACATSTransferSchema> = {
+      status,
+      statusHistory,
+      updatedAt: new Date(),
+    };
+
+    // Set completion date if completed
+    if (status === 'completed') {
+      updates.completedAt = new Date();
+    }
+
+    return this.update(transferId, updates as any);
+  }
+
+  /**
+   * Add document to transfer
+   */
+  async addDocument(
+    transferId: string,
+    document: ACATSTransferSchema['documents'][0]
+  ): Promise<ACATSTransferSchema | null> {
+    const transfer = await this.findById(transferId);
+    if (!transfer) return null;
+
+    const documents = transfer.documents || [];
+    documents.push(document);
+
+    return this.update(transferId, { documents } as any);
+  }
+
+  /**
+   * Add issue to transfer
+   */
+  async addIssue(
+    transferId: string,
+    issue: ACATSTransferSchema['issues'][0]
+  ): Promise<ACATSTransferSchema | null> {
+    const transfer = await this.findById(transferId);
+    if (!transfer) return null;
+
+    const issues = transfer.issues || [];
+    issues.push(issue);
+
+    return this.update(transferId, { issues } as any);
+  }
+
+  /**
+   * Record notification sent
+   */
+  async recordNotification(
+    transferId: string,
+    notification: ACATSTransferSchema['notificationsSent'][0]
+  ): Promise<ACATSTransferSchema | null> {
+    const transfer = await this.findById(transferId);
+    if (!transfer) return null;
+
+    const notificationsSent = transfer.notificationsSent || [];
+    notificationsSent.push(notification);
+
+    return this.update(transferId, { notificationsSent } as any);
+  }
+
+  /**
+   * Get transfer statistics
+   */
+  async getStatistics(): Promise<{
+    totalTransfers: number;
+    byStatus: Record<ACATSTransferStatus, number>;
+    averageCompletionDays: number;
+    byBroker: Array<{ broker: string; count: number }>;
+    totalValue: number;
+  }> {
+    const transfers = await this.findMany({} as any);
+
+    const byStatus: Record<string, number> = {};
+    const byBroker: Record<string, number> = {};
+    let totalDays = 0;
+    let completedCount = 0;
+    let totalValue = 0;
+
+    for (const transfer of transfers) {
+      // Count by status
+      byStatus[transfer.status] = (byStatus[transfer.status] || 0) + 1;
+
+      // Count by broker
+      const brokerName = transfer.deliveringBroker.brokerName;
+      byBroker[brokerName] = (byBroker[brokerName] || 0) + 1;
+
+      // Calculate average completion time
+      if (transfer.status === 'completed' && transfer.completedAt && transfer.submittedAt) {
+        const days =
+          (new Date(transfer.completedAt).getTime() - new Date(transfer.submittedAt).getTime()) /
+          (24 * 60 * 60 * 1000);
+        totalDays += days;
+        completedCount++;
+      }
+
+      // Sum total value
+      totalValue += transfer.totalEstimatedValue || 0;
+    }
+
+    return {
+      totalTransfers: transfers.length,
+      byStatus: byStatus as Record<ACATSTransferStatus, number>,
+      averageCompletionDays: completedCount > 0 ? totalDays / completedCount : 0,
+      byBroker: Object.entries(byBroker)
+        .map(([broker, count]) => ({ broker, count }))
+        .sort((a, b) => b.count - a.count),
+      totalValue,
+    };
+  }
+
+  /**
+   * Find transfers needing follow-up (stalled in a status)
+   */
+  async findStalledTransfers(maxAgeHours: number = 48): Promise<ACATSTransferSchema[]> {
+    const cutoff = new Date(Date.now() - maxAgeHours * 60 * 60 * 1000);
+    const activeTransfers = await this.findActiveTransfers();
+
+    return activeTransfers.filter(t => {
+      const lastUpdate = t.statusHistory?.[t.statusHistory.length - 1]?.timestamp;
+      return lastUpdate && new Date(lastUpdate) < cutoff;
+    });
+  }
+}
+
+// ============================================================================
 // Export Repository Instances
 // ============================================================================
 
@@ -626,3 +837,4 @@ export const insightRepository = new InsightRepository();
 export const notificationRepository = new NotificationRepository();
 export const auditLogRepository = new AuditLogRepository();
 export const tradingStateRepository = new TradingStateRepository();
+export const acatsTransferRepository = new ACATSTransferRepository();

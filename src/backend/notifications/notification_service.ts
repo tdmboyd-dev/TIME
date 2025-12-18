@@ -93,6 +93,18 @@ If no activity is detected within {daysRemaining} more days, TIME will automatic
 
 TIME continues to evolve.`,
   },
+  transfer_update: {
+    type: 'transfer_update',
+    subject: 'TIME: {title}',
+    template: `{message}
+
+Transfer Control Number: {requestNumber}
+Status: {status}
+
+Log in to TIME to view your transfer status and details.
+
+TIME - Your Intelligent Trading Partner`,
+  },
   inactivity_final: {
     type: 'inactivity_final',
     subject: 'TIME: FINAL WARNING - Autonomous Mode Imminent',

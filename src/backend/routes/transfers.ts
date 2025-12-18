@@ -1,13 +1,15 @@
 /**
- * TIME Transfer API Routes
+ * TIME Transfer API Routes v2.0
  *
  * Endpoints for ACATS transfers and account transfers.
+ * Now with MongoDB persistence and async operations.
  */
 
 import { Router, Request, Response } from 'express';
 import { acatsManager, SUPPORTED_BROKERS } from '../transfers/acats_transfer';
-import { logger } from '../utils/logger';
+import { createComponentLogger } from '../utils/logger';
 
+const logger = createComponentLogger('TransfersRoute');
 const router = Router();
 
 /**
@@ -17,11 +19,28 @@ const router = Router();
 router.get('/brokers', (req: Request, res: Response) => {
   try {
     const brokers = acatsManager.getSupportedBrokers();
+    const { category } = req.query;
+
+    // Filter by category if specified
+    let filteredBrokers = brokers;
+    if (category) {
+      const categoryMap: Record<string, string[]> = {
+        traditional: ['fidelity', 'schwab', 'vanguard', 'td_ameritrade', 'etrade', 'merrill', 'morgan_stanley', 'jpmorgan', 'wells_fargo', 'ubs', 'goldman', 'raymond_james', 'edward_jones', 'lpl', 'ameriprise'],
+        modern: ['robinhood', 'webull', 'cashapp', 'sofi', 'public', 'stash', 'acorns', 'betterment', 'wealthfront', 'm1_finance', 'ally', 'firstrade', 'tradier', 'moomoo', 'dough'],
+        retirement: ['tiaa', 'principal', 'empower', 'fidelity_401k', 'transamerica', 'voya', 'axa', 'prudential', 'lincoln', 'john_hancock', 'nationwide'],
+        bank: ['chase', 'bofa', 'citi', 'pnc', 'usbank', 'bbva', 'suntrust', 'regions', 'keybank', 'huntington', 'fifth_third', 'zions'],
+        crypto: ['coinbase', 'gemini', 'kraken', 'crypto_com', 'blockfi'],
+      };
+      const ids = categoryMap[category as string] || [];
+      filteredBrokers = brokers.filter(b => ids.includes(b.id));
+    }
 
     res.json({
       success: true,
       data: {
-        brokers,
+        brokers: filteredBrokers,
+        totalCount: brokers.length,
+        categories: ['traditional', 'modern', 'retirement', 'bank', 'crypto'],
         message: 'List of brokers you can transfer from',
       },
     });
@@ -53,6 +72,10 @@ router.post('/initiate', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
+    if (!userInfo?.fullName || !userInfo?.dateOfBirth || !userInfo?.address) {
+      return res.status(400).json({ error: 'Missing user info (fullName, dateOfBirth, address)' });
+    }
+
     const transfer = await acatsManager.initiateTransfer(
       {
         userId,
@@ -71,6 +94,11 @@ router.post('/initiate', async (req: Request, res: Response) => {
       success: true,
       data: {
         transfer,
+        nextSteps: [
+          'Upload your most recent account statement from the delivering broker',
+          'Verify your identity information is correct',
+          'Submit the transfer when ready',
+        ],
         message: 'Transfer initiated. Please upload required documents to proceed.',
       },
     });
@@ -95,6 +123,11 @@ router.post('/:transferId/submit', async (req: Request, res: Response) => {
       data: {
         transfer,
         message: 'Transfer submitted. Expected completion: ' + transfer.expectedCompletionDate?.toDateString(),
+        timeline: {
+          submitted: new Date(),
+          expectedCompletion: transfer.expectedCompletionDate,
+          businessDays: '5-7',
+        },
       },
     });
   } catch (error) {
@@ -107,11 +140,16 @@ router.post('/:transferId/submit', async (req: Request, res: Response) => {
  * GET /api/v1/transfers/:transferId
  * Get transfer details
  */
-router.get('/:transferId', (req: Request, res: Response) => {
+router.get('/:transferId', async (req: Request, res: Response) => {
   try {
     const { transferId } = req.params;
 
-    const transfer = acatsManager.getTransfer(transferId);
+    // Skip if it's the stats endpoint
+    if (transferId === 'stats') {
+      return res.status(400).json({ error: 'Use /stats/overview for statistics' });
+    }
+
+    const transfer = await acatsManager.getTransfer(transferId);
 
     if (!transfer) {
       return res.status(404).json({ error: 'Transfer not found' });
@@ -131,7 +169,7 @@ router.get('/:transferId', (req: Request, res: Response) => {
  * GET /api/v1/transfers
  * Get all transfers for user
  */
-router.get('/', (req: Request, res: Response) => {
+router.get('/', async (req: Request, res: Response) => {
   try {
     const userId = req.query.userId as string;
 
@@ -139,13 +177,21 @@ router.get('/', (req: Request, res: Response) => {
       return res.status(400).json({ error: 'userId is required' });
     }
 
-    const transfers = acatsManager.getUserTransfers(userId);
+    const transfers = await acatsManager.getUserTransfers(userId);
+
+    // Group by status
+    const byStatus = {
+      active: transfers.filter(t => !['completed', 'cancelled', 'failed', 'rejected'].includes(t.status)),
+      completed: transfers.filter(t => t.status === 'completed'),
+      cancelled: transfers.filter(t => ['cancelled', 'failed', 'rejected'].includes(t.status)),
+    };
 
     res.json({
       success: true,
       data: {
         transfers,
         count: transfers.length,
+        byStatus,
       },
     });
   } catch (error) {
@@ -186,7 +232,7 @@ router.post('/:transferId/cancel', async (req: Request, res: Response) => {
  * POST /api/v1/transfers/:transferId/documents
  * Add document to transfer
  */
-router.post('/:transferId/documents', (req: Request, res: Response) => {
+router.post('/:transferId/documents', async (req: Request, res: Response) => {
   try {
     const { transferId } = req.params;
     const { type, fileName } = req.body;
@@ -195,11 +241,14 @@ router.post('/:transferId/documents', (req: Request, res: Response) => {
       return res.status(400).json({ error: 'type and fileName are required' });
     }
 
-    const transfer = acatsManager.addDocument(transferId, {
+    const validTypes = ['transfer_form', 'account_statement', 'signature', 'identity'];
+    if (!validTypes.includes(type)) {
+      return res.status(400).json({ error: `Invalid document type. Valid types: ${validTypes.join(', ')}` });
+    }
+
+    const transfer = await acatsManager.addDocument(transferId, {
       type,
       fileName,
-      uploadedAt: new Date(),
-      verified: false,
     });
 
     res.json({
@@ -213,16 +262,44 @@ router.post('/:transferId/documents', (req: Request, res: Response) => {
 });
 
 /**
- * GET /api/v1/transfers/stats
- * Get transfer statistics
+ * PUT /api/v1/transfers/:transferId/assets
+ * Update assets for partial transfer
  */
-router.get('/stats/overview', (req: Request, res: Response) => {
+router.put('/:transferId/assets', async (req: Request, res: Response) => {
   try {
-    const stats = acatsManager.getStatistics();
+    const { transferId } = req.params;
+    const { assets } = req.body;
+
+    if (!assets || !Array.isArray(assets)) {
+      return res.status(400).json({ error: 'assets array is required' });
+    }
+
+    const transfer = await acatsManager.updateAssets(transferId, assets);
 
     res.json({
       success: true,
-      data: stats,
+      data: transfer,
+    });
+  } catch (error) {
+    logger.error('Update assets failed', { error });
+    res.status(500).json({ error: error instanceof Error ? error.message : 'Failed to update assets' });
+  }
+});
+
+/**
+ * GET /api/v1/transfers/stats/overview
+ * Get transfer statistics
+ */
+router.get('/stats/overview', async (req: Request, res: Response) => {
+  try {
+    const stats = await acatsManager.getStatistics();
+
+    res.json({
+      success: true,
+      data: {
+        ...stats,
+        supportedBrokerCount: SUPPORTED_BROKERS.length,
+      },
     });
   } catch (error) {
     logger.error('Get transfer stats failed', { error });
