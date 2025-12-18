@@ -499,6 +499,135 @@ router.post('/quick/stop-all', authMiddleware, async (req: Request, res: Respons
 // ============================================
 
 import { autoPilotCapital } from '../autopilot/dropbot';
+import { tradingStateRepository } from '../database/repositories';
+
+/**
+ * POST /trading/autopilot/create
+ * Create a new AutoPilot pilot
+ * SECURITY: Requires authentication
+ */
+router.post('/autopilot/create', authMiddleware, async (req: Request, res: Response) => {
+  const { riskProfile, initialCapital } = req.body;
+  const userId = (req as any).user?.id || 'anonymous';
+
+  if (!initialCapital || initialCapital < 10) {
+    return res.status(400).json({
+      success: false,
+      error: 'Minimum initial capital is $10',
+    });
+  }
+
+  try {
+    // Create pilot with autoPilotCapital
+    const pilot = await autoPilotCapital.createPilot(userId, initialCapital, {
+      riskDNA: riskProfile || 'balanced',
+    });
+    const pilotId = pilot.id;
+
+    // Save to database for persistence (use botId field for pilotId)
+    await tradingStateRepository.saveBotState(pilotId, {
+      botName: `AutoPilot-${userId}`,
+      isEnabled: true,
+      riskLevel: riskProfile === 'yolo' || riskProfile === 'aggressive' ? 'HIGH' :
+                 riskProfile === 'ultra_safe' || riskProfile === 'careful' ? 'LOW' : 'MEDIUM',
+      maxPositionSize: initialCapital * 0.1,
+      totalPnL: 0,
+    } as any);
+
+    res.json({
+      success: true,
+      pilotId,
+      pilot,
+    });
+  } catch (error: any) {
+    console.error('Failed to create AutoPilot:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to create AutoPilot',
+    });
+  }
+});
+
+/**
+ * GET /trading/autopilot/:pilotId/trades
+ * Get trades for a pilot
+ * SECURITY: Requires authentication
+ */
+router.get('/autopilot/:pilotId/trades', authMiddleware, async (req: Request, res: Response) => {
+  const { pilotId } = req.params;
+  const limit = parseInt(req.query.limit as string) || 20;
+
+  try {
+    // Get trades from database - filter by pilotId
+    const allTrades = await tradingStateRepository.getTrades(pilotId);
+    const trades = allTrades.slice(0, limit);
+
+    res.json({
+      success: true,
+      trades: trades.map((t: any) => ({
+        id: t._id?.toString() || t.id,
+        timestamp: t.timestamp,
+        symbol: t.symbol,
+        side: t.side,
+        quantity: t.quantity,
+        price: t.price,
+        pnl: t.pnl || 0,
+        reason: t.reason || t.signal?.reason,
+        botName: t.botName || t.signal?.botName,
+      })),
+    });
+  } catch (error: any) {
+    console.error('Failed to get trades:', error);
+    res.json({
+      success: true,
+      trades: [], // Return empty if no trades
+    });
+  }
+});
+
+/**
+ * GET /trading/autopilot/:pilotId/stats
+ * Get stats for a pilot
+ * SECURITY: Requires authentication
+ */
+router.get('/autopilot/:pilotId/stats', authMiddleware, async (req: Request, res: Response) => {
+  const { pilotId } = req.params;
+
+  try {
+    const pilot = autoPilotCapital.getPilot(pilotId);
+    const snapshot = autoPilotCapital.getSnapshot(pilotId);
+
+    if (!pilot) {
+      return res.status(404).json({
+        success: false,
+        error: 'Pilot not found',
+      });
+    }
+
+    // Calculate stats from trades
+    const trades = await tradingStateRepository.getTrades(pilotId);
+    const totalTrades = trades.length;
+    const winningTrades = trades.filter((t: any) => t.pnl > 0).length;
+    const totalPnL = trades.reduce((sum: number, t: any) => sum + (t.pnl || 0), 0);
+
+    res.json({
+      success: true,
+      currentValue: snapshot?.totalValue || pilot.initialDeposit + totalPnL,
+      totalReturn: totalPnL,
+      returnPercent: pilot.initialDeposit > 0 ? (totalPnL / pilot.initialDeposit) * 100 : 0,
+      winRate: totalTrades > 0 ? (winningTrades / totalTrades) * 100 : 0,
+      totalTrades,
+      winningTrades,
+      losingTrades: totalTrades - winningTrades,
+    });
+  } catch (error: any) {
+    console.error('Failed to get stats:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to get stats',
+    });
+  }
+});
 
 /**
  * GET /trading/autopilot/:pilotId/balance

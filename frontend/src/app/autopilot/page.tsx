@@ -145,91 +145,107 @@ export default function AutoPilotPage() {
 
     setIsDropping(true);
 
-    // Simulate pilot creation with demo data
-    setTimeout(() => {
-      const newPilot: PilotProfile = {
-        id: `pilot_${Date.now()}`,
-        riskDNA: selectedRisk,
-        riskScore: selectedRisk === 'ultra_safe' ? 10 : selectedRisk === 'yolo' ? 95 : 50,
-        totalDeposited: amount,
-        currentValue: amount,
-        totalReturn: 0,
-        totalReturnPercent: 0,
-        winRate: 0,
-        autopilotEnabled: true,
-      };
+    try {
+      // Create pilot via real API
+      const response = await fetch(`${API_BASE}/trading/autopilot/create`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          riskProfile: selectedRisk,
+          initialCapital: amount,
+        }),
+      });
 
-      setPilot(newPilot);
-      setIsDropping(false);
-      setShowDropModal(false);
-      setDropAmount('');
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        const newPilot: PilotProfile = {
+          id: data.pilotId || `pilot_${Date.now()}`,
+          riskDNA: selectedRisk,
+          riskScore: selectedRisk === 'ultra_safe' ? 10 : selectedRisk === 'yolo' ? 95 : 50,
+          totalDeposited: amount,
+          currentValue: amount,
+          totalReturn: 0,
+          totalReturnPercent: 0,
+          winRate: 0,
+          autopilotEnabled: true,
+        };
+
+        setPilot(newPilot);
+        setShowDropModal(false);
+        setDropAmount('');
+        setNotification({
+          type: 'success',
+          message: `$${amount.toLocaleString()} dropped! AutoPilot is now trading!`
+        });
+        setTimeout(() => setNotification(null), 5000);
+
+        // Start polling for real trades
+        startRealTradePolling(newPilot.id);
+      } else {
+        setNotification({
+          type: 'error',
+          message: data.error || 'Failed to create AutoPilot. Please try again.'
+        });
+        setTimeout(() => setNotification(null), 5000);
+      }
+    } catch (error) {
+      console.error('AutoPilot creation failed:', error);
       setNotification({
-        type: 'success',
-        message: `$${amount.toLocaleString()} dropped! AutoPilot is now trading!`
+        type: 'error',
+        message: 'Network error. Please check your connection.'
       });
       setTimeout(() => setNotification(null), 5000);
-
-      // Start generating demo trades
-      startDemoTrading(newPilot);
-    }, 2000);
+    } finally {
+      setIsDropping(false);
+    }
   };
 
-  const startDemoTrading = (pilotProfile: PilotProfile) => {
-    // Generate demo trades periodically
-    const interval = setInterval(() => {
-      if (!pilotProfile.autopilotEnabled) return;
+  const startRealTradePolling = (pilotId: string) => {
+    // Poll for real trades from the backend
+    const interval = setInterval(async () => {
+      try {
+        const [tradesRes, statsRes] = await Promise.all([
+          fetch(`${API_BASE}/trading/autopilot/${pilotId}/trades`),
+          fetch(`${API_BASE}/trading/autopilot/${pilotId}/stats`),
+        ]);
 
-      const assets = ['BTC/USD', 'ETH/USD', 'AAPL', 'NVDA', 'EUR/USD', 'GOLD'];
-      const strategies = activeBots.length > 0
-        ? activeBots.map(b => b.strategy)
-        : ['Grid Bot', 'DCA Smart', 'Momentum Hunter', 'Range Master', 'Stat Arb'];
-      const explanations = [
-        'Strong buy signal detected',
-        'Taking profit at resistance',
-        'RSI oversold, accumulating',
-        'Breakout confirmed, entering',
-        'Support level holding, buying',
-        'Target reached, closing position'
-      ];
+        if (tradesRes.ok) {
+          const tradesData = await tradesRes.json();
+          if (tradesData.success && Array.isArray(tradesData.trades)) {
+            setRecentTrades(tradesData.trades.map((t: any) => ({
+              id: t.id,
+              timestamp: new Date(t.timestamp),
+              asset: t.symbol,
+              side: t.side,
+              quantity: t.quantity,
+              price: t.price,
+              profitLoss: t.pnl,
+              explanation: t.reason || 'Signal from bot',
+              strategy: t.botName || 'AutoPilot',
+            })));
+          }
+        }
 
-      const side: 'buy' | 'sell' = Math.random() > 0.5 ? 'buy' : 'sell';
-      const asset = assets[Math.floor(Math.random() * assets.length)];
-      const quantity = Math.random() * 10;
-      const price = Math.random() * 1000 + 100;
-      const profitLoss = side === 'sell' ? (Math.random() - 0.3) * 50 : undefined;
-
-      const newTrade: RecentTrade = {
-        id: `trade_${Date.now()}`,
-        timestamp: new Date(),
-        asset,
-        side,
-        quantity,
-        price,
-        profitLoss,
-        explanation: explanations[Math.floor(Math.random() * explanations.length)],
-        strategy: strategies[Math.floor(Math.random() * strategies.length)],
-      };
-
-      setRecentTrades(prev => [newTrade, ...prev.slice(0, 19)]);
-
-      // Update pilot stats
-      setPilot(prev => {
-        if (!prev) return prev;
-        const profitChange = profitLoss || 0;
-        const newTotalReturn = prev.totalReturn + profitChange;
-        const newCurrentValue = prev.totalDeposited + newTotalReturn;
-        const trades = recentTrades.length + 1;
-        const wins = recentTrades.filter(t => t.profitLoss && t.profitLoss > 0).length + (profitLoss && profitLoss > 0 ? 1 : 0);
-
-        return {
-          ...prev,
-          currentValue: newCurrentValue,
-          totalReturn: newTotalReturn,
-          totalReturnPercent: (newTotalReturn / prev.totalDeposited) * 100,
-          winRate: trades > 0 ? (wins / trades) * 100 : 0,
-        };
-      });
-    }, 15000); // Generate a trade every 15 seconds
+        if (statsRes.ok) {
+          const statsData = await statsRes.json();
+          if (statsData.success) {
+            setPilot(prev => {
+              if (!prev) return prev;
+              return {
+                ...prev,
+                currentValue: statsData.currentValue || prev.currentValue,
+                totalReturn: statsData.totalReturn || prev.totalReturn,
+                totalReturnPercent: statsData.returnPercent || prev.totalReturnPercent,
+                winRate: statsData.winRate || prev.winRate,
+              };
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Trade polling error:', error);
+      }
+    }, 10000); // Poll every 10 seconds
 
     // Store interval for cleanup
     (window as any).autoPilotInterval = interval;

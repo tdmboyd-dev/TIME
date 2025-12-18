@@ -60,45 +60,7 @@ export default function RoboAdvisorPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedRisk, setSelectedRisk] = useState<'conservative' | 'moderate' | 'aggressive'>('moderate');
 
-  // Mock data fallback
-  const getMockPortfolios = useCallback((): Portfolio[] => [
-    {
-      id: '1',
-      name: 'Growth Portfolio',
-      riskLevel: 'aggressive',
-      totalValue: 125000,
-      totalReturn: 18500,
-      returnPercent: 17.4,
-      allocation: [
-        { asset: 'US Stocks', percentage: 50, value: 62500, change: 2.3 },
-        { asset: 'International Stocks', percentage: 25, value: 31250, change: 1.8 },
-        { asset: 'Emerging Markets', percentage: 15, value: 18750, change: -0.5 },
-        { asset: 'Bonds', percentage: 10, value: 12500, change: 0.2 },
-      ],
-      isActive: true,
-      autoRebalance: true,
-      lastRebalance: '2024-12-01',
-      monthlyDeposit: 1500,
-    },
-    {
-      id: '2',
-      name: 'Balanced Portfolio',
-      riskLevel: 'moderate',
-      totalValue: 85000,
-      totalReturn: 8900,
-      returnPercent: 11.7,
-      allocation: [
-        { asset: 'US Stocks', percentage: 40, value: 34000, change: 1.5 },
-        { asset: 'International Stocks', percentage: 20, value: 17000, change: 0.8 },
-        { asset: 'Bonds', percentage: 30, value: 25500, change: 0.3 },
-        { asset: 'Real Estate', percentage: 10, value: 8500, change: 0.5 },
-      ],
-      isActive: true,
-      autoRebalance: true,
-      lastRebalance: '2024-11-15',
-      monthlyDeposit: 1000,
-    },
-  ], []);
+  // No mock data - show empty state when no portfolios exist
 
   const fetchPortfolios = useCallback(async () => {
     const loadingState = isRefreshing ? setIsRefreshing : setIsLoading;
@@ -116,32 +78,44 @@ export default function RoboAdvisorPage() {
 
       if (response.ok && data.success && data.data) {
         setIsConnected(true);
-        // API returns object with portfolio types, convert to array for display
-        // For now use mock data since API format differs from expected
+        // Handle both array and object formats from API
         if (Array.isArray(data.data)) {
           setPortfolios(data.data);
           console.log('Connected to live Robo API:', data.data.length, 'portfolios');
-        } else {
-          // API returns model portfolios (object format), use mock user portfolios
-          setPortfolios(getMockPortfolios());
-          console.log('Connected to live Robo API (model portfolios loaded)');
+        } else if (typeof data.data === 'object') {
+          // Convert model portfolios object to array format
+          const modelPortfolios = Object.entries(data.data).map(([key, value]: [string, any]) => ({
+            id: key,
+            name: value.name || key,
+            riskLevel: value.riskLevel || 'moderate',
+            totalValue: 0,
+            totalReturn: 0,
+            returnPercent: 0,
+            allocation: value.allocation || [],
+            isActive: false,
+            autoRebalance: false,
+            lastRebalance: null,
+            monthlyDeposit: 0,
+            isModel: true, // Mark as model portfolio for UI
+          }));
+          setPortfolios(modelPortfolios);
+          console.log('Connected to live Robo API:', modelPortfolios.length, 'model portfolios');
         }
       } else {
-        // API returned error, use mock data
+        // API returned error - show empty state
         setIsConnected(false);
-        setPortfolios(getMockPortfolios());
-        console.log('Using mock data - API returned error');
+        setPortfolios([]);
+        console.log('No portfolios - create one to get started');
       }
     } catch (error) {
-      // Network error or API unreachable, use mock data
+      // Network error - show empty state
       console.error('Failed to fetch portfolios:', error);
       setIsConnected(false);
-      setPortfolios(getMockPortfolios());
-      console.log('Using mock data - API unreachable');
+      setPortfolios([]);
     } finally {
       loadingState(false);
     }
-  }, [isRefreshing, getMockPortfolios]);
+  }, [isRefreshing]);
 
   useEffect(() => {
     fetchPortfolios();
