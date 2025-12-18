@@ -9,8 +9,7 @@ import {
   CheckCircle, AlertCircle, X, Info
 } from 'lucide-react';
 import clsx from 'clsx';
-
-const API_BASE = 'https://time-backend-hosting.fly.dev';
+import { API_BASE } from '@/lib/api';
 
 type RiskDNA = 'ultra_safe' | 'careful' | 'balanced' | 'growth' | 'aggressive' | 'yolo';
 

@@ -1,7 +1,41 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+
+// Check if US stock market is open
+function getMarketStatus(): { isOpen: boolean; status: string; detail: string } {
+  const now = new Date();
+  const etNow = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+  const day = etNow.getDay();
+  const hours = etNow.getHours();
+  const minutes = etNow.getMinutes();
+  const timeInMinutes = hours * 60 + minutes;
+
+  // Weekend
+  if (day === 0 || day === 6) {
+    return { isOpen: false, status: 'Closed', detail: 'Weekend' };
+  }
+
+  // Pre-market: 4:00 AM - 9:30 AM ET
+  if (timeInMinutes >= 240 && timeInMinutes < 570) {
+    return { isOpen: true, status: 'Pre-Market', detail: 'Pre-market trading' };
+  }
+
+  // Regular: 9:30 AM - 4:00 PM ET
+  if (timeInMinutes >= 570 && timeInMinutes < 960) {
+    return { isOpen: true, status: 'Open', detail: 'NYSE: Open • NASDAQ: Open' };
+  }
+
+  // After-hours: 4:00 PM - 8:00 PM ET
+  if (timeInMinutes >= 960 && timeInMinutes < 1200) {
+    return { isOpen: true, status: 'After-Hours', detail: 'Extended trading' };
+  }
+
+  // Closed
+  return { isOpen: false, status: 'Closed', detail: 'Opens 9:30 AM ET' };
+}
 import {
   LayoutDashboard,
   TrendingUp,
@@ -84,6 +118,15 @@ const navigation = [
 
 export function Sidebar() {
   const pathname = usePathname();
+  const [marketStatus, setMarketStatus] = useState(getMarketStatus());
+
+  // Update market status every minute
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setMarketStatus(getMarketStatus());
+    }, 60000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div className="w-64 bg-slate-900/80 backdrop-blur-sm border-r border-slate-700/50 flex flex-col">
@@ -155,13 +198,13 @@ export function Sidebar() {
         <div className="card p-3">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs text-slate-400">Market Status</span>
-            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+            <span className={`w-2 h-2 rounded-full ${marketStatus.isOpen ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></span>
           </div>
           <div className="flex items-center gap-2">
-            <Activity className="w-4 h-4 text-green-400" />
-            <span className="text-sm font-semibold text-white">Markets Open</span>
+            <Activity className={`w-4 h-4 ${marketStatus.isOpen ? 'text-green-400' : 'text-red-400'}`} />
+            <span className="text-sm font-semibold text-white">{marketStatus.status}</span>
           </div>
-          <p className="text-xs text-slate-500 mt-1">NYSE: Open • NASDAQ: Open</p>
+          <p className="text-xs text-slate-500 mt-1">{marketStatus.detail}</p>
         </div>
       </div>
     </div>

@@ -182,19 +182,38 @@ export default function AdminPortalPage() {
 
     try {
       const token = localStorage.getItem('time_auth_token');
+
+      if (!token) {
+        // If no token, just update locally
+        setEvolutionMode(newMode);
+        return;
+      }
+
       // Call backend to update evolution mode
       const response = await fetch(`${API_BASE}/admin/evolution/${newMode}`, {
         method: 'POST',
-        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
       });
 
       if (response.ok) {
         // Persist to Zustand store (which persists to localStorage)
         setEvolutionMode(newMode);
+        console.log(`Evolution mode changed to: ${newMode}`);
+      } else if (response.status === 401 || response.status === 403) {
+        // Auth issue - update locally anyway since admin is viewing
+        console.warn('Auth issue but updating locally');
+        setEvolutionMode(newMode);
+      } else {
+        console.error('Failed to update evolution mode on backend');
+        // Still update locally for persistence
+        setEvolutionMode(newMode);
       }
     } catch (error) {
       console.error('Failed to toggle autonomous mode:', error);
-      // Still update locally for offline functionality
+      // Update locally for offline functionality
       setEvolutionMode(newMode);
     }
   };
