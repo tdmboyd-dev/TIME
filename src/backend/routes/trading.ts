@@ -916,6 +916,128 @@ router.post('/timebeunus/stop', authMiddleware, async (req: Request, res: Respon
 // TEST ORDER ENDPOINT (Admin only)
 // ============================================
 
+// Admin test key for quick testing (set as env var)
+const ADMIN_TEST_KEY = process.env.ADMIN_TEST_KEY || 'TIME_ADMIN_TEST_2025';
+
+/**
+ * GET /trading/test-broker
+ * Quick broker connectivity test - uses admin test key
+ * Returns account info and positions without placing orders
+ */
+router.get('/test-broker', async (req: Request, res: Response) => {
+  try {
+    const adminKey = req.headers['x-admin-key'] as string;
+    if (adminKey !== ADMIN_TEST_KEY) {
+      return res.status(401).json({
+        success: false,
+        error: 'Invalid admin test key. Set x-admin-key header.',
+      });
+    }
+
+    const brokerManager = BrokerManager.getInstance();
+    const status = brokerManager.getStatus();
+
+    // Get account info from connected brokers
+    const accountInfo: any = {};
+    for (const brokerInfo of status.brokers) {
+      if (brokerInfo.connected) {
+        try {
+          const broker = brokerManager.getBroker(brokerInfo.id);
+          if (broker) {
+            const account = await broker.getAccount();
+            const positions = await broker.getPositions();
+            accountInfo[brokerInfo.id] = {
+              account: {
+                id: account.id,
+                equity: account.equity,
+                cash: account.cash,
+                buyingPower: account.buyingPower,
+                currency: account.currency,
+              },
+              positions: positions.map(p => ({
+                symbol: p.symbol,
+                quantity: p.quantity,
+                entryPrice: p.entryPrice,
+                currentPrice: p.currentPrice,
+                unrealizedPnL: p.unrealizedPnL,
+              })),
+            };
+          }
+        } catch (err: any) {
+          accountInfo[brokerInfo.id] = { error: err.message };
+        }
+      }
+    }
+
+    res.json({
+      success: true,
+      data: {
+        brokerStatus: status,
+        accounts: accountInfo,
+      },
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to test brokers',
+    });
+  }
+});
+
+/**
+ * POST /trading/test-trade
+ * Quick test trade endpoint - uses admin test key
+ * Places a small test trade (1 share of specified symbol)
+ */
+router.post('/test-trade', async (req: Request, res: Response) => {
+  try {
+    const adminKey = req.headers['x-admin-key'] as string;
+    if (adminKey !== ADMIN_TEST_KEY) {
+      return res.status(401).json({
+        success: false,
+        error: 'Invalid admin test key. Set x-admin-key header.',
+      });
+    }
+
+    const { symbol = 'AAPL', side = 'buy', quantity = 1, broker = 'alpaca' } = req.body;
+
+    const brokerManager = BrokerManager.getInstance();
+    const status = brokerManager.getStatus();
+
+    // Check if requested broker is connected
+    const brokerInfo = status.brokers.find(b => b.id === broker);
+    if (!brokerInfo || !brokerInfo.connected) {
+      return res.status(400).json({
+        success: false,
+        error: `Broker ${broker} is not connected`,
+        brokerStatus: status,
+      });
+    }
+
+    // Submit test order
+    const orderResult = await brokerManager.submitOrder({
+      symbol,
+      side: side as 'buy' | 'sell',
+      type: 'market',
+      quantity: Number(quantity),
+    }, broker);
+
+    res.json({
+      success: true,
+      message: `Test trade submitted successfully to ${broker}`,
+      data: {
+        order: orderResult.order,
+        broker: broker,
+      },
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to submit test trade',
+    });
+  }
+});
+
 /**
  * POST /trading/test-order
  * Submit a test order to verify broker connectivity
