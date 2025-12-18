@@ -1,8 +1,8 @@
 # TIMEBEUNUS — THE MASTER AI GUIDE
 ## For Copilot, Claude, and All AI Assistants
 
-**Version:** 11.0.0 - REAL BROKER CONNECTIONS + LIVE TRADING EDITION
-**Last Updated:** 2025-12-17 (Brokers NOW connect on startup + DropBot live trading!)
+**Version:** 12.0.0 - BOTH BROKERS CONNECTED + PAPER/LIVE TOGGLE EDITION
+**Last Updated:** 2025-12-18 (Alpaca + OANDA Connected! Paper/Live Mode Toggle!)
 **Creator:** Timebeunus Boyd
 **Purpose:** Complete platform understanding for AI assistants to provide proper guidance
 
@@ -15,13 +15,14 @@
 
 # 🔴 CRITICAL TRUTH: WHAT'S REAL VS NOT REAL
 
-## ✅ WHAT'S ACTUALLY REAL (v11.0.0):
+## ✅ WHAT'S ACTUALLY REAL (v12.0.0):
 | Component | Status | Notes |
 |-----------|--------|-------|
-| **BROKER CONNECTIONS** | ✅ REAL | **NOW CONNECTS ON STARTUP!** |
-| **Alpaca Trading** | ✅ REAL | US Stocks & Crypto - Paper/Live mode |
-| **OANDA Trading** | ✅ REAL | Forex - Practice/Live mode |
+| **BOTH BROKERS CONNECTED** | ✅ REAL | **Alpaca + OANDA connected!** |
+| **Alpaca Trading** | ✅ REAL | US Stocks & Crypto - PAPER mode active |
+| **OANDA Trading** | ✅ REAL | Forex - LIVE mode active |
 | **Order Execution** | ✅ REAL | BrokerManager submits real orders |
+| **Paper/Live Toggle** | ✅ REAL | Frontend + API to switch modes |
 | Market Data | ✅ REAL | Finnhub, TwelveData, CoinGecko |
 | MongoDB Database | ✅ REAL | Users, bots, trades persist |
 | Redis Sessions | ✅ REAL | Auth sessions work |
