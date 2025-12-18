@@ -29,8 +29,7 @@ import {
 import { AlpacaBroker } from './alpaca_broker';
 import { OANDABroker } from './oanda_broker';
 import { SnapTradeBroker, createSnapTradeBroker } from './snaptrade_broker';
-import { IBClient } from './ib_client';
-// Note: IBBroker requires local TWS/Gateway - use Client Portal API for cloud deployment
+// Note: Interactive Brokers is supported via SnapTrade aggregation (92+ brokers)
 
 const logger = createComponentLogger('BrokerManager');
 
@@ -184,9 +183,11 @@ export class BrokerManager extends EventEmitter implements TIMEComponent {
         broker = new OANDABroker(config as any);
         break;
       case 'interactive_brokers':
-        // IB requires TWS/Gateway running locally or Client Portal Gateway
-        // For cloud deployment, consider using SnapTrade or Alpaca as alternatives
-        throw new Error('Interactive Brokers requires local TWS or IB Gateway. Use SnapTrade for IB account aggregation.');
+        // IB is accessed via SnapTrade aggregation (92+ brokers including IB)
+        // Connect your IB account through SnapTrade for seamless integration
+        logger.info('Interactive Brokers accessed via SnapTrade aggregation');
+        broker = createSnapTradeBroker(config as any);
+        break;
       case 'mt4':
       case 'mt5':
         // MT4/MT5 require the MT Bridge for connection
