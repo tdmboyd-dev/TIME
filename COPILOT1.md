@@ -2,16 +2,56 @@
 
 ## COMPLETE PLATFORM DOCUMENTATION FOR AI ASSISTANTS
 
-**Version:** 10.0.0 - WEBAUTHN + OAUTH EDITION
+**Version:** 11.0.0 - ACATS v2.0 TRANSFER EDITION
 **Last Updated:** 2025-12-18
-**Status:** PRODUCTION - Passwordless Auth + OAuth + 133 bots
+**Status:** PRODUCTION - ACATS Transfers + Passwordless Auth + 48+ bots
 **Purpose:** Complete platform understanding for Copilot, Claude, and all AI assistants
 
 ---
 
 # HONEST STATUS REPORT (December 18, 2025)
 
-## 🚀 NEW IN v10.0.0 - WEBAUTHN + OAUTH AUTHENTICATION
+## 🚀 NEW IN v11.0.0 - ACATS v2.0 TRANSFER AUTOMATION
+
+### ACATS TRANSFER SYSTEM v2.0
+**File:** `src/backend/transfers/acats_transfer.ts`
+
+Full ACATS (Automated Customer Account Transfer Service) implementation:
+- **92+ Supported Brokers** across all categories
+- **MongoDB Persistence** - transfers survive server restarts
+- **Background Processing** - automatic status progression
+- **Notification Integration** - email on status changes
+
+**API Endpoints:**
+```
+GET  /api/v1/transfers/brokers          - List 92+ supported brokers
+GET  /api/v1/transfers/brokers?category=modern - Filter by category
+POST /api/v1/transfers/initiate         - Start new transfer
+POST /api/v1/transfers/:id/submit       - Submit for processing
+GET  /api/v1/transfers/:id              - Get transfer details
+GET  /api/v1/transfers?userId=xxx       - Get user's transfers
+POST /api/v1/transfers/:id/cancel       - Cancel transfer
+POST /api/v1/transfers/:id/documents    - Add document
+PUT  /api/v1/transfers/:id/assets       - Update assets (partial)
+GET  /api/v1/transfers/stats/overview   - Get statistics
+```
+
+**Broker Categories:**
+- `traditional` - Fidelity, Schwab, Vanguard, TD Ameritrade, E*TRADE
+- `modern` - Robinhood, Webull, Cash App, SoFi, Public, M1 Finance
+- `retirement` - TIAA, Principal, Empower, Fidelity 401k, Voya
+- `bank` - Chase, Bank of America, Citi, PNC, Wells Fargo
+- `crypto` - Coinbase, Gemini, Kraken (limited ACATS)
+
+**Transfer Status Flow:**
+```
+draft → pending_validation → submitted → received_by_delivering
+  → in_review → approved → in_progress → completed
+```
+
+---
+
+## 🚀 v10.0.0 - WEBAUTHN + OAUTH AUTHENTICATION
 
 ### PASSWORDLESS AUTHENTICATION (WebAuthn/Passkeys)
 **File:** `src/backend/security/webauthn_service.ts`
