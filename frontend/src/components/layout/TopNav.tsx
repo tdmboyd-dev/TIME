@@ -1,10 +1,12 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { Bell, User, TrendingUp, TrendingDown, Minus, RefreshCw } from 'lucide-react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { Bell, User, TrendingUp, TrendingDown, Minus, RefreshCw, LogOut, Settings, ChevronDown } from 'lucide-react';
 import { useTimeStore } from '@/store/timeStore';
 import { GlobalSearchBar } from '@/components/search/GlobalSearchBar';
 import { TradingModeIndicator } from '@/components/TradingModeIndicator';
+import { useRouter } from 'next/navigation';
+import Cookies from 'js-cookie';
 
 // Health endpoint is at root level, not under /api/v1
 const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 'https://time-backend-hosting.fly.dev';
@@ -14,6 +16,9 @@ export function TopNav() {
   const [currentTime, setCurrentTime] = useState<string>('');
   const [mounted, setMounted] = useState(false);
   const [isReconnecting, setIsReconnecting] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
 
   useEffect(() => {
     setMounted(true);
@@ -21,6 +26,28 @@ export function TopNav() {
     const timer = setInterval(() => setCurrentTime(new Date().toLocaleTimeString()), 1000);
     return () => clearInterval(timer);
   }, []);
+
+  // Close user menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setShowUserMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Logout handler
+  const handleLogout = () => {
+    // Clear all auth cookies
+    Cookies.remove('token');
+    Cookies.remove('refreshToken');
+    Cookies.remove('user');
+    Cookies.remove('userRole');
+    // Redirect to login
+    router.push('/login');
+  };
 
   // Check connection on mount and periodically
   const checkConnection = useCallback(async () => {
@@ -128,15 +155,45 @@ export function TopNav() {
           <span className="absolute top-1 right-1 w-2 h-2 bg-time-danger rounded-full"></span>
         </button>
 
-        {/* User */}
-        <div className="flex items-center gap-3 pl-4 border-l border-slate-700/50">
-          <div className="text-right">
-            <div className="text-sm font-medium text-white">Timebeunus</div>
-            <div className="text-xs text-slate-400">Admin</div>
-          </div>
-          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-time-primary to-time-secondary flex items-center justify-center">
-            <User className="w-5 h-5 text-white" />
-          </div>
+        {/* User Dropdown */}
+        <div className="relative pl-4 border-l border-slate-700/50" ref={userMenuRef}>
+          <button
+            onClick={() => setShowUserMenu(!showUserMenu)}
+            className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+          >
+            <div className="text-right">
+              <div className="text-sm font-medium text-white">Timebeunus</div>
+              <div className="text-xs text-slate-400">Admin</div>
+            </div>
+            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-time-primary to-time-secondary flex items-center justify-center">
+              <User className="w-5 h-5 text-white" />
+            </div>
+            <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${showUserMenu ? 'rotate-180' : ''}`} />
+          </button>
+
+          {/* Dropdown Menu */}
+          {showUserMenu && (
+            <div className="absolute right-0 top-full mt-2 w-48 bg-slate-800 rounded-lg shadow-xl border border-slate-700 py-2 z-50">
+              <button
+                onClick={() => {
+                  setShowUserMenu(false);
+                  router.push('/settings');
+                }}
+                className="w-full flex items-center gap-3 px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
+              >
+                <Settings className="w-4 h-4" />
+                Settings
+              </button>
+              <div className="border-t border-slate-700 my-1" />
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors"
+              >
+                <LogOut className="w-4 h-4" />
+                Logout
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </header>
