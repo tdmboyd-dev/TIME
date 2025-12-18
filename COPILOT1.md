@@ -2,16 +2,57 @@
 
 ## COMPLETE PLATFORM DOCUMENTATION FOR AI ASSISTANTS
 
-**Version:** 17.2.0 - BROKER PERSISTENCE EDITION
+**Version:** 18.0.0 - MASTER ADMIN PANEL EDITION
 **Last Updated:** 2025-12-18
-**Status:** 97% READY - 40+ Brokers + MongoDB Persistence
+**Status:** 98% READY - Master Admin + Auth Fix + User Management
 **Purpose:** Complete platform understanding for Copilot, Claude, and all AI assistants
 
 ---
 
 # HONEST STATUS REPORT (December 18, 2025)
 
-## ✅ NEW IN v17.2.0 - BROKER PERSISTENCE EDITION
+## ✅ NEW IN v18.0.0 - MASTER ADMIN PANEL EDITION
+
+### MASTER ADMIN PANEL
+
+**Location:** `/admin-portal` (frontend/src/app/admin-portal/page.tsx)
+
+**Features:**
+- **Create Users** - Create new users with email, password, role, custom position, permissions
+- **Block/Unblock Users** - Block users with reason tracking
+- **Role Management** - User, Co-Admin, Admin (Owner protected)
+- **Permission System** - 16 granular permissions
+- **Custom Positions** - CEO, Senior Trader, etc.
+- **Delete Users** - Remove users (except Owner)
+- **CEO Badge** - Owner displays as CEO
+
+**Admin API Endpoints (src/backend/routes/admin.ts):**
+```
+GET    /admin/users                 - List all users
+GET    /admin/users/:id             - Get user details
+POST   /admin/users/create          - Create user
+PUT    /admin/users/:id/role        - Update role
+PUT    /admin/users/:id/permissions - Update permissions
+PUT    /admin/users/:id/block       - Block user
+PUT    /admin/users/:id/unblock     - Unblock user
+DELETE /admin/users/:id             - Delete user
+GET    /admin/roles                 - List custom roles
+GET    /admin/permissions           - List all permissions
+```
+
+### AUTHENTICATION FIX
+
+**Critical Fix:** All 18 frontend pages now read auth tokens from cookies instead of localStorage.
+
+**New Functions in @/lib/api:**
+- `getTokenFromCookie()` - Read token from document.cookie
+- `getAuthHeaders()` - Get auth headers with token
+
+**Pages Fixed:** All pages in frontend/src/app/ now use cookie-based auth
+
+---
+
+## ✅ PREVIOUS: v17.2.0 - BROKER PERSISTENCE EDITION
 
 ### BROKER CONNECTIONS PERSIST TO MONGODB
 

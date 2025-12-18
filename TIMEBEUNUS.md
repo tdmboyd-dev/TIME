@@ -1,8 +1,8 @@
 # TIMEBEUNUS — THE MASTER AI GUIDE
 ## For Copilot, Claude, and All AI Assistants
 
-**Version:** 23.2.0 - BROKER PERSISTENCE EDITION
-**Last Updated:** 2025-12-18 (40+ Brokers + MongoDB Persistence)
+**Version:** 24.0.0 - MASTER ADMIN PANEL EDITION
+**Last Updated:** 2025-12-18 (Master Admin + Auth Fix + User Management)
 **Creator:** Timebeunus Boyd
 **Purpose:** Complete platform understanding for AI assistants to provide proper guidance
 
@@ -13,7 +13,73 @@
 
 ---
 
-# 🚀 NEW IN v23.2.0 - BROKER PERSISTENCE EDITION
+# 🚀 NEW IN v24.0.0 - MASTER ADMIN PANEL EDITION
+
+## ✅ MASTER ADMIN PANEL - FULL USER MANAGEMENT
+
+**Date:** December 18, 2025
+
+### ADMIN PANEL FEATURES:
+
+| Feature | Description | Status |
+|---------|-------------|--------|
+| **Create Users** | Create new users with email, password, role, permissions | ✅ LIVE |
+| **Block/Unblock Users** | Block users with reason, unblock when needed | ✅ LIVE |
+| **Role Management** | User, Co-Admin, Admin roles (Owner is protected) | ✅ LIVE |
+| **Permission System** | 16 granular permissions for feature access | ✅ LIVE |
+| **Custom Positions** | Custom titles like CEO, Senior Trader, etc. | ✅ LIVE |
+| **Delete Users** | Remove users (except Owner) | ✅ LIVE |
+| **CEO Badge** | Owner displays as CEO in admin panel | ✅ LIVE |
+
+### ADMIN API ENDPOINTS:
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/v1/admin/users` | GET | List all users with filtering |
+| `/api/v1/admin/users/:id` | GET | Get specific user details |
+| `/api/v1/admin/users/create` | POST | Create new user |
+| `/api/v1/admin/users/:id/role` | PUT | Update user role |
+| `/api/v1/admin/users/:id/permissions` | PUT | Update user permissions |
+| `/api/v1/admin/users/:id/block` | PUT | Block user with reason |
+| `/api/v1/admin/users/:id/unblock` | PUT | Unblock user |
+| `/api/v1/admin/users/:id` | DELETE | Delete user |
+| `/api/v1/admin/roles` | GET | List custom roles |
+| `/api/v1/admin/permissions` | GET | List all permissions |
+
+### 16 AVAILABLE PERMISSIONS:
+
+| Permission | Description |
+|------------|-------------|
+| `trading` | Execute trades |
+| `bots` | Use/manage bots |
+| `strategies` | Create/edit strategies |
+| `portfolio` | View portfolio |
+| `analytics` | View analytics |
+| `defi` | Access DeFi features |
+| `transfers` | Make transfers |
+| `tax` | Access tax features |
+| `retirement` | Retirement planning |
+| `wealth` | Wealth management |
+| `marketplace` | Bot marketplace access |
+| `ml` | ML training |
+| `admin_users` | Manage users (admin) |
+| `admin_bots` | Manage all bots (admin) |
+| `admin_system` | System settings (admin) |
+| `admin_billing` | Billing management (admin) |
+
+---
+
+## ✅ AUTHENTICATION FIX - COOKIE-BASED AUTH
+
+### CRITICAL FIX:
+All 18 frontend pages now properly read auth tokens from cookies instead of localStorage. This fixes the "Authentication required" error that occurred when logged in.
+
+**Files Fixed:**
+- All page files in `frontend/src/app/` now use `getTokenFromCookie()` from `@/lib/api`
+
+---
+
+# 🚀 PREVIOUS: v23.2.0 - BROKER PERSISTENCE EDITION
 
 ## ✅ BROKER CONNECTIONS PERSIST TO MONGODB
 
