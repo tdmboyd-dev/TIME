@@ -38,6 +38,10 @@ export type { PremiumTier, TierLimits, UserSubscription, FeatureAccess } from '.
 export { AbsorbedSuperBots, getAbsorbedSuperBots } from './AbsorbedSuperBots';
 export type { SuperBot, BotCategory, AbsorbedAbility, TradeSignal as SuperBotSignal } from './AbsorbedSuperBots';
 
+// Super Bot Live Trading Engine (NEW! Connect Super Bots to Real Brokers)
+export { SuperBotLiveTradingEngine, getSuperBotLiveTrading } from './SuperBotLiveTrading';
+export type { LiveTradingState, ExecutedTrade, BotTradingStats } from './SuperBotLiveTrading';
+
 /**
  * ULTIMATE MONEY MACHINE SUMMARY
  * ==============================

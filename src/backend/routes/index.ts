@@ -64,6 +64,9 @@ import giftAccessRoutes from './gift_access';
 // ULTIMATE MONEY MACHINE - Premium $59/mo Feature!
 import ultimateRoutes from './ultimate';
 
+// SUBSCRIPTION & TRANSFER PAYMENTS - 10% platform fee system
+import subscriptionPaymentsRoutes from './subscription-payments';
+
 const router = Router();
 
 // Mount routes
@@ -134,6 +137,9 @@ router.use('/ml', mlRoutes);  // 50+ patterns, model training, historical data c
 // ULTIMATE MONEY MACHINE - Premium $59/mo Feature!
 // 25 Super Bots, Attack Strategies, Institutional Edge, Self-Learning AI
 router.use('/ultimate', ultimateRoutes);
+
+// SUBSCRIPTION & TRANSFER PAYMENTS - Custom payment system with 10% fee
+router.use('/subscription', subscriptionPaymentsRoutes);
 
 export default router;
 

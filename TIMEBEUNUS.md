@@ -1,8 +1,8 @@
 # TIMEBEUNUS — THE MASTER AI GUIDE
 ## For Copilot, Claude, and All AI Assistants
 
-**Version:** 28.0.0 - ULTIMATE MONEY MACHINE EDITION
-**Last Updated:** 2025-12-19 (39 Pages + Ultimate Money Machine + 25 Super Bots)
+**Version:** 29.0.0 - LIVE TRADING + PAYMENT SYSTEM EDITION
+**Last Updated:** 2025-12-19 (40 Pages + Live Trading + Payment System)
 **Creator:** Timebeunus Boyd
 **Purpose:** Complete platform understanding for AI assistants to provide proper guidance
 
@@ -10,6 +10,98 @@
 
 > **"Never get left out again. The big boys' playbook is now YOUR playbook."**
 > — TIMEBEUNUS
+
+---
+
+# 🚀 NEW: LIVE TRADING INTEGRATION
+
+## Super Bots Now Execute REAL Trades!
+
+The 25 Super Bots are now connected to REAL brokers for live trading!
+
+### Live Trading API Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/v1/ultimate/live/status` | GET | Get live trading status |
+| `/api/v1/ultimate/live/enable` | POST | Enable live/paper trading |
+| `/api/v1/ultimate/live/disable` | POST | Disable live trading |
+| `/api/v1/ultimate/live/activate-bot` | POST | Activate a Super Bot |
+| `/api/v1/ultimate/live/deactivate-bot` | POST | Deactivate a Super Bot |
+| `/api/v1/ultimate/live/active-bots` | GET | Get active bots details |
+| `/api/v1/ultimate/live/generate-signal` | POST | Generate and execute signal |
+| `/api/v1/ultimate/live/trades` | GET | Get executed trades |
+| `/api/v1/ultimate/live/bot-stats` | GET | Get all bot trading stats |
+| `/api/v1/ultimate/live/configure` | POST | Configure trading settings |
+| `/api/v1/ultimate/live/activate-all-legendary` | POST | Activate all 5 LEGENDARY bots |
+| `/api/v1/ultimate/live/activate-by-tier` | POST | Activate bots by tier |
+
+### Live Trading Configuration
+
+```typescript
+{
+  mode: 'paper' | 'live',          // Trading mode
+  maxPositionSize: 0.05,           // 5% max per trade
+  maxDailyTrades: 50,              // 50 trades per day max
+  maxDrawdown: 0.10,               // 10% max drawdown before auto-stop
+  confidenceThreshold: 70,         // 70% minimum signal confidence
+}
+```
+
+### Risk Management Features
+
+- ✅ **Daily Trade Limit** - Max 50 trades per day
+- ✅ **Position Size Limit** - Max 5% of portfolio per trade
+- ✅ **Drawdown Protection** - Auto-stop at 10% drawdown
+- ✅ **Confidence Filter** - Only execute signals >70% confidence
+- ✅ **Signal Queue** - Orderly execution of bot signals
+
+---
+
+# 💳 NEW: CUSTOM PAYMENT SYSTEM (10% FEE)
+
+## Alternative to Stripe - Bank Transfer Style
+
+### Payment Flow
+1. User creates payment request
+2. System calculates 10% platform fee
+3. User completes bank transfer
+4. Admin verifies and marks complete
+5. 10% fee goes to owner account
+
+### Payment API Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/v1/subscription/tiers` | GET | Get subscription tiers |
+| `/api/v1/subscription/fee-calculator` | GET | Calculate fee for amount |
+| `/api/v1/subscription/payment/create` | POST | Create payment request |
+| `/api/v1/subscription/payment/:id/process` | POST | Process with bank details |
+| `/api/v1/subscription/payment/:id/verify` | POST | Verify with code |
+| `/api/v1/subscription/subscribe` | POST | Create subscription |
+| `/api/v1/subscription/status/:userId` | GET | Get subscription status |
+| `/api/v1/subscription/admin/stats` | GET | Admin: Get payment stats |
+| `/api/v1/subscription/admin/withdraw` | POST | Admin: Withdraw fees |
+
+### Fee Structure
+
+| Amount | Fee (10%) | Net Amount |
+|--------|-----------|------------|
+| $9.99 | $0.99 (min) | $9.00 |
+| $29.99 | $3.00 | $26.99 |
+| $59.00 | $5.90 | $53.10 |
+| $250.00 | $25.00 | $225.00 |
+| $5,000+ | $500 (max) | $4,500+ |
+
+### Subscription Tiers
+
+| Tier | Price | Features |
+|------|-------|----------|
+| Free | $0/mo | Paper trading, 5 bots, basic analytics |
+| Starter | $9.99/mo | Live trading, 20 bots, email alerts |
+| Pro | $29.99/mo | 50 bots, API access, priority support |
+| **Premium** | **$59/mo** | ALL 25 Super Bots, 133 bots, Ultimate Money Machine |
+| Enterprise | $250/mo | White-label, custom integrations, SLA |
 
 ---
 
