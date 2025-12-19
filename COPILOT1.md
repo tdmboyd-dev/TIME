@@ -2,18 +2,35 @@
 
 ## COMPLETE PLATFORM DOCUMENTATION FOR AI ASSISTANTS
 
-**Version:** 20.0.0 - FULL PAGE AUDIT EDITION
+**Version:** 21.0.0 - NEW PAGES + SMART BADGE EDITION
 **Last Updated:** 2025-12-19
-**Status:** 100% READY - All 35 Pages Connected + Deployed
+**Status:** 100% READY - 39 Pages + Smart NEW Badge System
 **Purpose:** Complete platform understanding for Copilot, Claude, and all AI assistants
 
 ---
 
 # HONEST STATUS REPORT (December 19, 2025)
 
-## ✅ NEW IN v20.0.0 - FULL PAGE AUDIT EDITION
+## ✅ NEW IN v21.0.0 - NEW PAGES + SMART BADGE EDITION
 
-### ALL 35 PAGES VERIFIED CONNECTED TO BACKEND APIs
+### 4 NEW PAGES ADDED
+
+| New Page | Route | Features |
+|----------|-------|----------|
+| **Wealth Management** | `/wealth` | Dynasty Trusts, Estate Tax Projections, Gifting Strategies |
+| **Bot Marketplace** | `/marketplace` | Rent/Buy Trading Bots, Performance Stats, Verified Creators |
+| **Backtesting** | `/backtest` | Strategy Testing, Walk-Forward Optimization, Monte Carlo |
+| **Gift Access** | `/gift-access` | Admin Chatbot, Gift Codes, Promo Calendar (ADMIN ONLY) |
+
+### SMART NEW BADGE SYSTEM
+
+The sidebar now shows **NEW** badges that:
+- Appear on pages marked as new features
+- **Disappear once user visits the page** (persists in localStorage)
+- Use smooth pulse animation
+- Work per-user (each user has their own visited pages list)
+
+### ALL 39 PAGES VERIFIED CONNECTED TO BACKEND APIs
 
 | Page | Backend Endpoints | Status |
 |------|-------------------|--------|
@@ -24,17 +41,20 @@
 | `/ai-trade-god` | `/alerts/bots`, `/alerts/command` | ✅ CONNECTED |
 | `/alerts` | BigMovesAlerts → `/alerts/big-moves` | ✅ CONNECTED |
 | `/autopilot` | `/bots/public`, `/trading/autopilot/*` | ✅ CONNECTED |
+| `/backtest` | `/backtest/run`, `/backtest/walk-forward` | ✅ CONNECTED |
 | `/bots` | `/bots/public`, `/bots/upload`, `/bots/activate` | ✅ CONNECTED |
 | `/brokers` | `/brokers/connections`, `/advanced-broker/venues` | ✅ CONNECTED |
 | `/charts` | `/charts/candles` | ✅ CONNECTED |
 | `/defi` | `/defi/protocols`, `/defi/yield-opportunities` | ✅ CONNECTED |
 | `/dropzone` | `/bot-brain/*`, `/auto-perfect-bot/*` | ✅ CONNECTED |
 | `/execution` | `/advanced-broker/venues`, `/advanced-broker/smart-orders` | ✅ CONNECTED |
+| `/gift-access` | `/gift-access/chat`, `/gift-access/gifts` | ✅ CONNECTED (ADMIN) |
 | `/goals` | `/robo/goals`, `/robo/questions` | ✅ CONNECTED |
 | `/history` | `/trading/trades`, `/portfolio/trades` | ✅ CONNECTED |
 | `/invest` | `/portfolio/positions`, `/portfolio/summary` | ✅ CONNECTED |
 | `/learn` | `/learn/courses` | ✅ CONNECTED |
 | `/live-trading` | `/trading/stats`, `/trading/bots/available`, `/trading/signals/pending` | ✅ CONNECTED |
+| `/marketplace` | `/marketplace/listings`, `/marketplace/plans` | ✅ CONNECTED |
 | `/markets` | `/real-market/stock`, `/real-market/crypto`, `/fmp/*` | ✅ CONNECTED |
 | `/payments` | `/payments/*` | ✅ CONNECTED |
 | `/portfolio` | `/portfolio/positions`, `/portfolio/summary`, `/portfolio/brokers/status` | ✅ CONNECTED |
@@ -49,6 +69,7 @@
 | `/trade` | `/real-market/stock`, `/real-market/crypto`, `/advanced-broker/smart-order` | ✅ CONNECTED |
 | `/transfers` | `/transfers/*`, `/transfers/brokers` | ✅ CONNECTED |
 | `/vision` | `/vision/analysis` | ✅ CONNECTED |
+| `/wealth` | `/wealth/trusts/*`, `/wealth/estate/*` | ✅ CONNECTED |
 
 ### MOCK DATA REMOVED FROM ALL PAGES
 All frontend pages now use real API data only. No fake numbers or fallback mock data.
