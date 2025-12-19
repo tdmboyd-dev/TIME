@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -36,6 +36,33 @@ function getMarketStatus(): { isOpen: boolean; status: string; detail: string } 
   // Closed
   return { isOpen: false, status: 'Closed', detail: 'Opens 9:30 AM ET' };
 }
+
+// Visited pages storage key
+const VISITED_PAGES_KEY = 'time_visited_pages';
+
+// Get visited pages from localStorage
+function getVisitedPages(): Set<string> {
+  if (typeof window === 'undefined') return new Set();
+  try {
+    const stored = localStorage.getItem(VISITED_PAGES_KEY);
+    return stored ? new Set(JSON.parse(stored)) : new Set();
+  } catch {
+    return new Set();
+  }
+}
+
+// Save visited page to localStorage
+function markPageVisited(href: string): void {
+  if (typeof window === 'undefined') return;
+  try {
+    const visited = getVisitedPages();
+    visited.add(href);
+    localStorage.setItem(VISITED_PAGES_KEY, JSON.stringify(Array.from(visited)));
+  } catch {
+    // Ignore storage errors
+  }
+}
+
 import {
   LayoutDashboard,
   TrendingUp,
@@ -69,6 +96,10 @@ import {
   Lock,
   Rocket,
   Brain,
+  Landmark,
+  Store,
+  FlaskConical,
+  Gift,
 } from 'lucide-react';
 import clsx from 'clsx';
 import { TradingModeIndicator } from '@/components/trading/TradingModeToggle';
@@ -76,20 +107,22 @@ import { TradingModeIndicator } from '@/components/trading/TradingModeToggle';
 const navigation = [
   // Core
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
-  { name: 'LIVE Bot Trading', href: '/live-trading', icon: Play, highlight: true },
-  { name: 'Big Moves Alerts', href: '/alerts', icon: Bell, highlight: true },
-  { name: 'AI Trade God', href: '/ai-trade-god', icon: Zap, highlight: true },
-  { name: 'Bot Dropzone', href: '/dropzone', icon: Download, highlight: true },
+  { name: 'LIVE Bot Trading', href: '/live-trading', icon: Play, isNew: true },
+  { name: 'Big Moves Alerts', href: '/alerts', icon: Bell, isNew: true },
+  { name: 'AI Trade God', href: '/ai-trade-god', icon: Zap, isNew: true },
+  { name: 'Bot Dropzone', href: '/dropzone', icon: Download, isNew: true },
   // Trading
   { name: 'Markets', href: '/markets', icon: TrendingUp },
   { name: 'Charts', href: '/charts', icon: BarChart3 },
   { name: 'Trade', href: '/trade', icon: ArrowRightLeft },
   { name: 'Execution Engine', href: '/execution', icon: Cpu },
   { name: 'Trade History', href: '/history', icon: History },
+  { name: 'Backtesting', href: '/backtest', icon: FlaskConical, isNew: true },
   // Investments
   { name: 'Portfolio', href: '/portfolio', icon: Wallet },
   { name: 'Strategies', href: '/strategies', icon: Layers },
   { name: 'Bots', href: '/bots', icon: Bot },
+  { name: 'Bot Marketplace', href: '/marketplace', icon: Store, isNew: true },
   { name: 'Social Trading', href: '/social', icon: Users },
   { name: 'Robo Advisor', href: '/robo', icon: Bot },
   { name: 'Invest', href: '/invest', icon: PiggyBank },
@@ -101,24 +134,44 @@ const navigation = [
   // Connections
   { name: 'Broker Connect', href: '/brokers', icon: Link2 },
   { name: 'Payments', href: '/payments', icon: CreditCard },
-  // Vanguard Features
-  { name: 'Retirement', href: '/retirement', icon: Umbrella, highlight: true },
-  { name: 'Account Transfers', href: '/transfers', icon: Building2, highlight: true },
-  { name: 'Tax Optimization', href: '/tax', icon: Leaf, highlight: true },
-  { name: 'Investment Goals', href: '/goals', icon: Target, highlight: true },
+  // Wealth & Planning
+  { name: 'Wealth Management', href: '/wealth', icon: Landmark, isNew: true },
+  { name: 'Retirement', href: '/retirement', icon: Umbrella, isNew: true },
+  { name: 'Account Transfers', href: '/transfers', icon: Building2, isNew: true },
+  { name: 'Tax Optimization', href: '/tax', icon: Leaf, isNew: true },
+  { name: 'Investment Goals', href: '/goals', icon: Target, isNew: true },
   // Settings & Admin
   { name: 'Settings', href: '/settings', icon: Settings },
   { name: 'Control Panel', href: '/admin', icon: Settings },
   { name: 'System Health', href: '/admin/health', icon: HeartPulse },
-  { name: 'Admin Portal', href: '/admin-portal', icon: Crown, highlight: true },
+  { name: 'Admin Portal', href: '/admin-portal', icon: Crown, isNew: true },
   // Admin-Only Features
   { name: 'TIMEBEUNUS', href: '/timebeunus', icon: Brain, adminOnly: true },
   { name: 'DROPBOT AutoPilot', href: '/autopilot', icon: Rocket, adminOnly: true },
+  { name: 'Gift Access', href: '/gift-access', icon: Gift, adminOnly: true, isNew: true },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
   const [marketStatus, setMarketStatus] = useState(getMarketStatus());
+  const [visitedPages, setVisitedPages] = useState<Set<string>>(new Set());
+
+  // Load visited pages on mount
+  useEffect(() => {
+    setVisitedPages(getVisitedPages());
+  }, []);
+
+  // Mark current page as visited when pathname changes
+  useEffect(() => {
+    if (pathname) {
+      markPageVisited(pathname);
+      setVisitedPages(prev => {
+        const next = new Set(prev);
+        next.add(pathname);
+        return next;
+      });
+    }
+  }, [pathname]);
 
   // Update market status every minute
   useEffect(() => {
@@ -127,6 +180,11 @@ export function Sidebar() {
     }, 60000);
     return () => clearInterval(interval);
   }, []);
+
+  // Check if page should show NEW badge (isNew flag + not visited yet)
+  const shouldShowNew = useCallback((item: typeof navigation[0]) => {
+    return (item as any).isNew && !visitedPages.has(item.href);
+  }, [visitedPages]);
 
   return (
     <div className="w-64 bg-slate-900/80 backdrop-blur-sm border-r border-slate-700/50 flex flex-col">
@@ -148,6 +206,7 @@ export function Sidebar() {
         {navigation.map((item) => {
           const isActive = pathname === item.href ||
             (item.href !== '/' && pathname.startsWith(item.href));
+          const showNewBadge = shouldShowNew(item);
           return (
             <Link
               key={item.name}
@@ -158,12 +217,12 @@ export function Sidebar() {
                   ? 'bg-time-primary/20 text-time-primary border border-time-primary/30'
                   : (item as any).adminOnly
                   ? 'text-red-400 hover:text-red-300 hover:bg-red-500/10 border border-red-500/30'
-                  : (item as any).highlight
+                  : showNewBadge
                   ? 'text-amber-400 hover:text-amber-300 hover:bg-amber-500/10 border border-amber-500/30'
                   : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
               )}
             >
-              <item.icon className={clsx('w-5 h-5', (item as any).adminOnly && !isActive && 'text-red-400', (item as any).highlight && !isActive && 'text-amber-400')} />
+              <item.icon className={clsx('w-5 h-5', (item as any).adminOnly && !isActive && 'text-red-400', showNewBadge && !isActive && 'text-amber-400')} />
               {item.name}
               {(item as any).adminOnly && (
                 <span className="ml-auto flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-red-500/20 text-red-400 font-bold">
@@ -171,8 +230,8 @@ export function Sidebar() {
                   ADMIN
                 </span>
               )}
-              {(item as any).highlight && !(item as any).adminOnly && (
-                <span className="ml-auto text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 font-bold">
+              {showNewBadge && !(item as any).adminOnly && (
+                <span className="ml-auto text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 font-bold animate-pulse">
                   NEW
                 </span>
               )}
