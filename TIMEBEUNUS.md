@@ -1,10 +1,149 @@
 # TIMEBEUNUS — THE MASTER AI GUIDE
 ## For Copilot, Claude, and All AI Assistants
 
-**Version:** 33.0.0 - COMPLETE BATTLE EDITION
-**Last Updated:** 2025-12-19 (60+ Pages + Full System Comparison)
+**Version:** 34.0.0 - FULL TRADING ABILITIES EDITION
+**Last Updated:** 2025-12-19 (60+ Pages + Full System Comparison + v17 Trading Features)
 
 > 📄 **SEE ALSO:** [SYSTEM_COMPARISON.md](./SYSTEM_COMPARISON.md) for the FULL 500+ line detailed comparison!
+
+---
+
+# 💰 v17.0.0 - TIMEBEUNUS FULL TRADING ABILITIES
+
+## TIMEBEUNUS Admin Bot - Owner Trading Powers
+
+**NEW: The platform owner can now TRADE, not just monitor!**
+
+### Trading Abilities
+
+| Ability | Description | API Endpoint |
+|---------|-------------|--------------|
+| **Manual Buy/Sell** | Execute individual trades | `POST /timebeunus/trade` |
+| **Batch Trading** | Trade multiple assets at once | `POST /timebeunus/trade/batch` |
+| **Emergency Exit** | Close all positions instantly | `POST /timebeunus/trade/close-all` |
+| **Real-Time Positions** | View all positions with P&L | `GET /timebeunus/positions` |
+| **Trade History** | See all trades with gains/losses | `GET /timebeunus/trades` |
+
+### Investing Abilities
+
+| Ability | Description | Strategies |
+|---------|-------------|------------|
+| **Lump Sum** | Invest all at once | Single purchase |
+| **DCA** | Dollar-cost averaging | Weekly purchases |
+| **Value Averaging** | Dynamic allocation | Adjust based on performance |
+
+### Yield Farming Abilities
+
+| Protocol | Asset | APY | Risk |
+|----------|-------|-----|------|
+| Aave | USDC | 4.5% | Low |
+| Compound | ETH | 3.2% | Low |
+| Curve | 3Pool | 8.5% | Medium |
+| Yearn | USDC | 12.5% | Medium |
+| Convex | CRV | 25.0% | High |
+
+### 8 Automation Toggles (PERSIST AFTER REFRESH!)
+
+| Toggle | Description | Default |
+|--------|-------------|---------|
+| `autoTrade` | Execute signals automatically | ON |
+| `autoInvest` | Reinvest profits | ON |
+| `autoYield` | Farm yields automatically | ON |
+| `autoRebalance` | Rebalance portfolio | ON |
+| `autoHedge` | Hedge on drawdown | ON |
+| `autoScale` | Scale positions | OFF |
+| `autoTax` | Tax-loss harvesting | ON |
+| `autoCompound` | Compound interest | ON |
+
+### Bot Evolution Suggestions
+
+TIMEBEUNUS receives AI-generated suggestions for new bots:
+- "Enhanced Momentum Bot v2" (+12% improvement)
+- "Adaptive Mean Reversion" (-15% drawdown)
+- "ML Sentiment Fusion Bot" (+25% crypto returns)
+
+---
+
+# 📋 v17.0.0 - MONEY MACHINE QUESTIONNAIRE
+
+## Auto-Configure with 5 Simple Questions
+
+**Money Machine users now have TWO options:**
+
+### Option 1: Manual Control (Full Power)
+- Configure each of 25 Super Bots individually
+- Set custom risk levels per bot
+- Choose specific assets to trade
+- Set position sizes, stop losses, take profits
+
+### Option 2: Questionnaire (Quick Setup)
+
+Answer 5 simple questions:
+1. **Risk Tolerance**: Ultra Safe → Maximum
+2. **Investment Goal**: Preserve → Aggressive Growth
+3. **Time Horizon**: <1 year → 5+ years
+4. **Trading Style**: Set & Forget → Always On
+5. **Capital Amount**: $100 → $100K+
+
+**Result**: Optimal bot selection and configuration!
+
+### Risk Level Hover Explanations
+
+| Level | Short | Hover Explanation |
+|-------|-------|-------------------|
+| **Ultra Safe** | "I don't want to lose anything" | "Maximum loss protection. Expected: 8-12% annually." |
+| **Conservative** | "Small, steady gains" | "Capital preservation. Expected: 12-18% annually." |
+| **Moderate** | "Balanced risk and reward" | "Calculated risks. Expected: 18-28% annually." |
+| **Aggressive** | "Big gains, can handle losses" | "Higher returns. Expected: 28-45% annually." |
+| **Maximum** | "Go all out" | "Hedge fund-level. Expected: 45-66% annually." |
+
+---
+
+# 💵 v17.0.0 - PLATFORM FEE SYSTEM
+
+## 10% Fee on Profits (Money Machine & DropBot)
+
+| System | Fee | When Charged | Example |
+|--------|-----|--------------|---------|
+| **TIMEBEUNUS** | 0% | Never | Owner keeps 100% |
+| **Money Machine** | 10% | Profitable trades only | $100 profit → $10 fee |
+| **DropBot** | 10% | Profitable trades only | $50 profit → $5 fee |
+
+### Fee Transparency
+- Fees deducted automatically
+- No fee on losing trades
+- Clear breakdown in trade history
+- Monthly fee summary in dashboard
+
+---
+
+# 🛠️ v17.0.0 - NEW API ENDPOINTS
+
+## TIMEBEUNUS Admin Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/timebeunus/dashboard` | GET | Full owner dashboard |
+| `/timebeunus/trade` | POST | Execute single trade |
+| `/timebeunus/trade/batch` | POST | Execute multiple trades |
+| `/timebeunus/trade/close-all` | POST | Emergency close all |
+| `/timebeunus/positions` | GET | All positions with P&L |
+| `/timebeunus/trades` | GET | Trade history |
+| `/timebeunus/automation` | GET/PUT | Automation toggles |
+| `/timebeunus/invest` | POST | Create investment |
+| `/timebeunus/yield` | GET | Yield opportunities |
+| `/timebeunus/yield/deposit` | POST | Deposit to yield |
+| `/timebeunus/bot-suggestions` | GET | AI bot suggestions |
+| `/timebeunus/fees` | GET | Platform fee stats |
+
+## Questionnaire Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/questionnaire/questions` | GET | Get all questions |
+| `/questionnaire/submit` | POST | Submit answers, get config |
+| `/questionnaire/risk-explanations` | GET | Hover text for risks |
+| `/questionnaire/fee-info` | GET | Fee structure details |
 
 ---
 
