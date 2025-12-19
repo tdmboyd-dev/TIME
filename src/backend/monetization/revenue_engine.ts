@@ -27,7 +27,8 @@ const logger = createComponentLogger('RevenueEngine');
 // SUBSCRIPTION TIERS
 // ============================================================
 
-export type SubscriptionTier = 'free' | 'starter' | 'trader' | 'professional' | 'enterprise';
+// ALIGNED WITH GiftAccessService.ts - SINGLE SOURCE OF TRUTH
+export type SubscriptionTier = 'free' | 'starter' | 'pro' | 'unlimited' | 'enterprise';
 
 export interface SubscriptionPlan {
   tier: SubscriptionTier;
@@ -50,21 +51,30 @@ export interface SubscriptionPlan {
   };
 }
 
+/**
+ * SUBSCRIPTION PRICING - ALIGNED WITH GiftAccessService.ts
+ *
+ * OFFICIAL PRICING (December 2025):
+ * - FREE: $0/mo
+ * - STARTER: $24.99/mo ($239.88/year = $19.99/mo)
+ * - PRO: $79/mo ($758.40/year = $63.20/mo)
+ * - UNLIMITED: $149/mo ($1,430.40/year = $119.20/mo)
+ * - ENTERPRISE: $499/mo ($4,790.40/year = $399.20/mo)
+ */
 const SUBSCRIPTION_PLANS: Record<SubscriptionTier, SubscriptionPlan> = {
   free: {
     tier: 'free',
-    name: 'Free Explorer',
+    name: 'Free',
     price: { monthly: 0, yearly: 0 },
     features: [
-      'Basic market data (15min delayed)',
-      '2 paper trading bots',
-      '1 watchlist (10 symbols)',
-      'Basic learning modules',
-      'Community forum access',
-      'Mobile app access',
+      'Paper trading',
+      'Basic charts',
+      'Community bots',
+      '5 alerts',
+      '3 bot limit',
     ],
     limits: {
-      maxBots: 2,
+      maxBots: 3,
       maxWatchlists: 1,
       maxAlerts: 5,
       maxBacktests: 5,
@@ -77,20 +87,18 @@ const SUBSCRIPTION_PLANS: Record<SubscriptionTier, SubscriptionPlan> = {
   },
   starter: {
     tier: 'starter',
-    name: 'Starter Trader',
-    price: { monthly: 9.99, yearly: 95.88 }, // $7.99/mo annually
+    name: 'Starter',
+    price: { monthly: 24.99, yearly: 239.88 }, // $19.99/mo annual (20% off)
     features: [
-      'Real-time market data',
-      '5 paper trading bots',
-      '3 watchlists (25 symbols each)',
-      '50 price alerts',
-      'Basic bot analytics',
+      'Live trading',
+      '1 AI-powered bot',
+      '$10K capital limit',
+      'Basic alerts',
       'Email support',
-      'All learning modules',
-      '1 connected broker',
+      '50 trades/month',
     ],
     limits: {
-      maxBots: 5,
+      maxBots: 1,
       maxWatchlists: 3,
       maxAlerts: 50,
       maxBacktests: 50,
@@ -101,24 +109,21 @@ const SUBSCRIPTION_PLANS: Record<SubscriptionTier, SubscriptionPlan> = {
       storageGB: 2,
     },
   },
-  trader: {
-    tier: 'trader',
-    name: 'Active Trader',
-    price: { monthly: 29.99, yearly: 287.88 }, // $23.99/mo annually
+  pro: {
+    tier: 'pro',
+    name: 'Pro',
+    price: { monthly: 79, yearly: 758.40 }, // $63.20/mo annual (20% off)
     features: [
       'Everything in Starter',
-      '15 bots (paper + live)',
-      '10 watchlists (50 symbols each)',
-      'Unlimited alerts',
-      'Advanced bot analytics',
-      'Regime detection insights',
-      'Copy trading (follow 5 traders)',
-      'Priority email support',
-      '3 connected brokers',
-      'API access (basic)',
+      '5 AI-powered bots',
+      '$100K capital limit',
+      'Tax-loss harvesting',
+      'Advanced charts',
+      'Priority support',
+      '500 trades/month',
     ],
     limits: {
-      maxBots: 15,
+      maxBots: 5,
       maxWatchlists: 10,
       maxAlerts: 500,
       maxBacktests: 500,
@@ -129,23 +134,19 @@ const SUBSCRIPTION_PLANS: Record<SubscriptionTier, SubscriptionPlan> = {
       storageGB: 10,
     },
   },
-  professional: {
-    tier: 'professional',
-    name: 'Professional',
-    price: { monthly: 99.99, yearly: 959.88 }, // $79.99/mo annually
+  unlimited: {
+    tier: 'unlimited',
+    name: 'Unlimited',
+    price: { monthly: 149, yearly: 1430.40 }, // $119.20/mo annual (20% off)
     features: [
-      'Everything in Active Trader',
-      'Unlimited bots',
-      'Unlimited watchlists',
-      'Custom bot creation tools',
-      'AI-powered strategy synthesis',
-      'Copy trading (unlimited follows)',
-      'Become a signal provider',
-      'Phone + chat support',
-      '10 connected brokers',
-      'Full API access',
-      'Team collaboration (3 users)',
-      'White-label reports',
+      'Everything in Pro',
+      'Unlimited AI bots',
+      'Unlimited capital',
+      'Dynasty Trust planning',
+      'Family Legacy AI',
+      'AutoPilot system',
+      'Dedicated support',
+      'Unlimited trades',
     ],
     limits: {
       maxBots: 999,
@@ -162,20 +163,15 @@ const SUBSCRIPTION_PLANS: Record<SubscriptionTier, SubscriptionPlan> = {
   enterprise: {
     tier: 'enterprise',
     name: 'Enterprise',
-    price: { monthly: 499.99, yearly: 4799.88 }, // Custom pricing available
+    price: { monthly: 499, yearly: 4790.40 }, // $399.20/mo annual (20% off)
     features: [
-      'Everything in Professional',
-      'Unlimited everything',
-      'Dedicated account manager',
+      'Everything in Unlimited',
+      'White-label solution',
+      'Full API access',
+      'Custom strategies',
+      'Account manager',
+      'SLA guarantee',
       'Custom integrations',
-      'On-premise deployment option',
-      'SLA guarantees (99.9% uptime)',
-      'Custom bot development',
-      'Bulk user management',
-      'Advanced compliance tools',
-      'Priority API endpoints',
-      'Custom analytics dashboards',
-      'Team collaboration (unlimited)',
     ],
     limits: {
       maxBots: Infinity,
@@ -780,9 +776,9 @@ export class RevenueEngine extends EventEmitter {
       },
       {
         feature: 'Pro Subscription',
-        timeFee: '$29.99/mo',
-        industryAvg: '$50-100/mo',
-        savings: '40-70% less',
+        timeFee: '$79/mo',
+        industryAvg: '$100-200/mo',
+        savings: '20-60% less',
       },
     ];
   }

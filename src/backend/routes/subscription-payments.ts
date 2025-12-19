@@ -31,10 +31,28 @@ router.get('/tiers', (req: Request, res: Response) => {
         minFee: feeStructure.minFee,
         maxFee: feeStructure.maxFee,
       },
+      note: 'Ultimate Money Machine is a SEPARATE optional add-on requiring admin approval',
     });
   } catch (error) {
     console.error('[Payments] Error getting tiers:', error);
     res.status(500).json({ error: 'Failed to get subscription tiers' });
+  }
+});
+
+// GET /api/v1/subscription/ultimate-money-machine - Get UMM add-on info
+router.get('/ultimate-money-machine', (req: Request, res: Response) => {
+  try {
+    const paymentSystem = getPaymentTransferSystem();
+    const ummInfo = paymentSystem.getUltimateMoneyMachineInfo();
+
+    res.json({
+      success: true,
+      addOn: ummInfo,
+      note: 'This is an OPTIONAL ADD-ON that requires admin approval. Contact admin for access.',
+    });
+  } catch (error) {
+    console.error('[Payments] Error getting UMM info:', error);
+    res.status(500).json({ error: 'Failed to get Ultimate Money Machine info' });
   }
 });
 

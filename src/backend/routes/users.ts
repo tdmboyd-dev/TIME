@@ -537,7 +537,7 @@ router.post('/subscription/upgrade', authMiddleware, async (req: Request, res: R
   const user = (req as any).user;
   const { tier, billingCycle = 'monthly' } = req.body;
 
-  const validTiers: SubscriptionTier[] = ['free', 'starter', 'trader', 'professional', 'enterprise'];
+  const validTiers: SubscriptionTier[] = ['free', 'starter', 'pro', 'unlimited', 'enterprise'];
   if (!validTiers.includes(tier)) {
     return res.status(400).json({
       error: 'Invalid tier',
@@ -585,7 +585,7 @@ router.post('/admin/:userId/grant-tier', authMiddleware, ownerMiddleware, (req: 
   const { tier, reason, durationDays } = req.body;
   const owner = (req as any).user;
 
-  const validTiers: SubscriptionTier[] = ['free', 'starter', 'trader', 'professional', 'enterprise'];
+  const validTiers: SubscriptionTier[] = ['free', 'starter', 'pro', 'unlimited', 'enterprise'];
   if (!validTiers.includes(tier)) {
     return res.status(400).json({
       error: 'Invalid tier',
@@ -709,7 +709,7 @@ router.post('/admin/bulk-grant', authMiddleware, ownerMiddleware, (req: Request,
     });
   }
 
-  const validTiers: SubscriptionTier[] = ['free', 'starter', 'trader', 'professional', 'enterprise'];
+  const validTiers: SubscriptionTier[] = ['free', 'starter', 'pro', 'unlimited', 'enterprise'];
   if (!validTiers.includes(tier)) {
     return res.status(400).json({
       error: 'Invalid tier',

@@ -354,6 +354,15 @@ export class PaymentTransferSystem extends EventEmitter {
 
   /**
    * Get available subscription tiers
+   * NOTE: Ultimate Money Machine ($59) is a SEPARATE optional add-on
+   *       It requires admin approval and is NOT part of these tiers
+   *
+   * OFFICIAL PRICING (from GiftAccessService.ts):
+   * - FREE: $0
+   * - STARTER: $24.99/mo ($19.99/mo annual)
+   * - PRO: $79/mo ($63.20/mo annual)
+   * - UNLIMITED: $149/mo ($119.20/mo annual)
+   * - ENTERPRISE: $499/mo ($399.20/mo annual)
    */
   getSubscriptionTiers(): SubscriptionTier[] {
     return [
@@ -363,70 +372,102 @@ export class PaymentTransferSystem extends EventEmitter {
         price: 0,
         interval: 'monthly',
         features: [
-          'View markets',
           'Paper trading',
-          '5 bots',
-          'Basic analytics',
+          'Basic charts',
+          'Community bots',
+          '5 alerts',
+          '3 bot limit',
         ],
       },
       {
         id: 'starter',
         name: 'Starter',
-        price: 9.99,
+        price: 24.99,
         interval: 'monthly',
         features: [
-          'Everything in Free',
           'Live trading',
-          '20 bots',
-          'Email alerts',
-          'Basic strategies',
+          '1 AI-powered bot',
+          '$10K capital limit',
+          'Basic alerts',
+          'Email support',
+          '50 trades/month',
         ],
       },
       {
         id: 'pro',
         name: 'Pro',
-        price: 29.99,
+        price: 79,
         interval: 'monthly',
         features: [
           'Everything in Starter',
-          '50 bots',
-          'Advanced analytics',
+          '5 AI-powered bots',
+          '$100K capital limit',
+          'Tax-loss harvesting',
+          'Advanced charts',
           'Priority support',
-          'API access',
+          '500 trades/month',
         ],
       },
       {
-        id: 'premium',
-        name: 'Premium',
-        price: 59,
+        id: 'unlimited',
+        name: 'Unlimited',
+        price: 149,
         interval: 'monthly',
         features: [
           'Everything in Pro',
-          'ALL 25 Super Bots',
-          '133 regular bots',
-          'Attack strategies',
-          'Institutional techniques',
-          'Ultimate Money Machine',
-          'Self-learning AI',
-          'Priority execution',
+          'Unlimited AI bots',
+          'Unlimited capital',
+          'Dynasty Trust planning',
+          'Family Legacy AI',
+          'AutoPilot system',
           'Dedicated support',
+          'Unlimited trades',
         ],
       },
       {
         id: 'enterprise',
         name: 'Enterprise',
-        price: 250,
+        price: 499,
         interval: 'monthly',
         features: [
-          'Everything in Premium',
+          'Everything in Unlimited',
           'White-label solution',
-          'Custom integrations',
+          'Full API access',
+          'Custom strategies',
+          'Account manager',
           'SLA guarantee',
-          'Dedicated account manager',
-          'On-premise deployment option',
+          'Custom integrations',
         ],
       },
     ];
+  }
+
+  /**
+   * Ultimate Money Machine - SEPARATE OPTIONAL ADD-ON
+   * Requires admin approval - not available for self-purchase
+   */
+  getUltimateMoneyMachineInfo(): {
+    name: string;
+    price: number;
+    description: string;
+    features: string[];
+    requiresApproval: boolean;
+  } {
+    return {
+      name: 'Ultimate Money Machine',
+      price: 59,
+      description: 'The most advanced trading AI - ADMIN APPROVAL REQUIRED',
+      features: [
+        '25 Super Bots (LEGENDARY, EPIC, RARE)',
+        '133 Regular Bots',
+        'Attack Strategies',
+        'Institutional Techniques',
+        'Self-learning AI',
+        'Priority Execution',
+        'Live Trading Integration',
+      ],
+      requiresApproval: true,
+    };
   }
 
   /**

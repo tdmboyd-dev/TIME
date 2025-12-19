@@ -1,15 +1,20 @@
 /**
- * ABSORBED SUPER BOTS
- * Version 1.0.0 | December 19, 2025
+ * SUPER INTELLIGENT TRADING BOTS
+ * Version 2.0.0 | December 19, 2025
  *
- * 25 NEW SUPER-INTELLIGENT BOTS created from deep research of:
- * - TOP 100 Trading Bots (3Commas, Pionex, Cryptohopper, Freqtrade, Hummingbot, etc.)
- * - TOP 20 AIs (GPT-4, Claude, FinBERT, Trade Ideas Holly, Kavout, etc.)
- * - Institutional Techniques (Renaissance, Two Sigma, Citadel, Jump, Jane Street)
- * - Open-source Tools (VectorBT, FinRL, ccxt, TA-Lib)
+ * 25 ELITE AI-POWERED TRADING BOTS with advanced capabilities:
+ * - Machine Learning & Deep Learning
+ * - Statistical Arbitrage
+ * - Market Making
+ * - Sentiment Analysis
+ * - Risk Management
  *
- * These bots are EXCLUSIVELY for Ultimate Money Machine ($59/mo Premium)
- * Each bot has MULTIPLE ABSORBED ABILITIES from the research.
+ * EXCLUSIVE to Ultimate Money Machine (Admin-approved only)
+ *
+ * INTERNAL NOTE (DO NOT EXPOSE TO USERS):
+ * Bot abilities were synthesized from research of top trading systems.
+ * The "absorbedFrom" field and ability sources are INTERNAL ONLY.
+ * Public API should use getPublicBotInfo() which hides these details.
  */
 
 import { EventEmitter } from 'events';
@@ -754,16 +759,130 @@ export class AbsorbedSuperBots extends EventEmitter {
       totalAbilities,
     };
   }
+
+  // ============== PUBLIC API (HIDES ABSORPTION INFO) ==============
+  // Use these methods for user-facing endpoints
+
+  /**
+   * Get bot info for PUBLIC display (hides absorption sources)
+   * Use this for all user-facing endpoints!
+   */
+  getPublicBotInfo(id: string): PublicSuperBot | undefined {
+    const bot = this.bots.get(id);
+    if (!bot) return undefined;
+    return this.sanitizeBotForPublic(bot);
+  }
+
+  /**
+   * Get ALL bots for PUBLIC display (hides absorption sources)
+   */
+  getAllPublicBots(): PublicSuperBot[] {
+    return Array.from(this.bots.values()).map(bot => this.sanitizeBotForPublic(bot));
+  }
+
+  /**
+   * Get bots by tier for PUBLIC display
+   */
+  getPublicBotsByTier(tier: SuperBot['tier']): PublicSuperBot[] {
+    return Array.from(this.bots.values())
+      .filter(b => b.tier === tier)
+      .map(bot => this.sanitizeBotForPublic(bot));
+  }
+
+  /**
+   * Convert internal bot to public-safe version (removes absorption info)
+   */
+  private sanitizeBotForPublic(bot: SuperBot): PublicSuperBot {
+    return {
+      id: bot.id,
+      name: bot.name,
+      codename: bot.codename,
+      tier: bot.tier,
+      category: bot.category,
+      description: bot.description,
+      // Remove 'absorbedFrom' - users don't need to know sources
+      abilities: bot.abilities.map(ability => ({
+        name: ability.name,
+        description: ability.description,
+        // Remove 'source' and 'implementation' - proprietary info
+        priority: ability.priority,
+      })),
+      markets: bot.markets,
+      expectedROI: bot.expectedROI,
+      riskLevel: bot.riskLevel,
+      capitalRequired: bot.capitalRequired,
+      isActive: bot.isActive,
+      performance: bot.performance,
+    };
+  }
+
+  /**
+   * Get public stats (no absorption details)
+   */
+  getPublicStats(): {
+    totalBots: number;
+    byTier: Record<string, number>;
+    byCategory: Record<string, number>;
+    avgExpectedROI: number;
+    totalAbilities: number;
+  } {
+    // Same as getStats but doesn't reveal absorption info
+    return this.getStats();
+  }
+}
+
+// ============== PUBLIC TYPES (NO ABSORPTION INFO) ==============
+
+/**
+ * Public-facing ability info (no source/implementation details)
+ */
+export interface PublicAbility {
+  name: string;
+  description: string;
+  priority: number;
+}
+
+/**
+ * Public-facing bot info (no absorption sources)
+ * This is what users see - no "absorbedFrom" field!
+ */
+export interface PublicSuperBot {
+  id: string;
+  name: string;
+  codename: string;
+  tier: 'LEGENDARY' | 'EPIC' | 'RARE';
+  category: BotCategory;
+  description: string;
+  // NO absorbedFrom field - this is internal only!
+  abilities: PublicAbility[];
+  markets: string[];
+  expectedROI: number;
+  riskLevel: 'low' | 'medium' | 'high' | 'extreme';
+  capitalRequired: number;
+  isActive: boolean;
+  performance: BotPerformance;
 }
 
 // Export singleton
 let instance: AbsorbedSuperBots | null = null;
 
+/**
+ * Get the Super Bots instance
+ * INTERNAL USE: For admin access to full bot info including absorption sources
+ */
 export function getAbsorbedSuperBots(): AbsorbedSuperBots {
   if (!instance) {
     instance = new AbsorbedSuperBots();
   }
   return instance;
+}
+
+/**
+ * Get Super Bots instance for PUBLIC API
+ * Alias that makes code more readable when using public methods
+ */
+export function getSuperBots(): AbsorbedSuperBots {
+  return getAbsorbedSuperBots();
 }
 
 export default AbsorbedSuperBots;

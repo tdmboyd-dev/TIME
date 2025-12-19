@@ -21,18 +21,26 @@ import { getSuperBotLiveTrading } from '../ultimate/SuperBotLiveTrading';
 
 const router = Router();
 
-// Middleware to check Premium subscription
+// Middleware to check Premium/Admin access
+// Ultimate Money Machine is ADMIN-APPROVED ONLY - not part of regular subscriptions
 const requirePremium = (req: Request, res: Response, next: Function) => {
+  // Admin key bypasses all checks
+  const adminKey = req.headers['x-admin-key'] as string;
+  if (adminKey === 'TIME_ADMIN_2025') {
+    return next();
+  }
+
+  // Check if user is admin-approved for Ultimate Money Machine
   const premiumGate = getPremiumFeatureGate();
   const userId = req.headers['x-user-id'] as string || 'anonymous';
 
   const access = premiumGate.checkAccess(userId, 'ultimate_money_machine');
   if (!access.hasAccess) {
     return res.status(403).json({
-      error: 'Premium subscription required',
-      requiredTier: access.requiredTier,
+      error: 'Admin approval required for Ultimate Money Machine',
+      message: 'This is an optional add-on feature. Contact admin for access.',
+      requiredTier: 'admin_approved',
       currentTier: 'free',
-      upgradeUrl: '/subscribe/premium'
     });
   }
 
@@ -41,51 +49,72 @@ const requirePremium = (req: Request, res: Response, next: Function) => {
 
 // ============== SUPER BOTS ==============
 
-// GET /api/v1/ultimate/super-bots - Get all 25 super bots
+// GET /api/v1/ultimate/super-bots - Get all 25 super bots (PUBLIC - no absorption info)
 router.get('/super-bots', (req: Request, res: Response) => {
   try {
     const superBots = getAbsorbedSuperBots();
-    const bots = superBots.getAllBots();
-    const stats = superBots.getStats();
+    const isAdmin = req.headers['x-admin-key'] === 'TIME_ADMIN_2025';
 
-    res.json({
-      success: true,
-      bots: bots.map(bot => ({
-        id: bot.id,
-        name: bot.name,
-        codename: bot.codename,
-        tier: bot.tier,
-        category: bot.category,
-        description: bot.description,
-        absorbedFrom: bot.absorbedFrom,
-        abilities: bot.abilities,
-        markets: bot.markets,
-        expectedROI: bot.expectedROI,
-        riskLevel: bot.riskLevel,
-        capitalRequired: bot.capitalRequired,
-        isActive: bot.isActive,
-        performance: bot.performance,
-      })),
-      stats,
-    });
+    // For admin: return full bot info including absorbedFrom
+    // For users: return sanitized public info
+    if (isAdmin) {
+      const bots = superBots.getAllBots();
+      const stats = superBots.getStats();
+      res.json({
+        success: true,
+        admin: true,
+        bots: bots.map(bot => ({
+          id: bot.id,
+          name: bot.name,
+          codename: bot.codename,
+          tier: bot.tier,
+          category: bot.category,
+          description: bot.description,
+          absorbedFrom: bot.absorbedFrom, // ADMIN ONLY - shows sources
+          abilities: bot.abilities, // Full abilities with sources
+          markets: bot.markets,
+          expectedROI: bot.expectedROI,
+          riskLevel: bot.riskLevel,
+          capitalRequired: bot.capitalRequired,
+          isActive: bot.isActive,
+          performance: bot.performance,
+        })),
+        stats,
+      });
+    } else {
+      // PUBLIC view - no absorption info
+      const bots = superBots.getAllPublicBots();
+      const stats = superBots.getPublicStats();
+      res.json({
+        success: true,
+        bots,
+        stats,
+      });
+    }
   } catch (error) {
     console.error('[Ultimate] Error getting super bots:', error);
     res.status(500).json({ error: 'Failed to get super bots' });
   }
 });
 
-// GET /api/v1/ultimate/super-bots/:tier - Get bots by tier
+// GET /api/v1/ultimate/super-bots/:tier - Get bots by tier (PUBLIC - no absorption info)
 router.get('/super-bots/tier/:tier', (req: Request, res: Response) => {
   try {
     const superBots = getAbsorbedSuperBots();
+    const isAdmin = req.headers['x-admin-key'] === 'TIME_ADMIN_2025';
     const tier = req.params.tier.toUpperCase() as 'LEGENDARY' | 'EPIC' | 'RARE';
-    const bots = superBots.getBotsByTier(tier);
+
+    // Admin sees full info, users see public info
+    const bots = isAdmin
+      ? superBots.getBotsByTier(tier)
+      : superBots.getPublicBotsByTier(tier);
 
     res.json({
       success: true,
       tier,
       count: bots.length,
       bots,
+      admin: isAdmin || undefined,
     });
   } catch (error) {
     console.error('[Ultimate] Error getting bots by tier:', error);
