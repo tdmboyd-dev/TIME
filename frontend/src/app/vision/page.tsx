@@ -38,75 +38,21 @@ const perspectives: Record<Perspective, { icon: typeof Brain; label: string; col
   merged: { icon: Brain, label: 'TIME Merged', color: 'text-time-primary' },
 };
 
-const mockViews: Record<Perspective, MarketView> = {
-  human: {
-    perspective: 'human',
-    sentiment: 'bullish',
-    confidence: 72,
-    signals: [
-      'Higher lows forming on daily chart',
-      'Volume increasing on up days',
-      'Market structure remains intact',
-      'Fear & Greed Index recovering',
-    ],
-    keyLevels: [
-      { type: 'Resistance', price: 45000, importance: 'high' },
-      { type: 'Support', price: 42500, importance: 'high' },
-      { type: 'Previous High', price: 44200, importance: 'medium' },
-    ],
-    reasoning: 'The market appears to be forming a bullish continuation pattern. Price action suggests accumulation at current levels with buyers stepping in at support. The overall trend remains up, and the recent pullback looks healthy rather than concerning.',
-  },
-  quant: {
-    perspective: 'quant',
-    sentiment: 'bullish',
-    confidence: 68,
-    signals: [
-      'RSI(14) = 58.3 (neutral-bullish)',
-      'MACD bullish crossover forming',
-      '20 EMA > 50 EMA (bullish)',
-      'Bollinger Band squeeze detected',
-    ],
-    keyLevels: [
-      { type: '0.618 Fib', price: 44850, importance: 'high' },
-      { type: '0.382 Fib', price: 43200, importance: 'medium' },
-      { type: 'VWAP', price: 43567, importance: 'high' },
-    ],
-    reasoning: 'Statistical analysis indicates a 68% probability of upward movement. Key momentum indicators are turning bullish, with MACD about to cross. Volatility compression (Bollinger squeeze) suggests an imminent large move. Risk/reward favors long positions above VWAP.',
-  },
-  bot: {
-    perspective: 'bot',
-    sentiment: 'bullish',
-    confidence: 74,
-    signals: [
-      'Trend Follower: LONG signal active',
-      'Mean Reversion: Neutral (no extremes)',
-      'Momentum Bot: Accumulating',
-      'Breakout Bot: Watching 44000',
-    ],
-    keyLevels: [
-      { type: 'Bot Cluster Buy', price: 42800, importance: 'high' },
-      { type: 'Bot Cluster Sell', price: 45200, importance: 'high' },
-      { type: 'Stop Hunt Zone', price: 42000, importance: 'medium' },
-    ],
-    reasoning: '3 out of 4 active bots have bullish bias. Ensemble consensus is LONG. The bots identify strong buy pressure around 42800 level where multiple algorithms converge. Risk: potential stop hunt below 42000 before continuation.',
-  },
-  merged: {
-    perspective: 'merged',
-    sentiment: 'bullish',
-    confidence: 78,
-    signals: [
-      'Cross-validated bullish bias (3/3 perspectives)',
-      'High-probability setup forming',
-      'Risk levels clearly defined',
-      'Multiple confluences at key levels',
-    ],
-    keyLevels: [
-      { type: 'TIME Entry Zone', price: 43000, importance: 'high' },
-      { type: 'TIME Target 1', price: 44500, importance: 'high' },
-      { type: 'TIME Stop', price: 41800, importance: 'high' },
-    ],
-    reasoning: 'TIME has synthesized all perspectives and identified a high-conviction setup. Human intuition, quantitative analysis, and bot signals all align bullish. The merged view provides optimal entry (43000), targets (44500, 46000), and stop (41800). Risk/Reward: 2.5:1. Recommended position size: 1.5% of portfolio.',
-  },
+// Empty views for when no data is available
+const emptyView: MarketView = {
+  perspective: 'merged',
+  sentiment: 'neutral',
+  confidence: 0,
+  signals: ['No signals available - connect to backend for analysis'],
+  keyLevels: [],
+  reasoning: 'Unable to fetch market analysis. Please ensure the backend is connected.',
+};
+
+const emptyViews: Record<Perspective, MarketView> = {
+  human: { ...emptyView, perspective: 'human' },
+  quant: { ...emptyView, perspective: 'quant' },
+  bot: { ...emptyView, perspective: 'bot' },
+  merged: { ...emptyView, perspective: 'merged' },
 };
 
 export default function VisionPage() {
@@ -117,8 +63,9 @@ export default function VisionPage() {
   const [isConnected, setIsConnected] = useState(false);
   const [marketData, setMarketData] = useState<any>(null);
   const [marketStatus, setMarketStatus] = useState<any>(null);
+  const [views, setViews] = useState<Record<Perspective, MarketView>>(emptyViews);
 
-  const currentView = mockViews[selectedPerspective];
+  const currentView = views[selectedPerspective];
 
   // Fetch market status
   const fetchMarketStatus = useCallback(async () => {
@@ -137,7 +84,7 @@ export default function VisionPage() {
     return false;
   }, []);
 
-  // Fetch market data based on selected symbol
+  // Fetch market data and vision analysis based on selected symbol
   const fetchMarketData = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -151,19 +98,40 @@ export default function VisionPage() {
         endpoint = `${API_BASE}/real-market/stock/${symbol}`;
       }
 
-      const response = await fetch(endpoint);
-      if (response.ok) {
-        const data = await response.json();
+      // Fetch market data and vision analysis in parallel
+      const [marketResponse, visionResponse] = await Promise.all([
+        fetch(endpoint).catch(() => null),
+        fetch(`${API_BASE}/vision/analysis?symbol=${symbol}`).catch(() => null),
+      ]);
+
+      if (marketResponse?.ok) {
+        const data = await marketResponse.json();
         setMarketData(data);
         setIsConnected(true);
       } else {
-        // No data - use mock data
-        setIsConnected(false);
+        setMarketData(null);
+      }
+
+      // Process vision data if available
+      if (visionResponse?.ok) {
+        const visionData = await visionResponse.json();
+        if (visionData.success && visionData.views) {
+          setViews(visionData.views);
+          setIsConnected(true);
+        } else if (visionData.perspectives) {
+          // Alternative response format
+          setViews(visionData.perspectives);
+          setIsConnected(true);
+        }
+      } else {
+        // No vision data available - use empty views
+        setViews(emptyViews);
       }
     } catch (error) {
-      // Error handled - uses mock data
+      // Error handled - shows empty state
       setIsConnected(false);
       setMarketData(null);
+      setViews(emptyViews);
     } finally {
       setIsLoading(false);
     }
@@ -273,7 +241,7 @@ export default function VisionPage() {
           const config = perspectives[perspective];
           const Icon = config.icon;
           const isSelected = selectedPerspective === perspective;
-          const view = mockViews[perspective];
+          const view = views[perspective];
 
           return (
             <button
@@ -472,8 +440,8 @@ export default function VisionPage() {
               </tr>
             </thead>
             <tbody>
-              {(Object.keys(mockViews) as Perspective[]).map((perspective) => {
-                const view = mockViews[perspective];
+              {(Object.keys(views) as Perspective[]).map((perspective) => {
+                const view = views[perspective];
                 const config = perspectives[perspective];
                 const Icon = config.icon;
 

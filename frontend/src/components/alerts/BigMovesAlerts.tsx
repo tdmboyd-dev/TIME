@@ -92,64 +92,7 @@ const riskColors = {
   YOLO: 'bg-red-500/20 text-red-400 border-red-500'
 };
 
-// Mock data as fallback
-const MOCK_ALERTS: BigMovesAlert[] = [
-  {
-    id: 'mock-1',
-    timestamp: new Date(Date.now() - 5 * 60000).toISOString(),
-    priority: 'HIGH',
-    category: 'WHALE_MOVEMENT',
-    title: '50M USDT Transfer Detected',
-    plainEnglish: 'A whale just moved 50 million USDT from Binance to an unknown wallet. This could signal a major buy-in coming.',
-    whatItMeans: 'Large whale movements often precede price action. Monitor BTC and ETH for potential volatility.',
-    source: 'Whale Alert',
-    suggestedActions: [
-      {
-        id: 'action-1',
-        label: 'Conservative Play',
-        riskLevel: 'CONSERVATIVE',
-        action: 'Set alerts',
-        description: 'Set price alerts for BTC at key levels and wait for confirmation before entering.'
-      },
-      {
-        id: 'action-2',
-        label: 'Moderate Play',
-        riskLevel: 'MODERATE',
-        action: 'Buy',
-        symbol: 'BTC',
-        description: 'Enter 25% position in BTC with tight stop loss at recent support.'
-      }
-    ],
-    riskLevel: 'HIGH',
-    affectedAssets: ['BTC', 'ETH', 'USDT'],
-    confidence: 85,
-    acknowledged: false
-  },
-  {
-    id: 'mock-2',
-    timestamp: new Date(Date.now() - 15 * 60000).toISOString(),
-    priority: 'MEDIUM',
-    category: 'INSTITUTIONAL',
-    title: 'Major Fund Increases Crypto Holdings',
-    plainEnglish: 'Grayscale reported a $100M increase in Bitcoin holdings this week.',
-    whatItMeans: 'Institutional accumulation is bullish long-term signal. Consider gradual position building.',
-    source: 'SEC Filings',
-    suggestedActions: [
-      {
-        id: 'action-3',
-        label: 'DCA Strategy',
-        riskLevel: 'CONSERVATIVE',
-        action: 'Dollar-cost average',
-        symbol: 'BTC',
-        description: 'Set up automated weekly buys to accumulate during institutional buying phase.'
-      }
-    ],
-    riskLevel: 'MEDIUM',
-    affectedAssets: ['BTC'],
-    confidence: 92,
-    acknowledged: false
-  }
-];
+// No mock data - show empty state when API unavailable
 
 export function BigMovesAlerts() {
   const [alerts, setAlerts] = useState<BigMovesAlert[]>([]);
@@ -194,12 +137,8 @@ export function BigMovesAlerts() {
         throw new Error('Invalid response format');
       }
     } catch (error) {
-      console.error('Error fetching alerts, using mock data:', error);
-      // Fallback to mock data
-      const filteredMockData = filter === 'ALL'
-        ? MOCK_ALERTS
-        : MOCK_ALERTS.filter(alert => alert.priority === filter);
-      setAlerts(filteredMockData);
+      // Show empty state - no mock data
+      setAlerts([]);
       setIsConnected(false);
     } finally {
       setIsLoading(false);

@@ -34,32 +34,7 @@ interface Broker {
   dtcNumber: string;
 }
 
-// Mock data as fallback
-const MOCK_BROKERS: Broker[] = [
-  { id: 'broker-1', name: 'Robinhood', dtcNumber: '8050' },
-  { id: 'broker-2', name: 'Fidelity', dtcNumber: '0226' },
-  { id: 'broker-3', name: 'Charles Schwab', dtcNumber: '0164' },
-  { id: 'broker-4', name: 'TD Ameritrade', dtcNumber: '0188' },
-  { id: 'broker-5', name: 'E*TRADE', dtcNumber: '0385' },
-];
-
-const MOCK_TRANSFERS: Transfer[] = [
-  {
-    id: 'transfer-1',
-    status: 'in_progress',
-    deliveringBroker: { brokerName: 'Robinhood' },
-    totalEstimatedValue: 25000,
-    createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-    expectedCompletionDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    id: 'transfer-2',
-    status: 'completed',
-    deliveringBroker: { brokerName: 'Fidelity' },
-    totalEstimatedValue: 50000,
-    createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-  },
-];
+// No mock data - show empty state when API unavailable
 
 export default function TransfersPage() {
   const [transfers, setTransfers] = useState<Transfer[]>([]);
@@ -87,8 +62,8 @@ export default function TransfersPage() {
         setIsConnected(true);
       }
     } catch (error) {
-      // Error handled - uses mock data
-      setBrokers(MOCK_BROKERS);
+      // Show empty state - no mock data
+      setBrokers([]);
       setIsConnected(false);
     }
   }, []);
@@ -104,8 +79,8 @@ export default function TransfersPage() {
         setIsConnected(true);
       }
     } catch (error) {
-      // Error handled - uses mock data
-      setTransfers(MOCK_TRANSFERS);
+      // Show empty state - no mock data
+      setTransfers([]);
       setIsConnected(false);
     } finally {
       setIsLoading(false);

@@ -105,99 +105,13 @@ export default function SocialTradingPage() {
         return;
       }
 
-      // Fallback to mock data if API fails
-      throw new Error('API not available, using mock data');
+      // No mock data - show empty state when API unavailable
+      throw new Error('API not available');
     } catch (error) {
-      console.log('Using mock data - API endpoints not yet available');
+      // Show empty state - no mock data
       setIsConnected(false);
-
-      // Sample data (fallback)
-      const sampleTraders: Trader[] = [
-        {
-          id: '1',
-          username: 'AlphaTrader',
-          avatar: 'AT',
-          rank: 1,
-          followers: 12500,
-          following: 45,
-          totalReturn: 156.8,
-          winRate: 72.3,
-          totalTrades: 2847,
-          riskScore: 6,
-          verified: true,
-          isPro: true,
-          copiers: 834,
-          strategy: 'Momentum + Mean Reversion',
-          monthlyReturn: 12.4,
-          isFollowing: false,
-          isCopying: false,
-        },
-        {
-          id: '2',
-          username: 'CryptoKing',
-          avatar: 'CK',
-          rank: 2,
-          followers: 8900,
-          following: 120,
-          totalReturn: 234.5,
-          winRate: 68.1,
-          totalTrades: 5621,
-          riskScore: 8,
-          verified: true,
-          isPro: true,
-          copiers: 567,
-          strategy: 'Crypto Swing Trading',
-          monthlyReturn: 18.2,
-          isFollowing: true,
-          isCopying: false,
-        },
-        {
-          id: '3',
-          username: 'SteadyGains',
-          avatar: 'SG',
-          rank: 3,
-          followers: 5400,
-          following: 89,
-          totalReturn: 78.9,
-          winRate: 81.2,
-          totalTrades: 1234,
-          riskScore: 3,
-          verified: true,
-          isPro: false,
-          copiers: 423,
-          strategy: 'Conservative Value',
-          monthlyReturn: 5.8,
-          isFollowing: false,
-          isCopying: true,
-        },
-        {
-          id: '4',
-          username: 'TechTrader',
-          avatar: 'TT',
-          rank: 4,
-          followers: 3200,
-          following: 67,
-          totalReturn: 112.3,
-          winRate: 65.4,
-          totalTrades: 3456,
-          riskScore: 7,
-          verified: false,
-          isPro: false,
-          copiers: 234,
-          strategy: 'Tech Sector Focus',
-          monthlyReturn: 9.1,
-          isFollowing: false,
-          isCopying: false,
-        },
-      ];
-
-      setTraders(sampleTraders);
-      setLeaderboard(sampleTraders.map((t, idx) => ({
-        rank: idx + 1,
-        trader: t,
-        monthlyPnL: t.monthlyReturn * 1000,
-        weeklyPnL: t.monthlyReturn * 250,
-      })));
+      setTraders([]);
+      setLeaderboard([]);
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);

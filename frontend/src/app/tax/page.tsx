@@ -65,19 +65,6 @@ export default function TaxPage() {
   const [isConnected, setIsConnected] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Mock data for fallback
-  const mockYearlySummary: YearlySummary = {
-    year: 2025,
-    totalHarvested: 12500,
-    totalTaxSavings: 3125,
-    harvestCount: 8,
-  };
-
-  const mockWashSaleCalendar: WashSaleEntry[] = [
-    { symbol: 'AAPL', canTradeAfter: '2025-12-30', dayesRemaining: 14 },
-    { symbol: 'TSLA', canTradeAfter: '2025-12-25', dayesRemaining: 9 },
-  ];
-
   const fetchData = useCallback(async () => {
     try {
       // Fetch yearly summary
@@ -108,9 +95,9 @@ export default function TaxPage() {
         throw new Error('Invalid response format');
       }
     } catch (error) {
-      // Error handled - uses fallback mock data
-      setYearlySummary(mockYearlySummary);
-      setWashSaleCalendar(mockWashSaleCalendar);
+      // No mock data - show empty state when API unavailable
+      setYearlySummary({ year: new Date().getFullYear(), totalHarvested: 0, totalTaxSavings: 0, harvestCount: 0 });
+      setWashSaleCalendar([]);
       setIsConnected(false);
     } finally {
       setIsLoading(false);
@@ -130,28 +117,51 @@ export default function TaxPage() {
   const scanForOpportunities = async () => {
     setIsScanning(true);
     try {
-      // Mock portfolio data - in production this would come from user's actual portfolio
-      const mockPositions = [
-        { symbol: 'SPY', shares: 50, costBasis: 22500, currentPrice: 420, purchaseDate: new Date('2024-01-15'), accountId: 'acc1', lotId: 'lot1' },
-        { symbol: 'QQQ', shares: 30, costBasis: 12000, currentPrice: 360, purchaseDate: new Date('2024-03-01'), accountId: 'acc1', lotId: 'lot2' },
-        { symbol: 'VTI', shares: 100, costBasis: 25000, currentPrice: 230, purchaseDate: new Date('2023-06-15'), accountId: 'acc1', lotId: 'lot3' },
-      ];
+      // Fetch real portfolio positions from backend
+      const portfolioRes = await fetch(`${API_BASE}/portfolio/positions`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const portfolioData = await portfolioRes.json();
 
-      const mockTaxLots = mockPositions.map(p => ({
-        lotId: p.lotId,
-        symbol: p.symbol,
-        shares: p.shares,
-        purchasePrice: p.costBasis / p.shares,
-        purchaseDate: p.purchaseDate,
-        accountId: p.accountId,
-      }));
+      let positions: any[] = [];
+      let taxLots: any[] = [];
+
+      if (portfolioData.success && portfolioData.positions) {
+        // Map real positions to tax harvest format
+        positions = portfolioData.positions.map((p: any, idx: number) => ({
+          symbol: p.symbol,
+          shares: p.qty || p.quantity || p.shares || 0,
+          costBasis: (p.avg_entry_price || p.averagePrice || p.costBasis || 0) * (p.qty || p.quantity || p.shares || 0),
+          currentPrice: p.current_price || p.currentPrice || p.lastPrice || 0,
+          purchaseDate: p.created_at ? new Date(p.created_at) : new Date(),
+          accountId: p.account_id || 'default',
+          lotId: `lot-${idx}`,
+        }));
+
+        taxLots = positions.map(p => ({
+          lotId: p.lotId,
+          symbol: p.symbol,
+          shares: p.shares,
+          purchasePrice: p.costBasis / (p.shares || 1),
+          purchaseDate: p.purchaseDate,
+          accountId: p.accountId,
+        }));
+      }
+
+      // If no positions, show empty state
+      if (positions.length === 0) {
+        setOpportunities([]);
+        setIsConnected(true);
+        return;
+      }
 
       const res = await fetch(`${API_BASE}/tax/harvest/opportunities`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          positions: mockPositions,
-          taxLots: mockTaxLots,
+          positions,
+          taxLots,
           options: { minLoss: 100 },
         }),
       });
@@ -165,6 +175,7 @@ export default function TaxPage() {
       }
     } catch (error) {
       // Error handled - shows empty opportunities
+      setOpportunities([]);
       setIsConnected(false);
     } finally {
       setIsScanning(false);

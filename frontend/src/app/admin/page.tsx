@@ -39,14 +39,6 @@ interface SystemEvent {
   component: string;
 }
 
-const mockEvents: SystemEvent[] = [
-  { id: '1', type: 'success', message: 'New strategy synthesized: TIME Synthesis #48', timestamp: new Date(Date.now() - 300000), component: 'Recursive Synthesis' },
-  { id: '2', type: 'info', message: 'Market regime changed to trending_up', timestamp: new Date(Date.now() - 600000), component: 'Regime Detector' },
-  { id: '3', type: 'warning', message: 'Approaching daily loss limit (4.2%)', timestamp: new Date(Date.now() - 900000), component: 'Risk Engine' },
-  { id: '4', type: 'success', message: 'Bot absorbed: Momentum Hunter V3', timestamp: new Date(Date.now() - 1800000), component: 'Bot Ingestion' },
-  { id: '5', type: 'info', message: 'Learning cycle completed - 47 patterns identified', timestamp: new Date(Date.now() - 3600000), component: 'Learning Engine' },
-];
-
 export default function AdminPage() {
   const [evolutionMode, setEvolutionMode] = useState<EvolutionMode>('controlled');
   const [isToggling, setIsToggling] = useState(false);
@@ -58,7 +50,7 @@ export default function AdminPage() {
   const [showEmergencyDialog, setShowEmergencyDialog] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [systemEvents, setSystemEvents] = useState<SystemEvent[]>(mockEvents);
+  const [systemEvents, setSystemEvents] = useState<SystemEvent[]>([]);
   const [metrics, setMetrics] = useState<any>(null);
 
   // Fetch admin data from backend
@@ -404,7 +396,7 @@ export default function AdminPage() {
             </button>
           </div>
           <div className="space-y-3">
-            {mockEvents.map((event) => (
+            {systemEvents.map((event) => (
               <div
                 key={event.id}
                 className="flex items-start gap-3 p-3 bg-slate-800/50 rounded-lg"

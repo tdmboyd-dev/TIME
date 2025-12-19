@@ -101,89 +101,10 @@ export default function PaymentsPage() {
         }
       }
 
-      // If no real data available, fall back to mock data
+      // No mock data - show empty state when no data available
       if (!hasData) {
-        setPaymentMethods([
-        {
-          id: '1',
-          type: 'card',
-          name: 'Personal Visa',
-          last4: '4242',
-          expiryMonth: 12,
-          expiryYear: 2027,
-          brand: 'Visa',
-          isDefault: true,
-          isVerified: true,
-        },
-        {
-          id: '2',
-          type: 'bank',
-          name: 'Chase Checking',
-          last4: '6789',
-          bankName: 'Chase Bank',
-          routingNumber: '***4567',
-          isDefault: false,
-          isVerified: true,
-        },
-        {
-          id: '3',
-          type: 'crypto',
-          name: 'Bitcoin Wallet',
-          last4: '7abc',
-          cryptoAddress: '1BvB...7abc',
-          cryptoNetwork: 'Bitcoin',
-          isDefault: false,
-          isVerified: true,
-        },
-      ]);
-
-      setTransactions([
-        {
-          id: '1',
-          type: 'deposit',
-          amount: 5000,
-          status: 'completed',
-          date: '2024-12-12',
-          description: 'Bank Transfer Deposit',
-          method: 'Chase Checking ****6789',
-        },
-        {
-          id: '2',
-          type: 'trade',
-          amount: -1250.50,
-          status: 'completed',
-          date: '2024-12-11',
-          description: 'Buy 10 AAPL @ $125.05',
-          method: 'Trading Account',
-        },
-        {
-          id: '3',
-          type: 'withdrawal',
-          amount: -2000,
-          status: 'pending',
-          date: '2024-12-10',
-          description: 'Withdrawal to Bank',
-          method: 'Chase Checking ****6789',
-        },
-        {
-          id: '4',
-          type: 'fee',
-          amount: -9.99,
-          status: 'completed',
-          date: '2024-12-01',
-          description: 'Monthly Platform Fee',
-          method: 'Visa ****4242',
-        },
-        {
-          id: '5',
-          type: 'deposit',
-          amount: 10000,
-          status: 'completed',
-          date: '2024-11-28',
-          description: 'Wire Transfer Deposit',
-          method: 'Chase Checking ****6789',
-        },
-        ]);
+        setPaymentMethods([]);
+        setTransactions([]);
       }
     } catch (error) {
       // Error handled - shows disconnected state

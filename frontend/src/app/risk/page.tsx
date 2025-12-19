@@ -129,46 +129,14 @@ export default function RiskProfilePage() {
           assessmentDate: riskData.assessmentDate || riskData.date || new Date().toISOString().split('T')[0],
         });
       } else {
-        // Use mock data as fallback
+        // No data available - show empty state
         setIsConnected(false);
-        setProfile({
-          overallScore: 72,
-          riskTolerance: 'medium',
-          investmentHorizon: '5-10 years',
-          maxDrawdown: 15.5,
-          portfolioVolatility: 18.2,
-          sharpeRatio: 1.45,
-          betaToMarket: 1.12,
-          valueAtRisk: 8500,
-          recommendations: [
-            'Consider reducing exposure to high-volatility tech stocks',
-            'Add more international diversification',
-            'Increase bond allocation by 5% for stability',
-            'Review stop-loss levels on active positions',
-          ],
-          assessmentDate: '2024-12-01',
-        });
+        setProfile(null);
       }
     } catch (error) {
-      // Error handled - uses fallback data
+      // Error handled - show empty state, no mock data
       setIsConnected(false);
-      // Fallback to mock data
-      setProfile({
-        overallScore: 72,
-        riskTolerance: 'medium',
-        investmentHorizon: '5-10 years',
-        maxDrawdown: 15.5,
-        portfolioVolatility: 18.2,
-        sharpeRatio: 1.45,
-        betaToMarket: 1.12,
-        valueAtRisk: 8500,
-        recommendations: [
-          'Consider reducing exposure to high-volatility tech stocks',
-          'Add more international diversification',
-          'Increase bond allocation by 5% for stability',
-        ],
-        assessmentDate: '2024-12-01',
-      });
+      setProfile(null);
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
@@ -290,7 +258,20 @@ export default function RiskProfilePage() {
         </div>
       </div>
 
-      {profile && (
+      {!profile ? (
+        <div className="card p-8 text-center">
+          <Shield className="w-12 h-12 text-slate-600 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-white mb-2">No Risk Profile</h3>
+          <p className="text-slate-400 mb-4">Take the assessment to understand your risk tolerance</p>
+          <button
+            onClick={() => setShowAssessment(true)}
+            className="btn-primary"
+          >
+            <Target className="w-4 h-4 mr-2" />
+            Take Assessment
+          </button>
+        </div>
+      ) : (
         <>
           {/* Risk Score Card */}
           <div className="card p-6">
