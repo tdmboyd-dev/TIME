@@ -64,6 +64,15 @@ import giftAccessRoutes from './gift_access';
 // AI Chat Assistant - HR-like support with security
 import chatRoutes from './chat';
 
+// PLAIN ENGLISH - Human-readable translations for all data
+import plainEnglishRoutes from './plain_english';
+
+// EDUCATION - Admin Academy, Bot University, Learning Path
+import educationRoutes from './education';
+
+// SMART BOTS - Advanced AI capabilities for bots
+import smartBotRoutes from './smart_bots';
+
 // ULTIMATE MONEY MACHINE - Premium $59/mo Feature!
 import ultimateRoutes from './ultimate';
 
@@ -146,6 +155,15 @@ router.use('/subscription', subscriptionPaymentsRoutes);
 
 // AI CHAT ASSISTANT - HR-like support, secure, rate-limited
 router.use('/chat', chatRoutes);
+
+// PLAIN ENGLISH - Human-readable translations for TIMEBEUNUS & Money Machine
+router.use('/plain-english', plainEnglishRoutes);
+
+// EDUCATION - Admin Academy, Bot University, Learning Path
+router.use('/education', educationRoutes);
+
+// SMART BOTS - Self-optimize, swarm coordinate, natural language
+router.use('/smart-bots', smartBotRoutes);
 
 export default router;
 
