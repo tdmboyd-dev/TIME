@@ -6,7 +6,8 @@ import {
   BarChart3, Eye, Rocket, Flame, Trophy, Users, Play, Pause, Settings,
   RefreshCw, ChevronRight, AlertTriangle, CheckCircle, Clock, DollarSign,
   Percent, ArrowUpRight, ArrowDownRight, Loader2, X, Info, Wifi, WifiOff,
-  Swords, Star
+  Swords, Star, Wallet, PiggyBank, Coins, ToggleLeft, ToggleRight, Lightbulb,
+  TrendingUp as Invest, Banknote, Power, XCircle
 } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -71,6 +72,59 @@ interface FusedStrategy {
   vsRenaissance: number;
 }
 
+// Owner Trading Panel Types
+interface OwnerPosition {
+  symbol: string;
+  quantity: number;
+  avgPrice: number;
+  currentPrice: number;
+  pnl: number;
+  pnlPercent: number;
+  value: number;
+}
+
+interface OwnerTrade {
+  id: string;
+  symbol: string;
+  action: 'buy' | 'sell';
+  quantity: number;
+  price: number;
+  status: string;
+  filledPrice?: number;
+  pnl?: number;
+  createdAt: string;
+}
+
+interface AutomationToggles {
+  autoTrade: boolean;
+  autoInvest: boolean;
+  autoYield: boolean;
+  autoRebalance: boolean;
+  autoHedge: boolean;
+  autoScale: boolean;
+  autoTax: boolean;
+  autoCompound: boolean;
+}
+
+interface YieldOpportunity {
+  id: string;
+  protocol: string;
+  asset: string;
+  apy: number;
+  tvl: number;
+  risk: 'low' | 'medium' | 'high';
+  minDeposit: number;
+}
+
+interface BotSuggestion {
+  botId: string;
+  name: string;
+  reason: string;
+  expectedImprovement: string;
+  basedOn: string;
+  confidence: number;
+}
+
 const dominanceModes = [
   { id: 'stealth' as DominanceMode, name: 'Stealth', description: 'Quiet accumulation', color: 'from-slate-500 to-slate-600', aggressiveness: 30 },
   { id: 'defensive' as DominanceMode, name: 'Defensive', description: 'Capital preservation', color: 'from-blue-500 to-blue-600', aggressiveness: 40 },
@@ -107,6 +161,23 @@ export default function TIMEBEUNUSPage() {
   const [showTradeModal, setShowTradeModal] = useState(false);
   const [selectedSignal, setSelectedSignal] = useState<AlphaSignal | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Owner Trading Panel State
+  const [ownerPositions, setOwnerPositions] = useState<OwnerPosition[]>([]);
+  const [ownerTrades, setOwnerTrades] = useState<OwnerTrade[]>([]);
+  const [automationToggles, setAutomationToggles] = useState<AutomationToggles>({
+    autoTrade: true, autoInvest: true, autoYield: true, autoRebalance: true,
+    autoHedge: true, autoScale: false, autoTax: true, autoCompound: true,
+  });
+  const [yieldOpportunities, setYieldOpportunities] = useState<YieldOpportunity[]>([]);
+  const [botSuggestions, setBotSuggestions] = useState<BotSuggestion[]>([]);
+  const [showManualTradeModal, setShowManualTradeModal] = useState(false);
+  const [manualTradeSymbol, setManualTradeSymbol] = useState('AAPL');
+  const [manualTradeAction, setManualTradeAction] = useState<'buy' | 'sell'>('buy');
+  const [manualTradeQuantity, setManualTradeQuantity] = useState('10');
+  const [isExecutingTrade, setIsExecutingTrade] = useState(false);
+  const [ownerPanelTab, setOwnerPanelTab] = useState<'trade' | 'positions' | 'automation' | 'yield' | 'suggestions'>('trade');
+  const [platformFees, setPlatformFees] = useState({ totalFeesCollected: 0, moneyMachineFee: 0.1, dropbotFee: 0.1 });
 
   // Fetch real trading signals from strategy engine
   const fetchSignals = async () => {
@@ -231,6 +302,153 @@ export default function TIMEBEUNUSPage() {
     }
   };
 
+  // ============================================================
+  // OWNER TRADING PANEL - Fetch Functions
+  // ============================================================
+
+  const getAdminHeaders = () => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    return {
+      'Content-Type': 'application/json',
+      'x-admin-key': 'TIME_ADMIN_2025',
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+    };
+  };
+
+  // Fetch owner dashboard (positions, trades, automation, yields, suggestions)
+  const fetchOwnerDashboard = async () => {
+    try {
+      const response = await fetch(`${API_BASE}/timebeunus/dashboard`, {
+        headers: getAdminHeaders(),
+      });
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.dashboard) {
+          const d = data.dashboard;
+          setOwnerPositions(d.portfolio?.positions || []);
+          setOwnerTrades(d.recentTrades || []);
+          setAutomationToggles(d.automation || automationToggles);
+          setYieldOpportunities(d.yieldOpportunities || []);
+          setBotSuggestions(d.botSuggestions || []);
+          if (d.platformFees) {
+            setPlatformFees(d.platformFees);
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Failed to fetch owner dashboard:', err);
+    }
+  };
+
+  // Execute manual trade
+  const executeManualTrade = async () => {
+    setIsExecutingTrade(true);
+    try {
+      const response = await fetch(`${API_BASE}/timebeunus/trade`, {
+        method: 'POST',
+        headers: getAdminHeaders(),
+        body: JSON.stringify({
+          symbol: manualTradeSymbol,
+          action: manualTradeAction,
+          quantity: parseInt(manualTradeQuantity),
+          orderType: 'market',
+        }),
+      });
+      const data = await response.json();
+      if (data.success) {
+        setNotification({ type: 'success', message: `Trade executed: ${manualTradeAction.toUpperCase()} ${manualTradeQuantity} ${manualTradeSymbol}` });
+        setShowManualTradeModal(false);
+        fetchOwnerDashboard();
+      } else {
+        setNotification({ type: 'error', message: data.error || 'Trade failed' });
+      }
+    } catch (err) {
+      setNotification({ type: 'error', message: 'Failed to execute trade' });
+    }
+    setIsExecutingTrade(false);
+    setTimeout(() => setNotification(null), 4000);
+  };
+
+  // Close all positions
+  const closeAllPositions = async () => {
+    try {
+      const response = await fetch(`${API_BASE}/timebeunus/trade/close-all`, {
+        method: 'POST',
+        headers: getAdminHeaders(),
+      });
+      const data = await response.json();
+      if (data.success) {
+        setNotification({ type: 'success', message: 'All positions closed!' });
+        fetchOwnerDashboard();
+      } else {
+        setNotification({ type: 'error', message: data.error || 'Failed to close positions' });
+      }
+    } catch (err) {
+      setNotification({ type: 'error', message: 'Failed to close positions' });
+    }
+    setTimeout(() => setNotification(null), 4000);
+  };
+
+  // Toggle automation setting
+  const toggleAutomation = async (key: keyof AutomationToggles) => {
+    const newValue = !automationToggles[key];
+    setAutomationToggles(prev => ({ ...prev, [key]: newValue }));
+
+    try {
+      await fetch(`${API_BASE}/timebeunus/automation/${key}`, {
+        method: 'PUT',
+        headers: getAdminHeaders(),
+        body: JSON.stringify({ value: newValue }),
+      });
+      setNotification({ type: 'success', message: `${key} ${newValue ? 'enabled' : 'disabled'}` });
+    } catch (err) {
+      // Revert on error
+      setAutomationToggles(prev => ({ ...prev, [key]: !newValue }));
+      setNotification({ type: 'error', message: 'Failed to update setting' });
+    }
+    setTimeout(() => setNotification(null), 2000);
+  };
+
+  // Deposit to yield
+  const depositToYield = async (opportunityId: string, amount: number) => {
+    try {
+      const response = await fetch(`${API_BASE}/timebeunus/yield/deposit`, {
+        method: 'POST',
+        headers: getAdminHeaders(),
+        body: JSON.stringify({ opportunityId, amount }),
+      });
+      const data = await response.json();
+      if (data.success) {
+        setNotification({ type: 'success', message: data.message });
+      } else {
+        setNotification({ type: 'error', message: data.error || 'Deposit failed' });
+      }
+    } catch (err) {
+      setNotification({ type: 'error', message: 'Failed to deposit' });
+    }
+    setTimeout(() => setNotification(null), 4000);
+  };
+
+  // Create suggested bot
+  const createSuggestedBot = async (suggestionId: string) => {
+    try {
+      const response = await fetch(`${API_BASE}/timebeunus/bot-suggestions/${suggestionId}/create`, {
+        method: 'POST',
+        headers: getAdminHeaders(),
+      });
+      const data = await response.json();
+      if (data.success) {
+        setNotification({ type: 'success', message: `Bot created: ${data.botId}` });
+        fetchOwnerDashboard();
+      } else {
+        setNotification({ type: 'error', message: data.error || 'Failed to create bot' });
+      }
+    } catch (err) {
+      setNotification({ type: 'error', message: 'Failed to create bot' });
+    }
+    setTimeout(() => setNotification(null), 4000);
+  };
+
   // Initial data load
   useEffect(() => {
     const loadData = async () => {
@@ -241,6 +459,7 @@ export default function TIMEBEUNUSPage() {
         fetchTrades(),
         fetchPerformance(),
         fetchStrategies(),
+        fetchOwnerDashboard(), // Owner trading panel data
       ]);
       setIsLoading(false);
     };
@@ -638,6 +857,284 @@ export default function TIMEBEUNUSPage() {
                 </div>
               </div>
             ))
+          )}
+        </div>
+      </div>
+
+      {/* ============================================================ */}
+      {/* OWNER TRADING PANEL - Full Trading Abilities */}
+      {/* ============================================================ */}
+      <div className="card p-5 border-2 border-yellow-500/30 bg-gradient-to-br from-yellow-900/10 to-orange-900/10">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-400 flex items-center gap-2">
+            <Crown className="w-6 h-6 text-yellow-400" />
+            Owner Trading Panel
+            <span className="text-xs px-2 py-1 bg-yellow-500/20 text-yellow-400 rounded-full ml-2">0% FEES</span>
+          </h3>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setShowManualTradeModal(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-600 rounded-lg text-white font-medium"
+            >
+              <DollarSign className="w-4 h-4" />New Trade
+            </button>
+            <button
+              onClick={closeAllPositions}
+              className="flex items-center gap-2 px-4 py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 rounded-lg text-red-400 font-medium"
+            >
+              <XCircle className="w-4 h-4" />Close All
+            </button>
+          </div>
+        </div>
+
+        {/* Tab Navigation */}
+        <div className="flex gap-2 mb-4 border-b border-slate-700 pb-2">
+          {[
+            { id: 'trade', label: 'Manual Trade', icon: Banknote },
+            { id: 'positions', label: 'Positions', icon: Wallet },
+            { id: 'automation', label: 'Automation', icon: Settings },
+            { id: 'yield', label: 'Yield Farming', icon: Coins },
+            { id: 'suggestions', label: 'Bot Suggestions', icon: Lightbulb },
+          ].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setOwnerPanelTab(tab.id as any)}
+              className={clsx(
+                'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all',
+                ownerPanelTab === tab.id
+                  ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/50'
+                  : 'bg-slate-800/50 text-slate-400 hover:bg-slate-700/50'
+              )}
+            >
+              <tab.icon className="w-4 h-4" />{tab.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Tab Content */}
+        <div className="min-h-[300px]">
+          {/* Manual Trade Tab */}
+          {ownerPanelTab === 'trade' && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="p-4 bg-slate-800/50 rounded-lg">
+                <h4 className="font-medium text-white mb-3 flex items-center gap-2">
+                  <Banknote className="w-4 h-4 text-green-400" />Quick Trade
+                </h4>
+                <div className="space-y-3">
+                  <div>
+                    <label className="text-xs text-slate-400 mb-1 block">Symbol</label>
+                    <input
+                      type="text"
+                      value={manualTradeSymbol}
+                      onChange={(e) => setManualTradeSymbol(e.target.value.toUpperCase())}
+                      className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white"
+                      placeholder="AAPL, TSLA, BTC..."
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setManualTradeAction('buy')}
+                      className={clsx('flex-1 py-2 rounded-lg font-medium', manualTradeAction === 'buy' ? 'bg-green-500 text-white' : 'bg-slate-700 text-slate-400')}
+                    >BUY</button>
+                    <button
+                      onClick={() => setManualTradeAction('sell')}
+                      className={clsx('flex-1 py-2 rounded-lg font-medium', manualTradeAction === 'sell' ? 'bg-red-500 text-white' : 'bg-slate-700 text-slate-400')}
+                    >SELL</button>
+                  </div>
+                  <div>
+                    <label className="text-xs text-slate-400 mb-1 block">Quantity</label>
+                    <input
+                      type="number"
+                      value={manualTradeQuantity}
+                      onChange={(e) => setManualTradeQuantity(e.target.value)}
+                      className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white"
+                    />
+                  </div>
+                  <button
+                    onClick={executeManualTrade}
+                    disabled={isExecutingTrade}
+                    className={clsx(
+                      'w-full py-3 rounded-lg font-bold text-white',
+                      manualTradeAction === 'buy' ? 'bg-gradient-to-r from-green-500 to-emerald-500' : 'bg-gradient-to-r from-red-500 to-orange-500',
+                      isExecutingTrade && 'opacity-50 cursor-not-allowed'
+                    )}
+                  >
+                    {isExecutingTrade ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : `${manualTradeAction.toUpperCase()} ${manualTradeSymbol}`}
+                  </button>
+                </div>
+              </div>
+
+              <div className="p-4 bg-slate-800/50 rounded-lg">
+                <h4 className="font-medium text-white mb-3 flex items-center gap-2">
+                  <Activity className="w-4 h-4 text-blue-400" />Recent Owner Trades
+                </h4>
+                <div className="space-y-2 max-h-[250px] overflow-y-auto">
+                  {ownerTrades.length === 0 ? (
+                    <p className="text-slate-500 text-center py-4">No trades yet</p>
+                  ) : (
+                    ownerTrades.slice(0, 5).map(trade => (
+                      <div key={trade.id} className="flex items-center justify-between p-2 bg-slate-700/50 rounded">
+                        <div className="flex items-center gap-2">
+                          <span className={clsx('text-xs px-2 py-0.5 rounded', trade.action === 'buy' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400')}>
+                            {trade.action.toUpperCase()}
+                          </span>
+                          <span className="text-white text-sm">{trade.symbol}</span>
+                          <span className="text-slate-400 text-xs">x{trade.quantity}</span>
+                        </div>
+                        <span className={clsx('text-sm font-medium', trade.status === 'filled' ? 'text-green-400' : 'text-yellow-400')}>
+                          {trade.status}
+                        </span>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Positions Tab */}
+          {ownerPanelTab === 'positions' && (
+            <div>
+              <div className="grid grid-cols-4 gap-4 mb-4">
+                <div className="p-3 bg-slate-800/50 rounded-lg text-center">
+                  <p className="text-xs text-slate-400">Total Positions</p>
+                  <p className="text-xl font-bold text-white">{ownerPositions.length}</p>
+                </div>
+                <div className="p-3 bg-slate-800/50 rounded-lg text-center">
+                  <p className="text-xs text-slate-400">Total Value</p>
+                  <p className="text-xl font-bold text-blue-400">${ownerPositions.reduce((s, p) => s + p.value, 0).toLocaleString()}</p>
+                </div>
+                <div className="p-3 bg-slate-800/50 rounded-lg text-center">
+                  <p className="text-xs text-slate-400">Total P&L</p>
+                  <p className={clsx('text-xl font-bold', ownerPositions.reduce((s, p) => s + p.pnl, 0) >= 0 ? 'text-green-400' : 'text-red-400')}>
+                    ${ownerPositions.reduce((s, p) => s + p.pnl, 0).toFixed(2)}
+                  </p>
+                </div>
+                <div className="p-3 bg-slate-800/50 rounded-lg text-center">
+                  <p className="text-xs text-slate-400">Platform Fees</p>
+                  <p className="text-xl font-bold text-yellow-400">$0 (Owner)</p>
+                </div>
+              </div>
+              <div className="space-y-2">
+                {ownerPositions.length === 0 ? (
+                  <p className="text-slate-500 text-center py-8">No open positions</p>
+                ) : (
+                  ownerPositions.map((pos, i) => (
+                    <div key={i} className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg">
+                      <div>
+                        <span className="font-bold text-white">{pos.symbol}</span>
+                        <span className="text-slate-400 text-sm ml-2">x{pos.quantity} @ ${pos.avgPrice.toFixed(2)}</span>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-white">${pos.value.toFixed(2)}</p>
+                        <p className={clsx('text-sm', pos.pnl >= 0 ? 'text-green-400' : 'text-red-400')}>
+                          {pos.pnl >= 0 ? '+' : ''}{pos.pnlPercent.toFixed(2)}%
+                        </p>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Automation Tab */}
+          {ownerPanelTab === 'automation' && (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {Object.entries(automationToggles).map(([key, value]) => {
+                const labels: Record<string, { name: string; desc: string }> = {
+                  autoTrade: { name: 'Auto Trade', desc: 'Execute signals automatically' },
+                  autoInvest: { name: 'Auto Invest', desc: 'Reinvest profits' },
+                  autoYield: { name: 'Auto Yield', desc: 'Farm yields in DeFi' },
+                  autoRebalance: { name: 'Auto Rebalance', desc: 'Rebalance portfolio' },
+                  autoHedge: { name: 'Auto Hedge', desc: 'Hedge on drawdown' },
+                  autoScale: { name: 'Auto Scale', desc: 'Scale positions' },
+                  autoTax: { name: 'Auto Tax', desc: 'Tax-loss harvesting' },
+                  autoCompound: { name: 'Auto Compound', desc: 'Compound yields' },
+                };
+                return (
+                  <button
+                    key={key}
+                    onClick={() => toggleAutomation(key as keyof AutomationToggles)}
+                    className={clsx(
+                      'p-4 rounded-lg border transition-all text-left',
+                      value ? 'bg-green-500/20 border-green-500/50' : 'bg-slate-800/50 border-slate-700'
+                    )}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <span className={clsx('font-medium text-sm', value ? 'text-green-400' : 'text-slate-400')}>
+                        {labels[key]?.name || key}
+                      </span>
+                      {value ? <ToggleRight className="w-5 h-5 text-green-400" /> : <ToggleLeft className="w-5 h-5 text-slate-500" />}
+                    </div>
+                    <p className="text-xs text-slate-500">{labels[key]?.desc}</p>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Yield Farming Tab */}
+          {ownerPanelTab === 'yield' && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {yieldOpportunities.map(opp => (
+                <div key={opp.id} className="p-4 bg-slate-800/50 rounded-lg border border-slate-700">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-bold text-white">{opp.protocol}</span>
+                    <span className={clsx('text-xs px-2 py-0.5 rounded',
+                      opp.risk === 'low' ? 'bg-green-500/20 text-green-400' :
+                      opp.risk === 'medium' ? 'bg-yellow-500/20 text-yellow-400' :
+                      'bg-red-500/20 text-red-400'
+                    )}>{opp.risk.toUpperCase()}</span>
+                  </div>
+                  <p className="text-slate-400 text-sm mb-2">{opp.asset}</p>
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-2xl font-bold text-green-400">{opp.apy}% APY</span>
+                    <span className="text-xs text-slate-500">TVL: ${(opp.tvl / 1e9).toFixed(1)}B</span>
+                  </div>
+                  <button
+                    onClick={() => depositToYield(opp.id, 1000)}
+                    className="w-full py-2 bg-green-500/20 hover:bg-green-500/30 border border-green-500/50 rounded-lg text-green-400 text-sm font-medium"
+                  >
+                    Deposit $1,000
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Bot Suggestions Tab */}
+          {ownerPanelTab === 'suggestions' && (
+            <div className="space-y-4">
+              {botSuggestions.length === 0 ? (
+                <p className="text-slate-500 text-center py-8">No bot suggestions at this time</p>
+              ) : (
+                botSuggestions.map(suggestion => (
+                  <div key={suggestion.botId} className="p-4 bg-slate-800/50 rounded-lg border border-purple-500/30">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <Lightbulb className="w-5 h-5 text-purple-400" />
+                        <span className="font-bold text-white">{suggestion.name}</span>
+                      </div>
+                      <span className="text-green-400 font-bold">{suggestion.expectedImprovement}</span>
+                    </div>
+                    <p className="text-slate-400 text-sm mb-2">{suggestion.reason}</p>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4 text-xs text-slate-500">
+                        <span>Confidence: {suggestion.confidence}%</span>
+                        <span>Based on: {suggestion.basedOn}</span>
+                      </div>
+                      <button
+                        onClick={() => createSuggestedBot(suggestion.botId)}
+                        className="px-4 py-2 bg-purple-500 hover:bg-purple-600 rounded-lg text-white text-sm font-medium"
+                      >
+                        Create Bot
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
           )}
         </div>
       </div>
