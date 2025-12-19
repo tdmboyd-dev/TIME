@@ -61,6 +61,9 @@ import wealthRoutes from './wealth';
 // Gift Access System - Admin chatbot & tier management
 import giftAccessRoutes from './gift_access';
 
+// ULTIMATE MONEY MACHINE - Premium $59/mo Feature!
+import ultimateRoutes from './ultimate';
+
 const router = Router();
 
 // Mount routes
@@ -127,6 +130,10 @@ router.use('/backtest', backtestRoutes);        // Industry-standard backtesting
 
 // ML TRAINING PIPELINE - Pattern Recognition & Model Training
 router.use('/ml', mlRoutes);  // 50+ patterns, model training, historical data collection
+
+// ULTIMATE MONEY MACHINE - Premium $59/mo Feature!
+// 25 Super Bots, Attack Strategies, Institutional Edge, Self-Learning AI
+router.use('/ultimate', ultimateRoutes);
 
 export default router;
 

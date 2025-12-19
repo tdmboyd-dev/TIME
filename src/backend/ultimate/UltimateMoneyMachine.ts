@@ -74,7 +74,7 @@ export interface UltimateConfig {
 
 export class UltimateMoneyMachine extends EventEmitter {
   private config: UltimateConfig;
-  private isRunning: boolean = false;
+  private _isRunning: boolean = false;
   private knowledgeBase: Map<string, KnowledgeEntry> = new Map();
   private activeTrades: Map<string, TradeExecution> = new Map();
   private botRoles: Map<string, BotRole> = new Map();
@@ -305,12 +305,12 @@ export class UltimateMoneyMachine extends EventEmitter {
   // ============== CORE ENGINE ==============
 
   async start(): Promise<void> {
-    if (this.isRunning) {
+    if (this._isRunning) {
       console.log('[UMM] Already running');
       return;
     }
 
-    this.isRunning = true;
+    this._isRunning = true;
     console.log('[UMM] 🚀 ULTIMATE MONEY MACHINE ACTIVATED');
     console.log(`[UMM] Mode: ${this.config.mode.toUpperCase()}`);
     console.log(`[UMM] Auto-Execute: ${this.config.autoExecute ? 'ON' : 'OFF'}`);
@@ -324,13 +324,13 @@ export class UltimateMoneyMachine extends EventEmitter {
   }
 
   async stop(): Promise<void> {
-    this.isRunning = false;
+    this._isRunning = false;
     console.log('[UMM] ⛔ ULTIMATE MONEY MACHINE STOPPED');
     this.emit('stopped', { timestamp: new Date(), metrics: this.getMetrics() });
   }
 
   private async mainLoop(): Promise<void> {
-    while (this.isRunning) {
+    while (this._isRunning) {
       try {
         // 1. Check risk limits
         if (this.dailyPnL <= -this.config.dailyLossLimit) {
@@ -685,14 +685,22 @@ export class UltimateMoneyMachine extends EventEmitter {
     return { ...this.config };
   }
 
+  isRunning(): boolean {
+    return this._isRunning;
+  }
+
+  getMode(): string {
+    return this.config.mode;
+  }
+
   updateConfig(updates: Partial<UltimateConfig>): void {
     this.config = { ...this.config, ...updates };
     this.emit('config_updated', this.config);
   }
 
-  getStatus(): { isRunning: boolean; activeTrades: number; dailyPnL: number; metrics: typeof this.metrics } {
+  getStatus() {
     return {
-      isRunning: this.isRunning,
+      isRunning: this._isRunning,
       activeTrades: this.activeTrades.size,
       dailyPnL: this.dailyPnL,
       metrics: this.getMetrics(),
