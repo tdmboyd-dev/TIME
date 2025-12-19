@@ -61,6 +61,9 @@ import wealthRoutes from './wealth';
 // Gift Access System - Admin chatbot & tier management
 import giftAccessRoutes from './gift_access';
 
+// AI Chat Assistant - HR-like support with security
+import chatRoutes from './chat';
+
 // ULTIMATE MONEY MACHINE - Premium $59/mo Feature!
 import ultimateRoutes from './ultimate';
 
@@ -140,6 +143,9 @@ router.use('/ultimate', ultimateRoutes);
 
 // SUBSCRIPTION & TRANSFER PAYMENTS - Custom payment system with 10% fee
 router.use('/subscription', subscriptionPaymentsRoutes);
+
+// AI CHAT ASSISTANT - HR-like support, secure, rate-limited
+router.use('/chat', chatRoutes);
 
 export default router;
 
