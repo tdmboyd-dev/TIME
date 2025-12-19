@@ -100,6 +100,7 @@ import {
   Store,
   FlaskConical,
   Gift,
+  Gem,
 } from 'lucide-react';
 import clsx from 'clsx';
 import { TradingModeIndicator } from '@/components/trading/TradingModeToggle';
@@ -107,6 +108,7 @@ import { TradingModeIndicator } from '@/components/trading/TradingModeToggle';
 const navigation = [
   // Core
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
+  { name: 'Ultimate Money Machine', href: '/ultimate', icon: Gem, isNew: true, isPremium: true },
   { name: 'LIVE Bot Trading', href: '/live-trading', icon: Play, isNew: true },
   { name: 'Big Moves Alerts', href: '/alerts', icon: Bell, isNew: true },
   { name: 'AI Trade God', href: '/ai-trade-god', icon: Zap, isNew: true },
@@ -222,15 +224,21 @@ export function Sidebar() {
                   : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
               )}
             >
-              <item.icon className={clsx('w-5 h-5', (item as any).adminOnly && !isActive && 'text-red-400', showNewBadge && !isActive && 'text-amber-400')} />
+              <item.icon className={clsx('w-5 h-5', (item as any).adminOnly && !isActive && 'text-red-400', (item as any).isPremium && !isActive && 'text-purple-400', showNewBadge && !isActive && !(item as any).isPremium && 'text-amber-400')} />
               {item.name}
+              {(item as any).isPremium && (
+                <span className="ml-auto flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-400 font-bold">
+                  <Gem className="w-3 h-3" />
+                  $59
+                </span>
+              )}
               {(item as any).adminOnly && (
                 <span className="ml-auto flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-red-500/20 text-red-400 font-bold">
                   <Lock className="w-3 h-3" />
                   ADMIN
                 </span>
               )}
-              {showNewBadge && !(item as any).adminOnly && (
+              {showNewBadge && !(item as any).adminOnly && !(item as any).isPremium && (
                 <span className="ml-auto text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 font-bold animate-pulse">
                   NEW
                 </span>
