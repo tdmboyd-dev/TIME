@@ -1,8 +1,8 @@
 # TIMEBEUNUS — THE MASTER AI GUIDE
 ## For Copilot, Claude, and All AI Assistants
 
-**Version:** 29.0.0 - LIVE TRADING + PAYMENT SYSTEM EDITION
-**Last Updated:** 2025-12-19 (40 Pages + Live Trading + Payment System)
+**Version:** 30.0.0 - PRICING FIX + BOT IDENTITY EDITION
+**Last Updated:** 2025-12-19 (40 Pages + Correct Pricing + Bot Privacy)
 **Creator:** Timebeunus Boyd
 **Purpose:** Complete platform understanding for AI assistants to provide proper guidance
 
@@ -93,19 +93,33 @@ The 25 Super Bots are now connected to REAL brokers for live trading!
 | $250.00 | $25.00 | $225.00 |
 | $5,000+ | $500 (max) | $4,500+ |
 
-### Subscription Tiers
+### Subscription Tiers (OFFICIAL PRICING)
 
-| Tier | Price | Features |
-|------|-------|----------|
-| Free | $0/mo | Paper trading, 5 bots, basic analytics |
-| Starter | $9.99/mo | Live trading, 20 bots, email alerts |
-| Pro | $29.99/mo | 50 bots, API access, priority support |
-| **Premium** | **$59/mo** | ALL 25 Super Bots, 133 bots, Ultimate Money Machine |
-| Enterprise | $250/mo | White-label, custom integrations, SLA |
+| Tier | Monthly | Annual | Features |
+|------|---------|--------|----------|
+| **Free** | $0 | $0 | Paper trading, 3 bots, basic charts |
+| **Starter** | $24.99 | $239.88 ($19.99/mo) | Live trading, 1 AI bot, $10K capital |
+| **Pro** | $79 | $758.40 ($63.20/mo) | 5 AI bots, $100K capital, tax harvesting |
+| **Unlimited** | $149 | $1,430.40 ($119.20/mo) | Unlimited bots, Dynasty Trust, AutoPilot |
+| **Enterprise** | $499 | $4,790.40 ($399.20/mo) | White-label, API, custom strategies, SLA |
+
+### Ultimate Money Machine - SEPARATE OPTIONAL ADD-ON
+
+⚠️ **ADMIN APPROVAL REQUIRED** - Not part of regular subscription tiers!
+
+| Add-On | Price | Access |
+|--------|-------|--------|
+| **Ultimate Money Machine** | **$59/mo** | ADMIN-APPROVED ONLY |
+
+**How to get access:**
+1. Contact admin
+2. Admin approves your account
+3. Admin grants UMM access via `/gift-access` or direct approval
+4. You can now use the 25 Super Bots for live trading
 
 ---
 
-# 💰 ULTIMATE MONEY MACHINE — PREMIUM $59/MONTH
+# 💰 ULTIMATE MONEY MACHINE — ADMIN-APPROVED ADD-ON ($59/MONTH)
 
 ## THE MOST ADVANCED TRADING AI EVER BUILT
 
