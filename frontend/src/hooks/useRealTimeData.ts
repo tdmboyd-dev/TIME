@@ -12,12 +12,12 @@ import { API_BASE } from '@/lib/api';
 export function useRealTimeData() {
   const {
     setConnected,
-    setEvolutionMode,
     setRegime,
     setBots,
     setInsights,
     setMetrics,
     setHealth,
+    // evolutionMode is now managed by localStorage persistence - don't overwrite it
   } = useTimeStore();
 
   // Fetch system health from backend
@@ -60,28 +60,13 @@ export function useRealTimeData() {
   // Fetch TIME Governor status using working endpoint: /api/v1/admin/status
   const fetchGovernorStatus = useCallback(async () => {
     try {
-      // Fetch both admin status and real bot count
-      const [statusRes, botsRes] = await Promise.allSettled([
-        fetch(`${API_BASE}/admin/status`),
-        fetch(`${API_BASE}/bots/public`),
-      ]);
-
-      let evolutionMode: 'controlled' | 'autonomous' = 'controlled';
+      // Fetch bot count - evolutionMode is managed by localStorage persistence
+      const botsRes = await fetch(`${API_BASE}/bots/public`);
       let botCount = 0;
 
-      // Get evolution mode
-      if (statusRes.status === 'fulfilled') {
-        const data = await statusRes.value.json();
-        if (data.evolution || data.health) {
-          const mode = data.evolution?.mode;
-          evolutionMode = mode === 'autonomous' ? 'autonomous' : 'controlled';
-        }
-      }
-      setEvolutionMode(evolutionMode);
-
       // Get REAL bot count from API
-      if (botsRes.status === 'fulfilled') {
-        const botsData = await botsRes.value.json();
+      if (botsRes.ok) {
+        const botsData = await botsRes.json();
         if (botsData.success && Array.isArray(botsData.data)) {
           botCount = botsData.data.length;
         }

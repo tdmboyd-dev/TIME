@@ -79,6 +79,12 @@ import ultimateRoutes from './ultimate';
 // SUBSCRIPTION & TRANSFER PAYMENTS - 10% platform fee system
 import subscriptionPaymentsRoutes from './subscription-payments';
 
+// TIMEBEUNUS ADMIN - Owner trading, investing, yields, automation
+import timebeunusRoutes from './timebeunus';
+
+// MONEY MACHINE QUESTIONNAIRE - Auto-config for users
+import questionnaireRoutes from './questionnaire';
+
 const router = Router();
 
 // Mount routes
@@ -164,6 +170,12 @@ router.use('/education', educationRoutes);
 
 // SMART BOTS - Self-optimize, swarm coordinate, natural language
 router.use('/smart-bots', smartBotRoutes);
+
+// TIMEBEUNUS ADMIN - Owner trading, investing, yields, automation, NO FEES
+router.use('/timebeunus', timebeunusRoutes);
+
+// MONEY MACHINE QUESTIONNAIRE - Auto-config for users
+router.use('/questionnaire', questionnaireRoutes);
 
 export default router;
 
