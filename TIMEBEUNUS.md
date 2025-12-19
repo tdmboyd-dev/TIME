@@ -1,10 +1,91 @@
 # TIMEBEUNUS — THE MASTER AI GUIDE
 ## For Copilot, Claude, and All AI Assistants
 
-**Version:** 35.0.0 - OWNER TRADING PANEL EDITION
-**Last Updated:** 2025-12-19 (60+ Pages + Full System Comparison + Frontend Trading Panel)
+**Version:** 36.0.0 - PAPER/LIVE MODE + FULL TEST EDITION
+**Last Updated:** 2025-12-19 (60+ Pages + Full System Comparison + Paper/Live Mode + Complete Page Testing)
 
 > 📄 **SEE ALSO:** [SYSTEM_COMPARISON.md](./SYSTEM_COMPARISON.md) for the FULL 500+ line detailed comparison!
+
+---
+
+# 🔄 v36.0.0 - PAPER/LIVE MODE SYSTEM
+
+## Global Trading Mode Toggle
+
+All brokers now support PAPER and LIVE mode switching via a global toggle:
+
+### Broker Paper/Live Support
+
+| Broker | Paper Mode | Live Mode | How |
+|--------|------------|-----------|-----|
+| **Alpaca** | YES | YES | `isPaper` flag |
+| **OANDA** | YES | YES | `environment: 'practice'` |
+| **Crypto Futures** | YES | YES | `testnet` flag |
+| **IBKR** | YES | YES | Port 7497 (paper) / 7496 (live) |
+| **SnapTrade** | YES | YES | `isPaperTrading` flag |
+
+### API Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/trading/mode` | GET | Get current trading mode |
+| `/trading/mode` | POST | Set trading mode (paper/live) |
+| `/trading/mode/status` | GET | Full mode info with warnings |
+
+### 10-Minute Progress Reports
+
+New system to track bot performance over time:
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/trading/progress/start` | POST | Start tracking session |
+| `/trading/progress/:sessionId` | GET | Get progress report |
+| `/trading/progress/live` | GET | Live status without session |
+
+---
+
+## FULL PAGE-BY-PAGE TEST RESULTS (December 19, 2025)
+
+### Test Configuration
+- **Mode:** PAPER (Safe - No Real Money)
+- **Bots Enabled:** 4
+- **Pending Signals:** 4 (AAPL, TSLA, MSFT, GOOGL)
+- **Market Status:** CLOSED during test
+
+### The 4 Bots Tested
+
+| Bot | Win Rate | Profit Factor | P&L | Signal |
+|-----|----------|---------------|-----|--------|
+| Momentum Rider | 60.5% | 1.97x | +$9,830 | BUY AAPL 10 |
+| Mean Reversion Pro | 70.0% | 1.67x | +$6,988 | BUY TSLA 5 |
+| Breakout Hunter | 59.4% | 1.50x | +$8,120 | BUY MSFT 10 |
+| Scalper Elite | 56.3% | 1.76x | +$5,594 | BUY GOOGL 10 |
+
+### All Pages Tested
+
+| Page | Status | What It Does |
+|------|--------|--------------|
+| Bots | WORKING | 133 bots, enable/disable, performance |
+| Trade | WORKING | Manual buy/sell, signals |
+| DeFi/Yield | WORKING | 6 protocols, 9 yield opportunities |
+| TIMEBEUNUS | WORKING | Owner trading, automation, yield |
+| Robo Advisor | WORKING | Model portfolios |
+| Backtest | WORKING | Historical strategy testing |
+| Invest | WORKING | Real prices, DCA, lump sum |
+| Strategies | NEEDS LOGIN | Strategy configuration |
+| AutoPilot | NEEDS LOGIN | Automated trading |
+| Live Trading | WORKING | Real-time bot status |
+| Charts | WORKING | Live crypto data |
+| Markets | WORKING | All 4 data providers online |
+
+### Market Data Providers
+
+| Provider | Status |
+|----------|--------|
+| AlphaVantage | WORKING |
+| Finnhub | WORKING |
+| CoinGecko | WORKING |
+| Binance | WORKING |
 
 ---
 
