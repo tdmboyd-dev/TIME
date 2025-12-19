@@ -88,7 +88,7 @@ export function useRealTimeData() {
         totalStrategiesSynthesized: 0,
       });
     }
-  }, [setEvolutionMode, setMetrics]);
+  }, [setMetrics]);
 
   // Fetch market regime using working endpoint: /api/v1/real-market/status
   const fetchRegime = useCallback(async () => {
