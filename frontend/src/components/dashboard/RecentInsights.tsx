@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Lightbulb, TrendingUp, AlertTriangle, Info, CheckCircle } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -70,6 +71,7 @@ const MOCK_INSIGHTS = [
 ];
 
 export function RecentInsights({ insights }: RecentInsightsProps) {
+  const router = useRouter();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -77,6 +79,10 @@ export function RecentInsights({ insights }: RecentInsightsProps) {
   }, []);
 
   const displayInsights = insights.length > 0 ? insights.slice(0, 5) : MOCK_INSIGHTS;
+
+  const handleViewAllInsights = () => {
+    router.push('/strategies');
+  };
 
   return (
     <div className="card p-4">
@@ -123,7 +129,10 @@ export function RecentInsights({ insights }: RecentInsightsProps) {
       </div>
 
       {displayInsights.length > 0 && (
-        <button className="w-full mt-4 py-2 text-sm text-time-primary hover:text-time-primary/80 transition-colors">
+        <button
+          onClick={handleViewAllInsights}
+          className="w-full mt-4 py-2 text-sm text-time-primary hover:text-time-primary/80 transition-colors"
+        >
           View All Insights →
         </button>
       )}

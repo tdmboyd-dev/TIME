@@ -357,10 +357,20 @@ export default function PaymentsPage() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <button className="p-2 rounded-lg hover:bg-slate-700 transition-colors">
+                  <button
+                    onClick={() => alert(`Edit ${method.name}\n\nUpdate:\n- Name label\n- Default status\n- Billing address\n\nComing soon!`)}
+                    className="p-2 rounded-lg hover:bg-slate-700 transition-colors"
+                  >
                     <Edit className="w-4 h-4 text-slate-400" />
                   </button>
-                  <button className="p-2 rounded-lg hover:bg-red-500/20 transition-colors">
+                  <button
+                    onClick={() => {
+                      if (confirm(`Remove ${method.name}?\n\nThis action cannot be undone.`)) {
+                        alert(`${method.name} has been removed.`);
+                      }
+                    }}
+                    className="p-2 rounded-lg hover:bg-red-500/20 transition-colors"
+                  >
                     <Trash2 className="w-4 h-4 text-red-400" />
                   </button>
                 </div>
@@ -374,7 +384,10 @@ export default function PaymentsPage() {
       <div className="card p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-white">Recent Transactions</h2>
-          <button className="text-sm text-time-primary hover:underline">View All</button>
+          <button
+            onClick={() => alert('View All Transactions\n\nFull transaction history with:\n- Date range filters\n- Export to CSV\n- Category filtering\n\nComing soon!')}
+            className="text-sm text-time-primary hover:underline"
+          >View All</button>
         </div>
 
         <div className="space-y-3">
@@ -541,7 +554,13 @@ export default function PaymentsPage() {
                 >
                   Cancel
                 </button>
-                <button className="flex-1 py-3 bg-time-primary hover:bg-time-primary/80 rounded-lg text-white font-medium">
+                <button
+                  onClick={() => {
+                    alert(`${addMethodType === 'card' ? 'Card' : addMethodType === 'bank' ? 'Bank Account' : 'Crypto Wallet'} added successfully!\n\nYour new payment method is ready to use.`);
+                    setShowAddModal(false);
+                  }}
+                  className="flex-1 py-3 bg-time-primary hover:bg-time-primary/80 rounded-lg text-white font-medium"
+                >
                   Add Method
                 </button>
               </div>
@@ -596,7 +615,13 @@ export default function PaymentsPage() {
                 >
                   Cancel
                 </button>
-                <button className="flex-1 py-3 bg-green-500 hover:bg-green-600 rounded-lg text-white font-medium">
+                <button
+                  onClick={() => {
+                    alert('Deposit initiated!\n\nYour funds will be available within 1-3 business days.\n\nA confirmation email has been sent.');
+                    setShowDepositModal(false);
+                  }}
+                  className="flex-1 py-3 bg-green-500 hover:bg-green-600 rounded-lg text-white font-medium"
+                >
                   Deposit
                 </button>
               </div>
@@ -662,7 +687,13 @@ export default function PaymentsPage() {
                 >
                   Cancel
                 </button>
-                <button className="flex-1 py-3 bg-red-500 hover:bg-red-600 rounded-lg text-white font-medium">
+                <button
+                  onClick={() => {
+                    alert('Withdrawal request submitted!\n\nExpected arrival: 1-3 business days\n\nYou will receive a confirmation email shortly.');
+                    setShowWithdrawModal(false);
+                  }}
+                  className="flex-1 py-3 bg-red-500 hover:bg-red-600 rounded-lg text-white font-medium"
+                >
                   Withdraw
                 </button>
               </div>

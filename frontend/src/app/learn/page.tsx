@@ -408,12 +408,17 @@ export default function LearnPage() {
               </div>
 
               {!lesson.locked && (
-                <button className={clsx(
-                  'flex items-center gap-1 text-sm font-medium',
-                  lesson.completed
-                    ? 'text-green-400'
-                    : 'text-time-primary'
-                )}>
+                <button
+                  onClick={() => {
+                    window.location.href = `/learn/${lesson.id}?mode=${selectedMode}`;
+                  }}
+                  className={clsx(
+                    'flex items-center gap-1 text-sm font-medium',
+                    lesson.completed
+                      ? 'text-green-400'
+                      : 'text-time-primary'
+                  )}
+                >
                   {lesson.completed ? 'Review' : 'Start'}
                   <ChevronRight className="w-4 h-4" />
                 </button>

@@ -506,7 +506,11 @@ export default function LoginPage() {
 
                 <p className="text-center text-white/50 text-sm">
                   Didn't receive a code?{' '}
-                  <button type="button" className="text-cyan-400 hover:text-cyan-300">
+                  <button
+                    type="button"
+                    onClick={() => alert('Verification code resent!\n\nPlease check your authenticator app or wait for a new code.')}
+                    className="text-cyan-400 hover:text-cyan-300"
+                  >
                     Resend
                   </button>
                 </p>

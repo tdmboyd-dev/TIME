@@ -175,7 +175,13 @@ export default function SocialTradingPage() {
             <RefreshCw className={clsx('w-4 h-4', isRefreshing && 'animate-spin')} />
             Refresh
           </button>
-          <button className="btn-secondary flex items-center gap-2">
+          <button
+            onClick={() => {
+              navigator.clipboard.writeText(window.location.href);
+              alert('Profile link copied to clipboard!');
+            }}
+            className="btn-secondary flex items-center gap-2"
+          >
             <Share2 className="w-4 h-4" />
             Share Profile
           </button>
@@ -236,7 +242,12 @@ export default function SocialTradingPage() {
             <Crown className="w-5 h-5 text-yellow-400" />
             <h2 className="text-lg font-semibold text-white">Top Traders This Month</h2>
           </div>
-          <button className="text-sm text-time-primary hover:underline">View All</button>
+          <button
+            onClick={() => setFilterBy('all')}
+            className="text-sm text-time-primary hover:underline"
+          >
+            View All
+          </button>
         </div>
 
         <div className="space-y-3">
@@ -358,6 +369,11 @@ export default function SocialTradingPage() {
 
                 <div className="flex items-center gap-2 pt-3 border-t border-slate-700">
                   <button
+                    onClick={() => {
+                      setTraders(prev => prev.map(t =>
+                        t.id === trader.id ? { ...t, isFollowing: !t.isFollowing } : t
+                      ));
+                    }}
                     className={clsx(
                       'flex-1 py-2 rounded-lg font-medium text-sm transition-colors',
                       trader.isFollowing
@@ -458,7 +474,18 @@ export default function SocialTradingPage() {
                 >
                   Cancel
                 </button>
-                <button className="flex-1 py-3 bg-time-primary hover:bg-time-primary/80 rounded-lg text-white font-medium">
+                <button
+                  onClick={() => {
+                    if (selectedTrader) {
+                      setTraders(prev => prev.map(t =>
+                        t.id === selectedTrader.id ? { ...t, isCopying: true } : t
+                      ));
+                      setShowCopyModal(false);
+                      alert(`Started copying ${selectedTrader.username}!`);
+                    }
+                  }}
+                  className="flex-1 py-3 bg-time-primary hover:bg-time-primary/80 rounded-lg text-white font-medium"
+                >
                   Start Copying
                 </button>
               </div>

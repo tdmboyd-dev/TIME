@@ -1,5 +1,6 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { Bot, TrendingUp, TrendingDown, Pause, Play, MoreVertical } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -80,13 +81,38 @@ const defaultBots: BotData[] = [
 ];
 
 export function ActiveBots({ bots }: ActiveBotsProps) {
+  const router = useRouter();
   const displayBots = bots.length > 0 ? bots : defaultBots;
+
+  const handleViewAll = () => {
+    router.push('/bots');
+  };
+
+  const handleToggleBot = async (botId: string, currentStatus: string) => {
+    const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://time-backend-hosting.fly.dev/api/v1';
+    try {
+      const action = currentStatus === 'paused' ? 'activate' : 'pause';
+      await fetch(`${API_BASE}/bots/${botId}/${action}`, { method: 'POST' });
+      // Refresh page to show updated status
+      window.location.reload();
+    } catch (error) {
+      console.error('Failed to toggle bot:', error);
+    }
+  };
+
+  const handleBotMenu = (botId: string) => {
+    // Navigate to bot details
+    router.push(`/bots?selected=${botId}`);
+  };
 
   return (
     <div className="card p-4">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-white">Active Bots</h3>
-        <button className="text-sm text-time-primary hover:text-time-primary/80 transition-colors">
+        <button
+          onClick={handleViewAll}
+          className="text-sm text-time-primary hover:text-time-primary/80 transition-colors"
+        >
           View All →
         </button>
       </div>
@@ -171,15 +197,23 @@ export function ActiveBots({ bots }: ActiveBotsProps) {
                 </td>
                 <td className="py-3">
                   <div className="flex items-center gap-1">
-                    <button className="p-1.5 rounded hover:bg-slate-700 transition-colors">
+                    <button
+                      onClick={() => handleToggleBot(bot.id, bot.status)}
+                      className="p-1.5 rounded hover:bg-slate-700 transition-colors"
+                      title={bot.status === 'paused' ? 'Start bot' : 'Pause bot'}
+                    >
                       {bot.status === 'paused' ? (
-                        <Play className="w-4 h-4 text-slate-400" />
+                        <Play className="w-4 h-4 text-green-400 hover:text-green-300" />
                       ) : (
-                        <Pause className="w-4 h-4 text-slate-400" />
+                        <Pause className="w-4 h-4 text-yellow-400 hover:text-yellow-300" />
                       )}
                     </button>
-                    <button className="p-1.5 rounded hover:bg-slate-700 transition-colors">
-                      <MoreVertical className="w-4 h-4 text-slate-400" />
+                    <button
+                      onClick={() => handleBotMenu(bot.id)}
+                      className="p-1.5 rounded hover:bg-slate-700 transition-colors"
+                      title="View bot details"
+                    >
+                      <MoreVertical className="w-4 h-4 text-slate-400 hover:text-white" />
                     </button>
                   </div>
                 </td>

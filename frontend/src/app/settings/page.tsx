@@ -421,7 +421,10 @@ export default function SettingsPage() {
                   <User className="w-10 h-10 text-white" />
                 </div>
                 <div>
-                  <button className="btn-secondary text-sm">Change Avatar</button>
+                  <button
+                    onClick={() => alert('Upload a new avatar image.\n\nSupported formats: JPG, PNG, GIF\nMax size: 2MB\n\nComing soon!')}
+                    className="btn-secondary text-sm"
+                  >Change Avatar</button>
                   <p className="text-xs text-slate-500 mt-1">JPG, PNG or GIF. Max 2MB.</p>
                 </div>
               </div>
@@ -628,7 +631,10 @@ export default function SettingsPage() {
               <div className="card p-6 space-y-4">
                 <h2 className="text-lg font-semibold text-white">Security</h2>
 
-                <button className="w-full flex items-center justify-between p-4 bg-slate-800/50 rounded-lg hover:bg-slate-800 transition-colors">
+                <button
+                  onClick={() => alert('Change Password\n\nYou will receive an email with instructions to reset your password.\n\nComing soon!')}
+                  className="w-full flex items-center justify-between p-4 bg-slate-800/50 rounded-lg hover:bg-slate-800 transition-colors"
+                >
                   <div className="flex items-center gap-3">
                     <Key className="w-5 h-5 text-slate-400" />
                     <div className="text-left">
@@ -639,7 +645,10 @@ export default function SettingsPage() {
                   <span className="text-slate-400">→</span>
                 </button>
 
-                <button className="w-full flex items-center justify-between p-4 bg-slate-800/50 rounded-lg hover:bg-slate-800 transition-colors">
+                <button
+                  onClick={() => alert('Two-Factor Authentication\n\nEnable 2FA to add an extra layer of security to your account.\n\nOptions:\n- Authenticator App (Google/Microsoft Authenticator)\n- SMS Verification\n- Security Key (YubiKey)\n\nComing soon!')}
+                  className="w-full flex items-center justify-between p-4 bg-slate-800/50 rounded-lg hover:bg-slate-800 transition-colors"
+                >
                   <div className="flex items-center gap-3">
                     <Shield className="w-5 h-5 text-slate-400" />
                     <div className="text-left">

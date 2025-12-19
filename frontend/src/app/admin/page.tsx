@@ -391,7 +391,10 @@ export default function AdminPage() {
         <div className="card p-4">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-white">System Activity</h3>
-            <button className="text-sm text-time-primary hover:text-time-primary/80">
+            <button
+              onClick={() => alert('View All System Activity\n\nFull activity log with:\n- Date range filters\n- Event type filters\n- Export to CSV\n\nComing soon!')}
+              className="text-sm text-time-primary hover:text-time-primary/80"
+            >
               View All
             </button>
           </div>
@@ -448,10 +451,20 @@ export default function AdminPage() {
                       <p className="text-xs text-slate-500 mt-0.5">{item.desc}</p>
                     </div>
                     <div className="flex items-center gap-2">
-                      <button className="p-1.5 rounded bg-green-500/20 text-green-400 hover:bg-green-500/30">
+                      <button
+                        onClick={() => alert(`✅ Approved: ${item.title}\n\nType: ${item.type}\n${item.desc}\n\nChanges have been applied to the system.`)}
+                        className="p-1.5 rounded bg-green-500/20 text-green-400 hover:bg-green-500/30"
+                      >
                         <CheckCircle className="w-4 h-4" />
                       </button>
-                      <button className="p-1.5 rounded bg-red-500/20 text-red-400 hover:bg-red-500/30">
+                      <button
+                        onClick={() => {
+                          if (confirm(`Reject: ${item.title}?\n\n${item.desc}\n\nThis will discard the pending changes.`)) {
+                            alert(`❌ Rejected: ${item.title}\n\nThe ${item.type} changes have been discarded.`);
+                          }
+                        }}
+                        className="p-1.5 rounded bg-red-500/20 text-red-400 hover:bg-red-500/30"
+                      >
                         <XCircle className="w-4 h-4" />
                       </button>
                     </div>

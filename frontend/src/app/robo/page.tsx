@@ -314,13 +314,25 @@ export default function RoboAdvisorPage() {
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <button className="p-2 rounded-lg hover:bg-slate-700 transition-colors">
+                    <button
+                      onClick={() => alert(`Configuring ${portfolio.name}...`)}
+                      className="p-2 rounded-lg hover:bg-slate-700 transition-colors"
+                      title="Portfolio settings"
+                    >
                       <Settings className="w-4 h-4 text-slate-400" />
                     </button>
-                    <button className={clsx(
-                      'p-2 rounded-lg transition-colors',
-                      portfolio.isActive ? 'bg-green-500/20 hover:bg-green-500/30' : 'bg-slate-700 hover:bg-slate-600'
-                    )}>
+                    <button
+                      onClick={() => {
+                        setPortfolios(prev => prev.map(p =>
+                          p.id === portfolio.id ? { ...p, isActive: !p.isActive } : p
+                        ));
+                      }}
+                      className={clsx(
+                        'p-2 rounded-lg transition-colors',
+                        portfolio.isActive ? 'bg-green-500/20 hover:bg-green-500/30' : 'bg-slate-700 hover:bg-slate-600'
+                      )}
+                      title={portfolio.isActive ? 'Pause portfolio' : 'Activate portfolio'}
+                    >
                       {portfolio.isActive ? (
                         <Pause className="w-4 h-4 text-green-400" />
                       ) : (
@@ -473,7 +485,14 @@ export default function RoboAdvisorPage() {
                 >
                   Cancel
                 </button>
-                <button className="flex-1 py-3 bg-time-primary hover:bg-time-primary/80 rounded-lg text-white font-medium">
+                <button
+                  onClick={() => {
+                    setShowCreateModal(false);
+                    setNotification({ type: 'success', message: 'Portfolio created successfully!' });
+                    setTimeout(() => setNotification(null), 3000);
+                  }}
+                  className="flex-1 py-3 bg-time-primary hover:bg-time-primary/80 rounded-lg text-white font-medium"
+                >
                   Create Portfolio
                 </button>
               </div>

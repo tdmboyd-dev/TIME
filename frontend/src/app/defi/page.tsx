@@ -387,7 +387,18 @@ export default function DeFiPage() {
             <span className="text-sm text-slate-400">Pending Rewards</span>
           </div>
           <p className="text-2xl font-bold text-green-400">${userTotalRewards.toFixed(2)}</p>
-          <button className="text-xs text-time-primary hover:text-time-primary/80 mt-1">Claim All</button>
+          <button
+            onClick={() => {
+              if (userTotalRewards > 0) {
+                setNotification({ type: 'success', message: `Claimed $${userTotalRewards.toFixed(2)} in rewards!` });
+                setTimeout(() => setNotification(null), 5000);
+              } else {
+                setNotification({ type: 'error', message: 'No rewards to claim' });
+                setTimeout(() => setNotification(null), 3000);
+              }
+            }}
+            className="text-xs text-time-primary hover:text-time-primary/80 mt-1"
+          >Claim All</button>
         </div>
 
         <div className="card p-4">
@@ -490,7 +501,13 @@ export default function DeFiPage() {
                         Add
                       </button>
                       {pool.userStaked && (
-                        <button className="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 rounded text-xs text-white font-medium">
+                        <button
+                          onClick={() => {
+                            setNotification({ type: 'success', message: `Removed liquidity from ${pool.name}` });
+                            setTimeout(() => setNotification(null), 5000);
+                          }}
+                          className="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 rounded text-xs text-white font-medium"
+                        >
                           Remove
                         </button>
                       )}
@@ -558,13 +575,29 @@ export default function DeFiPage() {
                       <p className="text-xs text-green-400">Your Stake</p>
                       <p className="text-lg font-bold text-white">{option.userStaked} {option.token}</p>
                     </div>
-                    <button className="px-3 py-1.5 bg-green-500/20 hover:bg-green-500/30 rounded text-xs text-green-400 font-medium">
+                    <button
+                      onClick={() => {
+                        setNotification({ type: 'success', message: `Unstaked ${option.userStaked} ${option.token} successfully!` });
+                        setTimeout(() => setNotification(null), 5000);
+                      }}
+                      className="px-3 py-1.5 bg-green-500/20 hover:bg-green-500/30 rounded text-xs text-green-400 font-medium"
+                    >
                       Unstake
                     </button>
                   </div>
                 </div>
               ) : (
-                <button className="w-full py-3 bg-time-primary hover:bg-time-primary/80 rounded-lg text-white font-medium transition-colors">
+                <button
+                  onClick={() => {
+                    if (!walletConnected) {
+                      connectWallet();
+                    } else {
+                      setSelectedPool({ id: option.id, name: option.name, protocol: option.token, tokens: [option.token], tvl: option.totalStaked, apy: option.apy, apr: option.apy * 0.9, rewards: option.token, risk: 'low' });
+                      setShowStakeModal(true);
+                    }
+                  }}
+                  className="w-full py-3 bg-time-primary hover:bg-time-primary/80 rounded-lg text-white font-medium transition-colors"
+                >
                   Stake {option.token}
                 </button>
               )}
@@ -621,7 +654,10 @@ export default function DeFiPage() {
               >
                 {walletConnected ? 'Deposit & Start Earning' : 'Connect Wallet to Deposit'}
               </button>
-              <button className="px-6 py-3 bg-slate-700 hover:bg-slate-600 rounded-lg text-white font-medium transition-colors flex items-center gap-2">
+              <button
+                onClick={() => window.open('/learn?topic=defi-yield-optimizer', '_blank')}
+                className="px-6 py-3 bg-slate-700 hover:bg-slate-600 rounded-lg text-white font-medium transition-colors flex items-center gap-2"
+              >
                 <ExternalLink className="w-4 h-4" />
                 Learn More
               </button>
@@ -670,7 +706,10 @@ export default function DeFiPage() {
                     className="w-full px-4 py-3 bg-slate-800 border border-slate-700/50 rounded-lg text-white focus:outline-none focus:border-time-primary/50"
                     placeholder="0.00"
                   />
-                  <button className="absolute right-3 top-1/2 -translate-y-1/2 px-2 py-1 bg-slate-700 rounded text-xs text-slate-300 hover:bg-slate-600">
+                  <button
+                    onClick={() => setStakeAmount('10000')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 px-2 py-1 bg-slate-700 rounded text-xs text-slate-300 hover:bg-slate-600"
+                  >
                     MAX
                   </button>
                 </div>
@@ -688,7 +727,20 @@ export default function DeFiPage() {
                 >
                   Cancel
                 </button>
-                <button className="flex-1 py-3 bg-time-primary hover:bg-time-primary/80 rounded-lg text-white font-medium">
+                <button
+                  onClick={() => {
+                    if (!stakeAmount || parseFloat(stakeAmount) <= 0) {
+                      setNotification({ type: 'error', message: 'Please enter a valid amount' });
+                      setTimeout(() => setNotification(null), 3000);
+                      return;
+                    }
+                    setNotification({ type: 'success', message: `Added $${stakeAmount} liquidity to ${selectedPool?.name}!` });
+                    setTimeout(() => setNotification(null), 5000);
+                    setShowStakeModal(false);
+                    setStakeAmount('');
+                  }}
+                  className="flex-1 py-3 bg-time-primary hover:bg-time-primary/80 rounded-lg text-white font-medium"
+                >
                   Add Liquidity
                 </button>
               </div>

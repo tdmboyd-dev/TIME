@@ -255,7 +255,10 @@ export default function RetirementPage() {
             <Calculator className="w-4 h-4" />
             Calculator
           </button>
-          <button className="btn-primary flex items-center gap-2">
+          <button
+            onClick={() => alert('Create New Retirement Plan\n\nThis will open a wizard to help you:\n1. Set your retirement age goal\n2. Define monthly contributions\n3. Choose investment allocation\n4. Set target savings amount\n\nComing soon!')}
+            className="btn-primary flex items-center gap-2"
+          >
             <Plus className="w-4 h-4" />
             New Plan
           </button>
@@ -323,7 +326,10 @@ export default function RetirementPage() {
             <PiggyBank className="w-12 h-12 text-slate-600 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-white mb-2">No retirement plans yet</h3>
             <p className="text-slate-400 mb-4">Create your first retirement plan to start tracking</p>
-            <button className="btn-primary">
+            <button
+              onClick={() => alert('Create New Retirement Plan\n\nThis will open a wizard to help you:\n1. Set your retirement age goal\n2. Define monthly contributions\n3. Choose investment allocation\n4. Set target savings amount\n\nComing soon!')}
+              className="btn-primary"
+            >
               <Plus className="w-4 h-4 mr-2" />
               Create Plan
             </button>
@@ -351,7 +357,10 @@ export default function RetirementPage() {
                     Age {plan.currentAge} → {plan.retirementAge} ({plan.retirementAge - plan.currentAge} years)
                   </p>
                 </div>
-                <button className="p-2 rounded-lg hover:bg-slate-700 transition-colors">
+                <button
+                  onClick={() => alert(`Retirement Plan Settings\n\n- Adjust monthly contribution\n- Update expected return rate\n- Modify target retirement age\n- Change investment allocation\n\nComing soon!`)}
+                  className="p-2 rounded-lg hover:bg-slate-700 transition-colors"
+                >
                   <Settings className="w-4 h-4 text-slate-400" />
                 </button>
               </div>

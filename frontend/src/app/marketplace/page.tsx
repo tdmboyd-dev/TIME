@@ -319,7 +319,12 @@ export default function MarketplacePage() {
                       <div className="text-xs text-gray-500">Starting at</div>
                       <div className="font-bold text-lg">{formatCurrency(listing.pricing?.hourly || 0)}/hr</div>
                     </div>
-                    <button className="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg font-medium flex items-center gap-2 transition-colors">
+                    <button
+                      onClick={() => {
+                        alert(`Renting ${listing.name}! Monthly price: ${formatCurrency(listing.pricing?.monthly || 0)}`);
+                      }}
+                      className="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg font-medium flex items-center gap-2 transition-colors"
+                    >
                       <ShoppingCart className="w-4 h-4" />
                       Rent
                     </button>

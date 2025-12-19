@@ -983,6 +983,7 @@ export default function BrokersPage() {
                           <RefreshCw className="w-4 h-4 text-slate-400" />
                         </button>
                         <button
+                          onClick={() => alert(`Broker Settings\n\nConfigure:\n- Paper/Live mode toggle\n- Trading permissions\n- Order defaults\n- Risk limits\n\nComing soon!`)}
                           className="p-2 hover:bg-slate-700 rounded-lg transition-colors"
                           title="Settings"
                         >

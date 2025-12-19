@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Gem, Crown, Zap, Shield, Brain, Target, TrendingUp,
   Bot, Rocket, Star, Lock, CheckCircle, Play, Pause,
@@ -74,6 +75,7 @@ interface ActivityItem {
 }
 
 export default function UltimatePage() {
+  const router = useRouter();
   const [superBots, setSuperBots] = useState<SuperBot[]>([]);
   const [liveStatus, setLiveStatus] = useState<LiveTradingStatus | null>(null);
   const [trades, setTrades] = useState<Trade[]>([]);
@@ -82,6 +84,16 @@ export default function UltimatePage() {
   const [expandedBot, setExpandedBot] = useState<string | null>(null);
   const [selectedTier, setSelectedTier] = useState<string>('LEGENDARY');
   const [activatingBots, setActivatingBots] = useState(false);
+
+  const handleRequestAccess = () => {
+    // Navigate to contact/settings with access request
+    router.push('/settings?tab=subscription&request=ultimate');
+  };
+
+  const handleViewDocumentation = () => {
+    // Navigate to learn page with UMM documentation
+    router.push('/learn?topic=ultimate-money-machine');
+  };
 
   const fetchData = useCallback(async () => {
     try {
@@ -560,10 +572,16 @@ export default function UltimatePage() {
           Contact admin for access to this premium add-on.
         </p>
         <div className="flex items-center justify-center gap-4">
-          <button className="px-6 py-3 bg-purple-500 hover:bg-purple-600 text-white font-bold rounded-xl transition-colors">
+          <button
+            onClick={handleRequestAccess}
+            className="px-6 py-3 bg-purple-500 hover:bg-purple-600 text-white font-bold rounded-xl transition-colors"
+          >
             Request Access
           </button>
-          <button className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-xl transition-colors">
+          <button
+            onClick={handleViewDocumentation}
+            className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-xl transition-colors"
+          >
             View Documentation
           </button>
         </div>

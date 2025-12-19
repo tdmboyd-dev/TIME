@@ -350,7 +350,10 @@ export default function AITradeGodPage() {
                       List for Lending ($20/mo)
                     </button>
                   )}
-                  <button className="px-4 py-2 bg-slate-500/20 text-slate-400 rounded-lg hover:bg-slate-500/30 transition-colors flex items-center gap-2">
+                  <button
+                    onClick={() => alert(`Configure settings for ${selectedBot.name}\n\nAvailable settings:\n- Risk Level\n- Trading Pairs\n- Max Position Size\n- Stop Loss %\n\nComing soon!`)}
+                    className="px-4 py-2 bg-slate-500/20 text-slate-400 rounded-lg hover:bg-slate-500/30 transition-colors flex items-center gap-2"
+                  >
                     <Settings className="w-4 h-4" />
                     Configure
                   </button>
@@ -454,7 +457,10 @@ export default function AITradeGodPage() {
             <p className="text-slate-400 text-sm mb-3">By @CryptoKing</p>
             <div className="flex justify-between text-sm">
               <span className="text-slate-400">$50/mo + 15% profit</span>
-              <button className="text-amber-400 hover:text-amber-300">Borrow</button>
+              <button
+                onClick={() => alert('Borrowing Whale Hunter Pro!\n\nCost: $50/mo + 15% profit share\n\nThis will start a 30-day rental of this bot. Coming soon!')}
+                className="text-amber-400 hover:text-amber-300"
+              >Borrow</button>
             </div>
           </div>
           <div className="p-4 border border-slate-700 rounded-lg bg-slate-800/50">
@@ -466,7 +472,10 @@ export default function AITradeGodPage() {
             <p className="text-slate-400 text-sm mb-3">By @SteadyGains</p>
             <div className="flex justify-between text-sm">
               <span className="text-slate-400">$20/mo + 10% profit</span>
-              <button className="text-amber-400 hover:text-amber-300">Borrow</button>
+              <button
+                onClick={() => alert('Borrowing DCA Master!\n\nCost: $20/mo + 10% profit share\n\nThis will start a 30-day rental of this bot. Coming soon!')}
+                className="text-amber-400 hover:text-amber-300"
+              >Borrow</button>
             </div>
           </div>
           <div className="p-4 border border-slate-700 rounded-lg bg-slate-800/50">
@@ -478,7 +487,10 @@ export default function AITradeGodPage() {
             <p className="text-slate-400 text-sm mb-3">By @GridMaster</p>
             <div className="flex justify-between text-sm">
               <span className="text-slate-400">$35/mo + 12% profit</span>
-              <button className="text-amber-400 hover:text-amber-300">Borrow</button>
+              <button
+                onClick={() => alert('Borrowing Grid Genius!\n\nCost: $35/mo + 12% profit share\n\nThis will start a 30-day rental of this bot. Coming soon!')}
+                className="text-amber-400 hover:text-amber-300"
+              >Borrow</button>
             </div>
           </div>
         </div>

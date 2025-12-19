@@ -508,7 +508,13 @@ export default function HistoryPage() {
                       <p className="text-sm text-slate-300 p-3 bg-slate-800/50 rounded-lg">
                         {trade.reasoning}
                       </p>
-                      <button className="text-sm text-time-primary hover:text-time-primary/80 flex items-center gap-1">
+                      <button
+                        onClick={() => {
+                          // Navigate to backtest page with trade analysis
+                          window.location.href = `/backtest?tradeId=${trade.id}&symbol=${trade.symbol}`;
+                        }}
+                        className="text-sm text-time-primary hover:text-time-primary/80 flex items-center gap-1"
+                      >
                         View Full Analysis
                         <ExternalLink className="w-3 h-3" />
                       </button>

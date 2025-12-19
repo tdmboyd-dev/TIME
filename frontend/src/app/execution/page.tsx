@@ -503,7 +503,12 @@ export default function ExecutionPage() {
                   <Target className="w-5 h-5 text-time-primary" />
                   Active Smart Orders
                 </h2>
-                <button className="btn-secondary text-sm">View All</button>
+                <button
+                  onClick={() => setActiveTab('orders')}
+                  className="btn-secondary text-sm"
+                >
+                  View All
+                </button>
               </div>
               {activeOrders.length === 0 ? (
                 <div className="text-center py-8 text-slate-500">
