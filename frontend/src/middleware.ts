@@ -8,43 +8,7 @@ import type { NextRequest } from 'next/server';
  * Uses httpOnly cookies for secure token storage.
  */
 
-// Routes that require authentication
-const PROTECTED_ROUTES = [
-  '/settings',
-  '/portfolio',
-  '/trade',
-  '/bots',
-  '/strategies',
-  '/history',
-  '/brokers',
-  '/execution',
-  '/live-trading',
-  '/autopilot',
-  '/payments',
-  '/transfers',
-  '/alerts',
-  '/defi',
-  '/dropzone',
-  '/goals',
-  '/invest',
-  '/retirement',
-  '/risk',
-  '/robo',
-  '/social',
-  '/tax',
-  '/timebeunus',
-  '/vision',
-  '/ai-trade-god',
-];
-
-// Routes that require admin privileges
-const ADMIN_ROUTES = [
-  '/admin',
-  '/admin-portal',
-  '/admin/health',
-];
-
-// Public routes (no auth required)
+// Public routes (no auth required) - ONLY these are accessible without login
 const PUBLIC_ROUTES = [
   '/',
   '/login',
@@ -52,7 +16,14 @@ const PUBLIC_ROUTES = [
   '/admin-login',
   '/markets',
   '/learn',
-  '/charts',
+];
+
+// Routes that require admin privileges
+const ADMIN_ROUTES = [
+  '/admin',
+  '/admin-portal',
+  '/admin/health',
+  '/gift-access',
 ];
 
 export function middleware(request: NextRequest) {
@@ -66,21 +37,22 @@ export function middleware(request: NextRequest) {
   const headerToken = request.headers.get('authorization')?.replace('Bearer ', '');
   const hasValidToken = !!(authToken || headerToken);
 
+  // Check if route is public (no auth required)
+  const isPublicRoute = PUBLIC_ROUTES.some(route => pathname === route || pathname.startsWith(route + '/'));
+
   // Check if route requires admin access
-  // Make sure to NOT redirect /admin-login to itself
   const isAdminRoute = ADMIN_ROUTES.some(route => pathname.startsWith(route)) && !pathname.startsWith('/admin-login');
+
+  // ADMIN ROUTES - Require admin privileges
   if (isAdminRoute) {
     if (!hasValidToken) {
-      // Redirect to admin login
       const url = request.nextUrl.clone();
       url.pathname = '/admin-login';
       url.searchParams.set('redirect', pathname);
       return NextResponse.redirect(url);
     }
 
-    // For admin routes, also verify admin status
-    // Note: Real admin verification should happen server-side
-    if (!isAdmin && !pathname.includes('/admin-login')) {
+    if (!isAdmin) {
       const url = request.nextUrl.clone();
       url.pathname = '/admin-login';
       url.searchParams.set('error', 'admin_required');
@@ -88,10 +60,8 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  // Check if route requires authentication
-  const isProtectedRoute = PROTECTED_ROUTES.some(route => pathname.startsWith(route));
-  if (isProtectedRoute && !hasValidToken) {
-    // Redirect to login
+  // ALL OTHER ROUTES (not public, not admin) - Require authentication
+  if (!isPublicRoute && !isAdminRoute && !hasValidToken) {
     const url = request.nextUrl.clone();
     url.pathname = '/login';
     url.searchParams.set('redirect', pathname);
