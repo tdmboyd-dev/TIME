@@ -105,27 +105,46 @@ export default function LiveTradingPage() {
   // Fetch all trading data
   const fetchData = useCallback(async () => {
     try {
+      // ALWAYS fetch public bots first (works without auth)
+      const publicBotsRes = await fetch(`${API_BASE}/bots/public`);
+      const publicBotsData = await publicBotsRes.json();
+
+      if (publicBotsData.success && Array.isArray(publicBotsData.data)) {
+        const mappedBots = publicBotsData.data.slice(0, 20).map((bot: any) => ({
+          id: bot.id || bot._id,
+          name: bot.name,
+          source: bot.source || 'absorbed',
+          status: bot.status || 'active',
+          rating: bot.rating || 4.0,
+          winRate: bot.performance?.winRate || bot.winRate || 0,
+          profitFactor: bot.performance?.profitFactor || bot.profitFactor || 1.0,
+          isEnabledForTrading: false,
+        }));
+        setAvailableBots(mappedBots);
+
+        // Set default stats based on public bots
+        const totalBots = publicBotsData.data.length;
+        const avgWinRate = publicBotsData.data.reduce((sum: number, b: any) => sum + (b.performance?.winRate || 0), 0) / totalBots;
+        const totalPnL = publicBotsData.data.reduce((sum: number, b: any) => sum + (b.performance?.totalPnL || 0), 0);
+
+        setStats({
+          isRunning: false,
+          enabledBots: 0,
+          totalTrades: publicBotsData.data.reduce((sum: number, b: any) => sum + (b.performance?.totalTrades || 0), 0),
+          openPositions: 0,
+          pendingSignals: 0,
+          totalPnL: totalPnL,
+          todayPnL: 0,
+          winRate: avgWinRate * 100,
+          bots: [],
+        });
+      }
+
       // Check if user is logged in
       const loggedIn = isLoggedIn();
       setIsAuthenticated(loggedIn);
 
       if (!loggedIn) {
-        // Not logged in - fetch public bot data only
-        const publicBotsRes = await fetch(`${API_BASE}/bots/public`);
-        const publicBotsData = await publicBotsRes.json();
-
-        if (publicBotsData.success && Array.isArray(publicBotsData.data)) {
-          setAvailableBots(publicBotsData.data.slice(0, 20).map((bot: any) => ({
-            id: bot.id || bot._id,
-            name: bot.name,
-            source: bot.source || 'absorbed',
-            status: bot.status || 'active',
-            rating: bot.rating || 4.0,
-            winRate: bot.performance?.winRate || bot.winRate || 0,
-            profitFactor: bot.performance?.profitFactor || bot.profitFactor || 1.0,
-            isEnabledForTrading: false,
-          })));
-        }
         setAuthError('Login required to enable live trading');
         setIsLoading(false);
         setIsRefreshing(false);
@@ -141,25 +160,10 @@ export default function LiveTradingPage() {
         fetch(`${API_BASE}/trading/trades?limit=20`, { headers: getAuthHeaders() }),
       ]);
 
-      // Check for auth errors
+      // Check for auth errors (public bots already loaded above)
       if (statsRes.status === 401 || statsRes.status === 403) {
         setAuthError('Session expired. Please login again.');
         setIsAuthenticated(false);
-        // Still load public bots
-        const publicBotsRes = await fetch(`${API_BASE}/bots/public`);
-        const publicBotsData = await publicBotsRes.json();
-        if (publicBotsData.success) {
-          setAvailableBots(publicBotsData.data.slice(0, 20).map((bot: any) => ({
-            id: bot.id || bot._id,
-            name: bot.name,
-            source: bot.source || 'absorbed',
-            status: bot.status || 'active',
-            rating: bot.rating || 4.0,
-            winRate: bot.performance?.winRate || bot.winRate || 0,
-            profitFactor: bot.performance?.profitFactor || bot.profitFactor || 1.0,
-            isEnabledForTrading: false,
-          })));
-        }
         setIsLoading(false);
         setIsRefreshing(false);
         return;
