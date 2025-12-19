@@ -104,6 +104,10 @@ export default function BotsPage() {
   const [newBotDescription, setNewBotDescription] = useState('');
   const [newBotStrategy, setNewBotStrategy] = useState<'trend_following' | 'mean_reversion' | 'scalping' | 'arbitrage'>('trend_following');
 
+  // Selected bot for detail view
+  const [selectedBot, setSelectedBot] = useState<BotData | null>(null);
+  const [showBotDetails, setShowBotDetails] = useState(false);
+
   // Fetch bots from backend API
   const fetchBots = useCallback(async () => {
     try {
@@ -329,12 +333,21 @@ export default function BotsPage() {
     return matchesSearch && matchesSource && matchesStatus;
   });
 
-  const toggleBotSelection = (botId: string) => {
+  const toggleBotSelection = (botId: string, e: React.MouseEvent) => {
+    // If clicking on a button, don't toggle selection
+    if ((e.target as HTMLElement).closest('button')) return;
+
     setSelectedBots(prev =>
       prev.includes(botId)
         ? prev.filter(id => id !== botId)
         : [...prev, botId]
     );
+  };
+
+  const openBotDetails = (bot: BotData, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSelectedBot(bot);
+    setShowBotDetails(true);
   };
 
   const handleBulkStart = async () => {
@@ -540,10 +553,10 @@ export default function BotsPage() {
               <div
                 key={bot.id}
                 className={clsx(
-                  'card p-4 cursor-pointer transition-all',
+                  'card p-4 cursor-pointer transition-all hover:border-slate-600',
                   selectedBots.includes(bot.id) && 'ring-2 ring-time-primary'
                 )}
-                onClick={() => toggleBotSelection(bot.id)}
+                onClick={(e) => toggleBotSelection(bot.id, e)}
               >
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-3">
@@ -639,31 +652,39 @@ export default function BotsPage() {
                       </span>
                     </span>
                   </div>
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-2">
+                    {/* View Details Button */}
+                    <button
+                      onClick={(e) => openBotDetails(bot, e)}
+                      className="px-3 py-1.5 text-xs bg-slate-700 hover:bg-slate-600 text-white rounded transition-colors"
+                      title="View bot details"
+                    >
+                      Details
+                    </button>
+                    {/* Start/Stop Button - Bigger and more visible */}
                     {bot.status === 'active' ? (
                       <button
                         onClick={(e) => { e.stopPropagation(); handleStopBot(bot.id); }}
-                        className="p-1.5 rounded hover:bg-slate-700 transition-colors"
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 border border-yellow-500/30 rounded transition-colors"
                         title="Stop bot"
                       >
-                        <Pause className="w-4 h-4 text-yellow-400" />
+                        <Pause className="w-3.5 h-3.5" />
+                        Stop
                       </button>
                     ) : bot.status === 'paused' || bot.status === 'stopped' ? (
                       <button
                         onClick={(e) => { e.stopPropagation(); handleStartBot(bot.id); }}
-                        className="p-1.5 rounded hover:bg-slate-700 transition-colors"
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-green-500/20 hover:bg-green-500/30 text-green-400 border border-green-500/30 rounded transition-colors"
                         title="Start bot"
                       >
-                        <Play className="w-4 h-4 text-green-400" />
+                        <Play className="w-3.5 h-3.5" />
+                        Start
                       </button>
-                    ) : null}
-                    <button
-                      onClick={(e) => { e.stopPropagation(); }}
-                      className="p-1.5 rounded hover:bg-slate-700 transition-colors"
-                      title="Bot settings"
-                    >
-                      <Settings className="w-4 h-4 text-slate-400" />
-                    </button>
+                    ) : (
+                      <span className="px-3 py-1.5 text-xs bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded">
+                        {bot.status.replace('_', ' ')}
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -866,6 +887,179 @@ export default function BotsPage() {
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Bot Details Modal */}
+      {showBotDetails && selectedBot && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-slate-900 border border-slate-700 rounded-xl p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="p-3 rounded-lg bg-slate-800">
+                  <Bot className="w-6 h-6 text-time-primary" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-white">{selectedBot.name}</h3>
+                  <p className="text-sm text-slate-400 capitalize">{selectedBot.source.replace('_', ' ')}</p>
+                </div>
+              </div>
+              <button onClick={() => setShowBotDetails(false)} className="text-slate-400 hover:text-white">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            {/* Status and Controls */}
+            <div className="flex items-center justify-between mb-6 p-4 bg-slate-800/50 rounded-lg">
+              <div className="flex items-center gap-3">
+                <span className={clsx(
+                  'px-3 py-1.5 text-sm font-medium rounded-full capitalize',
+                  statusColors[selectedBot.status]?.bg || 'bg-slate-500/20',
+                  statusColors[selectedBot.status]?.text || 'text-slate-400'
+                )}>
+                  {selectedBot.status.replace('_', ' ')}
+                </span>
+                {selectedBot.absorbed && (
+                  <span className="px-3 py-1.5 text-sm bg-purple-500/20 text-purple-400 rounded-full">
+                    Absorbed
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                {selectedBot.status === 'active' ? (
+                  <button
+                    onClick={() => { handleStopBot(selectedBot.id); setShowBotDetails(false); }}
+                    className="flex items-center gap-2 px-4 py-2 bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 border border-yellow-500/30 rounded-lg transition-colors"
+                  >
+                    <Pause className="w-4 h-4" />
+                    Stop Bot
+                  </button>
+                ) : selectedBot.status === 'paused' || selectedBot.status === 'stopped' ? (
+                  <button
+                    onClick={() => { handleStartBot(selectedBot.id); setShowBotDetails(false); }}
+                    className="flex items-center gap-2 px-4 py-2 bg-green-500/20 hover:bg-green-500/30 text-green-400 border border-green-500/30 rounded-lg transition-colors"
+                  >
+                    <Play className="w-4 h-4" />
+                    Start Bot
+                  </button>
+                ) : null}
+              </div>
+            </div>
+
+            {/* Description */}
+            <div className="mb-6">
+              <h4 className="text-sm font-semibold text-slate-400 mb-2">Description</h4>
+              <p className="text-white">{selectedBot.description}</p>
+            </div>
+
+            {/* Performance Grid */}
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+              <div className="p-4 bg-slate-800/50 rounded-lg">
+                <p className="text-xs text-slate-500 mb-1">Win Rate</p>
+                <p className={clsx(
+                  'text-2xl font-bold',
+                  selectedBot.performance.winRate >= 60 ? 'text-green-400' :
+                  selectedBot.performance.winRate >= 50 ? 'text-yellow-400' : 'text-red-400'
+                )}>
+                  {selectedBot.performance.winRate > 0 ? `${selectedBot.performance.winRate.toFixed(1)}%` : 'N/A'}
+                </p>
+              </div>
+              <div className="p-4 bg-slate-800/50 rounded-lg">
+                <p className="text-xs text-slate-500 mb-1">Profit Factor</p>
+                <p className={clsx(
+                  'text-2xl font-bold',
+                  selectedBot.performance.profitFactor >= 2 ? 'text-green-400' :
+                  selectedBot.performance.profitFactor >= 1.5 ? 'text-yellow-400' : 'text-slate-300'
+                )}>
+                  {selectedBot.performance.profitFactor > 0 ? selectedBot.performance.profitFactor.toFixed(2) : 'N/A'}
+                </p>
+              </div>
+              <div className="p-4 bg-slate-800/50 rounded-lg">
+                <p className="text-xs text-slate-500 mb-1">Sharpe Ratio</p>
+                <p className={clsx(
+                  'text-2xl font-bold',
+                  selectedBot.performance.sharpeRatio >= 2 ? 'text-green-400' :
+                  selectedBot.performance.sharpeRatio >= 1 ? 'text-yellow-400' : 'text-slate-300'
+                )}>
+                  {selectedBot.performance.sharpeRatio > 0 ? selectedBot.performance.sharpeRatio.toFixed(2) : 'N/A'}
+                </p>
+              </div>
+              <div className="p-4 bg-slate-800/50 rounded-lg">
+                <p className="text-xs text-slate-500 mb-1">Max Drawdown</p>
+                <p className="text-2xl font-bold text-red-400">
+                  {selectedBot.performance.maxDrawdown > 0 ? `${selectedBot.performance.maxDrawdown.toFixed(1)}%` : 'N/A'}
+                </p>
+              </div>
+              <div className="p-4 bg-slate-800/50 rounded-lg">
+                <p className="text-xs text-slate-500 mb-1">Total Trades</p>
+                <p className="text-2xl font-bold text-white">
+                  {selectedBot.performance.totalTrades.toLocaleString()}
+                </p>
+              </div>
+              <div className="p-4 bg-slate-800/50 rounded-lg">
+                <p className="text-xs text-slate-500 mb-1">Total P&L</p>
+                <p className={clsx(
+                  'text-2xl font-bold',
+                  selectedBot.performance.totalPnL >= 0 ? 'text-green-400' : 'text-red-400'
+                )}>
+                  ${selectedBot.performance.totalPnL.toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
+                </p>
+              </div>
+            </div>
+
+            {/* Rating */}
+            {selectedBot.rating > 0 && (
+              <div className="mb-6">
+                <h4 className="text-sm font-semibold text-slate-400 mb-2">Rating</h4>
+                <div className="flex items-center gap-2">
+                  <div className="flex">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <span
+                        key={star}
+                        className={clsx(
+                          'text-xl',
+                          star <= selectedBot.rating ? 'text-yellow-400' : 'text-slate-600'
+                        )}
+                      >
+                        ★
+                      </span>
+                    ))}
+                  </div>
+                  <span className="text-white font-medium">{selectedBot.rating.toFixed(1)}</span>
+                </div>
+              </div>
+            )}
+
+            {/* Actions */}
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowBotDetails(false)}
+                className="flex-1 py-3 bg-slate-700 hover:bg-slate-600 rounded-lg text-white font-medium"
+              >
+                Close
+              </button>
+              {selectedBot.status === 'active' ? (
+                <button
+                  onClick={() => { handleStopBot(selectedBot.id); setShowBotDetails(false); }}
+                  className="flex-1 py-3 bg-yellow-500 hover:bg-yellow-600 rounded-lg text-white font-medium flex items-center justify-center gap-2"
+                >
+                  <Pause className="w-5 h-5" />
+                  Stop Trading
+                </button>
+              ) : (
+                <button
+                  onClick={() => { handleStartBot(selectedBot.id); setShowBotDetails(false); }}
+                  className="flex-1 py-3 bg-green-500 hover:bg-green-600 rounded-lg text-white font-medium flex items-center justify-center gap-2"
+                >
+                  <Play className="w-5 h-5" />
+                  Start Trading
+                </button>
+              )}
+            </div>
           </div>
         </div>
       )}

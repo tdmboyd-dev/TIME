@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Play,
   Pause,
@@ -20,10 +21,11 @@ import {
   Shield,
   Zap,
   Eye,
-  XCircle
+  XCircle,
+  LogIn
 } from 'lucide-react';
 
-import { API_BASE, getAuthHeaders } from '@/lib/api';
+import { API_BASE, getAuthHeaders, isLoggedIn } from '@/lib/api';
 
 interface BotTradingState {
   botId: string;
@@ -89,23 +91,79 @@ interface ExecutedTrade {
 }
 
 export default function LiveTradingPage() {
+  const router = useRouter();
   const [stats, setStats] = useState<TradingStats | null>(null);
   const [availableBots, setAvailableBots] = useState<AvailableBot[]>([]);
   const [pendingSignals, setPendingSignals] = useState<PendingSignal[]>([]);
   const [recentTrades, setRecentTrades] = useState<ExecutedTrade[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   // Fetch all trading data
   const fetchData = useCallback(async () => {
     try {
+      // Check if user is logged in
+      const loggedIn = isLoggedIn();
+      setIsAuthenticated(loggedIn);
+
+      if (!loggedIn) {
+        // Not logged in - fetch public bot data only
+        const publicBotsRes = await fetch(`${API_BASE}/bots/public`);
+        const publicBotsData = await publicBotsRes.json();
+
+        if (publicBotsData.success && Array.isArray(publicBotsData.data)) {
+          setAvailableBots(publicBotsData.data.slice(0, 20).map((bot: any) => ({
+            id: bot.id || bot._id,
+            name: bot.name,
+            source: bot.source || 'absorbed',
+            status: bot.status || 'active',
+            rating: bot.rating || 4.0,
+            winRate: bot.performance?.winRate || bot.winRate || 0,
+            profitFactor: bot.performance?.profitFactor || bot.profitFactor || 1.0,
+            isEnabledForTrading: false,
+          })));
+        }
+        setAuthError('Login required to enable live trading');
+        setIsLoading(false);
+        setIsRefreshing(false);
+        return;
+      }
+
+      // User is logged in - fetch all trading data
+      setAuthError(null);
       const [statsRes, botsRes, signalsRes, tradesRes] = await Promise.all([
         fetch(`${API_BASE}/trading/stats`, { headers: getAuthHeaders() }),
         fetch(`${API_BASE}/trading/bots/available`, { headers: getAuthHeaders() }),
         fetch(`${API_BASE}/trading/signals/pending`, { headers: getAuthHeaders() }),
         fetch(`${API_BASE}/trading/trades?limit=20`, { headers: getAuthHeaders() }),
       ]);
+
+      // Check for auth errors
+      if (statsRes.status === 401 || statsRes.status === 403) {
+        setAuthError('Session expired. Please login again.');
+        setIsAuthenticated(false);
+        // Still load public bots
+        const publicBotsRes = await fetch(`${API_BASE}/bots/public`);
+        const publicBotsData = await publicBotsRes.json();
+        if (publicBotsData.success) {
+          setAvailableBots(publicBotsData.data.slice(0, 20).map((bot: any) => ({
+            id: bot.id || bot._id,
+            name: bot.name,
+            source: bot.source || 'absorbed',
+            status: bot.status || 'active',
+            rating: bot.rating || 4.0,
+            winRate: bot.performance?.winRate || bot.winRate || 0,
+            profitFactor: bot.performance?.profitFactor || bot.profitFactor || 1.0,
+            isEnabledForTrading: false,
+          })));
+        }
+        setIsLoading(false);
+        setIsRefreshing(false);
+        return;
+      }
 
       const [statsData, botsData, signalsData, tradesData] = await Promise.all([
         statsRes.json(),
@@ -119,7 +177,7 @@ export default function LiveTradingPage() {
       if (signalsData.success) setPendingSignals(signalsData.data);
       if (tradesData.success) setRecentTrades(tradesData.data);
     } catch (error) {
-      // Error handled - shows empty state
+      console.error('Error fetching trading data:', error);
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
@@ -142,14 +200,26 @@ export default function LiveTradingPage() {
     setTimeout(() => setNotification(null), 3000);
   };
 
+  // Check auth and show error if not logged in
+  const requireAuth = (action: string): boolean => {
+    if (!isAuthenticated) {
+      showNotification('error', `Login required to ${action}`);
+      return false;
+    }
+    return true;
+  };
+
   // Trading controls
   const startTrading = async () => {
+    if (!requireAuth('start trading')) return;
     try {
       const res = await fetch(`${API_BASE}/trading/start`, { method: 'POST', headers: getAuthHeaders() });
       const data = await res.json();
       if (data.success) {
         showNotification('success', 'Trading started!');
         fetchData();
+      } else {
+        showNotification('error', data.error || 'Failed to start trading');
       }
     } catch (error) {
       showNotification('error', 'Failed to start trading');
@@ -157,12 +227,15 @@ export default function LiveTradingPage() {
   };
 
   const stopTrading = async () => {
+    if (!requireAuth('stop trading')) return;
     try {
       const res = await fetch(`${API_BASE}/trading/stop`, { method: 'POST', headers: getAuthHeaders() });
       const data = await res.json();
       if (data.success) {
         showNotification('success', 'Trading stopped');
         fetchData();
+      } else {
+        showNotification('error', data.error || 'Failed to stop trading');
       }
     } catch (error) {
       showNotification('error', 'Failed to stop trading');
@@ -170,6 +243,7 @@ export default function LiveTradingPage() {
   };
 
   const enableBot = async (botId: string) => {
+    if (!requireAuth('enable bot')) return;
     try {
       const res = await fetch(`${API_BASE}/trading/bot/${botId}/enable`, {
         method: 'POST',
@@ -180,6 +254,8 @@ export default function LiveTradingPage() {
       if (data.success) {
         showNotification('success', `Bot enabled for trading`);
         fetchData();
+      } else {
+        showNotification('error', data.error || 'Failed to enable bot');
       }
     } catch (error) {
       showNotification('error', 'Failed to enable bot');
@@ -187,12 +263,15 @@ export default function LiveTradingPage() {
   };
 
   const disableBot = async (botId: string) => {
+    if (!requireAuth('disable bot')) return;
     try {
       const res = await fetch(`${API_BASE}/trading/bot/${botId}/disable`, { method: 'POST', headers: getAuthHeaders() });
       const data = await res.json();
       if (data.success) {
         showNotification('success', 'Bot disabled');
         fetchData();
+      } else {
+        showNotification('error', data.error || 'Failed to disable bot');
       }
     } catch (error) {
       showNotification('error', 'Failed to disable bot');
@@ -200,12 +279,15 @@ export default function LiveTradingPage() {
   };
 
   const executeSignal = async (signalId: string) => {
+    if (!requireAuth('execute signal')) return;
     try {
       const res = await fetch(`${API_BASE}/trading/signals/${signalId}/execute`, { method: 'POST', headers: getAuthHeaders() });
       const data = await res.json();
       if (data.success) {
         showNotification('success', 'Signal executed!');
         fetchData();
+      } else {
+        showNotification('error', data.error || 'Failed to execute signal');
       }
     } catch (error) {
       showNotification('error', 'Failed to execute signal');
@@ -213,6 +295,7 @@ export default function LiveTradingPage() {
   };
 
   const enableTopBots = async () => {
+    if (!requireAuth('enable top bots')) return;
     try {
       const res = await fetch(`${API_BASE}/trading/quick/enable-top-bots`, {
         method: 'POST',
@@ -223,6 +306,8 @@ export default function LiveTradingPage() {
       if (data.success) {
         showNotification('success', `Enabled ${data.data.length} top bots!`);
         fetchData();
+      } else {
+        showNotification('error', data.error || 'Failed to enable bots');
       }
     } catch (error) {
       showNotification('error', 'Failed to enable bots');
@@ -285,6 +370,25 @@ export default function LiveTradingPage() {
           )}
         </div>
       </div>
+
+      {/* Login Required Banner */}
+      {authError && (
+        <div className="p-4 rounded-lg border bg-amber-500/10 border-amber-500/30">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <AlertTriangle className="w-5 h-5 text-amber-400" />
+              <span className="text-amber-400">{authError}</span>
+            </div>
+            <button
+              onClick={() => router.push('/login?redirect=/live-trading')}
+              className="flex items-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg transition-colors"
+            >
+              <LogIn className="w-4 h-4" />
+              Login to Trade
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Status Banner */}
       <div className={`p-4 rounded-lg border ${

@@ -1120,8 +1120,88 @@ export default function AdminPortalPage() {
 
           {activeTab === 'logs' && (
             <div className="space-y-6">
-              <h2 className="text-2xl font-bold text-white">System Logs</h2>
-              <p className="text-white/40">System logs interface coming soon...</p>
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold text-white">System Logs</h2>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleRefresh}
+                    disabled={isRefreshing}
+                    className="px-4 py-2 bg-slate-800 text-white/60 rounded-lg hover:bg-slate-700 flex items-center gap-2 disabled:opacity-50"
+                  >
+                    <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                    Refresh
+                  </button>
+                </div>
+              </div>
+
+              {/* Log Stats */}
+              <div className="grid grid-cols-4 gap-4">
+                <div className="bg-slate-900/50 border border-white/5 rounded-xl p-4">
+                  <div className="text-white/40 text-sm">Total Logs</div>
+                  <div className="text-2xl font-bold text-white">{systemLogs.length}</div>
+                </div>
+                <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4">
+                  <div className="text-emerald-400/60 text-sm">Info</div>
+                  <div className="text-2xl font-bold text-emerald-400">{systemLogs.filter(l => l.level === 'info').length}</div>
+                </div>
+                <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4">
+                  <div className="text-amber-400/60 text-sm">Warnings</div>
+                  <div className="text-2xl font-bold text-amber-400">{systemLogs.filter(l => l.level === 'warning').length}</div>
+                </div>
+                <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4">
+                  <div className="text-red-400/60 text-sm">Errors</div>
+                  <div className="text-2xl font-bold text-red-400">{systemLogs.filter(l => l.level === 'error').length}</div>
+                </div>
+              </div>
+
+              {/* Logs Table */}
+              <div className="bg-slate-900/50 border border-white/5 rounded-xl overflow-hidden">
+                <div className="grid grid-cols-5 gap-4 p-4 bg-slate-800/50 border-b border-white/5 font-medium text-white/60 text-sm">
+                  <div>Timestamp</div>
+                  <div>Level</div>
+                  <div>Component</div>
+                  <div className="col-span-2">Message</div>
+                </div>
+
+                {isLoading ? (
+                  <div className="p-8 text-center">
+                    <svg className="w-8 h-8 text-white/30 animate-spin mx-auto" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                    <p className="text-white/40 mt-2">Loading logs...</p>
+                  </div>
+                ) : systemLogs.length === 0 ? (
+                  <div className="p-8 text-center text-white/40">
+                    <svg className="w-12 h-12 mx-auto mb-4 text-white/20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <p>No system logs available</p>
+                    <p className="text-sm mt-1">Logs will appear here when system events occur</p>
+                  </div>
+                ) : (
+                  <div className="max-h-[500px] overflow-y-auto">
+                    {systemLogs.map((log) => (
+                      <div key={log.id} className="grid grid-cols-5 gap-4 p-4 border-b border-white/5 hover:bg-white/5">
+                        <div className="text-white/60 text-sm">
+                          {new Date(log.timestamp).toLocaleString()}
+                        </div>
+                        <div>
+                          <span className={`px-2 py-1 rounded text-xs font-medium ${
+                            log.level === 'error' ? 'bg-red-500/20 text-red-400' :
+                            log.level === 'warning' ? 'bg-amber-500/20 text-amber-400' :
+                            'bg-emerald-500/20 text-emerald-400'
+                          }`}>
+                            {log.level.toUpperCase()}
+                          </span>
+                        </div>
+                        <div className="text-white/60 text-sm">{log.component}</div>
+                        <div className="col-span-2 text-white text-sm">{log.message}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>
