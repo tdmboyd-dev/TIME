@@ -72,6 +72,9 @@ export class BrokerManager extends EventEmitter implements TIMEComponent {
   private brokers: Map<string, BrokerConnection> = new Map();
   private routingPreferences: Map<AssetClass, RoutingPreference> = new Map();
 
+  // GLOBAL PAPER/LIVE MODE TOGGLE
+  private _isPaperMode: boolean = true; // Default to paper mode for safety
+
   public readonly name = 'BrokerManager';
   public readonly version = '1.0.0';
   public status: 'online' | 'offline' | 'degraded' | 'building' = 'offline';
@@ -79,6 +82,73 @@ export class BrokerManager extends EventEmitter implements TIMEComponent {
   private constructor() {
     super();
     this.initializeDefaultRouting();
+    // Load mode from environment or default to paper
+    this._isPaperMode = process.env.TRADING_MODE !== 'live';
+    logger.info(`Trading mode initialized: ${this._isPaperMode ? 'PAPER' : 'LIVE'}`);
+  }
+
+  // ============================================================
+  // PAPER/LIVE MODE CONTROLS
+  // ============================================================
+
+  /**
+   * Get current trading mode
+   */
+  public isPaperMode(): boolean {
+    return this._isPaperMode;
+  }
+
+  /**
+   * Get trading mode as string
+   */
+  public getTradingMode(): 'paper' | 'live' {
+    return this._isPaperMode ? 'paper' : 'live';
+  }
+
+  /**
+   * Set trading mode - IMPORTANT: Requires reconnection to all brokers
+   */
+  public async setTradingMode(mode: 'paper' | 'live'): Promise<{ success: boolean; message: string }> {
+    const newPaperMode = mode === 'paper';
+
+    if (this._isPaperMode === newPaperMode) {
+      return { success: true, message: `Already in ${mode} mode` };
+    }
+
+    logger.warn(`SWITCHING TRADING MODE: ${this._isPaperMode ? 'PAPER' : 'LIVE'} → ${mode.toUpperCase()}`);
+
+    // Disconnect all brokers before switching
+    await this.disconnectAll();
+
+    // Update mode
+    this._isPaperMode = newPaperMode;
+
+    // Emit mode change event
+    this.emit('tradingModeChanged', { mode, isPaper: newPaperMode });
+
+    logger.info(`Trading mode changed to: ${mode.toUpperCase()}`);
+
+    return {
+      success: true,
+      message: `Switched to ${mode.toUpperCase()} mode. Reconnect brokers to apply.`
+    };
+  }
+
+  /**
+   * Get trading mode info for API
+   */
+  public getTradingModeInfo() {
+    return {
+      mode: this.getTradingMode(),
+      isPaper: this._isPaperMode,
+      description: this._isPaperMode
+        ? 'Paper trading mode - simulated trades, no real money at risk'
+        : 'LIVE trading mode - REAL money, REAL trades!',
+      warning: this._isPaperMode
+        ? null
+        : '⚠️ LIVE MODE: All trades will use real money!',
+      connectedBrokers: this.getConnectedBrokerIds().length,
+    };
   }
 
   public static getInstance(): BrokerManager {

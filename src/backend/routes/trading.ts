@@ -1644,4 +1644,353 @@ router.get('/test-bot-trades', async (req: Request, res: Response) => {
   }
 });
 
+// ============================================
+// TRADING MODE (PAPER/LIVE) ENDPOINTS
+// ============================================
+
+/**
+ * GET /trading/mode
+ * Get current trading mode (paper or live)
+ * Public endpoint - shows mode to all authenticated users
+ */
+router.get('/mode', authMiddleware, (_req: Request, res: Response) => {
+  try {
+    const brokerManager = BrokerManager.getInstance();
+    const modeInfo = brokerManager.getTradingModeInfo();
+
+    res.json({
+      success: true,
+      data: modeInfo,
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to get trading mode',
+    });
+  }
+});
+
+/**
+ * POST /trading/mode
+ * Switch trading mode between paper and live
+ * ADMIN ONLY - changing mode affects all trading!
+ */
+router.post('/mode', authMiddleware, adminMiddleware, async (req: Request, res: Response) => {
+  try {
+    const { mode } = req.body;
+
+    if (!mode || !['paper', 'live'].includes(mode)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid mode. Must be "paper" or "live".',
+      });
+    }
+
+    const brokerManager = BrokerManager.getInstance();
+
+    // Extra confirmation required for live mode
+    if (mode === 'live') {
+      const { confirmLive } = req.body;
+      if (confirmLive !== 'I_UNDERSTAND_REAL_MONEY') {
+        return res.status(400).json({
+          success: false,
+          error: 'Switching to LIVE mode requires confirmation. Set confirmLive: "I_UNDERSTAND_REAL_MONEY"',
+          warning: '⚠️ LIVE MODE USES REAL MONEY! All trades will be executed with real funds.',
+        });
+      }
+    }
+
+    const result = await brokerManager.setTradingMode(mode);
+
+    res.json({
+      success: result.success,
+      message: result.message,
+      data: brokerManager.getTradingModeInfo(),
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to set trading mode',
+    });
+  }
+});
+
+/**
+ * GET /trading/mode/status
+ * Get detailed trading mode status including broker connections
+ */
+router.get('/mode/status', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const brokerManager = BrokerManager.getInstance();
+    const modeInfo = brokerManager.getTradingModeInfo();
+    const brokerStatus = brokerManager.getStatus();
+
+    res.json({
+      success: true,
+      data: {
+        ...modeInfo,
+        brokers: brokerStatus.brokers,
+        connectedBrokers: brokerStatus.connectedBrokers,
+        totalBrokers: brokerStatus.totalBrokers,
+        tradingServiceRunning: tradingExecutionService.getStats().isRunning,
+        enabledBots: tradingExecutionService.getEnabledBots().length,
+      },
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to get trading mode status',
+    });
+  }
+});
+
+// ============================================
+// BOT PROGRESS REPORT SYSTEM
+// ============================================
+
+// Store progress snapshots for reporting
+const progressSnapshots: Map<string, {
+  timestamp: Date;
+  bots: Array<{
+    botId: string;
+    botName: string;
+    totalTrades: number;
+    winRate: number;
+    totalPnL: number;
+    openPositions: number;
+    pendingSignals: number;
+  }>;
+  overall: {
+    enabledBots: number;
+    totalTrades: number;
+    totalPnL: number;
+    winRate: number;
+  };
+}> = new Map();
+
+/**
+ * POST /trading/progress/start
+ * Start a progress tracking session (10-min default)
+ * Uses admin test key for authentication
+ */
+router.post('/progress/start', async (req: Request, res: Response) => {
+  try {
+    const adminKey = req.headers['x-admin-key'] as string;
+    if (adminKey !== (process.env.ADMIN_TEST_KEY || 'TIME_ADMIN_TEST_2025')) {
+      return res.status(401).json({ success: false, error: 'Invalid admin key' });
+    }
+
+    const { durationMinutes = 10, intervalSeconds = 30 } = req.body;
+    const sessionId = `progress_${Date.now()}`;
+    const startTime = new Date();
+    const endTime = new Date(startTime.getTime() + durationMinutes * 60 * 1000);
+
+    // Take initial snapshot
+    const enabledBots = tradingExecutionService.getEnabledBots();
+    const stats = tradingExecutionService.getStats();
+
+    progressSnapshots.set(sessionId, {
+      timestamp: startTime,
+      bots: enabledBots.map(b => ({
+        botId: b.botId,
+        botName: b.botName,
+        totalTrades: b.totalTrades,
+        winRate: b.winRate,
+        totalPnL: b.totalPnL,
+        openPositions: b.openPositions.length,
+        pendingSignals: 0,
+      })),
+      overall: {
+        enabledBots: enabledBots.length,
+        totalTrades: stats.totalTrades || 0,
+        totalPnL: stats.totalPnL || 0,
+        winRate: stats.winRate || 0,
+      },
+    });
+
+    res.json({
+      success: true,
+      message: `Progress tracking started for ${durationMinutes} minutes`,
+      data: {
+        sessionId,
+        startTime,
+        endTime,
+        durationMinutes,
+        intervalSeconds,
+        initialSnapshot: progressSnapshots.get(sessionId),
+        instructions: `Call GET /trading/progress/${sessionId} to get current progress report`,
+      },
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * GET /trading/progress/:sessionId
+ * Get progress report for a tracking session
+ */
+router.get('/progress/:sessionId', async (req: Request, res: Response) => {
+  try {
+    const adminKey = req.headers['x-admin-key'] as string;
+    if (adminKey !== (process.env.ADMIN_TEST_KEY || 'TIME_ADMIN_TEST_2025')) {
+      return res.status(401).json({ success: false, error: 'Invalid admin key' });
+    }
+
+    const { sessionId } = req.params;
+    const initialSnapshot = progressSnapshots.get(sessionId);
+
+    if (!initialSnapshot) {
+      return res.status(404).json({
+        success: false,
+        error: 'Session not found. Start a new session with POST /trading/progress/start',
+      });
+    }
+
+    // Get current state
+    const enabledBots = tradingExecutionService.getEnabledBots();
+    const stats = tradingExecutionService.getStats();
+    const now = new Date();
+    const elapsedMs = now.getTime() - initialSnapshot.timestamp.getTime();
+    const elapsedMinutes = elapsedMs / 60000;
+
+    // Calculate changes
+    const currentBots = enabledBots.map(b => {
+      const initial = initialSnapshot.bots.find(ib => ib.botId === b.botId);
+      return {
+        botId: b.botId,
+        botName: b.botName,
+        status: b.isEnabled ? (b.isPaused ? 'PAUSED' : 'ACTIVE') : 'DISABLED',
+        initial: initial ? {
+          trades: initial.totalTrades,
+          pnl: initial.totalPnL,
+          winRate: initial.winRate,
+        } : null,
+        current: {
+          trades: b.totalTrades,
+          pnl: b.totalPnL,
+          winRate: b.winRate,
+          openPositions: b.openPositions.length,
+        },
+        change: initial ? {
+          newTrades: b.totalTrades - initial.totalTrades,
+          pnlChange: b.totalPnL - initial.totalPnL,
+          winRateChange: b.winRate - initial.winRate,
+        } : { newTrades: b.totalTrades, pnlChange: b.totalPnL, winRateChange: 0 },
+      };
+    });
+
+    const overallChange = {
+      newTrades: (stats.totalTrades || 0) - initialSnapshot.overall.totalTrades,
+      pnlChange: (stats.totalPnL || 0) - initialSnapshot.overall.totalPnL,
+      botsChange: enabledBots.length - initialSnapshot.overall.enabledBots,
+    };
+
+    // Generate report
+    const report = {
+      sessionId,
+      startTime: initialSnapshot.timestamp,
+      currentTime: now,
+      elapsedMinutes: Math.round(elapsedMinutes * 100) / 100,
+
+      summary: {
+        enabledBots: enabledBots.length,
+        activeBots: enabledBots.filter(b => b.isEnabled && !b.isPaused).length,
+        totalNewTrades: overallChange.newTrades,
+        totalPnLChange: Math.round(overallChange.pnlChange * 100) / 100,
+        tradesPerMinute: elapsedMinutes > 0 ? Math.round(overallChange.newTrades / elapsedMinutes * 100) / 100 : 0,
+        pnlPerMinute: elapsedMinutes > 0 ? Math.round(overallChange.pnlChange / elapsedMinutes * 100) / 100 : 0,
+      },
+
+      botPerformance: currentBots.map(b => ({
+        bot: b.botName,
+        status: b.status,
+        newTrades: b.change.newTrades,
+        pnlChange: Math.round(b.change.pnlChange * 100) / 100,
+        currentPnL: Math.round(b.current.pnl * 100) / 100,
+        winRate: Math.round(b.current.winRate * 1000) / 10 + '%',
+        openPositions: b.current.openPositions,
+      })),
+
+      topPerformers: currentBots
+        .filter(b => b.status === 'ACTIVE')
+        .sort((a, b) => b.change.pnlChange - a.change.pnlChange)
+        .slice(0, 5)
+        .map(b => ({ name: b.botName, pnlChange: Math.round(b.change.pnlChange * 100) / 100 })),
+
+      worstPerformers: currentBots
+        .filter(b => b.status === 'ACTIVE')
+        .sort((a, b) => a.change.pnlChange - b.change.pnlChange)
+        .slice(0, 5)
+        .map(b => ({ name: b.botName, pnlChange: Math.round(b.change.pnlChange * 100) / 100 })),
+
+      tradingMode: BrokerManager.getInstance().getTradingMode(),
+    };
+
+    res.json({
+      success: true,
+      data: report,
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * GET /trading/progress/live
+ * Get live bot performance without starting a session
+ */
+router.get('/progress/live', async (req: Request, res: Response) => {
+  try {
+    const adminKey = req.headers['x-admin-key'] as string;
+    if (adminKey !== (process.env.ADMIN_TEST_KEY || 'TIME_ADMIN_TEST_2025')) {
+      return res.status(401).json({ success: false, error: 'Invalid admin key' });
+    }
+
+    const enabledBots = tradingExecutionService.getEnabledBots();
+    const stats = tradingExecutionService.getStats();
+    const brokerManager = BrokerManager.getInstance();
+
+    res.json({
+      success: true,
+      data: {
+        timestamp: new Date(),
+        tradingMode: brokerManager.getTradingMode(),
+        isPaperMode: brokerManager.isPaperMode(),
+
+        overview: {
+          totalBots: 133,
+          enabledBots: enabledBots.length,
+          activeBots: enabledBots.filter(b => b.isEnabled && !b.isPaused).length,
+          pausedBots: enabledBots.filter(b => b.isPaused).length,
+          tradingServiceRunning: stats.isRunning,
+        },
+
+        performance: {
+          totalTrades: stats.totalTrades || 0,
+          openPositions: stats.openPositions || 0,
+          pendingSignals: stats.pendingSignals || 0,
+          totalPnL: stats.totalPnL || 0,
+          todayPnL: stats.todayPnL || 0,
+          winRate: stats.winRate || 0,
+        },
+
+        bots: enabledBots.map(b => ({
+          id: b.botId,
+          name: b.botName,
+          status: b.isEnabled ? (b.isPaused ? 'PAUSED' : 'ACTIVE') : 'DISABLED',
+          trades: b.totalTrades,
+          pnl: Math.round(b.totalPnL * 100) / 100,
+          winRate: Math.round(b.winRate * 1000) / 10 + '%',
+          openPositions: b.openPositions.length,
+          lastSignal: b.lastSignal?.timestamp || null,
+          lastTrade: b.lastTrade?.openedAt || null,
+        })),
+      },
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 export default router;
