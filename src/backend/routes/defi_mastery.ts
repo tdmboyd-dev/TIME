@@ -226,23 +226,21 @@ router.get('/yield-opportunities', (req: Request, res: Response) => {
 
 /**
  * GET /api/defi/portfolio
- * Get user's DeFi portfolio summary
+ * Get user's DeFi portfolio summary - REAL DATA ONLY
  */
-router.get('/portfolio', (req: Request, res: Response) => {
+router.get('/portfolio', async (req: Request, res: Response) => {
   try {
-    // Return mock portfolio data for demo
+    // Return empty portfolio - user needs to connect DeFi wallet
+    // Real DeFi positions would come from wallet connection + on-chain data
     res.json({
       success: true,
       portfolio: {
-        totalValue: 15000,
-        totalStaked: 12500,
-        pendingRewards: 530.70,
-        avgApy: 18.5,
-        positions: [
-          { protocol: 'Uniswap V3', pool: 'ETH/USDC', staked: 5000, rewards: 125.50, apy: 12.5 },
-          { protocol: 'Curve', pool: 'BTC/ETH', staked: 3200, rewards: 65.20, apy: 8.2 },
-          { protocol: 'TIME DEX', pool: 'ETH/TIME', staked: 1500, rewards: 340.00, apy: 45.8 },
-        ],
+        totalValue: 0,
+        totalStaked: 0,
+        pendingRewards: 0,
+        avgApy: 0,
+        positions: [],
+        message: 'Connect your DeFi wallet to view positions',
       },
     });
   } catch (error: any) {

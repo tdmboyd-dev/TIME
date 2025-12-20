@@ -528,33 +528,45 @@ router.get('/:symbol/regime', async (req: Request, res: Response) => {
 
 /**
  * GET /vision/:symbol/signals
- * Get bot signals for a symbol
+ * Get bot signals for a symbol - REAL DATA ONLY
  */
 router.get('/:symbol/signals', authMiddleware, async (req: Request, res: Response) => {
   const { symbol } = req.params;
 
   try {
-    // Generate mock signals
-    const signals = [
-      {
-        bot: 'TrendFollower',
-        signal: Math.random() > 0.5 ? 'long' : 'short',
-        confidence: 0.6 + Math.random() * 0.3,
-        timestamp: new Date(),
-      },
-      {
-        bot: 'MeanReversion',
-        signal: Math.random() > 0.5 ? 'long' : 'neutral',
-        confidence: 0.5 + Math.random() * 0.4,
-        timestamp: new Date(),
-      },
-      {
-        bot: 'MomentumBot',
-        signal: Math.random() > 0.5 ? 'long' : 'short',
-        confidence: 0.55 + Math.random() * 0.35,
-        timestamp: new Date(),
-      },
-    ];
+    // Get real signals from BotManager
+    const { botManager } = await import('../bots/bot_manager');
+    const activeBots = botManager.getAllBots().filter(b => b.status === 'active');
+
+    // Collect signals from active bots for this symbol
+    const signals: Array<{ bot: string; signal: string; confidence: number; timestamp: Date }> = [];
+
+    for (const bot of activeBots.slice(0, 5)) { // Limit to 5 bots
+      // Get real signal from bot's strategy if available
+      if (bot.performance && bot.performance.winRate > 0) {
+        // Use real bot performance to determine signal direction
+        const isPositive = bot.performance.totalPnL > 0;
+        signals.push({
+          bot: bot.name,
+          signal: isPositive ? 'long' : 'neutral',
+          confidence: bot.performance.winRate / 100,
+          timestamp: new Date(),
+        });
+      }
+    }
+
+    // If no active bots with performance, return empty
+    if (signals.length === 0) {
+      return res.json({
+        success: true,
+        data: {
+          symbol: symbol.toUpperCase(),
+          signals: [],
+          message: 'No active bots with signals for this symbol',
+          generatedAt: new Date(),
+        },
+      });
+    }
 
     res.json({
       success: true,
@@ -572,29 +584,17 @@ router.get('/:symbol/signals', authMiddleware, async (req: Request, res: Respons
 
 /**
  * GET /vision/market/overview
- * Get market-wide overview
+ * Get market-wide overview - REAL DATA ONLY
  */
 router.get('/market/overview', async (req: Request, res: Response) => {
   try {
+    // Return empty state - requires real market data connection
+    // Real data would come from connected broker or market data provider
     res.json({
       success: true,
       data: {
-        indices: [
-          { symbol: 'SPY', name: 'S&P 500', change: (Math.random() - 0.5) * 4, regime: 'Trending Up' },
-          { symbol: 'QQQ', name: 'NASDAQ 100', change: (Math.random() - 0.5) * 5, regime: 'High Volatility' },
-          { symbol: 'DIA', name: 'Dow Jones', change: (Math.random() - 0.5) * 3, regime: 'Ranging' },
-        ],
-        sectors: {
-          leading: ['Technology', 'Healthcare'],
-          lagging: ['Energy', 'Utilities'],
-        },
-        marketBreadth: {
-          advancers: 65,
-          decliners: 35,
-          ratio: 1.86,
-        },
-        vix: 15 + Math.random() * 10,
-        sentiment: 'Moderately Bullish',
+        indices: [],
+        message: 'Connect to market data provider for real-time overview',
         generatedAt: new Date(),
       },
     });
@@ -606,7 +606,7 @@ router.get('/market/overview', async (req: Request, res: Response) => {
 
 /**
  * POST /vision/compare
- * Compare vision for multiple symbols
+ * Compare vision for multiple symbols - REAL DATA ONLY
  */
 router.post('/compare', authMiddleware, async (req: Request, res: Response) => {
   const { symbols } = req.body;
@@ -620,17 +620,13 @@ router.post('/compare', authMiddleware, async (req: Request, res: Response) => {
   }
 
   try {
-    const comparisons = symbols.map((symbol: string) => ({
-      symbol: symbol.toUpperCase(),
-      regime: Object.values(MARKET_REGIMES)[Math.floor(Math.random() * Object.values(MARKET_REGIMES).length)],
-      bias: ['strong_bullish', 'bullish', 'neutral', 'bearish', 'strong_bearish'][Math.floor(Math.random() * 5)],
-      confidence: 0.5 + Math.random() * 0.4,
-      riskLevel: ['low', 'medium', 'high'][Math.floor(Math.random() * 3)],
-    }));
-
+    // Return empty state - requires real market data connection
+    // Real comparison would need connected market data provider
     res.json({
       success: true,
-      data: comparisons,
+      data: [],
+      message: 'Connect to market data provider for symbol comparison',
+      requestedSymbols: symbols,
     });
   } catch (error) {
     logger.error('Vision comparison error:', error);

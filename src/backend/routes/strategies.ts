@@ -235,45 +235,33 @@ router.get('/:strategyId/performance', authMiddleware, (req: Request, res: Respo
 
 /**
  * GET /strategies/:strategyId/trades
- * Get recent trades from strategy
+ * Get recent trades from strategy - REAL DATA ONLY
  */
-router.get('/:strategyId/trades', authMiddleware, (req: Request, res: Response) => {
+router.get('/:strategyId/trades', authMiddleware, async (req: Request, res: Response) => {
   const { strategyId } = req.params;
   const { limit = '50' } = req.query;
 
-  // Mock trades
-  const trades = [
-    {
-      id: 'trade_1',
-      symbol: 'EURUSD',
-      direction: 'long',
-      entryPrice: 1.0850,
-      exitPrice: 1.0920,
-      quantity: 10000,
-      pnl: 70,
-      entryTime: new Date(Date.now() - 86400000),
-      exitTime: new Date(Date.now() - 43200000),
-      regime: 'trending',
-    },
-    {
-      id: 'trade_2',
-      symbol: 'GBPUSD',
-      direction: 'short',
-      entryPrice: 1.2650,
-      exitPrice: 1.2580,
-      quantity: 10000,
-      pnl: 70,
-      entryTime: new Date(Date.now() - 172800000),
-      exitTime: new Date(Date.now() - 129600000),
-      regime: 'ranging',
-    },
-  ].slice(0, parseInt(limit as string));
+  try {
+    // Try to get real trades from TradingStateRepository
+    const { tradingStateRepository } = await import('../database/repositories');
 
-  res.json({
-    strategyId,
-    total: trades.length,
-    trades,
-  });
+    // Get all trades and filter by strategyId
+    const allTrades = await tradingStateRepository.getTrades(strategyId);
+    const trades = allTrades.slice(0, parseInt(limit as string));
+
+    res.json({
+      strategyId,
+      total: trades.length,
+      trades,
+    });
+  } catch (error) {
+    // Return empty if no trades found - NO MOCK DATA
+    res.json({
+      strategyId,
+      total: 0,
+      trades: [],
+    });
+  }
 });
 
 // ============================================================
@@ -480,33 +468,29 @@ router.post('/:strategyId/backtest', authMiddleware, async (req: Request, res: R
 
 /**
  * GET /strategies/:strategyId/backtest/:backtestId
- * Get backtest results
+ * Get backtest results - REAL DATA ONLY
  */
-router.get('/:strategyId/backtest/:backtestId', authMiddleware, (req: Request, res: Response) => {
+router.get('/:strategyId/backtest/:backtestId', authMiddleware, async (req: Request, res: Response) => {
   const { strategyId, backtestId } = req.params;
 
-  // Mock backtest results
+  // Check if we have cached results for this backtest
+  const strategy = strategiesCache.get(strategyId);
+  if (strategy?.backtestResults?.[backtestId]) {
+    return res.json({
+      backtestId,
+      strategyId,
+      status: 'completed',
+      results: strategy.backtestResults[backtestId],
+    });
+  }
+
+  // No backtest results found - return empty state, NO MOCK DATA
   res.json({
     backtestId,
     strategyId,
-    status: 'completed',
-    results: {
-      totalReturn: 24.5,
-      maxDrawdown: 8.2,
-      sharpeRatio: 1.65,
-      sortinoRatio: 2.1,
-      winRate: 68,
-      profitFactor: 1.95,
-      totalTrades: 156,
-      avgWin: 125,
-      avgLoss: 85,
-      expectancy: 42.5,
-    },
-    equity: [
-      { date: '2024-01-01', value: 100000 },
-      { date: '2024-06-01', value: 112500 },
-      { date: '2024-12-01', value: 124500 },
-    ],
+    status: 'not_found',
+    results: null,
+    message: 'Backtest results not found. Please run a new backtest.',
   });
 });
 

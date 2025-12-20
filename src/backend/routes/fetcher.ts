@@ -42,95 +42,65 @@ router.get('/search', async (req: Request, res: Response) => {
     }
     searchTerms.push(`stars:>=${minStars}`);
 
-    // Note: In production, this would call the actual GitHub API
-    // For now, return mock results based on the dropzone bots
-    const mockResults = [
-      {
-        id: 1,
-        name: 'freqtrade/freqtrade',
-        description: 'Free, open source crypto trading bot',
-        stars: 45000,
-        language: 'Python',
-        topics: ['trading', 'bot', 'crypto', 'bitcoin'],
-        url: 'https://github.com/freqtrade/freqtrade',
-      },
-      {
-        id: 2,
-        name: 'ccxt/ccxt',
-        description: 'A JavaScript / Python / PHP cryptocurrency trading API',
-        stars: 40000,
-        language: 'JavaScript',
-        topics: ['cryptocurrency', 'trading', 'exchange'],
-        url: 'https://github.com/ccxt/ccxt',
-      },
-      {
-        id: 3,
-        name: 'backtrader/backtrader',
-        description: 'Python Backtesting library for trading strategies',
-        stars: 19000,
-        language: 'Python',
-        topics: ['backtesting', 'trading', 'finance'],
-        url: 'https://github.com/backtrader/backtrader',
-      },
-      {
-        id: 4,
-        name: 'quantopian/zipline',
-        description: 'Zipline, a Pythonic Algorithmic Trading Library',
-        stars: 19000,
-        language: 'Python',
-        topics: ['algorithmic-trading', 'finance', 'python'],
-        url: 'https://github.com/quantopian/zipline',
-      },
-      {
-        id: 5,
-        name: 'Ekliptor/WolfBot',
-        description: 'Crypto currency trading bot written in TypeScript',
-        stars: 700,
-        language: 'TypeScript',
-        topics: ['trading-bot', 'cryptocurrency', 'bitcoin'],
-        url: 'https://github.com/Ekliptor/WolfBot',
-      },
-      {
-        id: 6,
-        name: 'EA31337/EA31337',
-        description: 'EA31337 Libre - Free and open-source trading robot for MT4/MT5',
-        stars: 1200,
-        language: 'MQL5',
-        topics: ['metatrader', 'forex', 'trading-robot'],
-        url: 'https://github.com/EA31337/EA31337',
-      },
-      {
-        id: 7,
-        name: 'blankly-finance/blankly',
-        description: 'Rapidly build & deploy algorithmic trading strategies',
-        stars: 2000,
-        language: 'Python',
-        topics: ['algorithmic-trading', 'trading-bot'],
-        url: 'https://github.com/blankly-finance/blankly',
-      },
-      {
-        id: 8,
-        name: 'Haehnchen/crypto-trading-bot',
-        description: 'Cryptocurrency trading bot in javascript for Bitfinex, Bitmex',
-        stars: 3000,
-        language: 'JavaScript',
-        topics: ['trading-bot', 'bitcoin', 'cryptocurrency'],
-        url: 'https://github.com/Haehnchen/crypto-trading-bot',
-      },
-    ];
-
-    // Filter and paginate
+    // Call REAL GitHub API to search for trading bots
     const pageNum = parseInt(page as string);
     const limitNum = parseInt(limit as string);
-    const start = (pageNum - 1) * limitNum;
-    const paginated = mockResults.slice(start, start + limitNum);
+
+    const githubToken = process.env.GITHUB_TOKEN;
+    const headers: Record<string, string> = {
+      'Accept': 'application/vnd.github+json',
+      'User-Agent': 'TIME-Bot-Fetcher',
+    };
+    if (githubToken) {
+      headers['Authorization'] = `Bearer ${githubToken}`;
+    }
+
+    const searchQuery = encodeURIComponent(searchTerms.join(' '));
+    const apiUrl = `https://api.github.com/search/repositories?q=${searchQuery}&sort=stars&order=desc&per_page=${limitNum}&page=${pageNum}`;
+
+    const response = await fetch(apiUrl, { headers });
+
+    if (!response.ok) {
+      // Return empty results if API fails - NO MOCK DATA
+      return res.json({
+        total: 0,
+        page: pageNum,
+        limit: limitNum,
+        query: query,
+        results: [],
+        error: 'GitHub API unavailable',
+      });
+    }
+
+    const data = await response.json() as {
+      total_count?: number;
+      items?: Array<{
+        id: number;
+        full_name: string;
+        description: string;
+        stargazers_count: number;
+        language: string;
+        topics: string[];
+        html_url: string;
+      }>;
+    };
+
+    const results = data.items?.map((repo) => ({
+      id: repo.id,
+      name: repo.full_name,
+      description: repo.description,
+      stars: repo.stargazers_count,
+      language: repo.language,
+      topics: repo.topics || [],
+      url: repo.html_url,
+    })) || [];
 
     res.json({
-      total: mockResults.length,
+      total: data.total_count || 0,
       page: pageNum,
       limit: limitNum,
       query: query,
-      results: paginated,
+      results,
     });
   } catch (error: any) {
     res.status(500).json({ error: error.message || 'Search failed' });
