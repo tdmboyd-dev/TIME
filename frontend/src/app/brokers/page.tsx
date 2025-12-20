@@ -621,6 +621,18 @@ export default function BrokersPage() {
   const [showApiKeys, setShowApiKeys] = useState<Record<string, boolean>>({});
   const [venues, setVenues] = useState<any[]>([]);
 
+  // Credentials modal state
+  const [showCredentialsModal, setShowCredentialsModal] = useState(false);
+  const [selectedBroker, setSelectedBroker] = useState<AvailableBroker | null>(null);
+  const [credentialsForm, setCredentialsForm] = useState({
+    apiKey: '',
+    apiSecret: '',
+    isPaper: true,
+    passphrase: '', // For some brokers like Coinbase Pro
+  });
+  const [credentialsError, setCredentialsError] = useState<string | null>(null);
+  const [isVerifying, setIsVerifying] = useState(false);
+
   // Fetch broker connections from MongoDB via backend
   const fetchBrokerStatus = useCallback(async () => {
     try {
@@ -700,35 +712,68 @@ export default function BrokersPage() {
     return broker.assetClasses.includes(filter);
   });
 
-  // Connect to broker - saves to MongoDB via backend
-  const connectBroker = async (broker: AvailableBroker) => {
-    setConnecting(broker.id);
+  // Open credentials modal for broker connection
+  const openCredentialsModal = (broker: AvailableBroker) => {
+    setSelectedBroker(broker);
+    setCredentialsForm({
+      apiKey: '',
+      apiSecret: '',
+      isPaper: broker.paperTrading, // Default to paper if available
+      passphrase: '',
+    });
+    setCredentialsError(null);
+    setShowCredentialsModal(true);
+  };
+
+  // Connect to broker with credentials - actually connects to real broker API
+  const connectBrokerWithCredentials = async () => {
+    if (!selectedBroker) return;
+
+    // Validate inputs
+    if (!credentialsForm.apiKey.trim()) {
+      setCredentialsError('API Key is required');
+      return;
+    }
+    if (!credentialsForm.apiSecret.trim()) {
+      setCredentialsError('API Secret is required');
+      return;
+    }
+
+    setIsVerifying(true);
+    setCredentialsError(null);
+    setConnecting(selectedBroker.id);
 
     try {
+      // First verify the credentials work by connecting to the real broker
       const response = await fetch(`${API_BASE}/brokers/connect`, {
         method: 'POST',
         headers: getAuthHeaders(),
         body: JSON.stringify({
-          brokerId: broker.id,
-          brokerName: broker.name,
-          isPaper: broker.paperTrading, // Default to paper if available
+          brokerId: selectedBroker.id,
+          brokerName: selectedBroker.name,
+          apiKey: credentialsForm.apiKey.trim(),
+          apiSecret: credentialsForm.apiSecret.trim(),
+          passphrase: credentialsForm.passphrase.trim() || undefined,
+          isPaper: credentialsForm.isPaper,
         }),
       });
 
       const data = await response.json();
 
       if (response.ok && data.success) {
-        // Success! Refresh the connections list
-        await fetchBrokerStatus();
+        // Success! Close modals and refresh
+        setShowCredentialsModal(false);
         setShowAddBroker(false);
+        setSelectedBroker(null);
+        await fetchBrokerStatus();
       } else {
-        // Show error to user
-        alert(data.error || 'Failed to connect broker. Please try again.');
+        // Show specific error
+        setCredentialsError(data.error || 'Failed to connect. Check your API credentials.');
       }
     } catch (error) {
-      // Network error
-      alert('Network error. Please check your connection and try again.');
+      setCredentialsError('Network error. Please check your connection.');
     } finally {
+      setIsVerifying(false);
       setConnecting(null);
     }
   };
@@ -1054,14 +1099,14 @@ export default function BrokersPage() {
             <div className="p-4 overflow-y-auto max-h-[60vh]">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {filteredBrokers.map(broker => {
-                  const isConnected = connections.some(c => c.brokerId === broker.id);
+                  const isAlreadyConnected = connections.some(c => c.brokerId === broker.id);
                   const isConnecting = connecting === broker.id;
 
                   return (
                     <div
                       key={broker.id}
                       className={`p-4 rounded-lg border transition-all ${
-                        isConnected
+                        isAlreadyConnected
                           ? 'bg-green-500/10 border-green-500/30'
                           : 'bg-slate-800/50 border-slate-700/50 hover:border-time-primary/50'
                       }`}
@@ -1131,17 +1176,17 @@ export default function BrokersPage() {
                           )}
                         </div>
                         <button
-                          onClick={() => !isConnected && connectBroker(broker)}
-                          disabled={isConnected || isConnecting}
+                          onClick={() => !isAlreadyConnected && openCredentialsModal(broker)}
+                          disabled={isAlreadyConnected || isConnecting}
                           className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
-                            isConnected
+                            isAlreadyConnected
                               ? 'bg-green-500/20 text-green-400 cursor-default'
                               : isConnecting
                               ? 'bg-slate-700 text-slate-400 cursor-wait'
                               : 'bg-time-primary hover:bg-time-primary/80 text-white'
                           }`}
                         >
-                          {isConnected ? (
+                          {isAlreadyConnected ? (
                             <>
                               <Check className="w-4 h-4" />
                               Connected
@@ -1163,6 +1208,170 @@ export default function BrokersPage() {
                   );
                 })}
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* API Credentials Modal */}
+      {showCredentialsModal && selectedBroker && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-slate-900 border border-slate-700 rounded-xl w-full max-w-md overflow-hidden">
+            {/* Header */}
+            <div className="p-4 border-b border-slate-700 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-slate-700 flex items-center justify-center">
+                  <span className="text-lg font-bold text-white">
+                    {selectedBroker.name.charAt(0)}
+                  </span>
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-white">Connect {selectedBroker.name}</h2>
+                  <p className="text-xs text-slate-400">Enter your API credentials</p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setShowCredentialsModal(false);
+                  setSelectedBroker(null);
+                  setCredentialsError(null);
+                }}
+                className="p-2 hover:bg-slate-800 rounded-lg transition-colors text-slate-400 text-xl"
+              >
+                &times;
+              </button>
+            </div>
+
+            {/* Form */}
+            <div className="p-4 space-y-4">
+              {/* Error message */}
+              {credentialsError && (
+                <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg flex items-center gap-2">
+                  <AlertTriangle className="w-5 h-5 text-red-400" />
+                  <span className="text-sm text-red-400">{credentialsError}</span>
+                </div>
+              )}
+
+              {/* API Key */}
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-1">
+                  API Key <span className="text-red-400">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={credentialsForm.apiKey}
+                  onChange={(e) => setCredentialsForm({ ...credentialsForm, apiKey: e.target.value })}
+                  placeholder="Enter your API key"
+                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-time-primary focus:border-transparent"
+                />
+              </div>
+
+              {/* API Secret */}
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-1">
+                  API Secret <span className="text-red-400">*</span>
+                </label>
+                <div className="relative">
+                  <input
+                    type={showApiKeys[selectedBroker.id] ? 'text' : 'password'}
+                    value={credentialsForm.apiSecret}
+                    onChange={(e) => setCredentialsForm({ ...credentialsForm, apiSecret: e.target.value })}
+                    placeholder="Enter your API secret"
+                    className="w-full px-3 py-2 pr-10 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-time-primary focus:border-transparent"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowApiKeys({ ...showApiKeys, [selectedBroker.id]: !showApiKeys[selectedBroker.id] })}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-slate-500 hover:text-white"
+                  >
+                    {showApiKeys[selectedBroker.id] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Passphrase (for some brokers like Coinbase Pro) */}
+              {(selectedBroker.id === 'coinbase' || selectedBroker.id === 'kraken') && (
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-1">
+                    Passphrase
+                  </label>
+                  <input
+                    type="password"
+                    value={credentialsForm.passphrase}
+                    onChange={(e) => setCredentialsForm({ ...credentialsForm, passphrase: e.target.value })}
+                    placeholder="Enter passphrase (if required)"
+                    className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-time-primary focus:border-transparent"
+                  />
+                </div>
+              )}
+
+              {/* Paper/Live Toggle */}
+              {selectedBroker.paperTrading && (
+                <div className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg">
+                  <div>
+                    <p className="text-sm font-medium text-white">Trading Mode</p>
+                    <p className="text-xs text-slate-400">
+                      {credentialsForm.isPaper ? 'Paper trading - no real money' : 'LIVE trading - real money!'}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setCredentialsForm({ ...credentialsForm, isPaper: !credentialsForm.isPaper })}
+                    className={`relative w-14 h-7 rounded-full transition-colors ${
+                      credentialsForm.isPaper ? 'bg-yellow-500' : 'bg-green-500'
+                    }`}
+                  >
+                    <span
+                      className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-transform ${
+                        credentialsForm.isPaper ? 'translate-x-0' : 'translate-x-7'
+                      }`}
+                    />
+                    <span className={`absolute top-1.5 text-xs font-bold ${
+                      credentialsForm.isPaper ? 'right-2 text-yellow-900' : 'left-1.5 text-green-900'
+                    }`}>
+                      {credentialsForm.isPaper ? 'P' : 'L'}
+                    </span>
+                  </button>
+                </div>
+              )}
+
+              {/* Help text */}
+              <div className="p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+                <p className="text-xs text-blue-400">
+                  <strong>Where to find your API keys:</strong> Log into {selectedBroker.name},
+                  go to Settings → API Keys → Create New Key. Make sure to enable trading permissions.
+                </p>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="p-4 border-t border-slate-700 flex gap-3">
+              <button
+                onClick={() => {
+                  setShowCredentialsModal(false);
+                  setSelectedBroker(null);
+                  setCredentialsError(null);
+                }}
+                className="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg font-medium transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={connectBrokerWithCredentials}
+                disabled={isVerifying}
+                className="flex-1 py-2.5 bg-time-primary hover:bg-time-primary/80 disabled:bg-slate-700 disabled:text-slate-400 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+              >
+                {isVerifying ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                    Verifying...
+                  </>
+                ) : (
+                  <>
+                    <Link2 className="w-4 h-4" />
+                    Connect Broker
+                  </>
+                )}
+              </button>
             </div>
           </div>
         </div>

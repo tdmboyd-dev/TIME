@@ -97,6 +97,8 @@ export interface UserSchema {
     connectedAt: Date;
     lastSync: Date;
     status: 'active' | 'disconnected' | 'error';
+    balance?: number;
+    buyingPower?: number;
   }>;
 
   // WebAuthn/Passkey credentials
