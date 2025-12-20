@@ -60,28 +60,7 @@ export default function RetirementPage() {
   const [calcMonthly, setCalcMonthly] = useState(1000);
   const [calcReturn, setCalcReturn] = useState(7);
 
-  // Mock data as fallback
-  const getMockData = useCallback((): RetirementPlan[] => {
-    return [
-      {
-        id: '1',
-        name: 'Primary Retirement Plan',
-        currentAge: 35,
-        retirementAge: 65,
-        currentSavings: 150000,
-        monthlyContribution: 2000,
-        expectedReturn: 7,
-        inflationRate: 2.5,
-        targetAmount: 2000000,
-        projectedAmount: 2450000,
-        onTrack: true,
-        accounts: [
-          { type: '401(k)', balance: 120000, allocation: { stocks: 80, bonds: 15, cash: 5 } },
-          { type: 'Roth IRA', balance: 30000, allocation: { stocks: 90, bonds: 8, cash: 2 } },
-        ],
-      },
-    ];
-  }, []);
+  // NO MOCK DATA - All retirement plans come from real API endpoints
 
   const fetchPlans = useCallback(async () => {
     try {
@@ -165,20 +144,19 @@ export default function RetirementPage() {
         }
       }
 
-      // If all API calls fail, use mock data
-      console.log('Using mock data as fallback');
-      setPlans(getMockData());
+      // If all API calls fail, show empty state - NO MOCK DATA
+      setPlans([]);
       setIsConnected(false);
 
     } catch (error) {
-      // Error handled - uses fallback data
-      setPlans(getMockData());
+      // Error handled - show empty state, NO MOCK DATA
+      setPlans([]);
       setIsConnected(false);
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
     }
-  }, [getMockData]);
+  }, []);
 
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);

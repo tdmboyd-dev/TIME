@@ -76,35 +76,7 @@ const indicators = [
   { id: 'volume', name: 'Volume', active: true },
 ];
 
-// Fallback demo data generator (only used when API fails)
-function generateDemoCandles(count: number, basePrice: number, timeframeMinutes: number = 60): CandleData[] {
-  const candles: CandleData[] = [];
-  let currentPrice = basePrice;
-  const now = Date.now();
-  const volatilityMultiplier = Math.sqrt(timeframeMinutes / 60);
-
-  for (let i = count - 1; i >= 0; i--) {
-    const volatility = currentPrice * 0.02 * volatilityMultiplier;
-    const open = currentPrice;
-    const close = open + (Math.random() - 0.5) * volatility;
-    const high = Math.max(open, close) + Math.random() * volatility * 0.5;
-    const low = Math.min(open, close) - Math.random() * volatility * 0.5;
-    const volume = Math.floor(Math.random() * 1000000 * volatilityMultiplier) + 500000;
-
-    candles.push({
-      time: now - i * timeframeMinutes * 60000,
-      open,
-      high,
-      low,
-      close,
-      volume,
-    });
-
-    currentPrice = close;
-  }
-
-  return candles;
-}
+// NO MOCK DATA - All chart data comes from real API endpoints
 
 export default function ChartsPage() {
   const [selectedSymbol, setSelectedSymbol] = useState(symbols[0]);
@@ -191,18 +163,11 @@ export default function ChartsPage() {
         throw new Error('No data returned');
       }
     } catch (error) {
-      // API unavailable - falling back to demo visualization
-      // Fallback to demo data
-      const basePrice = selectedSymbol.type === 'crypto' ? 43000 :
-                       selectedSymbol.type === 'forex' ? 1.08 :
-                       180;
-      const candleCount = selectedTimeframe.minutes <= 15 ? 150 :
-                          selectedTimeframe.minutes <= 60 ? 100 :
-                          selectedTimeframe.minutes <= 240 ? 80 : 50;
-      setCandles(generateDemoCandles(candleCount, basePrice, selectedTimeframe.minutes));
+      // API unavailable - show empty state, NO MOCK DATA
+      setCandles([]);
       setIsLive(false);
-      setDataSource('Demo');
-      setNotification({ type: 'error', message: 'Using demo data (API unavailable)' });
+      setDataSource('Offline');
+      setNotification({ type: 'error', message: 'Chart data unavailable - check connection' });
       setTimeout(() => setNotification(null), 3000);
     } finally {
       setIsLoading(false);
