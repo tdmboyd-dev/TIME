@@ -134,11 +134,8 @@ const availableBrokers: AvailableBroker[] = [
   },
 ];
 
-const initialBrokers: BrokerConnection[] = [
-  { id: '1', name: 'Alpaca', type: 'Stock/Crypto', status: 'disconnected', lastSync: new Date() },
-  { id: '2', name: 'OANDA', type: 'Forex', status: 'disconnected', lastSync: new Date(Date.now() - 86400000) },
-  { id: '3', name: 'Interactive Brokers', type: 'Multi-Asset', status: 'disconnected', lastSync: new Date(Date.now() - 172800000) },
-];
+// Start with empty array - will fetch from API
+const initialBrokers: BrokerConnection[] = [];
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<Tab>('profile');
@@ -226,7 +223,39 @@ export default function SettingsPage() {
       }
     };
 
+    // Fetch broker connections from API
+    const fetchBrokerConnections = async () => {
+      try {
+        const token = getTokenFromCookie();
+        if (!token) return;
+
+        const response = await fetch(`${API_BASE}/brokers/connections`, {
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && Array.isArray(data.data)) {
+            // Map API response to BrokerConnection format
+            const connections: BrokerConnection[] = data.data.map((conn: any) => ({
+              id: conn.brokerId || conn.id,
+              name: conn.brokerType || conn.name || conn.brokerId,
+              type: conn.brokerType || 'Unknown',
+              status: conn.status === 'active' ? 'connected' : conn.status || 'disconnected',
+              lastSync: conn.lastSync ? new Date(conn.lastSync) : new Date(),
+              apiKey: conn.apiKey,
+              accountId: conn.accountId,
+            }));
+            setBrokers(connections);
+          }
+        }
+      } catch (error) {
+        // Error handled - keeps empty array
+      }
+    };
+
     fetchSettings();
+    fetchBrokerConnections();
   }, []);
 
   const handleSave = async () => {
