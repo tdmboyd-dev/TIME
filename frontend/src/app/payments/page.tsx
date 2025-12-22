@@ -71,6 +71,13 @@ export default function PaymentsPage() {
   const [editingMethod, setEditingMethod] = useState<PaymentMethod | null>(null);
   const [editMethodName, setEditMethodName] = useState('');
   const [editMethodDefault, setEditMethodDefault] = useState(false);
+  const [notification, setNotification] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<PaymentMethod | null>(null);
+
+  const showNotification = (type: 'success' | 'error' | 'info', message: string) => {
+    setNotification({ type, message });
+    setTimeout(() => setNotification(null), 5000);
+  };
 
   const fetchData = useCallback(async () => {
     try {
@@ -179,6 +186,61 @@ export default function PaymentsPage() {
 
   return (
     <div className="space-y-6">
+      {/* Toast Notification */}
+      {notification && (
+        <div className="fixed top-4 right-4 z-50 animate-in slide-in-from-top-2">
+          <div className={`flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg ${
+            notification.type === 'success' ? 'bg-green-500/90 text-white' :
+            notification.type === 'error' ? 'bg-red-500/90 text-white' :
+            'bg-blue-500/90 text-white'
+          }`}>
+            {notification.type === 'success' && <CheckCircle className="w-5 h-5" />}
+            {notification.type === 'error' && <XCircle className="w-5 h-5" />}
+            {notification.type === 'info' && <AlertCircle className="w-5 h-5" />}
+            <span className="font-medium">{notification.message}</span>
+            <button onClick={() => setNotification(null)} className="ml-2 hover:opacity-80">
+              ×
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-slate-900 border border-slate-700 rounded-xl p-6 max-w-sm w-full mx-4">
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Trash2 className="w-8 h-8 text-red-400" />
+              </div>
+              <h3 className="text-lg font-bold text-white mb-2">Remove Payment Method</h3>
+              <p className="text-slate-400">
+                Are you sure you want to remove <span className="text-white font-medium">{showDeleteConfirm.name}</span>?
+              </p>
+              <p className="text-sm text-red-400 mt-2">This action cannot be undone.</p>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowDeleteConfirm(null)}
+                className="flex-1 py-3 bg-slate-700 hover:bg-slate-600 rounded-lg text-white font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  setPaymentMethods(prev => prev.filter(m => m.id !== showDeleteConfirm.id));
+                  showNotification('success', `${showDeleteConfirm.name} has been removed.`);
+                  setShowDeleteConfirm(null);
+                }}
+                className="flex-1 py-3 bg-red-500 hover:bg-red-600 rounded-lg text-white font-medium"
+              >
+                Remove
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -374,11 +436,7 @@ export default function PaymentsPage() {
                     <Edit className="w-4 h-4 text-slate-400" />
                   </button>
                   <button
-                    onClick={() => {
-                      if (confirm(`Remove ${method.name}?\n\nThis action cannot be undone.`)) {
-                        alert(`${method.name} has been removed.`);
-                      }
-                    }}
+                    onClick={() => setShowDeleteConfirm(method)}
                     className="p-2 rounded-lg hover:bg-red-500/20 transition-colors"
                   >
                     <Trash2 className="w-4 h-4 text-red-400" />
@@ -566,7 +624,7 @@ export default function PaymentsPage() {
                 </button>
                 <button
                   onClick={() => {
-                    alert(`${addMethodType === 'card' ? 'Card' : addMethodType === 'bank' ? 'Bank Account' : 'Crypto Wallet'} added successfully!\n\nYour new payment method is ready to use.`);
+                    showNotification('success', `${addMethodType === 'card' ? 'Card' : addMethodType === 'bank' ? 'Bank Account' : 'Crypto Wallet'} added successfully!`);
                     setShowAddModal(false);
                   }}
                   className="flex-1 py-3 bg-time-primary hover:bg-time-primary/80 rounded-lg text-white font-medium"
@@ -627,7 +685,7 @@ export default function PaymentsPage() {
                 </button>
                 <button
                   onClick={() => {
-                    alert('Deposit initiated!\n\nYour funds will be available within 1-3 business days.\n\nA confirmation email has been sent.');
+                    showNotification('success', 'Deposit initiated! Funds will be available within 1-3 business days.');
                     setShowDepositModal(false);
                   }}
                   className="flex-1 py-3 bg-green-500 hover:bg-green-600 rounded-lg text-white font-medium"
@@ -699,7 +757,7 @@ export default function PaymentsPage() {
                 </button>
                 <button
                   onClick={() => {
-                    alert('Withdrawal request submitted!\n\nExpected arrival: 1-3 business days\n\nYou will receive a confirmation email shortly.');
+                    showNotification('success', 'Withdrawal submitted! Expected arrival: 1-3 business days.');
                     setShowWithdrawModal(false);
                   }}
                   className="flex-1 py-3 bg-red-500 hover:bg-red-600 rounded-lg text-white font-medium"

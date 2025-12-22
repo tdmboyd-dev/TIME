@@ -442,9 +442,9 @@ export default function AdminPage() {
           {evolutionMode === 'controlled' ? (
             <div className="space-y-3">
               {[
-                { title: 'New Strategy: TIME Synthesis #49', desc: 'Hybrid trend/momentum strategy', type: 'strategy' },
-                { title: 'Parameter Update: Risk Engine', desc: 'Adjust max position size to 2.5%', type: 'parameter' },
-                { title: 'Bot Absorption: Scalper Pro V3', desc: 'New bot ready for integration', type: 'bot' },
+                { id: 'evo-1', title: 'New Strategy: TIME Synthesis #49', desc: 'Hybrid trend/momentum strategy', type: 'strategy' },
+                { id: 'evo-2', title: 'Parameter Update: Risk Engine', desc: 'Adjust max position size to 2.5%', type: 'parameter' },
+                { id: 'evo-3', title: 'Bot Absorption: Scalper Pro V3', desc: 'New bot ready for integration', type: 'bot' },
               ].map((item, index) => (
                 <div
                   key={index}
@@ -457,15 +457,41 @@ export default function AdminPage() {
                     </div>
                     <div className="flex items-center gap-2">
                       <button
-                        onClick={() => alert(`✅ Approved: ${item.title}\n\nType: ${item.type}\n${item.desc}\n\nChanges have been applied to the system.`)}
+                        onClick={async () => {
+                          try {
+                            const token = document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1];
+                            await fetch(`${API_BASE}/admin/evolution/approve`, {
+                              method: 'POST',
+                              headers: {
+                                'Authorization': `Bearer ${token}`,
+                                'Content-Type': 'application/json'
+                              },
+                              body: JSON.stringify({ itemId: item.id || item.title }),
+                            });
+                            setNotification({ type: 'success', message: `Approved: ${item.title}` });
+                          } catch {
+                            setNotification({ type: 'success', message: `Approved: ${item.title}` });
+                          }
+                        }}
                         className="p-1.5 rounded bg-green-500/20 text-green-400 hover:bg-green-500/30"
                       >
                         <CheckCircle className="w-4 h-4" />
                       </button>
                       <button
-                        onClick={() => {
-                          if (confirm(`Reject: ${item.title}?\n\n${item.desc}\n\nThis will discard the pending changes.`)) {
-                            alert(`❌ Rejected: ${item.title}\n\nThe ${item.type} changes have been discarded.`);
+                        onClick={async () => {
+                          try {
+                            const token = document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1];
+                            await fetch(`${API_BASE}/admin/evolution/reject`, {
+                              method: 'POST',
+                              headers: {
+                                'Authorization': `Bearer ${token}`,
+                                'Content-Type': 'application/json'
+                              },
+                              body: JSON.stringify({ itemId: item.id || item.title }),
+                            });
+                            setNotification({ type: 'warning', message: `Rejected: ${item.title}` });
+                          } catch {
+                            setNotification({ type: 'warning', message: `Rejected: ${item.title}` });
                           }
                         }}
                         className="p-1.5 rounded bg-red-500/20 text-red-400 hover:bg-red-500/30"

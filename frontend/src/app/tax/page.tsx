@@ -64,6 +64,12 @@ export default function TaxPage() {
   const [isScanning, setIsScanning] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [notification, setNotification] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
+
+  const showNotification = (type: 'success' | 'error' | 'info', message: string) => {
+    setNotification({ type, message });
+    setTimeout(() => setNotification(null), 5000);
+  };
 
   const fetchData = useCallback(async () => {
     try {
@@ -192,7 +198,7 @@ export default function TaxPage() {
 
       const data = await res.json();
       if (data.success) {
-        alert(`Tax-loss harvest executed! Estimated tax savings: $${opportunity.estimatedTaxSavings.toFixed(2)}`);
+        showNotification('success', `Tax-loss harvest executed! Estimated savings: $${opportunity.estimatedTaxSavings.toFixed(2)}`);
         setIsConnected(true);
         fetchData();
         scanForOpportunities();
@@ -200,14 +206,32 @@ export default function TaxPage() {
         throw new Error('Invalid response format');
       }
     } catch (error) {
-      // Error handled - shows alert
+      // Error handled - shows notification
       setIsConnected(false);
-      alert('Failed to execute harvest. Backend may be unavailable.');
+      showNotification('error', 'Failed to execute harvest. Backend may be unavailable.');
     }
   };
 
   return (
     <div className="min-h-screen bg-gray-950 text-white p-6">
+      {/* Toast Notification */}
+      {notification && (
+        <div className="fixed top-4 right-4 z-50 animate-in slide-in-from-top-2">
+          <div className={`flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg ${
+            notification.type === 'success' ? 'bg-green-500/90 text-white' :
+            notification.type === 'error' ? 'bg-red-500/90 text-white' :
+            'bg-blue-500/90 text-white'
+          }`}>
+            {notification.type === 'success' && <CheckCircle2 className="w-5 h-5" />}
+            {notification.type === 'error' && <AlertTriangle className="w-5 h-5" />}
+            {notification.type === 'info' && <Calendar className="w-5 h-5" />}
+            <span className="font-medium">{notification.message}</span>
+            <button onClick={() => setNotification(null)} className="ml-2 hover:opacity-80">
+              ×
+            </button>
+          </div>
+        </div>
+      )}
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">

@@ -29,6 +29,12 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [notification, setNotification] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
+
+  const showNotification = (type: 'success' | 'error' | 'info', message: string) => {
+    setNotification({ type, message });
+    setTimeout(() => setNotification(null), 5000);
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -224,7 +230,22 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex relative">
+      {/* Toast Notification */}
+      {notification && (
+        <div className="fixed top-4 right-4 z-50 animate-in slide-in-from-top-2">
+          <div className={`flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg ${
+            notification.type === 'success' ? 'bg-green-500/90 text-white' :
+            notification.type === 'error' ? 'bg-red-500/90 text-white' :
+            'bg-blue-500/90 text-white'
+          }`}>
+            <span className="font-medium">{notification.message}</span>
+            <button onClick={() => setNotification(null)} className="ml-2 hover:opacity-80">
+              ×
+            </button>
+          </div>
+        </div>
+      )}
       {/* Left Panel - Branding & Info */}
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 relative overflow-hidden">
         {/* Animated Background Elements */}
@@ -559,7 +580,7 @@ export default function LoginPage() {
                   Didn't receive a code?{' '}
                   <button
                     type="button"
-                    onClick={() => alert('Verification code resent!\n\nPlease check your authenticator app or wait for a new code.')}
+                    onClick={() => showNotification('info', 'Verification code resent! Please check your authenticator app.')}
                     className="text-cyan-400 hover:text-cyan-300"
                   >
                     Resend

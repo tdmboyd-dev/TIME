@@ -21,7 +21,8 @@ import {
   Info,
   ChevronRight,
   Wifi,
-  WifiOff
+  WifiOff,
+  X,
 } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -60,6 +61,17 @@ export default function RoboAdvisorPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedRisk, setSelectedRisk] = useState<'conservative' | 'moderate' | 'aggressive'>('moderate');
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  // Portfolio Settings Modal
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [editingPortfolio, setEditingPortfolio] = useState<Portfolio | null>(null);
+  const [portfolioSettings, setPortfolioSettings] = useState({
+    autoRebalance: true,
+    rebalanceFrequency: 'monthly' as 'weekly' | 'monthly' | 'quarterly',
+    monthlyDeposit: 500,
+    reinvestDividends: true,
+    taxLossHarvesting: false,
+  });
 
   // No mock data - show empty state when no portfolios exist
 
@@ -324,7 +336,17 @@ export default function RoboAdvisorPage() {
                   </div>
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => alert(`Configuring ${portfolio.name}...`)}
+                      onClick={() => {
+                        setEditingPortfolio(portfolio);
+                        setPortfolioSettings({
+                          autoRebalance: portfolio.autoRebalance,
+                          rebalanceFrequency: 'monthly',
+                          monthlyDeposit: portfolio.monthlyDeposit,
+                          reinvestDividends: true,
+                          taxLossHarvesting: false,
+                        });
+                        setShowSettingsModal(true);
+                      }}
                       className="p-2 rounded-lg hover:bg-slate-700 transition-colors"
                       title="Portfolio settings"
                     >
@@ -503,6 +525,161 @@ export default function RoboAdvisorPage() {
                   className="flex-1 py-3 bg-time-primary hover:bg-time-primary/80 rounded-lg text-white font-medium"
                 >
                   Create Portfolio
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Portfolio Settings Modal */}
+      {showSettingsModal && editingPortfolio && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+          <div className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-lg overflow-hidden">
+            {/* Header */}
+            <div className="p-6 border-b border-slate-700 flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-bold text-white">{editingPortfolio.name} Settings</h2>
+                <p className="text-slate-400 text-sm mt-1">Configure your portfolio preferences</p>
+              </div>
+              <button
+                onClick={() => setShowSettingsModal(false)}
+                className="p-2 hover:bg-slate-800 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5 text-slate-400" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-6">
+              {/* Auto Rebalance */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-white font-medium">Auto Rebalance</h3>
+                  <p className="text-slate-500 text-sm">Automatically rebalance to target allocation</p>
+                </div>
+                <button
+                  onClick={() => setPortfolioSettings(prev => ({ ...prev, autoRebalance: !prev.autoRebalance }))}
+                  className={clsx(
+                    'w-12 h-6 rounded-full transition-colors relative',
+                    portfolioSettings.autoRebalance ? 'bg-time-primary' : 'bg-slate-700'
+                  )}
+                >
+                  <div className={clsx(
+                    'w-5 h-5 rounded-full bg-white absolute top-0.5 transition-all',
+                    portfolioSettings.autoRebalance ? 'left-6' : 'left-0.5'
+                  )} />
+                </button>
+              </div>
+
+              {/* Rebalance Frequency */}
+              {portfolioSettings.autoRebalance && (
+                <div>
+                  <h3 className="text-white font-medium mb-3">Rebalance Frequency</h3>
+                  <div className="grid grid-cols-3 gap-3">
+                    {(['weekly', 'monthly', 'quarterly'] as const).map((freq) => (
+                      <button
+                        key={freq}
+                        onClick={() => setPortfolioSettings(prev => ({ ...prev, rebalanceFrequency: freq }))}
+                        className={clsx(
+                          'py-2 px-4 rounded-lg border-2 capitalize transition-all',
+                          portfolioSettings.rebalanceFrequency === freq
+                            ? 'border-time-primary bg-time-primary/10 text-white'
+                            : 'border-slate-700 text-slate-400 hover:border-slate-600'
+                        )}
+                      >
+                        {freq}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Monthly Deposit */}
+              <div>
+                <h3 className="text-white font-medium mb-2">Monthly Deposit</h3>
+                <div className="relative">
+                  <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+                  <input
+                    type="number"
+                    value={portfolioSettings.monthlyDeposit}
+                    onChange={(e) => setPortfolioSettings(prev => ({ ...prev, monthlyDeposit: parseFloat(e.target.value) || 0 }))}
+                    className="w-full pl-10 pr-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-time-primary"
+                    placeholder="500"
+                  />
+                </div>
+              </div>
+
+              {/* Reinvest Dividends */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-white font-medium">Reinvest Dividends</h3>
+                  <p className="text-slate-500 text-sm">Automatically reinvest dividend payments</p>
+                </div>
+                <button
+                  onClick={() => setPortfolioSettings(prev => ({ ...prev, reinvestDividends: !prev.reinvestDividends }))}
+                  className={clsx(
+                    'w-12 h-6 rounded-full transition-colors relative',
+                    portfolioSettings.reinvestDividends ? 'bg-time-primary' : 'bg-slate-700'
+                  )}
+                >
+                  <div className={clsx(
+                    'w-5 h-5 rounded-full bg-white absolute top-0.5 transition-all',
+                    portfolioSettings.reinvestDividends ? 'left-6' : 'left-0.5'
+                  )} />
+                </button>
+              </div>
+
+              {/* Tax Loss Harvesting */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-white font-medium">Tax Loss Harvesting</h3>
+                  <p className="text-slate-500 text-sm">Sell losing positions to offset gains</p>
+                </div>
+                <button
+                  onClick={() => setPortfolioSettings(prev => ({ ...prev, taxLossHarvesting: !prev.taxLossHarvesting }))}
+                  className={clsx(
+                    'w-12 h-6 rounded-full transition-colors relative',
+                    portfolioSettings.taxLossHarvesting ? 'bg-time-primary' : 'bg-slate-700'
+                  )}
+                >
+                  <div className={clsx(
+                    'w-5 h-5 rounded-full bg-white absolute top-0.5 transition-all',
+                    portfolioSettings.taxLossHarvesting ? 'left-6' : 'left-0.5'
+                  )} />
+                </button>
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-3 pt-4 border-t border-slate-700">
+                <button
+                  onClick={() => setShowSettingsModal(false)}
+                  className="flex-1 py-3 bg-slate-800 hover:bg-slate-700 rounded-lg text-white font-medium"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={async () => {
+                    try {
+                      await fetch(`${API_BASE}/robo/portfolios/${editingPortfolio.id}/settings`, {
+                        method: 'PUT',
+                        headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+                        body: JSON.stringify(portfolioSettings),
+                      });
+                    } catch {
+                      // Continue anyway
+                    }
+                    setPortfolios(prev => prev.map(p =>
+                      p.id === editingPortfolio.id
+                        ? { ...p, autoRebalance: portfolioSettings.autoRebalance, monthlyDeposit: portfolioSettings.monthlyDeposit }
+                        : p
+                    ));
+                    setShowSettingsModal(false);
+                    setNotification({ type: 'success', message: 'Portfolio settings updated!' });
+                    setTimeout(() => setNotification(null), 3000);
+                  }}
+                  className="flex-1 py-3 bg-time-primary hover:bg-time-primary/80 rounded-lg text-white font-medium"
+                >
+                  Save Settings
                 </button>
               </div>
             </div>

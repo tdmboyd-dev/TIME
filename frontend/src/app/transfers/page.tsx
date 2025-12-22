@@ -50,6 +50,12 @@ export default function TransfersPage() {
   const [accountTitle, setAccountTitle] = useState('');
   const [ssnLast4, setSsnLast4] = useState('');
   const [transferType, setTransferType] = useState<'full' | 'partial'>('full');
+  const [notification, setNotification] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
+
+  const showNotification = (type: 'success' | 'error' | 'info', message: string) => {
+    setNotification({ type, message });
+    setTimeout(() => setNotification(null), 5000);
+  };
 
   const fetchBrokers = useCallback(async () => {
     try {
@@ -127,13 +133,13 @@ export default function TransfersPage() {
 
       const data = await res.json();
       if (data.success) {
-        alert('Transfer initiated! Check status below.');
+        showNotification('success', 'Transfer initiated successfully! Check status below.');
         setShowNewTransfer(false);
         fetchTransfers();
       }
     } catch (error) {
-      // Error handled - shows alert
-      alert('Failed to initiate transfer. Please try again.');
+      // Error handled - shows notification
+      showNotification('error', 'Failed to initiate transfer. Please try again.');
     }
   };
 
@@ -166,6 +172,24 @@ export default function TransfersPage() {
 
   return (
     <div className="min-h-screen bg-gray-950 text-white p-6">
+      {/* Toast Notification */}
+      {notification && (
+        <div className="fixed top-4 right-4 z-50 animate-in slide-in-from-top-2">
+          <div className={`flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg ${
+            notification.type === 'success' ? 'bg-green-500/90 text-white' :
+            notification.type === 'error' ? 'bg-red-500/90 text-white' :
+            'bg-blue-500/90 text-white'
+          }`}>
+            {notification.type === 'success' && <CheckCircle2 className="w-5 h-5" />}
+            {notification.type === 'error' && <AlertCircle className="w-5 h-5" />}
+            {notification.type === 'info' && <Clock className="w-5 h-5" />}
+            <span className="font-medium">{notification.message}</span>
+            <button onClick={() => setNotification(null)} className="ml-2 hover:opacity-80">
+              ×
+            </button>
+          </div>
+        </div>
+      )}
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">

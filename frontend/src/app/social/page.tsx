@@ -65,6 +65,12 @@ export default function SocialTradingPage() {
   const [filterBy, setFilterBy] = useState<'all' | 'following' | 'copying'>('all');
   const [showCopyModal, setShowCopyModal] = useState(false);
   const [selectedTrader, setSelectedTrader] = useState<Trader | null>(null);
+  const [notification, setNotification] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
+
+  const showNotification = (type: 'success' | 'error' | 'info', message: string) => {
+    setNotification({ type, message });
+    setTimeout(() => setNotification(null), 5000);
+  };
 
   // Fetch data from backend API with fallback to mock data
   const fetchData = useCallback(async () => {
@@ -152,6 +158,24 @@ export default function SocialTradingPage() {
 
   return (
     <div className="space-y-6">
+      {/* Toast Notification */}
+      {notification && (
+        <div className="fixed top-4 right-4 z-50 animate-in slide-in-from-top-2">
+          <div className={`flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg ${
+            notification.type === 'success' ? 'bg-green-500/90 text-white' :
+            notification.type === 'error' ? 'bg-red-500/90 text-white' :
+            'bg-blue-500/90 text-white'
+          }`}>
+            {notification.type === 'success' && <CheckCircle className="w-5 h-5" />}
+            {notification.type === 'error' && <WifiOff className="w-5 h-5" />}
+            {notification.type === 'info' && <Wifi className="w-5 h-5" />}
+            <span className="font-medium">{notification.message}</span>
+            <button onClick={() => setNotification(null)} className="ml-2 hover:opacity-80">
+              ×
+            </button>
+          </div>
+        </div>
+      )}
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -178,7 +202,7 @@ export default function SocialTradingPage() {
           <button
             onClick={() => {
               navigator.clipboard.writeText(window.location.href);
-              alert('Profile link copied to clipboard!');
+              showNotification('success', 'Profile link copied to clipboard!');
             }}
             className="btn-secondary flex items-center gap-2"
           >
@@ -481,7 +505,7 @@ export default function SocialTradingPage() {
                         t.id === selectedTrader.id ? { ...t, isCopying: true } : t
                       ));
                       setShowCopyModal(false);
-                      alert(`Started copying ${selectedTrader.username}!`);
+                      showNotification('success', `Started copying ${selectedTrader.username}!`);
                     }
                   }}
                   className="flex-1 py-3 bg-time-primary hover:bg-time-primary/80 rounded-lg text-white font-medium"

@@ -73,6 +73,12 @@ export default function GoalsPage() {
   const [monthlyContribution, setMonthlyContribution] = useState('');
   const [riskAnswers, setRiskAnswers] = useState<Record<string, number>>({});
   const [riskProfile, setRiskProfile] = useState<any>(null);
+  const [notification, setNotification] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
+
+  const showNotification = (type: 'success' | 'error' | 'info', message: string) => {
+    setNotification({ type, message });
+    setTimeout(() => setNotification(null), 5000);
+  };
 
   const fetchGoals = useCallback(async () => {
     // NO MOCK DATA - All goals come from real API endpoints
@@ -190,7 +196,7 @@ export default function GoalsPage() {
 
       const data = await res.json();
       if (data.success) {
-        alert(`Goal "${goalName}" created!`);
+        showNotification('success', `Goal "${goalName}" created successfully!`);
         setShowNewGoal(false);
         resetForm();
         fetchGoals();
@@ -198,8 +204,8 @@ export default function GoalsPage() {
         throw new Error('Invalid response format');
       }
     } catch (error) {
-      // Error handled - alert shown to user
-      alert('Failed to create goal. Please try again.');
+      // Error handled - notification shown to user
+      showNotification('error', 'Failed to create goal. Please try again.');
     }
   };
 
@@ -233,6 +239,24 @@ export default function GoalsPage() {
 
   return (
     <div className="min-h-screen bg-gray-950 text-white p-6">
+      {/* Toast Notification */}
+      {notification && (
+        <div className="fixed top-4 right-4 z-50 animate-in slide-in-from-top-2">
+          <div className={`flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg ${
+            notification.type === 'success' ? 'bg-green-500/90 text-white' :
+            notification.type === 'error' ? 'bg-red-500/90 text-white' :
+            'bg-blue-500/90 text-white'
+          }`}>
+            {notification.type === 'success' && <Check className="w-5 h-5" />}
+            {notification.type === 'error' && <Wifi className="w-5 h-5" />}
+            {notification.type === 'info' && <Wifi className="w-5 h-5" />}
+            <span className="font-medium">{notification.message}</span>
+            <button onClick={() => setNotification(null)} className="ml-2 hover:opacity-80">
+              ×
+            </button>
+          </div>
+        </div>
+      )}
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
