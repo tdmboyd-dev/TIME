@@ -1401,8 +1401,9 @@ export default function SettingsPage() {
                             setQrCode(data.qrCode);
                           }
                         } catch (e) {
-                          // Generate a placeholder
-                          setQrCode('https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=otpauth://totp/TIME:user@example.com?secret=JBSWY3DPEHPK3PXP&issuer=TIME');
+                          // Show error - don't use fake QR code
+                          showNotification('error', '2FA setup unavailable. Please try again later.');
+                          setTwoFactorMethod(null);
                         }
                       }}
                       className="w-full flex items-center gap-4 p-4 bg-slate-800/50 rounded-lg hover:bg-slate-800 transition-colors text-left"

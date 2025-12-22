@@ -137,7 +137,14 @@
       "Bash(python:*)",
       "Bash(wc:*)",
       "Bash(grep:*)",
-      "Bash(done)"
+      "Bash(done)",
+      "WebFetch(domain:frontend-mxbl1q8ft-tdmboyd-devs-projects.vercel.app)",
+      "Bash(npx vercel ls:*)",
+      "Bash(\"C:\\Users\\Timeb\\.fly\\bin\\fly.exe\" secrets set ADMIN_API_KEY=TIME_ADMIN_2025 --app time-backend-hosting)",
+      "Bash(\"C:\\Users\\Timeb\\.fly\\bin\\fly.exe\" secrets set ADMIN_TEST_KEY=TIME_ADMIN_2025 --app time-backend-hosting)",
+      "Bash(npx vercel:*)",
+      "Bash(npx next build)",
+      "Bash(git push)"
     ]
   }
 }
