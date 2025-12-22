@@ -190,8 +190,8 @@ Create/update your `.env` file with all required variables:
 # ============================================================================
 # CRITICAL - Server won't start without these
 # ============================================================================
-JWT_SECRET=your_32_character_or_longer_secret_key_here
-MONGODB_URI=mongodb+srv://user:pass@cluster.mongodb.net/time_db
+JWT_SECRET=<your_32_character_secret>
+MONGODB_URI=<your_mongodb_connection_string>
 
 # ============================================================================
 # REQUIRED FOR TRADING
