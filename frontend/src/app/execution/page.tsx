@@ -302,7 +302,7 @@ export default function ExecutionPage() {
           </h1>
           <p className="text-slate-400">
             Institutional-grade smart order routing across 50+ venues
-            {!isConnected && <span className="text-yellow-400 ml-2">(Using mock data)</span>}
+            {!isConnected && <span className="text-yellow-400 ml-2">(API Offline)</span>}
           </p>
         </div>
         <div className="flex items-center gap-3">
