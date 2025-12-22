@@ -18,6 +18,7 @@ import {
 } from '@simplewebauthn/server';
 import { v4 as uuidv4 } from 'uuid';
 import { createComponentLogger } from '../utils/logger';
+import { sessionStore } from '../utils/session_store';
 
 const logger = createComponentLogger('WebAuthnService');
 
@@ -39,23 +40,6 @@ export interface WebAuthnCredential {
   lastUsedAt: Date;
   friendlyName: string;
 }
-
-// Challenge storage (use Redis in production)
-const pendingChallenges = new Map<string, {
-  challenge: string;
-  userId?: string;
-  expiresAt: Date;
-}>();
-
-// Clean up expired challenges periodically
-setInterval(() => {
-  const now = new Date();
-  for (const [key, value] of pendingChallenges.entries()) {
-    if (value.expiresAt < now) {
-      pendingChallenges.delete(key);
-    }
-  }
-}, 60000); // Every minute
 
 export class WebAuthnService {
   private rpName = RP_NAME;
@@ -102,11 +86,10 @@ export class WebAuthnService {
       supportedAlgorithmIDs: [-7, -257], // ES256 and RS256
     });
 
-    // Store challenge for verification
-    pendingChallenges.set(sessionId, {
+    // Store challenge for verification (Redis-backed with in-memory fallback)
+    await sessionStore.setWebAuthnChallenge(sessionId, {
       challenge: options.challenge,
       userId,
-      expiresAt: new Date(Date.now() + 5 * 60 * 1000), // 5 minutes
     });
 
     logger.info('Generated WebAuthn registration options', { userId, sessionId });
@@ -126,15 +109,11 @@ export class WebAuthnService {
     response: any,
     friendlyName: string = 'Passkey'
   ): Promise<{ success: boolean; credential?: WebAuthnCredential; error?: string }> {
-    const pending = pendingChallenges.get(sessionId);
+    // Get challenge from Redis-backed store (auto-deleted after retrieval)
+    const pending = await sessionStore.getWebAuthnChallenge(sessionId);
 
     if (!pending) {
       return { success: false, error: 'Registration session expired or not found' };
-    }
-
-    if (pending.expiresAt < new Date()) {
-      pendingChallenges.delete(sessionId);
-      return { success: false, error: 'Registration session expired' };
     }
 
     try {
@@ -166,8 +145,7 @@ export class WebAuthnService {
         friendlyName,
       };
 
-      // Clean up challenge
-      pendingChallenges.delete(sessionId);
+      // Challenge already deleted by getWebAuthnChallenge
 
       logger.info('WebAuthn registration verified', {
         userId: pending.userId,
@@ -200,11 +178,10 @@ export class WebAuthnService {
       userVerification: 'preferred',
     });
 
-    // Store challenge for verification
-    pendingChallenges.set(sessionId, {
+    // Store challenge for verification (Redis-backed with in-memory fallback)
+    await sessionStore.setWebAuthnChallenge(sessionId, {
       challenge: options.challenge,
       userId,
-      expiresAt: new Date(Date.now() + 5 * 60 * 1000), // 5 minutes
     });
 
     logger.info('Generated WebAuthn authentication options', { sessionId, credentialCount: credentials.length });
@@ -223,15 +200,11 @@ export class WebAuthnService {
     response: any,
     credential: WebAuthnCredential
   ): Promise<{ success: boolean; newCounter?: number; error?: string }> {
-    const pending = pendingChallenges.get(sessionId);
+    // Get challenge from Redis-backed store (auto-deleted after retrieval)
+    const pending = await sessionStore.getWebAuthnChallenge(sessionId);
 
     if (!pending) {
       return { success: false, error: 'Authentication session expired or not found' };
-    }
-
-    if (pending.expiresAt < new Date()) {
-      pendingChallenges.delete(sessionId);
-      return { success: false, error: 'Authentication session expired' };
     }
 
     try {
@@ -253,8 +226,7 @@ export class WebAuthnService {
         return { success: false, error: 'Authentication failed' };
       }
 
-      // Clean up challenge
-      pendingChallenges.delete(sessionId);
+      // Challenge already deleted by getWebAuthnChallenge
 
       logger.info('WebAuthn authentication verified', {
         credentialId: credential.id,

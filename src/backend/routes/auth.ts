@@ -1383,7 +1383,7 @@ router.get('/oauth/providers', (_req: Request, res: Response) => {
  * GET /auth/oauth/:provider/authorize
  * Redirect to OAuth provider for authorization
  */
-router.get('/oauth/:provider/authorize', (req: Request, res: Response) => {
+router.get('/oauth/:provider/authorize', async (req: Request, res: Response) => {
   try {
     const { provider } = req.params;
     const { returnUrl, linkToUserId } = req.query;
@@ -1396,7 +1396,7 @@ router.get('/oauth/:provider/authorize', (req: Request, res: Response) => {
       return res.status(400).json({ error: `${provider} OAuth not configured` });
     }
 
-    const { url, state } = oAuthService.generateAuthUrl(provider, {
+    const { url, state } = await oAuthService.generateAuthUrl(provider, {
       returnUrl: returnUrl as string,
       linkToUserId: linkToUserId as string,
     });
@@ -1435,7 +1435,7 @@ router.get('/oauth/:provider/callback', async (req: Request, res: Response) => {
     }
 
     // Validate state (CSRF protection)
-    const stateValidation = oAuthService.validateState(state as string);
+    const stateValidation = await oAuthService.validateState(state as string);
     if (!stateValidation.valid) {
       return res.redirect(`/login?error=${encodeURIComponent(stateValidation.error || 'Invalid+state')}`);
     }

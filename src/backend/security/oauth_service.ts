@@ -14,6 +14,7 @@
 
 import { v4 as uuidv4 } from 'uuid';
 import { createComponentLogger } from '../utils/logger';
+import { sessionStore } from '../utils/session_store';
 
 const logger = createComponentLogger('OAuthService');
 
@@ -62,35 +63,17 @@ export interface OAuthProvider {
   refreshToken?: string; // Encrypted in production
 }
 
-// State storage for CSRF protection (use Redis in production)
-const pendingOAuthStates = new Map<string, {
-  provider: string;
-  returnUrl?: string;
-  linkToUserId?: string; // If linking to existing account
-  expiresAt: Date;
-}>();
-
-// Clean up expired states
-setInterval(() => {
-  const now = new Date();
-  for (const [key, value] of pendingOAuthStates.entries()) {
-    if (value.expiresAt < now) {
-      pendingOAuthStates.delete(key);
-    }
-  }
-}, 60000);
-
 export class OAuthService {
   /**
    * Generate OAuth authorization URL
    */
-  generateAuthUrl(
+  async generateAuthUrl(
     provider: 'google' | 'github' | 'apple',
     options: {
       returnUrl?: string;
       linkToUserId?: string; // If user wants to link OAuth to existing account
     } = {}
-  ): { url: string; state: string } {
+  ): Promise<{ url: string; state: string }> {
     const config = OAUTH_CONFIG[provider];
     if (!config.clientId) {
       throw new Error(`OAuth ${provider} not configured`);
@@ -99,12 +82,11 @@ export class OAuthService {
     const state = uuidv4();
     const callbackUrl = `${CALLBACK_BASE_URL}/${provider}/callback`;
 
-    // Store state for CSRF protection
-    pendingOAuthStates.set(state, {
+    // Store state for CSRF protection (Redis-backed with in-memory fallback)
+    await sessionStore.setOAuthState(state, {
       provider,
       returnUrl: options.returnUrl,
       linkToUserId: options.linkToUserId,
-      expiresAt: new Date(Date.now() + 10 * 60 * 1000), // 10 minutes
     });
 
     const params = new URLSearchParams({
@@ -131,26 +113,19 @@ export class OAuthService {
   /**
    * Validate OAuth state (CSRF protection)
    */
-  validateState(state: string): {
+  async validateState(state: string): Promise<{
     valid: boolean;
     provider?: string;
     returnUrl?: string;
     linkToUserId?: string;
     error?: string;
-  } {
-    const pending = pendingOAuthStates.get(state);
+  }> {
+    // Get and delete state from Redis-backed store (one-time use)
+    const pending = await sessionStore.getOAuthState(state);
 
     if (!pending) {
       return { valid: false, error: 'Invalid or expired state' };
     }
-
-    if (pending.expiresAt < new Date()) {
-      pendingOAuthStates.delete(state);
-      return { valid: false, error: 'State expired' };
-    }
-
-    // Clean up state (one-time use)
-    pendingOAuthStates.delete(state);
 
     return {
       valid: true,
