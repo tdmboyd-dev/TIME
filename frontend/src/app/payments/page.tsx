@@ -66,6 +66,11 @@ export default function PaymentsPage() {
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const [addMethodType, setAddMethodType] = useState<'card' | 'bank' | 'crypto'>('card');
   const [balance, setBalance] = useState(125438.67);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showAllTransactionsModal, setShowAllTransactionsModal] = useState(false);
+  const [editingMethod, setEditingMethod] = useState<PaymentMethod | null>(null);
+  const [editMethodName, setEditMethodName] = useState('');
+  const [editMethodDefault, setEditMethodDefault] = useState(false);
 
   const fetchData = useCallback(async () => {
     try {
@@ -358,7 +363,12 @@ export default function PaymentsPage() {
                 </div>
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => alert(`Edit ${method.name}\n\nUpdate:\n- Name label\n- Default status\n- Billing address\n\nComing soon!`)}
+                    onClick={() => {
+                      setEditingMethod(method);
+                      setEditMethodName(method.name);
+                      setEditMethodDefault(method.isDefault);
+                      setShowEditModal(true);
+                    }}
                     className="p-2 rounded-lg hover:bg-slate-700 transition-colors"
                   >
                     <Edit className="w-4 h-4 text-slate-400" />
@@ -385,7 +395,7 @@ export default function PaymentsPage() {
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-white">Recent Transactions</h2>
           <button
-            onClick={() => alert('View All Transactions\n\nFull transaction history with:\n- Date range filters\n- Export to CSV\n- Category filtering\n\nComing soon!')}
+            onClick={() => setShowAllTransactionsModal(true)}
             className="text-sm text-time-primary hover:underline"
           >View All</button>
         </div>
@@ -697,6 +707,199 @@ export default function PaymentsPage() {
                   Withdraw
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Payment Method Modal */}
+      {showEditModal && editingMethod && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-slate-900 border border-slate-700 rounded-xl p-6 max-w-md w-full mx-4">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-bold text-white">Edit Payment Method</h3>
+              <button onClick={() => setShowEditModal(false)} className="text-slate-400 hover:text-white">
+                ×
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div className="flex items-center gap-4 p-4 bg-slate-800 rounded-lg">
+                <div className={clsx(
+                  'p-3 rounded-lg',
+                  editingMethod.type === 'card' ? 'bg-blue-500/20 text-blue-400' :
+                  editingMethod.type === 'bank' ? 'bg-green-500/20 text-green-400' :
+                  'bg-orange-500/20 text-orange-400'
+                )}>
+                  {getMethodIcon(editingMethod.type)}
+                </div>
+                <div>
+                  <p className="font-medium text-white">
+                    {editingMethod.type === 'card' ? `${editingMethod.brand} ****${editingMethod.last4}` :
+                     editingMethod.type === 'bank' ? `${editingMethod.bankName} ****${editingMethod.last4}` :
+                     `${editingMethod.cryptoNetwork} Wallet`}
+                  </p>
+                  <p className="text-sm text-slate-400 capitalize">{editingMethod.type}</p>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-sm text-slate-400 mb-1 block">Display Name</label>
+                <input
+                  type="text"
+                  value={editMethodName}
+                  onChange={(e) => setEditMethodName(e.target.value)}
+                  className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-white"
+                  placeholder="e.g., My Business Card"
+                />
+              </div>
+
+              <label className="flex items-center gap-3 p-3 bg-slate-800 rounded-lg cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={editMethodDefault}
+                  onChange={(e) => setEditMethodDefault(e.target.checked)}
+                  className="w-4 h-4 text-time-primary rounded"
+                />
+                <div>
+                  <p className="text-white">Set as default</p>
+                  <p className="text-xs text-slate-500">Use this method for deposits and subscriptions</p>
+                </div>
+              </label>
+
+              {editingMethod.type === 'card' && (
+                <div className="p-3 bg-slate-800/50 rounded-lg">
+                  <p className="text-sm text-slate-400">Expiry: {editingMethod.expiryMonth}/{editingMethod.expiryYear}</p>
+                  <p className="text-xs text-slate-500 mt-1">To update card details, add a new card and remove this one.</p>
+                </div>
+              )}
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowEditModal(false)}
+                  className="flex-1 py-3 bg-slate-700 hover:bg-slate-600 rounded-lg text-white font-medium"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    // Update local state
+                    setPaymentMethods(paymentMethods.map(m => {
+                      if (m.id === editingMethod.id) {
+                        return { ...m, name: editMethodName, isDefault: editMethodDefault };
+                      }
+                      // If making this default, unset other defaults
+                      if (editMethodDefault && m.isDefault) {
+                        return { ...m, isDefault: false };
+                      }
+                      return m;
+                    }));
+                    setShowEditModal(false);
+                  }}
+                  className="flex-1 py-3 bg-time-primary hover:bg-time-primary/80 rounded-lg text-white font-medium"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* All Transactions Modal */}
+      {showAllTransactionsModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-slate-900 border border-slate-700 rounded-xl max-w-3xl w-full mx-4 max-h-[80vh] overflow-hidden flex flex-col">
+            <div className="flex items-center justify-between p-6 border-b border-slate-700">
+              <h3 className="text-lg font-bold text-white">Transaction History</h3>
+              <button onClick={() => setShowAllTransactionsModal(false)} className="text-slate-400 hover:text-white">
+                ×
+              </button>
+            </div>
+
+            <div className="p-4 border-b border-slate-700 flex flex-wrap gap-3">
+              <select className="px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm">
+                <option value="">All Types</option>
+                <option value="deposit">Deposits</option>
+                <option value="withdrawal">Withdrawals</option>
+                <option value="fee">Fees</option>
+                <option value="trade">Trades</option>
+              </select>
+              <select className="px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm">
+                <option value="">All Status</option>
+                <option value="completed">Completed</option>
+                <option value="pending">Pending</option>
+                <option value="failed">Failed</option>
+              </select>
+              <select className="px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm">
+                <option value="30">Last 30 Days</option>
+                <option value="90">Last 90 Days</option>
+                <option value="365">Last Year</option>
+                <option value="">All Time</option>
+              </select>
+              <button className="px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-400 hover:text-white text-sm flex items-center gap-2">
+                <ExternalLink className="w-4 h-4" />
+                Export CSV
+              </button>
+            </div>
+
+            <div className="overflow-y-auto flex-1 p-4">
+              <div className="space-y-3">
+                {transactions.length === 0 ? (
+                  <div className="text-center py-12">
+                    <Clock className="w-12 h-12 text-slate-600 mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold text-white mb-2">No transactions yet</h3>
+                    <p className="text-slate-400">Your transaction history will appear here</p>
+                  </div>
+                ) : (
+                  transactions.map((tx) => (
+                    <div
+                      key={tx.id}
+                      className="flex items-center justify-between p-4 bg-slate-800/50 rounded-lg"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className={clsx(
+                          'p-2 rounded-lg',
+                          tx.type === 'deposit' ? 'bg-green-500/20' :
+                          tx.type === 'withdrawal' ? 'bg-red-500/20' :
+                          tx.type === 'fee' ? 'bg-yellow-500/20' :
+                          'bg-blue-500/20'
+                        )}>
+                          {getTypeIcon(tx.type)}
+                        </div>
+                        <div>
+                          <p className="font-medium text-white">{tx.description}</p>
+                          <p className="text-sm text-slate-400">{tx.method} • {tx.date}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <div className="text-right">
+                          <p className={clsx(
+                            'font-semibold',
+                            tx.amount >= 0 ? 'text-green-400' : 'text-red-400'
+                          )}>
+                            {tx.amount >= 0 ? '+' : '-'}{formatCurrency(tx.amount)}
+                          </p>
+                          <div className="flex items-center gap-1 justify-end">
+                            {getStatusIcon(tx.status)}
+                            <span className="text-xs text-slate-500 capitalize">{tx.status}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            <div className="p-4 border-t border-slate-700 flex justify-between items-center">
+              <p className="text-sm text-slate-400">Showing {transactions.length} transactions</p>
+              <button
+                onClick={() => setShowAllTransactionsModal(false)}
+                className="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-white text-sm"
+              >
+                Close
+              </button>
             </div>
           </div>
         </div>

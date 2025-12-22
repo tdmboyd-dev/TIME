@@ -161,68 +161,113 @@ class PolygonProvider extends BaseDataProvider {
   async getQuote(symbol: string): Promise<Quote> {
     await this.throttle();
 
-    // Determine market type from symbol
     const marketType = this.detectMarketType(symbol);
     const formattedSymbol = this.formatSymbol(symbol, marketType);
 
-    // Simulated response (in production, call actual API)
-    const mockPrice = this.generateMockPrice(symbol);
+    // Make real API call to Polygon.io
+    const endpoint = marketType === 'stocks'
+      ? `${this.config.baseUrl}/v2/aggs/ticker/${formattedSymbol}/prev?apiKey=${this.config.apiKey}`
+      : `${this.config.baseUrl}/v2/aggs/ticker/${formattedSymbol}/prev?apiKey=${this.config.apiKey}`;
 
-    return {
-      symbol,
-      provider: 'polygon',
-      timestamp: new Date(),
-      bid: mockPrice * 0.9999,
-      ask: mockPrice * 1.0001,
-      last: mockPrice,
-      open: mockPrice * (1 - Math.random() * 0.02),
-      high: mockPrice * (1 + Math.random() * 0.02),
-      low: mockPrice * (1 - Math.random() * 0.02),
-      close: mockPrice,
-      volume: Math.floor(Math.random() * 10000000),
-      change: mockPrice * (Math.random() - 0.5) * 0.04,
-      changePercent: (Math.random() - 0.5) * 4,
-      marketType,
-    };
+    try {
+      const response = await fetch(endpoint);
+      if (!response.ok) {
+        throw new Error(`Polygon API error: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json() as { results?: { t: number; o: number; h: number; l: number; c: number; v: number }[] };
+      if (!data.results || data.results.length === 0) {
+        throw new Error(`No data returned from Polygon for ${symbol}`);
+      }
+
+      const result = data.results[0];
+      const change = result.c - result.o;
+      const changePercent = (change / result.o) * 100;
+
+      return {
+        symbol,
+        provider: 'polygon',
+        timestamp: new Date(result.t),
+        bid: result.c * 0.9999, // Estimate bid from close
+        ask: result.c * 1.0001, // Estimate ask from close
+        last: result.c,
+        open: result.o,
+        high: result.h,
+        low: result.l,
+        close: result.c,
+        volume: result.v,
+        change,
+        changePercent,
+        marketType,
+      };
+    } catch (error: any) {
+      throw new Error(`Failed to fetch quote for ${symbol} from Polygon: ${error.message}`);
+    }
   }
 
   async getHistoricalData(symbol: string, timeframe: TimeFrame, limit: number = 100): Promise<HistoricalData> {
     await this.throttle();
 
     const marketType = this.detectMarketType(symbol);
-    const bars: OHLCV[] = [];
-    const basePrice = this.generateMockPrice(symbol);
-    const timeframeMs = this.timeframeToMs(timeframe);
-
-    let currentPrice = basePrice;
+    const formattedSymbol = this.formatSymbol(symbol, marketType);
+    const multiplier = this.getTimeframeMultiplier(timeframe);
+    const span = this.getTimeframeSpan(timeframe);
     const now = Date.now();
+    const timeframeMs = this.timeframeToMs(timeframe);
+    const from = new Date(now - limit * timeframeMs).toISOString().split('T')[0];
+    const to = new Date(now).toISOString().split('T')[0];
 
-    for (let i = limit - 1; i >= 0; i--) {
-      const change = (Math.random() - 0.5) * 0.02;
-      const open = currentPrice;
-      const high = open * (1 + Math.random() * 0.01);
-      const low = open * (1 - Math.random() * 0.01);
-      const close = open * (1 + change);
-      currentPrice = close;
+    // Make real API call to Polygon.io
+    const endpoint = `${this.config.baseUrl}/v2/aggs/ticker/${formattedSymbol}/range/${multiplier}/${span}/${from}/${to}?adjusted=true&sort=asc&limit=${limit}&apiKey=${this.config.apiKey}`;
 
-      bars.push({
-        timestamp: new Date(now - i * timeframeMs),
-        open,
-        high,
-        low,
-        close,
-        volume: Math.floor(Math.random() * 1000000),
-      });
+    try {
+      const response = await fetch(endpoint);
+      if (!response.ok) {
+        throw new Error(`Polygon API error: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json() as { results?: { t: number; o: number; h: number; l: number; c: number; v: number }[] };
+      if (!data.results || data.results.length === 0) {
+        throw new Error(`No historical data returned from Polygon for ${symbol}`);
+      }
+
+      const bars: OHLCV[] = data.results.map((bar) => ({
+        timestamp: new Date(bar.t),
+        open: bar.o,
+        high: bar.h,
+        low: bar.l,
+        close: bar.c,
+        volume: bar.v,
+      }));
+
+      return {
+        symbol,
+        provider: 'polygon',
+        timeframe,
+        bars,
+        startDate: bars[0].timestamp,
+        endDate: bars[bars.length - 1].timestamp,
+      };
+    } catch (error: any) {
+      throw new Error(`Failed to fetch historical data for ${symbol} from Polygon: ${error.message}`);
     }
+  }
 
-    return {
-      symbol,
-      provider: 'polygon',
-      timeframe,
-      bars,
-      startDate: bars[0].timestamp,
-      endDate: bars[bars.length - 1].timestamp,
+  private getTimeframeMultiplier(tf: TimeFrame): number {
+    const map: Record<TimeFrame, number> = {
+      '1m': 1, '5m': 5, '15m': 15, '30m': 30,
+      '1h': 1, '4h': 4,
+      '1d': 1, '1w': 1, '1M': 1,
     };
+    return map[tf];
+  }
+
+  private getTimeframeSpan(tf: TimeFrame): string {
+    if (tf.endsWith('m')) return 'minute';
+    if (tf.endsWith('h')) return 'hour';
+    if (tf === '1w') return 'week';
+    if (tf === '1M') return 'month';
+    return 'day';
   }
 
   async searchSymbols(query: string): Promise<SymbolSearch[]> {
@@ -266,8 +311,8 @@ class PolygonProvider extends BaseDataProvider {
 
       ids.push(id);
 
-      // Simulate streaming updates
-      this.startMockStream(id, symbol);
+      // Start real-time quote polling
+      this.startRealTimeStream(id, symbol);
     }
 
     return ids;
@@ -281,17 +326,27 @@ class PolygonProvider extends BaseDataProvider {
     }
   }
 
-  private startMockStream(id: string, symbol: string): void {
+  private startRealTimeStream(id: string, symbol: string): void {
+    // Use real API polling for streaming quotes
     const stream = () => {
       const sub = this.subscriptions.get(id);
       if (!sub || !sub.active) return;
 
-      this.getQuote(symbol).then(quote => {
-        if (sub.active) {
-          sub.callback(quote);
-          setTimeout(stream, 1000 + Math.random() * 2000);
-        }
-      });
+      this.getQuote(symbol)
+        .then(quote => {
+          if (sub.active) {
+            sub.callback(quote);
+            // Poll every 5 seconds for real-time updates (respect rate limits)
+            setTimeout(stream, 5000);
+          }
+        })
+        .catch(error => {
+          console.error(`[Polygon] Stream error for ${symbol}:`, error.message);
+          // Retry after longer delay on error
+          if (sub.active) {
+            setTimeout(stream, 15000);
+          }
+        });
     };
 
     setTimeout(stream, 100);
@@ -317,27 +372,6 @@ class PolygonProvider extends BaseDataProvider {
       default:
         return symbol;
     }
-  }
-
-  private generateMockPrice(symbol: string): number {
-    // Generate consistent mock prices based on symbol
-    const basePrices: Record<string, number> = {
-      'AAPL': 178.50,
-      'GOOGL': 141.80,
-      'MSFT': 378.90,
-      'TSLA': 248.50,
-      'AMZN': 178.25,
-      'NVDA': 495.50,
-      'EUR/USD': 1.0850,
-      'GBP/USD': 1.2650,
-      'USD/JPY': 149.50,
-      'BTC/USD': 43500,
-      'ETH/USD': 2280,
-      'SPY': 475.50,
-      'QQQ': 405.75,
-    };
-
-    return basePrices[symbol] || 100 + Math.random() * 200;
   }
 
   private timeframeToMs(tf: TimeFrame): number {
@@ -375,62 +409,122 @@ class TwelveDataProvider extends BaseDataProvider {
     await this.throttle();
 
     const marketType = this.detectMarketType(symbol);
-    const mockPrice = this.generateMockPrice(symbol);
+    const formattedSymbol = symbol.replace('/', '');
 
-    return {
-      symbol,
-      provider: 'twelvedata',
-      timestamp: new Date(),
-      bid: mockPrice * 0.9998,
-      ask: mockPrice * 1.0002,
-      last: mockPrice,
-      open: mockPrice * (1 - Math.random() * 0.02),
-      high: mockPrice * (1 + Math.random() * 0.015),
-      low: mockPrice * (1 - Math.random() * 0.015),
-      close: mockPrice,
-      volume: Math.floor(Math.random() * 8000000),
-      change: mockPrice * (Math.random() - 0.5) * 0.03,
-      changePercent: (Math.random() - 0.5) * 3,
-      marketType,
-    };
+    // Make real API call to TwelveData
+    const endpoint = `${this.config.baseUrl}/quote?symbol=${formattedSymbol}&apikey=${this.config.apiKey}`;
+
+    try {
+      const response = await fetch(endpoint);
+      if (!response.ok) {
+        throw new Error(`TwelveData API error: ${response.status} ${response.statusText}`);
+      }
+
+      interface TwelveDataQuote {
+        code?: number;
+        message?: string;
+        close: string;
+        open: string;
+        high: string;
+        low: string;
+        volume: string;
+        change: string;
+        percent_change: string;
+        datetime: string;
+      }
+      const data = await response.json() as TwelveDataQuote;
+      if (data.code) {
+        throw new Error(`TwelveData error: ${data.message || data.code}`);
+      }
+
+      const close = parseFloat(data.close);
+      const open = parseFloat(data.open);
+      const high = parseFloat(data.high);
+      const low = parseFloat(data.low);
+      const volume = parseInt(data.volume) || 0;
+      const change = parseFloat(data.change) || close - open;
+      const changePercent = parseFloat(data.percent_change) || (change / open) * 100;
+
+      return {
+        symbol,
+        provider: 'twelvedata',
+        timestamp: new Date(data.datetime || Date.now()),
+        bid: close * 0.9998,
+        ask: close * 1.0002,
+        last: close,
+        open,
+        high,
+        low,
+        close,
+        volume,
+        change,
+        changePercent,
+        marketType,
+      };
+    } catch (error: any) {
+      throw new Error(`Failed to fetch quote for ${symbol} from TwelveData: ${error.message}`);
+    }
   }
 
   async getHistoricalData(symbol: string, timeframe: TimeFrame, limit: number = 100): Promise<HistoricalData> {
     await this.throttle();
 
-    const bars: OHLCV[] = [];
-    const basePrice = this.generateMockPrice(symbol);
-    const timeframeMs = this.timeframeToMs(timeframe);
+    const formattedSymbol = symbol.replace('/', '');
+    const interval = this.convertTimeframe(timeframe);
 
-    let currentPrice = basePrice;
-    const now = Date.now();
+    // Make real API call to TwelveData
+    const endpoint = `${this.config.baseUrl}/time_series?symbol=${formattedSymbol}&interval=${interval}&outputsize=${limit}&apikey=${this.config.apiKey}`;
 
-    for (let i = limit - 1; i >= 0; i--) {
-      const change = (Math.random() - 0.5) * 0.015;
-      const open = currentPrice;
-      const high = open * (1 + Math.random() * 0.008);
-      const low = open * (1 - Math.random() * 0.008);
-      const close = open * (1 + change);
-      currentPrice = close;
+    try {
+      const response = await fetch(endpoint);
+      if (!response.ok) {
+        throw new Error(`TwelveData API error: ${response.status} ${response.statusText}`);
+      }
 
-      bars.push({
-        timestamp: new Date(now - i * timeframeMs),
-        open,
-        high,
-        low,
-        close,
-        volume: Math.floor(Math.random() * 500000),
-      });
+      interface TwelveDataHistorical {
+        code?: number;
+        message?: string;
+        values?: { datetime: string; open: string; high: string; low: string; close: string; volume: string }[];
+      }
+      const data = await response.json() as TwelveDataHistorical;
+      if (data.code) {
+        throw new Error(`TwelveData error: ${data.message || data.code}`);
+      }
+
+      if (!data.values || data.values.length === 0) {
+        throw new Error(`No historical data returned from TwelveData for ${symbol}`);
+      }
+
+      // TwelveData returns data in reverse chronological order, so reverse it
+      const bars: OHLCV[] = data.values.reverse().map((bar) => ({
+        timestamp: new Date(bar.datetime),
+        open: parseFloat(bar.open),
+        high: parseFloat(bar.high),
+        low: parseFloat(bar.low),
+        close: parseFloat(bar.close),
+        volume: parseInt(bar.volume) || 0,
+      }));
+
+      return {
+        symbol,
+        provider: 'twelvedata',
+        timeframe,
+        bars,
+        startDate: bars[0].timestamp,
+        endDate: bars[bars.length - 1].timestamp,
+      };
+    } catch (error: any) {
+      throw new Error(`Failed to fetch historical data for ${symbol} from TwelveData: ${error.message}`);
     }
+  }
 
-    return {
-      symbol,
-      provider: 'twelvedata',
-      timeframe,
-      bars,
-      startDate: bars[0].timestamp,
-      endDate: bars[bars.length - 1].timestamp,
+  private convertTimeframe(tf: TimeFrame): string {
+    const map: Record<TimeFrame, string> = {
+      '1m': '1min', '5m': '5min', '15m': '15min', '30m': '30min',
+      '1h': '1h', '4h': '4h',
+      '1d': '1day', '1w': '1week', '1M': '1month',
     };
+    return map[tf];
   }
 
   async searchSymbols(query: string): Promise<SymbolSearch[]> {
@@ -506,20 +600,6 @@ class TwelveDataProvider extends BaseDataProvider {
       return cryptos.some(c => symbol.includes(c)) ? 'crypto' : 'forex';
     }
     return 'stocks';
-  }
-
-  private generateMockPrice(symbol: string): number {
-    const basePrices: Record<string, number> = {
-      'AAPL': 178.50,
-      'META': 505.25,
-      'V': 280.50,
-      'JPM': 195.75,
-      'AUD/USD': 0.6550,
-      'USD/CHF': 0.8850,
-      'XRP/USD': 0.62,
-      'SOL/USD': 98.50,
-    };
-    return basePrices[symbol] || 100 + Math.random() * 150;
   }
 
   private timeframeToMs(tf: TimeFrame): number {

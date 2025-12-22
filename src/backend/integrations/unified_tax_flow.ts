@@ -356,78 +356,121 @@ export class UnifiedTaxFlowEngine extends EventEmitter {
     if (session.dataSources.ikickitz && user.ikickitzCreatorId) {
       console.log('   ↳ Fetching iKickItz creator earnings...');
 
-      // Create mock tax account for demo
-      const mockTaxAccount: IKickItzTaxAccount = {
-        id: `tax_${user.ikickitzCreatorId}_${session.taxYear}`,
-        creator_id: user.ikickitzCreatorId,
-        tax_year: session.taxYear,
-        gross_income: 50000, // Demo values
-        platform_fees: 5000,
-        net_income: 45000,
-        reserve_balance: 13500, // 30% of net
-        reserve_target: 13500,
-        q1_estimate: 3375,
-        q2_estimate: 3375,
-        q3_estimate: 3375,
-        q4_estimate: 3375,
-        q1_paid: 0,
-        q2_paid: 0,
-        q3_paid: 0,
-        q4_paid: 0,
-        form_1099_generated: false,
-        mgr_return_filed: false,
-        created_at: new Date(),
-        updated_at: new Date(),
-      };
+      try {
+        // Fetch real tax account from iKickItz
+        const taxAccountResponse = await fetch(`${process.env.IKICKITZ_API_URL || 'https://api.ikickitz.com'}/api/v1/creators/${user.ikickitzCreatorId}/tax-accounts/${session.taxYear}`, {
+          headers: {
+            'Authorization': `Bearer ${process.env.IKICKITZ_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+        });
 
-      const earnings = await ikickitzBridge.exportEarningsForTax(
-        user.ikickitzCreatorId,
-        session.taxYear,
-        mockTaxAccount
-      );
+        if (!taxAccountResponse.ok) {
+          throw new Error(`Failed to fetch iKickItz tax account: ${taxAccountResponse.status}`);
+        }
 
-      session.creatorEarnings = {
-        grossIncome: earnings.grossIncome,
-        netIncome: earnings.netIncome,
-        taxReserve: earnings.taxReserveBalance,
-      };
+        const taxAccountData = await taxAccountResponse.json() as IKickItzTaxAccount & { created_at: string; updated_at: string };
+        const taxAccount: IKickItzTaxAccount = {
+          id: taxAccountData.id,
+          creator_id: taxAccountData.creator_id,
+          tax_year: taxAccountData.tax_year,
+          gross_income: taxAccountData.gross_income,
+          platform_fees: taxAccountData.platform_fees,
+          net_income: taxAccountData.net_income,
+          reserve_balance: taxAccountData.reserve_balance,
+          reserve_target: taxAccountData.reserve_target,
+          q1_estimate: taxAccountData.q1_estimate,
+          q2_estimate: taxAccountData.q2_estimate,
+          q3_estimate: taxAccountData.q3_estimate,
+          q4_estimate: taxAccountData.q4_estimate,
+          q1_paid: taxAccountData.q1_paid,
+          q2_paid: taxAccountData.q2_paid,
+          q3_paid: taxAccountData.q3_paid,
+          q4_paid: taxAccountData.q4_paid,
+          form_1099_generated: taxAccountData.form_1099_generated,
+          mgr_return_filed: taxAccountData.mgr_return_filed,
+          created_at: new Date(taxAccountData.created_at),
+          updated_at: new Date(taxAccountData.updated_at),
+        };
 
-      totalIncome += earnings.netIncome;
-      session.form1099Count++;
+        const earnings = await ikickitzBridge.exportEarningsForTax(
+          user.ikickitzCreatorId,
+          session.taxYear,
+          taxAccount
+        );
 
-      console.log(`      ✓ iKickItz earnings: $${earnings.netIncome.toFixed(2)}`);
-      console.log(`      ✓ Tax reserve available: $${earnings.taxReserveBalance.toFixed(2)}`);
+        session.creatorEarnings = {
+          grossIncome: earnings.grossIncome,
+          netIncome: earnings.netIncome,
+          taxReserve: earnings.taxReserveBalance,
+        };
+
+        totalIncome += earnings.netIncome;
+        session.form1099Count++;
+
+        console.log(`      ✓ iKickItz earnings: $${earnings.netIncome.toFixed(2)}`);
+        console.log(`      ✓ Tax reserve available: $${earnings.taxReserveBalance.toFixed(2)}`);
+      } catch (error: any) {
+        console.error('      ✗ Error fetching iKickItz data:', error.message);
+        throw new Error(`Cannot proceed without iKickItz earnings data: ${error.message}`);
+      }
     }
 
     // Gather TIME Payroll W-2s
     if (session.dataSources.timePayroll) {
       console.log('   ↳ Fetching TIME Payroll W-2 data...');
 
-      // In production, would fetch from TIMEPayrollEngine
-      // Demo: simulate 1 W-2
-      const mockW2Income = 65000;
-      const mockW2Withholding = 9750; // ~15%
+      try {
+        // Fetch real W-2 data from TIME Payroll Engine
+        const w2Response = await fetch(`${process.env.API_BASE || 'http://localhost:3001'}/api/payroll/w2/${user.id}/${session.taxYear}`);
+        if (!w2Response.ok) {
+          throw new Error(`Failed to fetch W-2 data: ${w2Response.status}`);
+        }
+        interface W2Form { employerName: string; wages: number; federalWithheld: number; }
+        const w2Data = await w2Response.json() as { forms?: W2Form[] };
 
-      totalIncome += mockW2Income;
-      totalWithholding += mockW2Withholding;
-      session.w2Count++;
-
-      console.log(`      ✓ W-2 wages: $${mockW2Income.toFixed(2)}`);
-      console.log(`      ✓ Federal withheld: $${mockW2Withholding.toFixed(2)}`);
+        if (!w2Data.forms || w2Data.forms.length === 0) {
+          console.log('      ⚠ No W-2 forms found for this user/year');
+        } else {
+          for (const w2 of w2Data.forms) {
+            totalIncome += w2.wages;
+            totalWithholding += w2.federalWithheld;
+            session.w2Count++;
+            console.log(`      ✓ W-2 from ${w2.employerName}: wages $${w2.wages.toFixed(2)}, withheld $${w2.federalWithheld.toFixed(2)}`);
+          }
+        }
+      } catch (error: any) {
+        console.error('      ✗ Error fetching W-2 data:', error.message);
+        throw new Error(`Cannot proceed without W-2 data: ${error.message}`);
+      }
     }
 
     // Gather TIME Invoice income
     if (session.dataSources.timeInvoice) {
       console.log('   ↳ Fetching TIME Invoice income...');
 
-      // In production, would fetch from TIMEInvoiceEngine
-      // Demo: simulate 1099 income
-      const mockInvoiceIncome = 15000;
+      try {
+        // Fetch real 1099 data from TIME Invoice Engine
+        const invoiceResponse = await fetch(`${process.env.API_BASE || 'http://localhost:3001'}/api/invoices/1099/${user.id}/${session.taxYear}`);
+        if (!invoiceResponse.ok) {
+          throw new Error(`Failed to fetch invoice data: ${invoiceResponse.status}`);
+        }
+        interface Form1099 { payerName: string; income: number; }
+        const invoiceData = await invoiceResponse.json() as { forms?: Form1099[] };
 
-      totalIncome += mockInvoiceIncome;
-      session.form1099Count++;
-
-      console.log(`      ✓ Invoice income: $${mockInvoiceIncome.toFixed(2)}`);
+        if (!invoiceData.forms || invoiceData.forms.length === 0) {
+          console.log('      ⚠ No 1099 forms found for this user/year');
+        } else {
+          for (const form1099 of invoiceData.forms) {
+            totalIncome += form1099.income;
+            session.form1099Count++;
+            console.log(`      ✓ 1099 from ${form1099.payerName}: $${form1099.income.toFixed(2)}`);
+          }
+        }
+      } catch (error: any) {
+        console.error('      ✗ Error fetching invoice data:', error.message);
+        throw new Error(`Cannot proceed without invoice data: ${error.message}`);
+      }
     }
 
     session.totalIncome = totalIncome;

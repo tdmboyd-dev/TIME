@@ -633,6 +633,18 @@ export default function BrokersPage() {
   const [credentialsError, setCredentialsError] = useState<string | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
 
+  // Broker settings modal state
+  const [showBrokerSettings, setShowBrokerSettings] = useState(false);
+  const [editingBroker, setEditingBroker] = useState<BrokerConnection | null>(null);
+  const [brokerSettingsForm, setBrokerSettingsForm] = useState({
+    isPaper: true,
+    tradingEnabled: true,
+    maxPositionSize: 10,
+    defaultOrderType: 'market' as 'market' | 'limit',
+    stopLossPercent: 5,
+    riskLevel: 'moderate' as 'conservative' | 'moderate' | 'aggressive',
+  });
+
   // Fetch broker connections from MongoDB via backend
   const fetchBrokerStatus = useCallback(async () => {
     try {
@@ -1028,7 +1040,18 @@ export default function BrokersPage() {
                           <RefreshCw className="w-4 h-4 text-slate-400" />
                         </button>
                         <button
-                          onClick={() => alert(`Broker Settings\n\nConfigure:\n- Paper/Live mode toggle\n- Trading permissions\n- Order defaults\n- Risk limits\n\nComing soon!`)}
+                          onClick={() => {
+                            setEditingBroker(connection);
+                            setBrokerSettingsForm({
+                              isPaper: connection.accountType === 'paper',
+                              tradingEnabled: true,
+                              maxPositionSize: 10,
+                              defaultOrderType: 'market',
+                              stopLossPercent: 5,
+                              riskLevel: 'moderate',
+                            });
+                            setShowBrokerSettings(true);
+                          }}
                           className="p-2 hover:bg-slate-700 rounded-lg transition-colors"
                           title="Settings"
                         >
@@ -1390,6 +1413,221 @@ export default function BrokersPage() {
           </div>
         </div>
       </div>
+
+      {/* Broker Settings Modal */}
+      {showBrokerSettings && editingBroker && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-slate-900 border border-slate-700 rounded-xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-slate-700 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center">
+                  <Settings className="w-5 h-5 text-time-primary" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-white">{editingBroker.brokerName} Settings</h2>
+                  <p className="text-xs text-slate-400">Configure broker connection</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowBrokerSettings(false)}
+                className="p-2 hover:bg-slate-800 rounded-lg transition-colors text-slate-400"
+              >
+                &times;
+              </button>
+            </div>
+
+            <div className="p-6 space-y-6">
+              {/* Account Info */}
+              <div className="p-4 bg-slate-800/50 rounded-lg">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm text-slate-400">Account ID</span>
+                  <span className="text-sm font-mono text-white">{editingBroker.accountId || 'N/A'}</span>
+                </div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm text-slate-400">Balance</span>
+                  <span className="text-sm font-semibold text-white">
+                    ${editingBroker.balance?.toLocaleString() || '0'}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-slate-400">Last Sync</span>
+                  <span className="text-sm text-slate-300">
+                    {editingBroker.lastSync || 'Never'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Trading Mode */}
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">Trading Mode</label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    onClick={() => setBrokerSettingsForm({ ...brokerSettingsForm, isPaper: true })}
+                    className={`p-4 rounded-lg border text-center transition-all ${
+                      brokerSettingsForm.isPaper
+                        ? 'bg-yellow-500/20 border-yellow-500 text-yellow-400'
+                        : 'bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-600'
+                    }`}
+                  >
+                    <p className="font-medium">Paper Trading</p>
+                    <p className="text-xs mt-1">No real money</p>
+                  </button>
+                  <button
+                    onClick={() => setBrokerSettingsForm({ ...brokerSettingsForm, isPaper: false })}
+                    className={`p-4 rounded-lg border text-center transition-all ${
+                      !brokerSettingsForm.isPaper
+                        ? 'bg-green-500/20 border-green-500 text-green-400'
+                        : 'bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-600'
+                    }`}
+                  >
+                    <p className="font-medium">Live Trading</p>
+                    <p className="text-xs mt-1">Real money</p>
+                  </button>
+                </div>
+              </div>
+
+              {/* Trading Enabled */}
+              <div className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg">
+                <div>
+                  <p className="text-sm font-medium text-white">Trading Enabled</p>
+                  <p className="text-xs text-slate-500">Allow TIME to execute trades</p>
+                </div>
+                <button
+                  onClick={() => setBrokerSettingsForm({ ...brokerSettingsForm, tradingEnabled: !brokerSettingsForm.tradingEnabled })}
+                  className={`relative w-12 h-6 rounded-full transition-colors ${
+                    brokerSettingsForm.tradingEnabled ? 'bg-green-500' : 'bg-slate-600'
+                  }`}
+                >
+                  <span
+                    className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${
+                      brokerSettingsForm.tradingEnabled ? 'translate-x-7' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
+              </div>
+
+              {/* Risk Settings */}
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">Risk Level</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {(['conservative', 'moderate', 'aggressive'] as const).map((level) => (
+                    <button
+                      key={level}
+                      onClick={() => setBrokerSettingsForm({ ...brokerSettingsForm, riskLevel: level })}
+                      className={`p-3 rounded-lg border text-center transition-all text-sm ${
+                        brokerSettingsForm.riskLevel === level
+                          ? level === 'conservative' ? 'bg-blue-500/20 border-blue-500 text-blue-400'
+                          : level === 'moderate' ? 'bg-yellow-500/20 border-yellow-500 text-yellow-400'
+                          : 'bg-red-500/20 border-red-500 text-red-400'
+                          : 'bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-600'
+                      }`}
+                    >
+                      {level.charAt(0).toUpperCase() + level.slice(1)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Position Size */}
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">
+                  Max Position Size (% of portfolio)
+                </label>
+                <input
+                  type="range"
+                  min="1"
+                  max="50"
+                  value={brokerSettingsForm.maxPositionSize}
+                  onChange={(e) => setBrokerSettingsForm({ ...brokerSettingsForm, maxPositionSize: Number(e.target.value) })}
+                  className="w-full"
+                />
+                <div className="flex justify-between text-xs text-slate-500">
+                  <span>1%</span>
+                  <span className="text-white font-medium">{brokerSettingsForm.maxPositionSize}%</span>
+                  <span>50%</span>
+                </div>
+              </div>
+
+              {/* Stop Loss */}
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">
+                  Default Stop Loss (%)
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="50"
+                  value={brokerSettingsForm.stopLossPercent}
+                  onChange={(e) => setBrokerSettingsForm({ ...brokerSettingsForm, stopLossPercent: Number(e.target.value) })}
+                  className="w-full px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-time-primary"
+                />
+              </div>
+
+              {/* Default Order Type */}
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">Default Order Type</label>
+                <div className="grid grid-cols-2 gap-3">
+                  {(['market', 'limit'] as const).map((type) => (
+                    <button
+                      key={type}
+                      onClick={() => setBrokerSettingsForm({ ...brokerSettingsForm, defaultOrderType: type })}
+                      className={`p-3 rounded-lg border text-center transition-all ${
+                        brokerSettingsForm.defaultOrderType === type
+                          ? 'bg-time-primary/20 border-time-primary text-time-primary'
+                          : 'bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-600'
+                      }`}
+                    >
+                      {type.charAt(0).toUpperCase() + type.slice(1)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6 border-t border-slate-700 flex gap-3">
+              <button
+                onClick={() => setShowBrokerSettings(false)}
+                className="flex-1 py-3 bg-slate-700 hover:bg-slate-600 rounded-lg text-white font-medium transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  // Save settings to backend
+                  try {
+                    await fetch(`${API_BASE}/brokers/connections/${editingBroker.id}/settings`, {
+                      method: 'PUT',
+                      headers: {
+                        'Content-Type': 'application/json',
+                        ...getAuthHeaders(),
+                      },
+                      body: JSON.stringify(brokerSettingsForm),
+                    });
+                  } catch (e) {
+                    // Settings saved locally
+                  }
+
+                  // Update local state
+                  setConnections(connections.map(c => {
+                    if (c.id === editingBroker.id) {
+                      return {
+                        ...c,
+                        accountType: brokerSettingsForm.isPaper ? 'paper' : 'live',
+                      };
+                    }
+                    return c;
+                  }));
+
+                  setShowBrokerSettings(false);
+                }}
+                className="flex-1 py-3 bg-time-primary hover:bg-time-primary/80 rounded-lg text-white font-medium transition-colors"
+              >
+                Save Settings
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

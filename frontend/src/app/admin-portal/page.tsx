@@ -46,6 +46,22 @@ interface AdminUser {
   createdAt: Date;
 }
 
+interface AdminBot {
+  id: string;
+  name: string;
+  type: string;
+  status: 'active' | 'paused' | 'pending' | 'rejected' | 'deleted';
+  rating: number;
+  performance: {
+    winRate: number;
+    profitFactor: number;
+    totalTrades: number;
+  };
+  owner: string;
+  createdAt: Date;
+  lastActive: Date;
+}
+
 // All available permissions
 const ALL_PERMISSIONS = [
   { id: 'trading', label: 'Trading', description: 'Execute trades' },
@@ -89,6 +105,14 @@ export default function AdminPortalPage() {
   const [showBlockModal, setShowBlockModal] = useState(false);
   const [userActionLoading, setUserActionLoading] = useState(false);
   const [userNotification, setUserNotification] = useState<{type: 'success' | 'error', message: string} | null>(null);
+
+  // Bot management state
+  const [bots, setBots] = useState<AdminBot[]>([]);
+  const [botSearchQuery, setBotSearchQuery] = useState('');
+  const [botStatusFilter, setBotStatusFilter] = useState<'all' | 'active' | 'paused' | 'pending' | 'rejected'>('all');
+  const [selectedBot, setSelectedBot] = useState<AdminBot | null>(null);
+  const [showBotDetailsModal, setShowBotDetailsModal] = useState(false);
+  const [botActionLoading, setBotActionLoading] = useState(false);
 
   // New user form state
   const [newUser, setNewUser] = useState({
@@ -178,8 +202,31 @@ export default function AdminPortalPage() {
         setUsers(usersList);
       }
 
+      // Update bots from real API
+      const botsArray = botsData?.data || botsData?.bots || [];
+      if (botsArray.length > 0) {
+        const botsList: AdminBot[] = botsArray.map((b: any) => ({
+          id: b.id || b._id,
+          name: b.name || b.filename || 'Unnamed Bot',
+          type: b.type || b.strategyType?.[0] || 'Unknown',
+          status: b.status || (b.isActive ? 'active' : 'paused'),
+          rating: b.rating || 0,
+          performance: {
+            winRate: b.performance?.winRate || b.winRate || 0,
+            profitFactor: b.performance?.profitFactor || b.profitFactor || 0,
+            totalTrades: b.performance?.totalTrades || b.totalTrades || 0,
+          },
+          owner: b.owner || b.userId || 'System',
+          createdAt: new Date(b.createdAt || Date.now()),
+          lastActive: new Date(b.lastActive || b.lastUpdated || Date.now()),
+        }));
+        setBots(botsList);
+      } else {
+        setBots([]);
+      }
+
       // Get real bot count
-      const botCount = botsData?.data?.length || botsData?.count || 0;
+      const botCount = botsArray.length || botsData?.count || 0;
       const userCount = usersData?.users?.length || usersData?.total || 0;
 
       // Update stats with REAL data
@@ -198,6 +245,7 @@ export default function AdminPortalPage() {
       setSystemHealth([]);
       setSystemLogs([]);
       setUsers([]);
+      setBots([]);
       setStats({
         totalUsers: 0,
         activeBots: 0,
@@ -422,6 +470,44 @@ export default function AdminPortalPage() {
       setTimeout(() => setUserNotification(null), 4000);
     }
   };
+
+  // Bot management functions
+  const handleBotAction = async (bot: AdminBot, action: 'approve' | 'reject' | 'pause' | 'activate' | 'delete') => {
+    setBotActionLoading(true);
+    try {
+      const token = getTokenFromCookie();
+      const response = await fetch(`${API_BASE}/admin/bots/${bot.id}/${action}`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const data = await response.json();
+      if (response.ok && data.success) {
+        setUserNotification({ type: 'success', message: `Bot ${bot.name} ${action}d successfully` });
+        fetchAllData();
+        setShowBotDetailsModal(false);
+      } else {
+        throw new Error(data.error || `Failed to ${action} bot`);
+      }
+    } catch (error: any) {
+      setUserNotification({ type: 'error', message: error.message });
+    } finally {
+      setBotActionLoading(false);
+      setTimeout(() => setUserNotification(null), 4000);
+    }
+  };
+
+  // Filtered bots based on search and status
+  const filteredBots = bots.filter(bot => {
+    const matchesSearch = bot.name.toLowerCase().includes(botSearchQuery.toLowerCase()) ||
+                         bot.type.toLowerCase().includes(botSearchQuery.toLowerCase()) ||
+                         bot.owner.toLowerCase().includes(botSearchQuery.toLowerCase());
+    const matchesStatus = botStatusFilter === 'all' || bot.status === botStatusFilter;
+    return matchesSearch && matchesStatus;
+  });
 
   return (
     <div className="min-h-screen">
@@ -678,10 +764,309 @@ export default function AdminPortalPage() {
                 </button>
               </div>
 
-              {/* Bot List would go here */}
+              {/* Bot List */}
               <div className="bg-slate-900/50 border border-white/5 rounded-xl p-6">
-                <h3 className="text-lg font-bold text-white mb-4">Active Bots (110)</h3>
-                <p className="text-white/40">Bot list interface coming soon...</p>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-bold text-white">All Bots ({filteredBots.length})</h3>
+                  <div className="flex items-center gap-3">
+                    {/* Search */}
+                    <div className="relative">
+                      <input
+                        type="text"
+                        placeholder="Search bots..."
+                        value={botSearchQuery}
+                        onChange={(e) => setBotSearchQuery(e.target.value)}
+                        className="w-64 px-4 py-2 pl-10 bg-slate-800/50 border border-white/10 rounded-lg text-white placeholder-white/40 focus:border-cyan-500/50 focus:outline-none"
+                      />
+                      <svg className="w-4 h-4 text-white/40 absolute left-3 top-1/2 -translate-y-1/2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                      </svg>
+                    </div>
+                    {/* Status Filter */}
+                    <select
+                      value={botStatusFilter}
+                      onChange={(e) => setBotStatusFilter(e.target.value as any)}
+                      className="px-4 py-2 bg-slate-800/50 border border-white/10 rounded-lg text-white focus:border-cyan-500/50 focus:outline-none"
+                    >
+                      <option value="all">All Status</option>
+                      <option value="active">Active</option>
+                      <option value="paused">Paused</option>
+                      <option value="pending">Pending</option>
+                      <option value="rejected">Rejected</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Bot Table */}
+                {filteredBots.length === 0 ? (
+                  <div className="text-center py-12">
+                    <svg className="w-16 h-16 text-white/20 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                    <p className="text-white/40">No bots found</p>
+                    <p className="text-white/20 text-sm mt-1">
+                      {bots.length === 0 ? 'Connect to backend to load bots' : 'Try adjusting your search or filters'}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b border-white/10">
+                          <th className="text-left py-3 px-4 text-white/60 font-medium text-sm">Bot Name</th>
+                          <th className="text-left py-3 px-4 text-white/60 font-medium text-sm">Type</th>
+                          <th className="text-left py-3 px-4 text-white/60 font-medium text-sm">Status</th>
+                          <th className="text-left py-3 px-4 text-white/60 font-medium text-sm">Rating</th>
+                          <th className="text-left py-3 px-4 text-white/60 font-medium text-sm">Win Rate</th>
+                          <th className="text-left py-3 px-4 text-white/60 font-medium text-sm">Owner</th>
+                          <th className="text-left py-3 px-4 text-white/60 font-medium text-sm">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredBots.map((bot) => (
+                          <tr key={bot.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                            <td className="py-3 px-4">
+                              <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500 to-purple-600 flex items-center justify-center">
+                                  <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                  </svg>
+                                </div>
+                                <span className="text-white font-medium">{bot.name}</span>
+                              </div>
+                            </td>
+                            <td className="py-3 px-4 text-white/60">{bot.type}</td>
+                            <td className="py-3 px-4">
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                bot.status === 'active' ? 'bg-emerald-500/20 text-emerald-400' :
+                                bot.status === 'paused' ? 'bg-amber-500/20 text-amber-400' :
+                                bot.status === 'pending' ? 'bg-blue-500/20 text-blue-400' :
+                                bot.status === 'rejected' ? 'bg-red-500/20 text-red-400' :
+                                'bg-gray-500/20 text-gray-400'
+                              }`}>
+                                {bot.status}
+                              </span>
+                            </td>
+                            <td className="py-3 px-4">
+                              <div className="flex items-center gap-1">
+                                <span className="text-amber-400">★</span>
+                                <span className="text-white">{bot.rating.toFixed(1)}</span>
+                              </div>
+                            </td>
+                            <td className="py-3 px-4 text-white">{bot.performance.winRate.toFixed(1)}%</td>
+                            <td className="py-3 px-4 text-white/60">{bot.owner}</td>
+                            <td className="py-3 px-4">
+                              <div className="flex items-center gap-2">
+                                <button
+                                  onClick={() => {
+                                    setSelectedBot(bot);
+                                    setShowBotDetailsModal(true);
+                                  }}
+                                  className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                                  title="View Details"
+                                >
+                                  <svg className="w-4 h-4 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                  </svg>
+                                </button>
+                                {bot.status === 'pending' && (
+                                  <>
+                                    <button
+                                      onClick={() => handleBotAction(bot, 'approve')}
+                                      disabled={botActionLoading}
+                                      className="p-2 hover:bg-emerald-500/20 rounded-lg transition-colors"
+                                      title="Approve"
+                                    >
+                                      <svg className="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                      </svg>
+                                    </button>
+                                    <button
+                                      onClick={() => handleBotAction(bot, 'reject')}
+                                      disabled={botActionLoading}
+                                      className="p-2 hover:bg-red-500/20 rounded-lg transition-colors"
+                                      title="Reject"
+                                    >
+                                      <svg className="w-4 h-4 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                      </svg>
+                                    </button>
+                                  </>
+                                )}
+                                {bot.status === 'active' && (
+                                  <button
+                                    onClick={() => handleBotAction(bot, 'pause')}
+                                    disabled={botActionLoading}
+                                    className="p-2 hover:bg-amber-500/20 rounded-lg transition-colors"
+                                    title="Pause"
+                                  >
+                                    <svg className="w-4 h-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                  </button>
+                                )}
+                                {bot.status === 'paused' && (
+                                  <button
+                                    onClick={() => handleBotAction(bot, 'activate')}
+                                    disabled={botActionLoading}
+                                    className="p-2 hover:bg-emerald-500/20 rounded-lg transition-colors"
+                                    title="Activate"
+                                  >
+                                    <svg className="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                  </button>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Bot Details Modal */}
+          {showBotDetailsModal && selectedBot && (
+            <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+              <div className="bg-slate-900 border border-white/10 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+                <div className="p-6 border-b border-white/10 flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500 to-purple-600 flex items-center justify-center">
+                      <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h2 className="text-xl font-bold text-white">{selectedBot.name}</h2>
+                      <p className="text-white/40 text-sm">Bot ID: {selectedBot.id}</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setShowBotDetailsModal(false)}
+                    className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                  >
+                    <svg className="w-5 h-5 text-white/60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+
+                <div className="p-6 space-y-6">
+                  {/* Bot Info */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-slate-800/50 rounded-xl p-4">
+                      <p className="text-white/40 text-sm mb-1">Type</p>
+                      <p className="text-white font-medium">{selectedBot.type}</p>
+                    </div>
+                    <div className="bg-slate-800/50 rounded-xl p-4">
+                      <p className="text-white/40 text-sm mb-1">Status</p>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        selectedBot.status === 'active' ? 'bg-emerald-500/20 text-emerald-400' :
+                        selectedBot.status === 'paused' ? 'bg-amber-500/20 text-amber-400' :
+                        selectedBot.status === 'pending' ? 'bg-blue-500/20 text-blue-400' :
+                        selectedBot.status === 'rejected' ? 'bg-red-500/20 text-red-400' :
+                        'bg-gray-500/20 text-gray-400'
+                      }`}>
+                        {selectedBot.status}
+                      </span>
+                    </div>
+                    <div className="bg-slate-800/50 rounded-xl p-4">
+                      <p className="text-white/40 text-sm mb-1">Owner</p>
+                      <p className="text-white font-medium">{selectedBot.owner}</p>
+                    </div>
+                    <div className="bg-slate-800/50 rounded-xl p-4">
+                      <p className="text-white/40 text-sm mb-1">Rating</p>
+                      <div className="flex items-center gap-1">
+                        <span className="text-amber-400">★</span>
+                        <span className="text-white font-medium">{selectedBot.rating.toFixed(1)}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Performance */}
+                  <div>
+                    <h3 className="text-white font-medium mb-3">Performance Metrics</h3>
+                    <div className="grid grid-cols-3 gap-4">
+                      <div className="bg-slate-800/50 rounded-xl p-4 text-center">
+                        <p className="text-2xl font-bold text-emerald-400">{selectedBot.performance.winRate.toFixed(1)}%</p>
+                        <p className="text-white/40 text-sm">Win Rate</p>
+                      </div>
+                      <div className="bg-slate-800/50 rounded-xl p-4 text-center">
+                        <p className="text-2xl font-bold text-cyan-400">{selectedBot.performance.profitFactor.toFixed(2)}</p>
+                        <p className="text-white/40 text-sm">Profit Factor</p>
+                      </div>
+                      <div className="bg-slate-800/50 rounded-xl p-4 text-center">
+                        <p className="text-2xl font-bold text-purple-400">{selectedBot.performance.totalTrades}</p>
+                        <p className="text-white/40 text-sm">Total Trades</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Timestamps */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-white/40 text-sm mb-1">Created</p>
+                      <p className="text-white">{selectedBot.createdAt.toLocaleDateString()}</p>
+                    </div>
+                    <div>
+                      <p className="text-white/40 text-sm mb-1">Last Active</p>
+                      <p className="text-white">{selectedBot.lastActive.toLocaleDateString()}</p>
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex gap-3 pt-4 border-t border-white/10">
+                    {selectedBot.status === 'pending' && (
+                      <>
+                        <button
+                          onClick={() => handleBotAction(selectedBot, 'approve')}
+                          disabled={botActionLoading}
+                          className="flex-1 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-medium transition-colors disabled:opacity-50"
+                        >
+                          {botActionLoading ? 'Processing...' : 'Approve Bot'}
+                        </button>
+                        <button
+                          onClick={() => handleBotAction(selectedBot, 'reject')}
+                          disabled={botActionLoading}
+                          className="flex-1 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl font-medium transition-colors disabled:opacity-50"
+                        >
+                          {botActionLoading ? 'Processing...' : 'Reject Bot'}
+                        </button>
+                      </>
+                    )}
+                    {selectedBot.status === 'active' && (
+                      <button
+                        onClick={() => handleBotAction(selectedBot, 'pause')}
+                        disabled={botActionLoading}
+                        className="flex-1 py-3 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-medium transition-colors disabled:opacity-50"
+                      >
+                        {botActionLoading ? 'Processing...' : 'Pause Bot'}
+                      </button>
+                    )}
+                    {selectedBot.status === 'paused' && (
+                      <button
+                        onClick={() => handleBotAction(selectedBot, 'activate')}
+                        disabled={botActionLoading}
+                        className="flex-1 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-medium transition-colors disabled:opacity-50"
+                      >
+                        {botActionLoading ? 'Processing...' : 'Activate Bot'}
+                      </button>
+                    )}
+                    <button
+                      onClick={() => handleBotAction(selectedBot, 'delete')}
+                      disabled={botActionLoading}
+                      className="px-6 py-3 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-xl font-medium transition-colors disabled:opacity-50"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           )}
