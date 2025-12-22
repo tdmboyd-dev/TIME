@@ -161,8 +161,13 @@ export default function SettingsPage() {
   const [showConnectModal, setShowConnectModal] = useState(false);
   const [selectedBroker, setSelectedBroker] = useState<AvailableBroker | null>(null);
   const [isConnecting, setIsConnecting] = useState(false);
-  const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [notification, setNotification] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
   const [showApiKey, setShowApiKey] = useState(false);
+
+  const showNotification = (type: 'success' | 'error' | 'info', message: string) => {
+    setNotification({ type, message });
+    setTimeout(() => setNotification(null), 5000);
+  };
   const [showSecret, setShowSecret] = useState(false);
 
   // Connection form
@@ -1193,7 +1198,7 @@ export default function SettingsPage() {
                       const file = e.target.files?.[0];
                       if (file) {
                         if (file.size > 2 * 1024 * 1024) {
-                          alert('File size must be less than 2MB');
+                          showNotification('error', 'File size must be less than 2MB');
                           return;
                         }
                         setAvatarFile(file);
@@ -1317,11 +1322,11 @@ export default function SettingsPage() {
                 <button
                   onClick={async () => {
                     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-                      alert('Passwords do not match');
+                      showNotification('error', 'Passwords do not match');
                       return;
                     }
                     if (passwordForm.newPassword.length < 8) {
-                      alert('Password must be at least 8 characters');
+                      showNotification('error', 'Password must be at least 8 characters');
                       return;
                     }
                     try {
@@ -1334,14 +1339,14 @@ export default function SettingsPage() {
                         }),
                       });
                       if (res.ok) {
-                        alert('Password changed successfully');
+                        showNotification('success', 'Password changed successfully');
                         setShowPasswordModal(false);
                         setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
                       } else {
-                        alert('Failed to change password. Please check your current password.');
+                        showNotification('error', 'Failed to change password. Please check your current password.');
                       }
                     } catch (e) {
-                      alert('Password change request submitted');
+                      showNotification('info', 'Password change request submitted');
                       setShowPasswordModal(false);
                     }
                   }}
@@ -1466,7 +1471,7 @@ export default function SettingsPage() {
                         } catch (e) {
                           // Continue
                         }
-                        alert('Two-factor authentication enabled successfully!');
+                        showNotification('success', 'Two-factor authentication enabled successfully!');
                         setShow2FAModal(false);
                         setTwoFactorMethod(null);
                         setVerificationCode('');
@@ -1498,7 +1503,7 @@ export default function SettingsPage() {
                     </button>
                     <button
                       onClick={() => {
-                        alert('Verification code sent to your phone!');
+                        showNotification('success', 'Verification code sent to your phone!');
                       }}
                       className="flex-1 py-2 bg-time-primary hover:bg-time-primary/80 rounded-lg text-white font-medium"
                     >

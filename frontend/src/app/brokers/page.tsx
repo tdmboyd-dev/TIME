@@ -6,6 +6,7 @@ import {
   Link2Off,
   Plus,
   Check,
+  CheckCircle,
   AlertTriangle,
   RefreshCw,
   Settings,
@@ -636,6 +637,12 @@ export default function BrokersPage() {
   // Broker settings modal state
   const [showBrokerSettings, setShowBrokerSettings] = useState(false);
   const [editingBroker, setEditingBroker] = useState<BrokerConnection | null>(null);
+  const [notification, setNotification] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
+
+  const showNotification = (type: 'success' | 'error' | 'info', message: string) => {
+    setNotification({ type, message });
+    setTimeout(() => setNotification(null), 5000);
+  };
   const [brokerSettingsForm, setBrokerSettingsForm] = useState({
     isPaper: true,
     tradingEnabled: true,
@@ -804,13 +811,14 @@ export default function BrokersPage() {
 
       if (response.ok) {
         // Success - refresh the list
+        showNotification('success', 'Broker disconnected successfully');
         await fetchBrokerStatus();
       } else {
         const data = await response.json();
-        alert(data.error || 'Failed to disconnect broker');
+        showNotification('error', data.error || 'Failed to disconnect broker');
       }
     } catch (error) {
-      alert('Network error. Please try again.');
+      showNotification('error', 'Network error. Please try again.');
     }
   };
 
@@ -845,6 +853,24 @@ export default function BrokersPage() {
 
   return (
     <div className="p-6 space-y-6">
+      {/* Toast Notification */}
+      {notification && (
+        <div className="fixed top-4 right-4 z-50 animate-in slide-in-from-top-2">
+          <div className={`flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg ${
+            notification.type === 'success' ? 'bg-green-500/90 text-white' :
+            notification.type === 'error' ? 'bg-red-500/90 text-white' :
+            'bg-blue-500/90 text-white'
+          }`}>
+            {notification.type === 'success' && <CheckCircle className="w-5 h-5" />}
+            {notification.type === 'error' && <AlertTriangle className="w-5 h-5" />}
+            {notification.type === 'info' && <Wifi className="w-5 h-5" />}
+            <span className="font-medium">{notification.message}</span>
+            <button onClick={() => setNotification(null)} className="ml-2 hover:opacity-80">
+              ×
+            </button>
+          </div>
+        </div>
+      )}
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
