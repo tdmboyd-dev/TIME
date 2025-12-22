@@ -53,6 +53,11 @@ export default function AdminPage() {
   const [systemEvents, setSystemEvents] = useState<SystemEvent[]>([]);
   const [metrics, setMetrics] = useState<any>(null);
 
+  // Activity Log Modal State
+  const [showActivityLog, setShowActivityLog] = useState(false);
+  const [activityFilter, setActivityFilter] = useState<'all' | 'info' | 'warning' | 'error' | 'success'>('all');
+  const [activityDateRange, setActivityDateRange] = useState<'today' | 'week' | 'month' | 'all'>('all');
+
   // Fetch admin data from backend
   const fetchAdminData = useCallback(async () => {
     try {
@@ -392,7 +397,7 @@ export default function AdminPage() {
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-white">System Activity</h3>
             <button
-              onClick={() => alert('View All System Activity\n\nFull activity log with:\n- Date range filters\n- Event type filters\n- Export to CSV\n\nComing soon!')}
+              onClick={() => setShowActivityLog(true)}
               className="text-sm text-time-primary hover:text-time-primary/80"
             >
               View All
@@ -681,6 +686,138 @@ export default function AdminPage() {
               >
                 Confirm Emergency Stop
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Activity Log Modal */}
+      {showActivityLog && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+          <div className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-4xl max-h-[85vh] overflow-hidden flex flex-col">
+            {/* Header */}
+            <div className="p-6 border-b border-slate-700 flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-bold text-white">System Activity Log</h2>
+                <p className="text-slate-400 text-sm mt-1">View and export all system events</p>
+              </div>
+              <button
+                onClick={() => setShowActivityLog(false)}
+                className="p-2 hover:bg-slate-800 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5 text-slate-400" />
+              </button>
+            </div>
+
+            {/* Filters */}
+            <div className="p-4 border-b border-slate-700 flex items-center gap-4 flex-wrap">
+              <div className="flex items-center gap-2">
+                <span className="text-slate-400 text-sm">Type:</span>
+                <select
+                  value={activityFilter}
+                  onChange={(e) => setActivityFilter(e.target.value as any)}
+                  className="px-3 py-1.5 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:border-time-primary"
+                >
+                  <option value="all">All Types</option>
+                  <option value="info">Info</option>
+                  <option value="success">Success</option>
+                  <option value="warning">Warning</option>
+                  <option value="error">Error</option>
+                </select>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-slate-400 text-sm">Range:</span>
+                <select
+                  value={activityDateRange}
+                  onChange={(e) => setActivityDateRange(e.target.value as any)}
+                  className="px-3 py-1.5 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:border-time-primary"
+                >
+                  <option value="today">Today</option>
+                  <option value="week">Last 7 Days</option>
+                  <option value="month">Last 30 Days</option>
+                  <option value="all">All Time</option>
+                </select>
+              </div>
+              <div className="flex-1" />
+              <button
+                onClick={() => {
+                  const filteredEvents = systemEvents.filter(e =>
+                    (activityFilter === 'all' || e.type === activityFilter)
+                  );
+                  const csv = 'Type,Message,Component,Timestamp\n' +
+                    filteredEvents.map(e =>
+                      `${e.type},"${e.message}",${e.component},${e.timestamp.toISOString()}`
+                    ).join('\n');
+                  const blob = new Blob([csv], { type: 'text/csv' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = `activity-log-${new Date().toISOString().split('T')[0]}.csv`;
+                  a.click();
+                  URL.revokeObjectURL(url);
+                }}
+                className="px-4 py-2 bg-time-primary hover:bg-time-primary/80 text-white rounded-lg text-sm font-medium transition-colors"
+              >
+                Export CSV
+              </button>
+            </div>
+
+            {/* Activity List */}
+            <div className="flex-1 overflow-y-auto p-4">
+              {systemEvents.length === 0 ? (
+                <div className="text-center py-12">
+                  <Activity className="w-12 h-12 text-slate-600 mx-auto mb-3" />
+                  <p className="text-slate-400">No activity events found</p>
+                  <p className="text-slate-500 text-sm mt-1">Connect to backend to load activity data</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {systemEvents
+                    .filter(e => activityFilter === 'all' || e.type === activityFilter)
+                    .filter(e => {
+                      if (activityDateRange === 'all') return true;
+                      const now = new Date();
+                      const eventDate = new Date(e.timestamp);
+                      const diffDays = (now.getTime() - eventDate.getTime()) / (1000 * 60 * 60 * 24);
+                      if (activityDateRange === 'today') return diffDays < 1;
+                      if (activityDateRange === 'week') return diffDays < 7;
+                      if (activityDateRange === 'month') return diffDays < 30;
+                      return true;
+                    })
+                    .map((event) => (
+                      <div
+                        key={event.id}
+                        className={clsx(
+                          "flex items-start gap-4 p-4 rounded-xl border",
+                          event.type === 'error' && "bg-red-500/10 border-red-500/20",
+                          event.type === 'warning' && "bg-amber-500/10 border-amber-500/20",
+                          event.type === 'success' && "bg-emerald-500/10 border-emerald-500/20",
+                          event.type === 'info' && "bg-blue-500/10 border-blue-500/20"
+                        )}
+                      >
+                        <div className={clsx(
+                          "w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0",
+                          event.type === 'error' && "bg-red-500/20",
+                          event.type === 'warning' && "bg-amber-500/20",
+                          event.type === 'success' && "bg-emerald-500/20",
+                          event.type === 'info' && "bg-blue-500/20"
+                        )}>
+                          {event.type === 'error' && <XCircle className="w-4 h-4 text-red-400" />}
+                          {event.type === 'warning' && <AlertTriangle className="w-4 h-4 text-amber-400" />}
+                          {event.type === 'success' && <CheckCircle className="w-4 h-4 text-emerald-400" />}
+                          {event.type === 'info' && <Activity className="w-4 h-4 text-blue-400" />}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-white">{event.message}</p>
+                          <div className="flex items-center gap-3 mt-2 text-xs text-slate-500">
+                            <span className="px-2 py-0.5 bg-slate-800 rounded-full">{event.component}</span>
+                            <span>{event.timestamp.toLocaleString()}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
