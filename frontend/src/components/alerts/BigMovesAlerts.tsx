@@ -103,6 +103,12 @@ export function BigMovesAlerts() {
   const [filter, setFilter] = useState<'ALL' | 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW'>('ALL');
   const [isMonitoring, setIsMonitoring] = useState(false);
   const [executing, setExecuting] = useState<string | null>(null);
+  const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  const showNotification = (type: 'success' | 'error', message: string) => {
+    setNotification({ type, message });
+    setTimeout(() => setNotification(null), 5000);
+  };
 
   // Fetch alerts with fallback to mock data
   const fetchAlerts = useCallback(async (showRefreshing = false) => {
@@ -154,8 +160,9 @@ export function BigMovesAlerts() {
         method: 'POST'
       });
       setIsMonitoring(!isMonitoring);
-    } catch (error) {
-      console.error('Error toggling monitoring:', error);
+      showNotification('success', isMonitoring ? 'Monitoring stopped' : 'Monitoring started');
+    } catch {
+      showNotification('error', 'Failed to toggle monitoring');
     }
   };
 
@@ -174,10 +181,12 @@ export function BigMovesAlerts() {
         // Refresh alerts
         fetchAlerts();
         // Show success message
-        alert(`Action executed: ${data.data.message}`);
+        showNotification('success', `Action executed: ${data.data.message}`);
+      } else {
+        showNotification('error', data.error || 'Failed to execute action');
       }
-    } catch (error) {
-      console.error('Error executing action:', error);
+    } catch {
+      showNotification('error', 'Failed to execute action');
     } finally {
       setExecuting(null);
     }
@@ -190,8 +199,9 @@ export function BigMovesAlerts() {
         method: 'POST'
       });
       fetchAlerts();
-    } catch (error) {
-      console.error('Error acknowledging alert:', error);
+      showNotification('success', 'Alert acknowledged');
+    } catch {
+      showNotification('error', 'Failed to acknowledge alert');
     }
   };
 
@@ -202,8 +212,9 @@ export function BigMovesAlerts() {
         method: 'POST'
       });
       fetchAlerts();
-    } catch (error) {
-      console.error('Error creating test alert:', error);
+      showNotification('success', `Test ${type} alert created`);
+    } catch {
+      showNotification('error', 'Failed to create test alert');
     }
   };
 
@@ -228,6 +239,16 @@ export function BigMovesAlerts() {
 
   return (
     <div className="space-y-6">
+      {/* Notification Toast */}
+      {notification && (
+        <div className={`fixed top-4 right-4 z-50 flex items-center gap-2 px-4 py-3 rounded-lg shadow-lg ${
+          notification.type === 'success' ? 'bg-green-500/20 border border-green-500/50 text-green-400' : 'bg-red-500/20 border border-red-500/50 text-red-400'
+        }`}>
+          {notification.type === 'success' ? <CheckCircle className="w-5 h-5" /> : <AlertTriangle className="w-5 h-5" />}
+          <span className="text-sm font-medium">{notification.message}</span>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>

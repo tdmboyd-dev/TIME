@@ -142,74 +142,12 @@ export default function AITradeGodPage() {
       if (data.success && data.data) {
         setMarketplaceBots(data.data);
       } else {
-        // Use real marketplace data from active listings
-        setMarketplaceBots([
-          {
-            id: 'whale-hunter-pro',
-            name: 'Whale Hunter Pro',
-            owner: '@CryptoKing',
-            performance30d: 127.4,
-            monthlyFee: 50,
-            profitShare: 15,
-            subscribers: 47,
-            strategies: ['WHALE_FOLLOW', 'AI_SENTIMENT']
-          },
-          {
-            id: 'dca-master',
-            name: 'DCA Master',
-            owner: '@SteadyGains',
-            performance30d: 45.2,
-            monthlyFee: 20,
-            profitShare: 10,
-            subscribers: 128,
-            strategies: ['DCA', 'GRID']
-          },
-          {
-            id: 'grid-genius',
-            name: 'Grid Genius',
-            owner: '@GridMaster',
-            performance30d: 89.7,
-            monthlyFee: 35,
-            profitShare: 12,
-            subscribers: 73,
-            strategies: ['GRID', 'MARKET_MAKE']
-          }
-        ]);
+        // No mock data - show empty state
+        setMarketplaceBots([]);
       }
     } catch (error) {
-      // Fallback to static data if API unavailable
-      setMarketplaceBots([
-        {
-          id: 'whale-hunter-pro',
-          name: 'Whale Hunter Pro',
-          owner: '@CryptoKing',
-          performance30d: 127.4,
-          monthlyFee: 50,
-          profitShare: 15,
-          subscribers: 47,
-          strategies: ['WHALE_FOLLOW', 'AI_SENTIMENT']
-        },
-        {
-          id: 'dca-master',
-          name: 'DCA Master',
-          owner: '@SteadyGains',
-          performance30d: 45.2,
-          monthlyFee: 20,
-          profitShare: 10,
-          subscribers: 128,
-          strategies: ['DCA', 'GRID']
-        },
-        {
-          id: 'grid-genius',
-          name: 'Grid Genius',
-          owner: '@GridMaster',
-          performance30d: 89.7,
-          monthlyFee: 35,
-          profitShare: 12,
-          subscribers: 73,
-          strategies: ['GRID', 'MARKET_MAKE']
-        }
-      ]);
+      // No mock data - show empty state
+      setMarketplaceBots([]);
     }
   };
 
