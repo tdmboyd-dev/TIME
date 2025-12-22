@@ -34,10 +34,11 @@ const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID;
 const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN;
 const TWILIO_PHONE_NUMBER = process.env.TWILIO_PHONE_NUMBER;
 
-// SendGrid client for email
-let sendgridClient: any = null;
+// Email client (supports both Resend and SendGrid)
+let emailClient: { send: (options: { to: string; subject: string; html: string }) => Promise<void> } | null = null;
+const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY;
-const SENDGRID_FROM_EMAIL = process.env.SENDGRID_FROM_EMAIL || 'noreply@timebeyondus.com';
+const FROM_EMAIL = process.env.SMTP_FROM_EMAIL || process.env.SENDGRID_FROM_EMAIL || 'noreply@timebeyondus.com';
 
 // Initialize clients
 async function initializeTwilio(): Promise<void> {
@@ -52,22 +53,57 @@ async function initializeTwilio(): Promise<void> {
   }
 }
 
-async function initializeSendGrid(): Promise<void> {
+async function initializeEmail(): Promise<void> {
+  // Try Resend first (preferred)
+  if (RESEND_API_KEY) {
+    try {
+      const { Resend } = await import('resend');
+      const resend = new Resend(RESEND_API_KEY);
+      emailClient = {
+        send: async (options) => {
+          await resend.emails.send({
+            from: FROM_EMAIL,
+            to: options.to,
+            subject: options.subject,
+            html: options.html,
+          });
+        }
+      };
+      console.log('[NotificationService] Resend initialized - REAL EMAIL ENABLED');
+      return;
+    } catch (e) {
+      console.log('[NotificationService] Resend not available, trying SendGrid...');
+    }
+  }
+
+  // Fall back to SendGrid
   if (SENDGRID_API_KEY) {
     try {
       const sgMail = await import('@sendgrid/mail');
       sgMail.default.setApiKey(SENDGRID_API_KEY);
-      sendgridClient = sgMail.default;
+      emailClient = {
+        send: async (options) => {
+          await sgMail.default.send({
+            from: FROM_EMAIL,
+            to: options.to,
+            subject: options.subject,
+            html: options.html,
+          });
+        }
+      };
       console.log('[NotificationService] SendGrid initialized - REAL EMAIL ENABLED');
+      return;
     } catch (e) {
-      console.log('[NotificationService] SendGrid not available, email will be simulated');
+      console.log('[NotificationService] SendGrid not available');
     }
   }
+
+  console.log('[NotificationService] No email provider configured, emails will be simulated');
 }
 
 // Initialize on module load
 initializeTwilio();
-initializeSendGrid();
+initializeEmail();
 
 const log = loggers.notifications;
 
@@ -338,41 +374,39 @@ export class NotificationService extends EventEmitter implements TIMEComponent {
       ? notification.userId
       : `${notification.userId}@example.com`; // In production, look up from database
 
-    if (sendgridClient) {
-      // REAL SendGrid email sending
-      try {
-        const msg = {
-          to: recipientEmail,
-          from: SENDGRID_FROM_EMAIL,
-          subject: notification.subject,
-          text: notification.message,
-          html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <div style="background: linear-gradient(90deg, #00d4ff, #7b2cbf); padding: 20px; text-align: center;">
-              <h1 style="color: white; margin: 0;">TIME</h1>
-              <p style="color: rgba(255,255,255,0.8); margin: 5px 0 0 0;">Meta-Intelligence Trading Governor</p>
-            </div>
-            <div style="padding: 30px; background: #f9f9f9;">
-              <h2 style="color: #333; margin-top: 0;">${notification.subject}</h2>
-              <div style="color: #555; line-height: 1.6; white-space: pre-wrap;">${notification.message}</div>
-            </div>
-            <div style="padding: 20px; background: #333; text-align: center;">
-              <p style="color: #888; margin: 0; font-size: 12px;">TIME evolves. TIME adapts. TIME persists.</p>
-            </div>
-          </div>`,
-        };
+    const htmlContent = `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <div style="background: linear-gradient(90deg, #00d4ff, #7b2cbf); padding: 20px; text-align: center;">
+        <h1 style="color: white; margin: 0;">TIME</h1>
+        <p style="color: rgba(255,255,255,0.8); margin: 5px 0 0 0;">Meta-Intelligence Trading Governor</p>
+      </div>
+      <div style="padding: 30px; background: #f9f9f9;">
+        <h2 style="color: #333; margin-top: 0;">${notification.subject}</h2>
+        <div style="color: #555; line-height: 1.6; white-space: pre-wrap;">${notification.message}</div>
+      </div>
+      <div style="padding: 20px; background: #333; text-align: center;">
+        <p style="color: #888; margin: 0; font-size: 12px;">TIME evolves. TIME adapts. TIME persists.</p>
+      </div>
+    </div>`;
 
-        await sendgridClient.send(msg);
-        log.info('Email sent via SendGrid', {
+    if (emailClient) {
+      // REAL email sending (Resend or SendGrid)
+      try {
+        await emailClient.send({
+          to: recipientEmail,
+          subject: notification.subject,
+          html: htmlContent,
+        });
+        log.info('Email sent successfully', {
           to: recipientEmail,
           subject: notification.subject,
         });
       } catch (error) {
-        log.error('SendGrid email failed', { error, to: recipientEmail });
+        log.error('Email send failed', { error, to: recipientEmail });
         // Fall through to simulation
       }
     } else {
-      // Simulated email (when SendGrid not configured)
-      log.info('Email notification (simulated - set SENDGRID_API_KEY for real delivery)', {
+      // Simulated email (when no email provider configured)
+      log.info('Email notification (simulated - set RESEND_API_KEY or SENDGRID_API_KEY for real delivery)', {
         to: recipientEmail,
         subject: notification.subject,
         preview: notification.message.slice(0, 100),
