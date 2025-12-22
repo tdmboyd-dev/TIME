@@ -143,17 +143,64 @@ export default function LoginPage() {
 
   const handleBiometricAuth = async () => {
     setIsLoading(true);
+    setError('');
     try {
       // Check for WebAuthn support
-      if (window.PublicKeyCredential) {
-        // TODO: Implement real WebAuthn authentication
-        // For now, show not implemented
-        setError('Biometric authentication coming soon. Please use email login.');
-      } else {
+      if (!window.PublicKeyCredential) {
         setError('Biometric authentication not supported on this device.');
+        return;
       }
-    } catch (err) {
-      setError('Biometric authentication failed.');
+
+      // Step 1: Begin WebAuthn authentication (get challenge from server)
+      const beginResponse = await fetch(`${API_BASE}/auth/webauthn/login/begin`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ email: email || undefined }),
+      });
+
+      if (!beginResponse.ok) {
+        const data = await beginResponse.json();
+        throw new Error(data.error || 'No passkey found. Please login with email first and register a passkey.');
+      }
+
+      const { options, sessionId } = await beginResponse.json();
+
+      // Step 2: Get credential from authenticator (Touch ID, Face ID, etc.)
+      const { startAuthentication } = await import('@simplewebauthn/browser');
+      const credential = await startAuthentication(options);
+
+      // Step 3: Complete authentication
+      const completeResponse = await fetch(`${API_BASE}/auth/webauthn/login/complete`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ sessionId, response: credential }),
+      });
+
+      const data = await completeResponse.json();
+
+      if (!completeResponse.ok) {
+        throw new Error(data.error || 'Passkey authentication failed');
+      }
+
+      if (data.success) {
+        // Set auth cookies on frontend domain
+        const expires = new Date(data.expiresAt);
+        const cookieOptions = `path=/; expires=${expires.toUTCString()}; SameSite=Lax; Secure`;
+        document.cookie = `time_auth_token=${data.token}; ${cookieOptions}`;
+        document.cookie = `time_is_admin=${data.user?.role === 'admin' || data.user?.role === 'owner'}; ${cookieOptions}`;
+        localStorage.setItem('time_user', JSON.stringify(data.user));
+
+        const redirectUrl = new URLSearchParams(window.location.search).get('redirect');
+        router.push(redirectUrl || '/');
+      }
+    } catch (err: any) {
+      if (err.name === 'NotAllowedError') {
+        setError('Authentication cancelled. Please try again.');
+      } else {
+        setError(err.message || 'Biometric authentication failed.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -161,13 +208,17 @@ export default function LoginPage() {
 
   const handleSocialLogin = async (provider: string) => {
     setIsLoading(true);
+    setError('');
     try {
-      // TODO: Implement real OAuth flow
-      // For now, show not implemented
-      setError(`${provider} login coming soon. Please use email login.`);
-    } catch (err) {
-      setError(`${provider} login failed.`);
-    } finally {
+      // Redirect to OAuth provider authorization URL
+      const providerName = provider.toLowerCase();
+      const returnUrl = new URLSearchParams(window.location.search).get('redirect') || '/';
+
+      // Open OAuth flow in current window
+      // The backend will redirect back to /login with token or error
+      window.location.href = `${API_BASE}/auth/oauth/${providerName}/authorize?returnUrl=${encodeURIComponent(returnUrl)}`;
+    } catch (err: any) {
+      setError(`${provider} login failed. Please try again.`);
       setIsLoading(false);
     }
   };

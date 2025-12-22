@@ -75,7 +75,6 @@ export default function RetirementPage() {
 
       if (goalsResponse.ok) {
         const goalsData = await goalsResponse.json();
-        console.log('Robo goals data:', goalsData);
 
         // Try to map retirement goals to retirement plans
         if (goalsData.success && goalsData.data) {
@@ -116,7 +115,6 @@ export default function RetirementPage() {
 
       if (portfolioResponse.ok) {
         const portfolioData = await portfolioResponse.json();
-        console.log('Portfolio summary data:', portfolioData);
 
         // Check if we can derive retirement info from portfolio
         if (portfolioData.success && portfolioData.data) {

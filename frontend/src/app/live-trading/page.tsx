@@ -180,8 +180,8 @@ export default function LiveTradingPage() {
       if (botsData.success) setAvailableBots(botsData.data);
       if (signalsData.success) setPendingSignals(signalsData.data);
       if (tradesData.success) setRecentTrades(tradesData.data);
-    } catch (error) {
-      console.error('Error fetching trading data:', error);
+    } catch {
+      // Error fetching trading data - continue silently
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);

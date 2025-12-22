@@ -226,27 +226,21 @@ export default function AdminPortalPage() {
 
     // ALWAYS update locally first for instant feedback and persistence
     setEvolutionMode(newMode);
-    console.log(`[TIME] Evolution mode saved to localStorage: ${newMode}`);
 
-    // Then try to sync with backend
+    // Then try to sync with backend (silent - no console logs in production)
     try {
       const token = getTokenFromCookie();
       if (token) {
-        const response = await fetch(`${API_BASE}/admin/evolution/${newMode}`, {
+        await fetch(`${API_BASE}/admin/evolution/${newMode}`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
           },
         });
-        if (response.ok) {
-          console.log(`[TIME] Backend synced: ${newMode}`);
-        } else {
-          console.warn(`[TIME] Backend sync failed (${response.status}), but local state saved`);
-        }
       }
-    } catch (error) {
-      console.warn('[TIME] Backend unreachable, but local state saved');
+    } catch {
+      // Backend sync failed - local state already saved
     }
   };
 

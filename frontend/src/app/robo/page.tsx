@@ -80,7 +80,6 @@ export default function RoboAdvisorPage() {
         // Handle both array and object formats from API
         if (Array.isArray(data.data)) {
           setPortfolios(data.data);
-          console.log('Connected to live Robo API:', data.data.length, 'portfolios');
         } else if (typeof data.data === 'object') {
           // Convert model portfolios object to array format
           const modelPortfolios = Object.entries(data.data).map(([key, value]: [string, any]) => ({
@@ -98,13 +97,11 @@ export default function RoboAdvisorPage() {
             isModel: true, // Mark as model portfolio for UI
           }));
           setPortfolios(modelPortfolios);
-          console.log('Connected to live Robo API:', modelPortfolios.length, 'model portfolios');
         }
       } else {
         // API returned error - show empty state
         setIsConnected(false);
         setPortfolios([]);
-        console.log('No portfolios - create one to get started');
       }
     } catch (error) {
       // Error handled - shows empty state

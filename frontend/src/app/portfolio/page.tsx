@@ -198,8 +198,8 @@ export default function PortfolioPage() {
           setProviders(providerList);
         }
       }
-    } catch (error) {
-      console.log('Provider status not available');
+    } catch {
+      // Provider status not available - continue silently
     }
   };
 

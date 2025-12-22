@@ -335,8 +335,8 @@ export default function TIMEBEUNUSPage() {
           }
         }
       }
-    } catch (err) {
-      console.error('Failed to fetch owner dashboard:', err);
+    } catch {
+      // Failed to fetch owner dashboard - continue silently
     }
   };
 

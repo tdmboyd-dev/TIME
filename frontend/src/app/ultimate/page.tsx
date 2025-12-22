@@ -127,8 +127,8 @@ export default function UltimatePage() {
         }));
         setActivities(newActivities);
       }
-    } catch (error) {
-      console.error('Failed to fetch UMM data:', error);
+    } catch {
+      // Failed to fetch UMM data - continue with empty state
     } finally {
       setLoading(false);
     }
@@ -159,8 +159,8 @@ export default function UltimatePage() {
 
       // Refresh data
       await fetchData();
-    } catch (error) {
-      console.error('Failed to activate bots:', error);
+    } catch {
+      // Failed to activate bots - continue silently
     } finally {
       setActivatingBots(false);
     }
@@ -189,8 +189,8 @@ export default function UltimatePage() {
 
       // Refresh data
       await fetchData();
-    } catch (error) {
-      console.error('Failed to generate signal:', error);
+    } catch {
+      // Failed to generate signal - continue silently
     }
   };
 
