@@ -63,6 +63,7 @@ function markPageVisited(href: string): void {
   }
 }
 
+import { TimeLogo, TimeIcon } from '@/components/branding/TimeLogo';
 import {
   LayoutDashboard,
   TrendingUp,
@@ -191,14 +192,12 @@ export function Sidebar() {
   return (
     <div className="w-64 bg-slate-900/80 backdrop-blur-sm border-r border-slate-700/50 flex flex-col">
       {/* Logo */}
-      <div className="h-16 flex items-center px-6 border-b border-slate-700/50">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-time-primary to-time-secondary flex items-center justify-center">
-            <span className="text-white font-bold text-xl">T</span>
-          </div>
+      <div className="h-16 flex items-center px-4 border-b border-slate-700/50">
+        <div className="flex items-center gap-2">
+          <TimeIcon size={36} animated />
           <div>
-            <h1 className="text-lg font-bold text-white">TIME</h1>
-            <p className="text-xs text-slate-400">Meta-Intelligence</p>
+            <TimeLogo size="sm" animated />
+            <p className="text-[10px] text-slate-500 -mt-1">Meta-Intelligence</p>
           </div>
         </div>
       </div>

@@ -372,43 +372,56 @@ export const SUBSCRIPTION_TIERS = {
 // ============================================================
 // INTEREST RATES — "UP TO" APY (via partner bank sweep accounts)
 //
-// IMPORTANT: These are MAXIMUM rates. Actual rates depend on:
-// - Federal Reserve rates
-// - Partner bank rates
-// - Market conditions
-// User sees: "Earn UP TO X% APY" — never guaranteed!
+// ============================================================
+// INTEREST RATES — REQUIRES BANKING PARTNER TO BE REAL
+// ============================================================
+//
+// CRITICAL: These rates are PROJECTED and require:
+// 1. A banking partner (Synapse, Unit, Treasury Prime, etc.)
+// 2. FDIC insurance through partner bank
+// 3. Money transmitter licenses in operating states
+// 4. Capital to fund the interest payments
+//
+// Until you have a banking partner:
+// - Set rates to 0% OR
+// - Remove APY promises from UI OR
+// - Mark as "Coming Soon"
 // ============================================================
 
 export const INTEREST_RATES = {
-  // Current maximum APY (variable, subject to change)
-  // Partner bank pays us ~5%, we pass up to 3.5% to users, keep 1.5% spread
+  // PROJECTED rates (require banking partner to actually pay)
   personal: {
-    upTo: 3.5, // "UP TO 3.5% APY"
-    current: 3.25, // Actual current rate
-    minimum: 1.5, // Floor rate
+    upTo: 3.5, // "UP TO 3.5% APY" - ONLY DISPLAY IF PARTNER BANK ACTIVE
+    current: 0, // Set to 0 until banking partner integrated
+    minimum: 0,
+    requiresBankingPartner: true,
   },
   savings: {
-    upTo: 3.5, // "UP TO 3.5% APY" - same as personal, simpler messaging
-    current: 3.25,
-    minimum: 1.5,
+    upTo: 3.5,
+    current: 0, // Set to 0 until banking partner integrated
+    minimum: 0,
+    requiresBankingPartner: true,
   },
   trading: {
-    upTo: 1.5, // Lower for trading (needs instant liquidity)
-    current: 1.0,
-    minimum: 0.25,
+    upTo: 1.5,
+    current: 0, // Set to 0 until banking partner integrated
+    minimum: 0,
+    requiresBankingPartner: true,
   },
   business: {
     upTo: 3.5,
-    current: 3.25,
-    minimum: 1.5,
+    current: 0, // Set to 0 until banking partner integrated
+    minimum: 0,
+    requiresBankingPartner: true,
   },
 
-  // How we make money: spread between what partner pays us vs what we pay users
-  // Partner pays us: ~5% APY
+  // Future revenue model (when banking partner active):
+  // Partner pays us: ~5% APY on sweep accounts
   // We pay users: up to 3.5% APY
-  // Our spread: 1.5% (MORE revenue than before!)
-  partnerBankRate: 5.0, // What partner bank pays TIME
-  ourSpread: 1.5, // We keep 1.5% spread (was 0.75%)
+  // Our spread: 1.5%
+  partnerBankRate: 5.0, // PROJECTED - requires partner
+  ourSpread: 1.5,
+  bankingPartnerIntegrated: false, // SET TO TRUE WHEN BANKING PARTNER IS LIVE
 };
 
 // ============================================================
@@ -1118,13 +1131,26 @@ export class TIMEPayEngine extends EventEmitter {
    * Get legal disclaimers (IMPORTANT for compliance)
    */
   public getDisclaimers(): string[] {
+    const bankingActive = INTEREST_RATES.bankingPartnerIntegrated;
+
+    if (!bankingActive) {
+      return [
+        'TIME Pay is currently in BETA. Full payment features coming soon.',
+        'Interest/APY features require banking partner integration (not yet active).',
+        'Current functionality: Portfolio tracking, broker connections, trading signals.',
+        'For real payments, use connected broker accounts directly.',
+        'TIME Technologies, Inc. is not a bank.',
+      ];
+    }
+
+    // These disclaimers apply ONLY when banking partner is integrated
     return [
       '*APY is variable and subject to change. Rates depend on Federal Reserve rates and partner bank policies.',
       'Funds held in TIME Pay wallets are swept to our partner bank and are FDIC insured up to $250,000.',
       'TIME Technologies, Inc. is not a bank. Banking services provided by [Partner Bank Name], Member FDIC.',
       'Interest is earned on funds held in sweep accounts at our partner bank.',
       'Past interest rates are not indicative of future rates.',
-      'P2P transfers over $500/month are subject to a 0.5% fee.',
+      'P2P transfers over $250/month are subject to a 0.5% fee.',
       'Instant transfers to bank/card are 1.5-1.75% of the transfer amount.',
     ];
   }
