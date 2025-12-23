@@ -183,7 +183,7 @@ const dominanceModes = [
 // Activity log entry type
 interface ActivityLogEntry {
   id: string;
-  timestamp: Date;
+  timestamp: string; // ISO string for SSR compatibility
   type: 'trade' | 'mode' | 'automation' | 'system' | 'signal' | 'error';
   action: string;
   details: string;
@@ -241,14 +241,23 @@ export default function TIMEBEUNUSPage() {
   // Helper to add activity log entry
   const addActivityLog = (type: ActivityLogEntry['type'], action: string, details: string, status: ActivityLogEntry['status'] = 'success') => {
     const entry: ActivityLogEntry = {
-      id: `log_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      timestamp: new Date(),
+      id: `log_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
+      timestamp: new Date().toISOString(),
       type,
       action,
       details,
       status,
     };
     setActivityLog(prev => [entry, ...prev].slice(0, 50)); // Keep last 50 entries
+  };
+
+  // Helper to format timestamp for display
+  const formatTime = (isoString: string) => {
+    try {
+      return new Date(isoString).toLocaleTimeString();
+    } catch {
+      return '';
+    }
   };
 
   // Fetch real trading signals from strategy engine
@@ -1337,7 +1346,7 @@ export default function TIMEBEUNUSPage() {
                   <div className="flex items-center justify-between mb-1">
                     <span className="font-medium text-white text-sm">{entry.action}</span>
                     <span className="text-xs text-slate-500">
-                      {entry.timestamp.toLocaleTimeString()}
+                      {formatTime(entry.timestamp)}
                     </span>
                   </div>
                   <p className="text-sm text-slate-400">{entry.details}</p>
