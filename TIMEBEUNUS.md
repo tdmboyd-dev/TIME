@@ -1,8 +1,8 @@
 # TIMEBEUNUS — THE MASTER AI GUIDE
 ## For Copilot, Claude, and All AI Assistants
 
-**Version:** 44.0.0 - REAL-TIME ACTIVITY FEED EDITION
-**Last Updated:** 2025-12-23 (Real-time Bot Controls + Plain English Explanations)
+**Version:** 45.0.0 - ADMIN & TIER ACCESS EDITION
+**Last Updated:** 2025-12-23 (Master Admin + Tier Access Controls)
 
 > 📄 **SEE ALSO:** [SYSTEM_COMPARISON.md](./SYSTEM_COMPARISON.md) for the FULL 500+ line detailed comparison!
 > 📄 **NEW:** [PRODUCTION_SETUP_GUIDE.md](./PRODUCTION_SETUP_GUIDE.md) for honest external requirements!
@@ -10,7 +10,71 @@
 
 ---
 
-# 🚀 v44.0.0 - REAL-TIME ACTIVITY FEED EDITION
+# 🚀 v45.0.0 - ADMIN & TIER ACCESS EDITION
+
+## Session 2025-12-23 — Master Admin + Tier Access Controls
+
+### Major Additions
+
+| Feature | Status | Details |
+|---------|--------|---------|
+| Master Admin Bypass | ✅ DEPLOYED | Owner/admin gets UNLIMITED access + 0% fees |
+| Tier Access Middleware | ✅ DEPLOYED | All routes enforce tier-based limits |
+| Bot/Capital/Trade Limits | ✅ DEPLOYED | Per-tier limits enforced in middleware |
+| Admin Key Auth | ✅ DEPLOYED | `x-admin-key: TIME_ADMIN_2025` for owner access |
+| Real-Time Activity Log | ✅ DEPLOYED | Live feed showing all bot actions |
+| Plain English Explanations | ✅ DEPLOYED | Every mode explained in simple terms |
+
+### 👑 Master Admin Access
+
+**Admin Key:** `TIME_ADMIN_2025` (or env var `ADMIN_API_KEY`)
+
+**How to authenticate as admin:**
+- HTTP Header: `x-admin-key: TIME_ADMIN_2025`
+- Or login as user with `role: 'owner'` or `role: 'admin'`
+- Or user with `id: 'admin'`
+
+**Admin Benefits:**
+- 0% trading fees (calculateTradeFee returns 0)
+- Unlimited bots (no bot limit)
+- Unlimited capital (no capital limit)
+- Unlimited trades per month
+- Access to ALL features regardless of tier
+- Full TIMEBEUNUS dashboard access
+
+### 💰 Subscription Tier Access
+
+| Tier | Price | Bots | Capital | Monthly Trades |
+|------|-------|------|---------|----------------|
+| **FREE** | $0 | 3 (paper) | $0 | 0 |
+| **STARTER** | $24.99/mo | 1 | $10,000 | 50 |
+| **PRO** | $79/mo | 5 | $100,000 | 500 |
+| **UNLIMITED** | $149/mo | ∞ | ∞ | ∞ |
+| **ENTERPRISE** | $499/mo | ∞ | ∞ | ∞ |
+
+### Feature Access Matrix
+
+| Feature | FREE | STARTER | PRO | UNLIMITED | ENTERPRISE |
+|---------|------|---------|-----|-----------|------------|
+| Live Trading | ❌ | ✅ | ✅ | ✅ | ✅ |
+| AutoPilot | ❌ | ❌ | ✅ | ✅ | ✅ |
+| Tax Harvesting | ❌ | ❌ | ✅ | ✅ | ✅ |
+| Dynasty Trust | ❌ | ❌ | ❌ | ✅ | ✅ |
+| Family Legacy | ❌ | ❌ | ❌ | ✅ | ✅ |
+| White-Label | ❌ | ❌ | ❌ | ❌ | ✅ |
+| API Access | ❌ | ❌ | ❌ | ❌ | ✅ |
+
+### Files Modified
+
+| File | Changes |
+|------|---------|
+| `src/backend/middleware/tierAccess.ts` | Added owner bypass for all middleware |
+| `src/backend/routes/auth.ts` | Added admin key bypass authentication |
+| `src/backend/routes/timebeunus.ts` | Owner-only routes with admin key |
+
+---
+
+# Previous: v44.0.0 - REAL-TIME ACTIVITY FEED EDITION
 
 ## Session 2025-12-23 — Real-Time Bot Feedback + Plain English Mode
 

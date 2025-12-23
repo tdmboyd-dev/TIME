@@ -3,10 +3,18 @@
  *
  * Enforces subscription tier limits on routes.
  * Integrates with GiftAccessService for gifted access.
+ *
+ * OWNER BYPASS: Users with role 'owner' or 'admin' get unlimited access with 0% fees
  */
 
 import { Request, Response, NextFunction } from 'express';
 import { giftAccessService, SubscriptionTier, GiftableFeature } from '../services/GiftAccessService';
+
+// Check if user is owner/admin (0% fees, unlimited access)
+export function isOwnerOrAdmin(user: any): boolean {
+  if (!user) return false;
+  return user.role === 'owner' || user.role === 'admin' || user.id === 'admin';
+}
 
 // Feature to tier mapping
 const FEATURE_TIERS: Record<GiftableFeature, SubscriptionTier[]> = {
@@ -67,6 +75,7 @@ export function hasFeatureAccess(userId: string, feature: GiftableFeature, baseT
 
 /**
  * Middleware factory: Require minimum tier
+ * OWNER BYPASS: Admins/owners skip tier checks
  */
 export function requireTier(minTier: SubscriptionTier) {
   return (req: Request, res: Response, next: NextFunction) => {
@@ -77,6 +86,13 @@ export function requireTier(minTier: SubscriptionTier) {
         error: 'Authentication required',
         requiredTier: minTier,
       });
+    }
+
+    // OWNER BYPASS: Skip tier check for admins/owners
+    if (isOwnerOrAdmin(user)) {
+      (req as any).effectiveTier = 'ENTERPRISE';
+      (req as any).isOwner = true;
+      return next();
     }
 
     const userId = user.id || user.email;
@@ -103,6 +119,7 @@ export function requireTier(minTier: SubscriptionTier) {
 
 /**
  * Middleware factory: Require specific feature
+ * OWNER BYPASS: Admins/owners have all features
  */
 export function requireFeature(feature: GiftableFeature) {
   return (req: Request, res: Response, next: NextFunction) => {
@@ -113,6 +130,12 @@ export function requireFeature(feature: GiftableFeature) {
         error: 'Authentication required',
         requiredFeature: feature,
       });
+    }
+
+    // OWNER BYPASS: All features available
+    if (isOwnerOrAdmin(user)) {
+      (req as any).isOwner = true;
+      return next();
     }
 
     const userId = user.id || user.email;
@@ -139,12 +162,20 @@ export function requireFeature(feature: GiftableFeature) {
 
 /**
  * Middleware: Check bot limit
+ * OWNER BYPASS: Unlimited bots for admins/owners
  */
 export function checkBotLimit(req: Request, res: Response, next: NextFunction) {
   const user = (req as any).user;
 
   if (!user) {
     return res.status(401).json({ error: 'Authentication required' });
+  }
+
+  // OWNER BYPASS: Unlimited bots
+  if (isOwnerOrAdmin(user)) {
+    (req as any).botLimit = Infinity;
+    (req as any).isOwner = true;
+    return next();
   }
 
   const userId = user.id || user.email;
@@ -181,6 +212,7 @@ export function checkBotLimit(req: Request, res: Response, next: NextFunction) {
 
 /**
  * Middleware: Check capital limit
+ * OWNER BYPASS: Unlimited capital for admins/owners
  */
 export function checkCapitalLimit(amount: number) {
   return (req: Request, res: Response, next: NextFunction) => {
@@ -188,6 +220,12 @@ export function checkCapitalLimit(amount: number) {
 
     if (!user) {
       return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    // OWNER BYPASS: Unlimited capital
+    if (isOwnerOrAdmin(user)) {
+      (req as any).isOwner = true;
+      return next();
     }
 
     const userId = user.id || user.email;
@@ -221,12 +259,20 @@ export function checkCapitalLimit(amount: number) {
 
 /**
  * Middleware: Check trade limit
+ * OWNER BYPASS: Unlimited trades for admins/owners
  */
 export function checkTradeLimit(req: Request, res: Response, next: NextFunction) {
   const user = (req as any).user;
 
   if (!user) {
     return res.status(401).json({ error: 'Authentication required' });
+  }
+
+  // OWNER BYPASS: Unlimited trades
+  if (isOwnerOrAdmin(user)) {
+    (req as any).tradesRemaining = Infinity;
+    (req as any).isOwner = true;
+    return next();
   }
 
   const userId = user.id || user.email;
@@ -259,8 +305,14 @@ export function checkTradeLimit(req: Request, res: Response, next: NextFunction)
 
 /**
  * Middleware: Calculate per-trade fee
+ * OWNER BYPASS: 0% fees for admins/owners
  */
-export function calculateTradeFee(tradeValue: number): { fee: number; type: 'flat' | 'percent' } {
+export function calculateTradeFee(tradeValue: number, user?: any): { fee: number; type: 'flat' | 'percent' | 'owner' } {
+  // OWNER BYPASS: 0% fees
+  if (user && isOwnerOrAdmin(user)) {
+    return { fee: 0, type: 'owner' };
+  }
+
   const flatFee = giftAccessService.pricing.perTradeFee;
   const percentFee = tradeValue * giftAccessService.pricing.perTradePercent;
 

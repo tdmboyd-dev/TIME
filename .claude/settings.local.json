@@ -147,7 +147,9 @@
       "Bash(git push)",
       "Bash(npm test:*)",
       "Bash(dir \"C:\\\\Users\\\\Timeb\\\\OneDrive\\\\TIME\\\\backend\\\\src\" /b)",
-      "Bash(npx vercel --prod)"
+      "Bash(npx vercel --prod)",
+      "Bash(fly deploy:*)",
+      "Bash(flyctl deploy:*)"
     ]
   }
 }

@@ -5,20 +5,100 @@
 
 ---
 
-## 🔐 LATEST UPDATES (2025-12-23) - REAL-TIME ACTIVITY FEED EDITION (v44.0.0)
+## 🔐 LATEST UPDATES (2025-12-23) - ADMIN & TIER ACCESS EDITION (v45.0.0)
 
-### Session Summary — Real-Time Bot Feedback + Plain English Mode
+### Session Summary — Master Admin + Tier Access Controls
 
 | Feature | Status | Details |
 |---------|--------|---------|
+| Master Admin Bypass | ✅ DEPLOYED | Owner/admin gets UNLIMITED access + 0% fees |
+| Tier Access Middleware | ✅ DEPLOYED | All routes enforce tier limits |
+| Bot/Capital/Trade Limits | ✅ DEPLOYED | Per-tier limits enforced in middleware |
+| Admin Key Auth | ✅ DEPLOYED | x-admin-key: TIME_ADMIN_2025 for owner access |
 | Real-Time Activity Log | ✅ DEPLOYED | Live feed showing all bot actions with timestamps |
 | Plain English Explanations | ✅ DEPLOYED | Every mode and toggle explained in simple terms |
-| TIMEBEUNUS Destroyer Logo | ✅ DEPLOYED | "Fang Singularity" logo with mode-based colors |
-| Premium TIME Logo | ✅ DEPLOYED | "Temporal Pulse Mark" - cleaner, professional |
-| Discord Marketing | ✅ WORKING | Webhook posts tested and working |
-| Telegram Marketing | ✅ WORKING | Bot posts to @TimeBeyondUs channel |
-| All 28 Tests | ✅ PASSING | Full test suite passes |
-| Frontend Build | ✅ PASSING | Compiles without errors |
+| All Builds | ✅ PASSING | Frontend + Backend compile without errors |
+
+### 👑 MASTER ADMIN ACCESS
+
+**Admin Key:** `TIME_ADMIN_2025` (or env `ADMIN_API_KEY`)
+
+**How to authenticate as admin:**
+- HTTP Header: `x-admin-key: TIME_ADMIN_2025`
+- Or login as user with `role: 'owner'` or `role: 'admin'`
+- Or user with `id: 'admin'`
+
+**Admin Benefits:**
+- 0% trading fees (calculateTradeFee returns 0)
+- Unlimited bots (no bot limit)
+- Unlimited capital (no capital limit)
+- Unlimited trades per month
+- Access to ALL features regardless of tier
+- Full TIMEBEUNUS dashboard access
+
+---
+
+## 💰 SUBSCRIPTION TIER ACCESS
+
+### Tier Comparison Table
+
+| Tier | Price | Bots | Capital | Monthly Trades | Key Features |
+|------|-------|------|---------|----------------|--------------|
+| **FREE** | $0 | 3 (paper only) | $0 | 0 | Paper trading, basic charts, community bots |
+| **STARTER** | $24.99/mo | 1 | $10,000 | 50 | Live trading, basic alerts, email support |
+| **PRO** | $79/mo | 5 | $100,000 | 500 | Tax harvesting, advanced charts, priority support |
+| **UNLIMITED** | $149/mo | ∞ | ∞ | ∞ | Dynasty Trust, Family Legacy AI, AutoPilot |
+| **ENTERPRISE** | $499/mo | ∞ | ∞ | ∞ | White-label, API access, custom strategies |
+
+### Feature Access by Tier
+
+| Feature | FREE | STARTER | PRO | UNLIMITED | ENTERPRISE |
+|---------|------|---------|-----|-----------|------------|
+| Paper Trading | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Basic Charts | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Live Trading | ❌ | ✅ | ✅ | ✅ | ✅ |
+| Robo Advisor | ❌ | ✅ | ✅ | ✅ | ✅ |
+| Advanced Charts | ❌ | ❌ | ✅ | ✅ | ✅ |
+| AutoPilot | ❌ | ❌ | ✅ | ✅ | ✅ |
+| Tax Harvesting | ❌ | ❌ | ✅ | ✅ | ✅ |
+| Bot Marketplace | ❌ | ❌ | ✅ | ✅ | ✅ |
+| Premium Data | ❌ | ❌ | ✅ | ✅ | ✅ |
+| Dynasty Trust | ❌ | ❌ | ❌ | ✅ | ✅ |
+| Family Legacy AI | ❌ | ❌ | ❌ | ✅ | ✅ |
+| White-Label | ❌ | ❌ | ❌ | ❌ | ✅ |
+| API Access | ❌ | ❌ | ❌ | ❌ | ✅ |
+
+### Transaction Fees
+
+| Fee Type | Amount | Notes |
+|----------|--------|-------|
+| Per-trade fee | $0.99 or 0.2% | Whichever is greater |
+| Crypto spread | 0.5% | Built into crypto prices |
+| Performance fee | 15% | On profits only |
+| AUM fee | 0.5% | Annual |
+| Marketplace cut | 25% | Bot rental revenue share |
+
+**OWNER BYPASS:** Admin/Owner users pay 0% on all fees.
+
+---
+
+## 🔒 TIER ACCESS MIDDLEWARE FILES
+
+- `src/backend/middleware/tierAccess.ts` - Main tier enforcement
+  - `requireTier(tier)` - Require minimum tier
+  - `requireFeature(feature)` - Require specific feature
+  - `checkBotLimit` - Enforce bot limits
+  - `checkCapitalLimit(amount)` - Enforce capital limits
+  - `checkTradeLimit` - Enforce monthly trade limits
+  - `calculateTradeFee(value, user)` - Calculate fees (0 for owners)
+  - `isOwnerOrAdmin(user)` - Check if user is owner
+
+- `src/backend/routes/auth.ts` - Auth middleware with admin key bypass
+- `src/backend/routes/timebeunus.ts` - Owner-only routes
+
+---
+
+## 🔐 PREVIOUS: REAL-TIME ACTIVITY FEED EDITION (v44.0.0)
 
 ### Critical Files Modified
 - `frontend/src/app/timebeunus/page.tsx` - Added real-time activity log + plain English
