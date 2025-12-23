@@ -126,14 +126,69 @@ interface BotSuggestion {
   confidence: number;
 }
 
+// ============================================
+// DOMINANCE MODES - Plain English Explanations
+// ============================================
 const dominanceModes = [
-  { id: 'stealth' as DominanceMode, name: 'Stealth', description: 'Quiet accumulation', color: 'from-slate-500 to-slate-600', aggressiveness: 30 },
-  { id: 'defensive' as DominanceMode, name: 'Defensive', description: 'Capital preservation', color: 'from-blue-500 to-blue-600', aggressiveness: 40 },
-  { id: 'balanced' as DominanceMode, name: 'Balanced', description: 'Standard operation', color: 'from-green-500 to-green-600', aggressiveness: 70 },
-  { id: 'aggressive' as DominanceMode, name: 'Aggressive', description: 'Maximum alpha extraction', color: 'from-orange-500 to-orange-600', aggressiveness: 85 },
-  { id: 'competition' as DominanceMode, name: 'Competition', description: 'Beat the benchmarks', color: 'from-purple-500 to-purple-600', aggressiveness: 80 },
-  { id: 'destroy' as DominanceMode, name: 'DESTROY', description: 'Full power - crush everything', color: 'from-red-500 to-red-600', aggressiveness: 100 },
+  {
+    id: 'stealth' as DominanceMode,
+    name: 'Stealth',
+    description: 'Quiet accumulation',
+    plainEnglish: 'Bot trades slowly and quietly. Small positions, low visibility. Good for accumulating without moving the market.',
+    color: 'from-slate-500 to-slate-600',
+    aggressiveness: 30
+  },
+  {
+    id: 'defensive' as DominanceMode,
+    name: 'Defensive',
+    description: 'Capital preservation',
+    plainEnglish: 'Bot focuses on protecting your money. Uses tight stop-losses, avoids risky trades. Best when markets are uncertain.',
+    color: 'from-blue-500 to-blue-600',
+    aggressiveness: 40
+  },
+  {
+    id: 'balanced' as DominanceMode,
+    name: 'Balanced',
+    description: 'Standard operation',
+    plainEnglish: 'Normal trading mode. Bot takes moderate risks for moderate gains. Best for everyday operation.',
+    color: 'from-green-500 to-green-600',
+    aggressiveness: 70
+  },
+  {
+    id: 'aggressive' as DominanceMode,
+    name: 'Aggressive',
+    description: 'Maximum alpha extraction',
+    plainEnglish: 'Bot hunts for big wins. Takes larger positions, chases momentum. Higher risk, higher potential reward.',
+    color: 'from-orange-500 to-orange-600',
+    aggressiveness: 85
+  },
+  {
+    id: 'competition' as DominanceMode,
+    name: 'Competition',
+    description: 'Beat the benchmarks',
+    plainEnglish: 'Bot actively tries to outperform other trading bots and hedge funds. Analyzes competitor strategies.',
+    color: 'from-purple-500 to-purple-600',
+    aggressiveness: 80
+  },
+  {
+    id: 'destroy' as DominanceMode,
+    name: 'DESTROY',
+    description: 'Full power - crush everything',
+    plainEnglish: 'Maximum aggression. Bot uses ALL available capital and strategies. Only use when you are confident in market direction!',
+    color: 'from-red-500 to-red-600',
+    aggressiveness: 100
+  },
 ];
+
+// Activity log entry type
+interface ActivityLogEntry {
+  id: string;
+  timestamp: Date;
+  type: 'trade' | 'mode' | 'automation' | 'system' | 'signal' | 'error';
+  action: string;
+  details: string;
+  status: 'success' | 'pending' | 'error';
+}
 
 export default function TIMEBEUNUSPage() {
   const [isActive, setIsActive] = useState(false);
@@ -179,6 +234,22 @@ export default function TIMEBEUNUSPage() {
   const [isExecutingTrade, setIsExecutingTrade] = useState(false);
   const [ownerPanelTab, setOwnerPanelTab] = useState<'trade' | 'positions' | 'automation' | 'yield' | 'suggestions'>('trade');
   const [platformFees, setPlatformFees] = useState({ totalFeesCollected: 0, moneyMachineFee: 0.1, dropbotFee: 0.1 });
+
+  // Real-time activity log
+  const [activityLog, setActivityLog] = useState<ActivityLogEntry[]>([]);
+
+  // Helper to add activity log entry
+  const addActivityLog = (type: ActivityLogEntry['type'], action: string, details: string, status: ActivityLogEntry['status'] = 'success') => {
+    const entry: ActivityLogEntry = {
+      id: `log_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      timestamp: new Date(),
+      type,
+      action,
+      details,
+      status,
+    };
+    setActivityLog(prev => [entry, ...prev].slice(0, 50)); // Keep last 50 entries
+  };
 
   // Fetch real trading signals from strategy engine
   const fetchSignals = async () => {
@@ -344,6 +415,7 @@ export default function TIMEBEUNUSPage() {
   // Execute manual trade
   const executeManualTrade = async () => {
     setIsExecutingTrade(true);
+    addActivityLog('trade', 'Executing Trade', `Placing ${manualTradeAction.toUpperCase()} order for ${manualTradeQuantity} ${manualTradeSymbol}...`, 'pending');
     try {
       const response = await fetch(`${API_BASE}/timebeunus/trade`, {
         method: 'POST',
@@ -357,13 +429,16 @@ export default function TIMEBEUNUSPage() {
       });
       const data = await response.json();
       if (data.success) {
+        addActivityLog('trade', 'Trade Filled', `Successfully ${manualTradeAction === 'buy' ? 'bought' : 'sold'} ${manualTradeQuantity} shares of ${manualTradeSymbol} at market price`, 'success');
         setNotification({ type: 'success', message: `Trade executed: ${manualTradeAction.toUpperCase()} ${manualTradeQuantity} ${manualTradeSymbol}` });
         setShowManualTradeModal(false);
         fetchOwnerDashboard();
       } else {
+        addActivityLog('error', 'Trade Rejected', data.error || 'Order was not filled', 'error');
         setNotification({ type: 'error', message: data.error || 'Trade failed' });
       }
     } catch (err) {
+      addActivityLog('error', 'Trade Failed', 'Could not connect to broker', 'error');
       setNotification({ type: 'error', message: 'Failed to execute trade' });
     }
     setIsExecutingTrade(false);
@@ -372,6 +447,7 @@ export default function TIMEBEUNUSPage() {
 
   // Close all positions
   const closeAllPositions = async () => {
+    addActivityLog('trade', 'Closing All Positions', `Liquidating ${ownerPositions.length} open positions...`, 'pending');
     try {
       const response = await fetch(`${API_BASE}/timebeunus/trade/close-all`, {
         method: 'POST',
@@ -379,12 +455,15 @@ export default function TIMEBEUNUSPage() {
       });
       const data = await response.json();
       if (data.success) {
+        addActivityLog('trade', 'Positions Closed', 'All positions have been liquidated at market price', 'success');
         setNotification({ type: 'success', message: 'All positions closed!' });
         fetchOwnerDashboard();
       } else {
+        addActivityLog('error', 'Close Failed', data.error || 'Could not close all positions', 'error');
         setNotification({ type: 'error', message: data.error || 'Failed to close positions' });
       }
     } catch (err) {
+      addActivityLog('error', 'Close Failed', 'Could not connect to broker', 'error');
       setNotification({ type: 'error', message: 'Failed to close positions' });
     }
     setTimeout(() => setNotification(null), 4000);
@@ -393,7 +472,20 @@ export default function TIMEBEUNUSPage() {
   // Toggle automation setting
   const toggleAutomation = async (key: keyof AutomationToggles) => {
     const newValue = !automationToggles[key];
+    const automationLabels: Record<string, { name: string; onDesc: string; offDesc: string }> = {
+      autoTrade: { name: 'Auto Trade', onDesc: 'Bot will automatically execute trades when it finds good opportunities', offDesc: 'Bot will only show signals, you must manually approve trades' },
+      autoInvest: { name: 'Auto Invest', onDesc: 'Profits will be automatically reinvested to grow your portfolio', offDesc: 'Profits will stay as cash until you manually invest them' },
+      autoYield: { name: 'Auto Yield', onDesc: 'Idle funds will be automatically deposited into yield-generating protocols', offDesc: 'Funds will stay in your wallet, not earning yield' },
+      autoRebalance: { name: 'Auto Rebalance', onDesc: 'Portfolio will automatically rebalance to maintain target allocations', offDesc: 'Portfolio allocations may drift from targets' },
+      autoHedge: { name: 'Auto Hedge', onDesc: 'Bot will automatically open hedges during drawdowns to protect capital', offDesc: 'No automatic hedging, positions remain unprotected' },
+      autoScale: { name: 'Auto Scale', onDesc: 'Position sizes will automatically adjust based on account growth', offDesc: 'Position sizes stay fixed regardless of account size' },
+      autoTax: { name: 'Auto Tax', onDesc: 'Bot will harvest tax losses to reduce your tax bill', offDesc: 'No automatic tax-loss harvesting' },
+      autoCompound: { name: 'Auto Compound', onDesc: 'Yields will be automatically reinvested to earn compound interest', offDesc: 'Yields will not be reinvested automatically' },
+    };
+
+    const label = automationLabels[key];
     setAutomationToggles(prev => ({ ...prev, [key]: newValue }));
+    addActivityLog('automation', `${label?.name} ${newValue ? 'Enabled' : 'Disabled'}`, newValue ? label?.onDesc : label?.offDesc, 'pending');
 
     try {
       await fetch(`${API_BASE}/timebeunus/automation/${key}`, {
@@ -401,10 +493,12 @@ export default function TIMEBEUNUSPage() {
         headers: getAdminHeaders(),
         body: JSON.stringify({ value: newValue }),
       });
-      setNotification({ type: 'success', message: `${key} ${newValue ? 'enabled' : 'disabled'}` });
+      addActivityLog('automation', `${label?.name} Updated`, newValue ? label?.onDesc : label?.offDesc, 'success');
+      setNotification({ type: 'success', message: `${label?.name} ${newValue ? 'enabled' : 'disabled'}` });
     } catch (err) {
       // Revert on error
       setAutomationToggles(prev => ({ ...prev, [key]: !newValue }));
+      addActivityLog('error', 'Setting Failed', `Could not update ${label?.name} setting`, 'error');
       setNotification({ type: 'error', message: 'Failed to update setting' });
     }
     setTimeout(() => setNotification(null), 2000);
@@ -454,6 +548,7 @@ export default function TIMEBEUNUSPage() {
   useEffect(() => {
     const loadData = async () => {
       setIsLoading(true);
+      addActivityLog('system', 'Loading Dashboard', 'Connecting to trading servers and fetching real-time data...', 'pending');
       await Promise.all([
         fetchTimebeunusStatus(), // Get current auto-trade status
         fetchSignals(),
@@ -462,6 +557,7 @@ export default function TIMEBEUNUSPage() {
         fetchStrategies(),
         fetchOwnerDashboard(), // Owner trading panel data
       ]);
+      addActivityLog('system', 'Dashboard Ready', 'All systems online. TIMEBEUNUS is ready for action.', 'success');
       setIsLoading(false);
     };
 
@@ -512,6 +608,7 @@ export default function TIMEBEUNUSPage() {
   // Start TIMEBEUNUS auto-trading
   const handleStart = async () => {
     setIsStarting(true);
+    addActivityLog('system', 'Starting Bot', `Initializing TIMEBEUNUS in ${dominanceMode.toUpperCase()} mode...`, 'pending');
     try {
       const response = await fetch(`${API_BASE}/trading/timebeunus/start`, {
         method: 'POST',
@@ -521,11 +618,14 @@ export default function TIMEBEUNUSPage() {
       const data = await response.json();
       if (data.success) {
         setIsActive(true);
+        addActivityLog('system', 'Bot Started', `TIMEBEUNUS is now LIVE in ${dominanceMode.toUpperCase()} mode. Scanning markets for opportunities...`, 'success');
         setNotification({ type: 'success', message: 'TIMEBEUNUS auto-trading ACTIVATED!' });
       } else {
+        addActivityLog('error', 'Start Failed', data.error || 'Failed to start bot', 'error');
         setNotification({ type: 'error', message: data.error || 'Failed to start' });
       }
     } catch (err) {
+      addActivityLog('error', 'Connection Error', 'Could not connect to trading server', 'error');
       setNotification({ type: 'error', message: 'Failed to connect to server' });
     }
     setIsStarting(false);
@@ -533,6 +633,7 @@ export default function TIMEBEUNUSPage() {
 
   // Pause TIMEBEUNUS
   const handlePause = async () => {
+    addActivityLog('system', 'Pausing Bot', 'Stopping new trades, keeping existing positions open...', 'pending');
     try {
       const response = await fetch(`${API_BASE}/trading/timebeunus/pause`, {
         method: 'POST',
@@ -541,17 +642,21 @@ export default function TIMEBEUNUSPage() {
       const data = await response.json();
       if (data.success) {
         setIsActive(false);
+        addActivityLog('system', 'Bot Paused', 'TIMEBEUNUS is paused. No new trades will be executed. Your open positions remain active.', 'success');
         setNotification({ type: 'info', message: 'TIMEBEUNUS paused. Positions remain open.' });
       } else {
+        addActivityLog('error', 'Pause Failed', data.error || 'Could not pause bot', 'error');
         setNotification({ type: 'error', message: data.error });
       }
     } catch (err) {
+      addActivityLog('error', 'Connection Error', 'Could not connect to server', 'error');
       setNotification({ type: 'error', message: 'Failed to pause' });
     }
   };
 
   // Resume TIMEBEUNUS
   const handleResume = async () => {
+    addActivityLog('system', 'Resuming Bot', 'Reactivating trading engine...', 'pending');
     try {
       const response = await fetch(`${API_BASE}/trading/timebeunus/resume`, {
         method: 'POST',
@@ -560,11 +665,14 @@ export default function TIMEBEUNUSPage() {
       const data = await response.json();
       if (data.success) {
         setIsActive(true);
+        addActivityLog('system', 'Bot Resumed', `TIMEBEUNUS is back online in ${dominanceMode.toUpperCase()} mode. Scanning for new opportunities...`, 'success');
         setNotification({ type: 'success', message: 'TIMEBEUNUS resumed!' });
       } else {
+        addActivityLog('error', 'Resume Failed', data.error || 'Could not resume bot', 'error');
         setNotification({ type: 'error', message: data.error });
       }
     } catch (err) {
+      addActivityLog('error', 'Connection Error', 'Could not connect to server', 'error');
       setNotification({ type: 'error', message: 'Failed to resume' });
     }
   };
@@ -579,8 +687,11 @@ export default function TIMEBEUNUSPage() {
   };
 
   const handleModeChange = async (mode: DominanceMode) => {
+    const modeInfo = dominanceModes.find(m => m.id === mode);
     setDominanceMode(mode);
     setShowModeModal(false);
+
+    addActivityLog('mode', 'Mode Changed', `Switching to ${mode.toUpperCase()} mode: ${modeInfo?.plainEnglish || modeInfo?.description}`, 'pending');
 
     // Call API to change mode
     try {
@@ -592,10 +703,11 @@ export default function TIMEBEUNUSPage() {
       });
       const data = await response.json();
       if (data.success) {
+        addActivityLog('mode', 'Mode Active', `Now operating in ${mode.toUpperCase()} mode. ${modeInfo?.plainEnglish}`, 'success');
         setNotification({ type: 'success', message: `Dominance mode changed to ${mode.toUpperCase()}` });
       }
     } catch (err) {
-      // Error handled - notification still shows
+      addActivityLog('error', 'Mode Change Failed', 'Could not change mode on server, but local UI updated', 'error');
     }
     setNotification({ type: 'success', message: `Dominance mode changed to ${mode.toUpperCase()}` });
     setTimeout(() => setNotification(null), 4000);
@@ -1040,37 +1152,50 @@ export default function TIMEBEUNUSPage() {
 
           {/* Automation Tab */}
           {ownerPanelTab === 'automation' && (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {Object.entries(automationToggles).map(([key, value]) => {
-                const labels: Record<string, { name: string; desc: string }> = {
-                  autoTrade: { name: 'Auto Trade', desc: 'Execute signals automatically' },
-                  autoInvest: { name: 'Auto Invest', desc: 'Reinvest profits' },
-                  autoYield: { name: 'Auto Yield', desc: 'Farm yields in DeFi' },
-                  autoRebalance: { name: 'Auto Rebalance', desc: 'Rebalance portfolio' },
-                  autoHedge: { name: 'Auto Hedge', desc: 'Hedge on drawdown' },
-                  autoScale: { name: 'Auto Scale', desc: 'Scale positions' },
-                  autoTax: { name: 'Auto Tax', desc: 'Tax-loss harvesting' },
-                  autoCompound: { name: 'Auto Compound', desc: 'Compound yields' },
-                };
-                return (
-                  <button
-                    key={key}
-                    onClick={() => toggleAutomation(key as keyof AutomationToggles)}
-                    className={clsx(
-                      'p-4 rounded-lg border transition-all text-left',
-                      value ? 'bg-green-500/20 border-green-500/50' : 'bg-slate-800/50 border-slate-700'
-                    )}
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <span className={clsx('font-medium text-sm', value ? 'text-green-400' : 'text-slate-400')}>
-                        {labels[key]?.name || key}
-                      </span>
-                      {value ? <ToggleRight className="w-5 h-5 text-green-400" /> : <ToggleLeft className="w-5 h-5 text-slate-500" />}
-                    </div>
-                    <p className="text-xs text-slate-500">{labels[key]?.desc}</p>
-                  </button>
-                );
-              })}
+            <div>
+              <div className="mb-4 p-3 bg-slate-800/50 rounded-lg border border-slate-700">
+                <div className="flex items-center gap-2 mb-1">
+                  <Info className="w-4 h-4 text-blue-400" />
+                  <span className="text-sm font-medium text-white">What do these toggles do?</span>
+                </div>
+                <p className="text-sm text-slate-400">
+                  Each toggle controls a different automation feature. When ON (green), the bot will automatically perform that action. When OFF (gray), you must do it manually.
+                </p>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {Object.entries(automationToggles).map(([key, value]) => {
+                  const labels: Record<string, { name: string; desc: string; onText: string; offText: string }> = {
+                    autoTrade: { name: 'Auto Trade', desc: 'Execute signals automatically', onText: 'Bot executes trades for you', offText: 'You must approve each trade' },
+                    autoInvest: { name: 'Auto Invest', desc: 'Reinvest profits', onText: 'Profits get reinvested automatically', offText: 'Profits stay as cash' },
+                    autoYield: { name: 'Auto Yield', desc: 'Farm yields in DeFi', onText: 'Idle cash earns yield in DeFi', offText: 'Cash sits idle in wallet' },
+                    autoRebalance: { name: 'Auto Rebalance', desc: 'Rebalance portfolio', onText: 'Portfolio stays balanced automatically', offText: 'Portfolio may drift from targets' },
+                    autoHedge: { name: 'Auto Hedge', desc: 'Hedge on drawdown', onText: 'Bot protects you in downturns', offText: 'No automatic protection' },
+                    autoScale: { name: 'Auto Scale', desc: 'Scale positions', onText: 'Position sizes grow with account', offText: 'Fixed position sizes' },
+                    autoTax: { name: 'Auto Tax', desc: 'Tax-loss harvesting', onText: 'Bot reduces your tax bill', offText: 'No tax optimization' },
+                    autoCompound: { name: 'Auto Compound', desc: 'Compound yields', onText: 'Yields get reinvested to earn more', offText: 'Yields are not reinvested' },
+                  };
+                  return (
+                    <button
+                      key={key}
+                      onClick={() => toggleAutomation(key as keyof AutomationToggles)}
+                      className={clsx(
+                        'p-4 rounded-lg border transition-all text-left',
+                        value ? 'bg-green-500/20 border-green-500/50' : 'bg-slate-800/50 border-slate-700'
+                      )}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <span className={clsx('font-medium text-sm', value ? 'text-green-400' : 'text-slate-400')}>
+                          {labels[key]?.name || key}
+                        </span>
+                        {value ? <ToggleRight className="w-5 h-5 text-green-400" /> : <ToggleLeft className="w-5 h-5 text-slate-500" />}
+                      </div>
+                      <p className={clsx('text-xs', value ? 'text-green-300' : 'text-slate-500')}>
+                        {value ? labels[key]?.onText : labels[key]?.offText}
+                      </p>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           )}
 
@@ -1139,6 +1264,95 @@ export default function TIMEBEUNUSPage() {
         </div>
       </div>
 
+      {/* ============================================================ */}
+      {/* REAL-TIME ACTIVITY LOG */}
+      {/* ============================================================ */}
+      <div className="card p-5 border border-cyan-500/30 bg-gradient-to-br from-cyan-900/10 to-blue-900/10">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400 flex items-center gap-2">
+            <Activity className="w-5 h-5 text-cyan-400" />
+            Live Activity Feed
+            <span className="text-xs px-2 py-1 bg-cyan-500/20 text-cyan-400 rounded-full ml-2">REAL-TIME</span>
+          </h3>
+          <div className="flex items-center gap-2">
+            <span className="flex items-center gap-1 text-xs text-slate-400">
+              <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+              {activityLog.length} events
+            </span>
+            <button
+              onClick={() => setActivityLog([])}
+              className="text-xs px-2 py-1 bg-slate-700 hover:bg-slate-600 rounded text-slate-400"
+            >
+              Clear
+            </button>
+          </div>
+        </div>
+
+        {/* Current Mode Explanation */}
+        <div className="mb-4 p-3 bg-slate-800/50 rounded-lg border border-slate-700">
+          <div className="flex items-center gap-2 mb-1">
+            <Info className="w-4 h-4 text-cyan-400" />
+            <span className="text-sm font-medium text-white">Current Mode: {dominanceMode.toUpperCase()}</span>
+          </div>
+          <p className="text-sm text-slate-400">
+            {dominanceModes.find(m => m.id === dominanceMode)?.plainEnglish || 'Select a mode to see what the bot will do.'}
+          </p>
+        </div>
+
+        {/* Activity Log */}
+        <div className="space-y-2 max-h-[300px] overflow-y-auto">
+          {activityLog.length === 0 ? (
+            <div className="text-center py-8 text-slate-500">
+              <Clock className="w-8 h-8 mx-auto mb-2 opacity-50" />
+              <p className="text-sm">No activity yet. Start the bot or execute a trade to see real-time updates.</p>
+            </div>
+          ) : (
+            activityLog.map(entry => (
+              <div
+                key={entry.id}
+                className={clsx(
+                  'flex items-start gap-3 p-3 rounded-lg border transition-all',
+                  entry.status === 'success' && 'bg-green-500/10 border-green-500/30',
+                  entry.status === 'pending' && 'bg-yellow-500/10 border-yellow-500/30 animate-pulse',
+                  entry.status === 'error' && 'bg-red-500/10 border-red-500/30'
+                )}
+              >
+                <div className={clsx(
+                  'w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0',
+                  entry.type === 'trade' && 'bg-green-500/20',
+                  entry.type === 'mode' && 'bg-purple-500/20',
+                  entry.type === 'automation' && 'bg-blue-500/20',
+                  entry.type === 'system' && 'bg-cyan-500/20',
+                  entry.type === 'signal' && 'bg-yellow-500/20',
+                  entry.type === 'error' && 'bg-red-500/20'
+                )}>
+                  {entry.type === 'trade' && <DollarSign className="w-4 h-4 text-green-400" />}
+                  {entry.type === 'mode' && <Flame className="w-4 h-4 text-purple-400" />}
+                  {entry.type === 'automation' && <Settings className="w-4 h-4 text-blue-400" />}
+                  {entry.type === 'system' && <Zap className="w-4 h-4 text-cyan-400" />}
+                  {entry.type === 'signal' && <Target className="w-4 h-4 text-yellow-400" />}
+                  {entry.type === 'error' && <AlertTriangle className="w-4 h-4 text-red-400" />}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-medium text-white text-sm">{entry.action}</span>
+                    <span className="text-xs text-slate-500">
+                      {entry.timestamp.toLocaleTimeString()}
+                    </span>
+                  </div>
+                  <p className="text-sm text-slate-400">{entry.details}</p>
+                </div>
+                <div className="flex-shrink-0">
+                  {entry.status === 'success' && <CheckCircle className="w-5 h-5 text-green-400" />}
+                  {entry.status === 'pending' && <Loader2 className="w-5 h-5 text-yellow-400 animate-spin" />}
+                  {entry.status === 'error' && <XCircle className="w-5 h-5 text-red-400" />}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+
       {/* Mode Modal */}
       {showModeModal && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
@@ -1152,9 +1366,10 @@ export default function TIMEBEUNUSPage() {
                 <button key={mode.id} onClick={() => handleModeChange(mode.id)} className={clsx('p-4 rounded-xl border transition-all text-left', dominanceMode === mode.id ? `bg-gradient-to-br ${mode.color} border-transparent` : 'bg-slate-800/50 border-slate-700 hover:border-slate-600')}>
                   <div className="flex items-center justify-between mb-2">
                     <span className={clsx('font-bold', dominanceMode === mode.id ? 'text-white' : 'text-slate-300')}>{mode.name}</span>
-                    <span className={clsx('text-xs', dominanceMode === mode.id ? 'text-white/80' : 'text-slate-500')}>{mode.aggressiveness}%</span>
+                    <span className={clsx('text-xs px-2 py-0.5 rounded', dominanceMode === mode.id ? 'bg-white/20 text-white' : 'bg-slate-700 text-slate-400')}>{mode.aggressiveness}% Power</span>
                   </div>
-                  <p className={clsx('text-sm', dominanceMode === mode.id ? 'text-white/80' : 'text-slate-500')}>{mode.description}</p>
+                  <p className={clsx('text-xs mb-2', dominanceMode === mode.id ? 'text-white/60' : 'text-slate-500')}>{mode.description}</p>
+                  <p className={clsx('text-sm', dominanceMode === mode.id ? 'text-white/90' : 'text-slate-400')}>{mode.plainEnglish}</p>
                 </button>
               ))}
             </div>
