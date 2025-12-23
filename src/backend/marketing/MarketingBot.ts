@@ -108,6 +108,66 @@ interface AIContentRequest {
   platforms: string[];
 }
 
+// Auto-post configuration
+export interface AutoPostConfig {
+  enabled: boolean;
+  intervalMinutes: number;           // How often to post (e.g., 60 = every hour)
+  platforms: string[];               // Which platforms to auto-post to
+  contentTypes: ContentTemplate['type'][]; // What types of content to generate
+  maxPostsPerDay: number;            // Maximum posts per day (to avoid spam)
+  quietHoursStart?: number;          // Hour to stop posting (0-23)
+  quietHoursEnd?: number;            // Hour to resume posting (0-23)
+  includeEmojis: boolean;
+  tone: 'professional' | 'casual' | 'exciting' | 'educational' | 'urgent';
+}
+
+// Pre-built content for auto-posting
+const AUTO_POST_CONTENT_LIBRARY = [
+  // Trading Tips
+  { type: 'tip', content: "Never invest more than you can afford to lose. Start small, learn the patterns, then scale up." },
+  { type: 'tip', content: "The best time to buy is when everyone else is scared. The best time to sell is when everyone else is greedy." },
+  { type: 'tip', content: "Diversification isn't just about different stocks - it's about different asset classes, sectors, and strategies." },
+  { type: 'tip', content: "Set stop-losses BEFORE you enter a trade. Emotions make terrible financial advisors." },
+  { type: 'tip', content: "Paper trading isn't just for beginners. Even pros use it to test new strategies." },
+  { type: 'tip', content: "The market can stay irrational longer than you can stay solvent. Always have a risk management plan." },
+  { type: 'tip', content: "Time in the market beats timing the market. Consistent investing outperforms lucky guesses." },
+  { type: 'tip', content: "Your trading journal is your best teacher. Document every trade and review weekly." },
+  { type: 'tip', content: "Position sizing is more important than entry timing. Small positions survive mistakes." },
+  { type: 'tip', content: "NEWS moves markets short-term. FUNDAMENTALS move markets long-term. Trade accordingly." },
+
+  // Feature Highlights
+  { type: 'feature', content: "TIME's AI bots analyze 10,000+ data points per second to find profitable opportunities you'd miss." },
+  { type: 'feature', content: "Our Tax-Loss Harvesting bot has saved users an average of 23% on their tax bills. Automatically." },
+  { type: 'feature', content: "Copy the exact trades of our top-performing users with one click. No experience required." },
+  { type: 'feature', content: "24/7 automated trading while you sleep. Wake up to profits, not missed opportunities." },
+  { type: 'feature', content: "Real-time alerts straight to your phone. Never miss a market-moving event again." },
+  { type: 'feature', content: "Backtest any strategy against 10+ years of historical data before risking real money." },
+  { type: 'feature', content: "Multi-broker support: Alpaca, Binance, OANDA, Kraken - all in one dashboard." },
+  { type: 'feature', content: "Dynasty Trust AI: Build generational wealth with strategies that compound for decades." },
+
+  // Educational
+  { type: 'educational', content: "What is RSI? Relative Strength Index measures momentum. Over 70 = overbought, under 30 = oversold." },
+  { type: 'educational', content: "Dollar-Cost Averaging: Invest the same amount regularly, regardless of price. Simple but powerful." },
+  { type: 'educational', content: "Market Cap = Share Price x Shares Outstanding. It's the total value of a company." },
+  { type: 'educational', content: "P/E Ratio: Price divided by Earnings. Lower isn't always better - growth stocks have high P/Es." },
+  { type: 'educational', content: "Options 101: Calls = bet on up, Puts = bet on down. Time decay works against buyers." },
+  { type: 'educational', content: "What's a limit order? You set the price. What's a market order? You accept whatever price is available." },
+  { type: 'educational', content: "Volatility is measured by VIX. High VIX = fear in the market. Low VIX = complacency." },
+
+  // Engagement
+  { type: 'engagement', content: "What's your go-to strategy for volatile markets? Comment below!" },
+  { type: 'engagement', content: "Poll: Do you prefer day trading or long-term investing? Reply with your choice!" },
+  { type: 'engagement', content: "What was your first investment ever? We love hearing your stories!" },
+  { type: 'engagement', content: "If you could give one piece of advice to beginner traders, what would it be?" },
+  { type: 'engagement', content: "What's on your watchlist this week? Share your top picks!" },
+
+  // Promotions
+  { type: 'promotion', content: "Start trading with as little as $1. No minimums, no barriers. Just results." },
+  { type: 'promotion', content: "Free tier includes 3 AI bots, paper trading, and real-time alerts. No credit card required." },
+  { type: 'promotion', content: "PRO users get 22% more returns on average. Upgrade today and see the difference." },
+  { type: 'promotion', content: "Refer a friend, get $10 credit. They get 30 days free. Everyone wins!" },
+];
+
 // Marketing Bot Engine
 class MarketingBotEngine {
   private platforms: Map<string, PlatformConfig> = new Map();
@@ -116,9 +176,227 @@ class MarketingBotEngine {
   private campaigns: Map<string, MarketingCampaign> = new Map();
   private scheduledJobs: Map<string, NodeJS.Timeout> = new Map();
 
+  // Auto-posting state
+  private autoPostConfig: AutoPostConfig = {
+    enabled: false,
+    intervalMinutes: 120,  // Every 2 hours
+    platforms: ['twitter', 'linkedin', 'discord', 'telegram'],
+    contentTypes: ['tip', 'feature', 'educational', 'engagement'],
+    maxPostsPerDay: 12,
+    quietHoursStart: 23,   // No posts between 11 PM
+    quietHoursEnd: 7,      // and 7 AM
+    includeEmojis: true,
+    tone: 'casual',
+  };
+  private autoPostInterval: NodeJS.Timeout | null = null;
+  private postsToday: number = 0;
+  private lastPostDate: string = '';
+  private contentIndex: number = 0;
+
   constructor() {
     this.initializeDefaultTemplates();
     logger.info('Marketing Bot Engine initialized');
+  }
+
+  // ============== AUTO-POSTING ==============
+
+  /**
+   * Start automatic posting
+   */
+  startAutoPosting(config?: Partial<AutoPostConfig>): void {
+    if (config) {
+      this.autoPostConfig = { ...this.autoPostConfig, ...config };
+    }
+
+    this.autoPostConfig.enabled = true;
+
+    // Clear existing interval if any
+    if (this.autoPostInterval) {
+      clearInterval(this.autoPostInterval);
+    }
+
+    // Start the auto-post loop
+    this.autoPostInterval = setInterval(() => {
+      this.executeAutoPost();
+    }, this.autoPostConfig.intervalMinutes * 60 * 1000);
+
+    // Also execute immediately
+    this.executeAutoPost();
+
+    logger.info(`Auto-posting started: every ${this.autoPostConfig.intervalMinutes} minutes`);
+  }
+
+  /**
+   * Stop automatic posting
+   */
+  stopAutoPosting(): void {
+    this.autoPostConfig.enabled = false;
+
+    if (this.autoPostInterval) {
+      clearInterval(this.autoPostInterval);
+      this.autoPostInterval = null;
+    }
+
+    logger.info('Auto-posting stopped');
+  }
+
+  /**
+   * Get auto-post configuration
+   */
+  getAutoPostConfig(): AutoPostConfig {
+    return { ...this.autoPostConfig };
+  }
+
+  /**
+   * Update auto-post configuration
+   */
+  updateAutoPostConfig(config: Partial<AutoPostConfig>): AutoPostConfig {
+    this.autoPostConfig = { ...this.autoPostConfig, ...config };
+
+    // If enabled and interval changed, restart
+    if (this.autoPostConfig.enabled && config.intervalMinutes) {
+      this.startAutoPosting();
+    }
+
+    return this.autoPostConfig;
+  }
+
+  /**
+   * Execute an auto-post
+   */
+  private async executeAutoPost(): Promise<void> {
+    // Check if enabled
+    if (!this.autoPostConfig.enabled) {
+      return;
+    }
+
+    // Check quiet hours
+    const hour = new Date().getHours();
+    if (this.autoPostConfig.quietHoursStart !== undefined &&
+        this.autoPostConfig.quietHoursEnd !== undefined) {
+      const inQuietHours = this.autoPostConfig.quietHoursStart > this.autoPostConfig.quietHoursEnd
+        ? (hour >= this.autoPostConfig.quietHoursStart || hour < this.autoPostConfig.quietHoursEnd)
+        : (hour >= this.autoPostConfig.quietHoursStart && hour < this.autoPostConfig.quietHoursEnd);
+
+      if (inQuietHours) {
+        logger.debug('Skipping auto-post: quiet hours');
+        return;
+      }
+    }
+
+    // Check daily limit
+    const today = new Date().toDateString();
+    if (this.lastPostDate !== today) {
+      this.postsToday = 0;
+      this.lastPostDate = today;
+    }
+
+    if (this.postsToday >= this.autoPostConfig.maxPostsPerDay) {
+      logger.debug('Skipping auto-post: daily limit reached');
+      return;
+    }
+
+    // Check if platforms are configured
+    const configuredPlatforms = this.autoPostConfig.platforms.filter(p => {
+      const config = this.platforms.get(p);
+      return config && config.enabled;
+    });
+
+    if (configuredPlatforms.length === 0) {
+      logger.warn('No platforms configured for auto-posting');
+      return;
+    }
+
+    // Get content
+    const content = this.getNextAutoPostContent();
+    if (!content) {
+      logger.warn('No content available for auto-posting');
+      return;
+    }
+
+    try {
+      // Create and publish the post
+      const post = await this.createPost(content, configuredPlatforms, {
+        createdBy: 'auto-poster',
+      });
+
+      await this.publishPost(post.id);
+
+      this.postsToday++;
+      logger.info(`Auto-post published: ${post.id} to ${configuredPlatforms.join(', ')}`);
+
+    } catch (error: any) {
+      logger.error(`Auto-post failed: ${error.message}`);
+    }
+  }
+
+  /**
+   * Get next piece of content to post
+   */
+  private getNextAutoPostContent(): string | null {
+    // Filter content by allowed types
+    const allowedContent = AUTO_POST_CONTENT_LIBRARY.filter(
+      c => this.autoPostConfig.contentTypes.includes(c.type as any)
+    );
+
+    if (allowedContent.length === 0) {
+      return null;
+    }
+
+    // Rotate through content
+    this.contentIndex = (this.contentIndex + 1) % allowedContent.length;
+    const selected = allowedContent[this.contentIndex];
+
+    // Format with emojis and hashtags
+    let content = selected.content;
+
+    if (this.autoPostConfig.includeEmojis) {
+      const typeEmojis: Record<string, string> = {
+        tip: '💡',
+        feature: '🚀',
+        educational: '📚',
+        engagement: '💬',
+        promotion: '🎁',
+        announcement: '📢',
+        milestone: '🎉',
+      };
+      content = `${typeEmojis[selected.type] || ''} ${content}`;
+    }
+
+    // Add hashtags and CTA
+    content += '\n\n#TIMETrading #Trading #FinTech';
+    content += '\n\n👉 Start trading: time-trading.app';
+
+    return content;
+  }
+
+  /**
+   * Get auto-posting stats
+   */
+  getAutoPostStats(): {
+    enabled: boolean;
+    postsToday: number;
+    maxPostsPerDay: number;
+    nextPostIn: string;
+    lastPost: Date | null;
+  } {
+    const lastPostedPost = Array.from(this.posts.values())
+      .filter(p => p.createdBy === 'auto-poster')
+      .sort((a, b) => (b.postedAt?.getTime() || 0) - (a.postedAt?.getTime() || 0))[0];
+
+    let nextPostIn = 'Not scheduled';
+    if (this.autoPostConfig.enabled) {
+      const remaining = this.autoPostConfig.intervalMinutes;
+      nextPostIn = `~${remaining} minutes`;
+    }
+
+    return {
+      enabled: this.autoPostConfig.enabled,
+      postsToday: this.postsToday,
+      maxPostsPerDay: this.autoPostConfig.maxPostsPerDay,
+      nextPostIn,
+      lastPost: lastPostedPost?.postedAt || null,
+    };
   }
 
   // ============== PLATFORM MANAGEMENT ==============
