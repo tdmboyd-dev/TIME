@@ -33,8 +33,7 @@ router.get('/tiers', (req: Request, res: Response) => {
       },
       note: 'Ultimate Money Machine is a SEPARATE optional add-on requiring admin approval',
     });
-  } catch (error) {
-    console.error('[Payments] Error getting tiers:', error);
+  } catch {
     res.status(500).json({ error: 'Failed to get subscription tiers' });
   }
 });
@@ -50,8 +49,7 @@ router.get('/ultimate-money-machine', (req: Request, res: Response) => {
       addOn: ummInfo,
       note: 'This is an OPTIONAL ADD-ON that requires admin approval. Contact admin for access.',
     });
-  } catch (error) {
-    console.error('[Payments] Error getting UMM info:', error);
+  } catch {
     res.status(500).json({ error: 'Failed to get Ultimate Money Machine info' });
   }
 });
@@ -77,8 +75,7 @@ router.get('/fee-calculator', (req: Request, res: Response) => {
       netAmount: amount - fee,
       feePercentage: `${(fee / amount * 100).toFixed(2)}%`,
     });
-  } catch (error) {
-    console.error('[Payments] Error calculating fee:', error);
+  } catch {
     res.status(500).json({ error: 'Failed to calculate fee' });
   }
 });
@@ -120,8 +117,7 @@ router.post('/payment/create', (req: Request, res: Response) => {
         recipientName: paymentSystem.getOwnerAccount().name,
       },
     });
-  } catch (error) {
-    console.error('[Payments] Error creating payment:', error);
+  } catch {
     res.status(500).json({ error: 'Failed to create payment' });
   }
 });
@@ -154,7 +150,6 @@ router.post('/payment/:paymentId/process', async (req: Request, res: Response) =
         : 'Payment processing failed. Please try again.',
     });
   } catch (error: any) {
-    console.error('[Payments] Error processing payment:', error);
     res.status(500).json({ error: error.message || 'Failed to process payment' });
   }
 });
@@ -185,8 +180,7 @@ router.post('/payment/:paymentId/verify', (req: Request, res: Response) => {
         error: 'Invalid verification code',
       });
     }
-  } catch (error) {
-    console.error('[Payments] Error verifying payment:', error);
+  } catch {
     res.status(500).json({ error: 'Failed to verify payment' });
   }
 });
@@ -202,8 +196,7 @@ router.get('/payment/:paymentId', (req: Request, res: Response) => {
     }
 
     res.json({ success: true, payment });
-  } catch (error) {
-    console.error('[Payments] Error getting payment:', error);
+  } catch {
     res.status(500).json({ error: 'Failed to get payment' });
   }
 });
@@ -219,8 +212,7 @@ router.get('/payments/user/:userId', (req: Request, res: Response) => {
       count: payments.length,
       payments,
     });
-  } catch (error) {
-    console.error('[Payments] Error getting user payments:', error);
+  } catch {
     res.status(500).json({ error: 'Failed to get user payments' });
   }
 });
@@ -248,7 +240,6 @@ router.post('/subscribe', async (req: Request, res: Response) => {
       message: `Subscription to ${tierId} tier created. Please complete payment.`,
     });
   } catch (error: any) {
-    console.error('[Payments] Error creating subscription:', error);
     res.status(500).json({ error: error.message || 'Failed to create subscription' });
   }
 });
@@ -268,8 +259,7 @@ router.get('/status/:userId', (req: Request, res: Response) => {
     }
 
     res.json({ success: true, subscription });
-  } catch (error) {
-    console.error('[Payments] Error getting subscription:', error);
+  } catch {
     res.status(500).json({ error: 'Failed to get subscription' });
   }
 });
@@ -288,8 +278,7 @@ router.post('/:userId/cancel', (req: Request, res: Response) => {
       success: true,
       message: 'Subscription cancelled successfully',
     });
-  } catch (error) {
-    console.error('[Payments] Error cancelling subscription:', error);
+  } catch {
     res.status(500).json({ error: 'Failed to cancel subscription' });
   }
 });
@@ -311,7 +300,6 @@ router.post('/payment/:paymentId/refund', async (req: Request, res: Response) =>
       message: 'Refund processed successfully',
     });
   } catch (error: any) {
-    console.error('[Payments] Error processing refund:', error);
     res.status(500).json({ error: error.message || 'Failed to process refund' });
   }
 });
@@ -321,8 +309,8 @@ router.post('/payment/:paymentId/refund', async (req: Request, res: Response) =>
 // Admin authentication middleware
 const requireAdmin = (req: Request, res: Response, next: Function) => {
   const adminKey = req.headers['x-admin-key'] as string;
-  // In production, use proper authentication
-  if (adminKey !== 'TIME_ADMIN_2025') {
+  const validAdminKey = process.env.TIME_ADMIN_KEY || process.env.ADMIN_API_KEY;
+  if (!validAdminKey || adminKey !== validAdminKey) {
     return res.status(403).json({ error: 'Admin access required' });
   }
   next();
@@ -339,8 +327,7 @@ router.get('/admin/stats', requireAdmin, (req: Request, res: Response) => {
       stats,
       ownerAccount: paymentSystem.getOwnerAccount(),
     });
-  } catch (error) {
-    console.error('[Payments] Error getting stats:', error);
+  } catch {
     res.status(500).json({ error: 'Failed to get stats' });
   }
 });
@@ -356,8 +343,7 @@ router.get('/admin/all', requireAdmin, (req: Request, res: Response) => {
       count: payments.length,
       payments,
     });
-  } catch (error) {
-    console.error('[Payments] Error getting all payments:', error);
+  } catch {
     res.status(500).json({ error: 'Failed to get payments' });
   }
 });
@@ -379,7 +365,6 @@ router.post('/admin/withdraw', requireAdmin, async (req: Request, res: Response)
       message: `Withdrawn $${result.withdrawnAmount.toFixed(2)} to owner account`,
     });
   } catch (error: any) {
-    console.error('[Payments] Error withdrawing:', error);
     res.status(500).json({ error: error.message || 'Failed to withdraw' });
   }
 });
@@ -399,8 +384,7 @@ router.post('/admin/:paymentId/complete', requireAdmin, (req: Request, res: Resp
       payment,
       message: 'Payment marked as completed',
     });
-  } catch (error) {
-    console.error('[Payments] Error completing payment:', error);
+  } catch {
     res.status(500).json({ error: 'Failed to complete payment' });
   }
 });

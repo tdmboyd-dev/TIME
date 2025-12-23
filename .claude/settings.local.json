@@ -144,7 +144,9 @@
       "Bash(\"C:\\Users\\Timeb\\.fly\\bin\\fly.exe\" secrets set ADMIN_TEST_KEY=TIME_ADMIN_2025 --app time-backend-hosting)",
       "Bash(npx vercel:*)",
       "Bash(npx next build)",
-      "Bash(git push)"
+      "Bash(git push)",
+      "Bash(npm test:*)",
+      "Bash(dir \"C:\\\\Users\\\\Timeb\\\\OneDrive\\\\TIME\\\\backend\\\\src\" /b)"
     ]
   }
 }

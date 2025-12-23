@@ -9,9 +9,9 @@
 
 import WebSocket from 'ws';
 
-const FINNHUB_API_KEY = 'd50gdd1r01qsabpt97ngd50gdd1r01qsabpt97o0';
+const FINNHUB_API_KEY = process.env.FINNHUB_API_KEY || '';
 const FINNHUB_REST_URL = 'https://finnhub.io/api/v1';
-const FINNHUB_WS_URL = `wss://ws.finnhub.io?token=${FINNHUB_API_KEY}`;
+const FINNHUB_WS_URL = FINNHUB_API_KEY ? `wss://ws.finnhub.io?token=${FINNHUB_API_KEY}` : '';
 
 // Rate limiting configuration
 const RATE_LIMIT = {

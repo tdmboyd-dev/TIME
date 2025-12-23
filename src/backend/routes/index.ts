@@ -85,6 +85,9 @@ import timebeunusRoutes from './timebeunus';
 // MONEY MACHINE QUESTIONNAIRE - Auto-config for users
 import questionnaireRoutes from './questionnaire';
 
+// ADMIN MARKETING BOT - Auto-post to social media
+import marketingRoutes from './marketing';
+
 const router = Router();
 
 // Mount routes
@@ -176,6 +179,9 @@ router.use('/timebeunus', timebeunusRoutes);
 
 // MONEY MACHINE QUESTIONNAIRE - Auto-config for users
 router.use('/questionnaire', questionnaireRoutes);
+
+// ADMIN MARKETING BOT - Auto-post to Twitter, LinkedIn, Reddit, Discord, Telegram
+router.use('/marketing', marketingRoutes);
 
 export default router;
 
