@@ -156,115 +156,102 @@ Create a `.env` file with these:
 NODE_ENV=production
 PORT=3001
 
-# Database
-MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/time
-REDIS_URL=redis://default:password@redis-host:6379
+# Database (EXAMPLE - replace with your actual connection string)
+# Get from: https://cloud.mongodb.com -> Connect -> Connect your application
+MONGODB_URI=<YOUR_MONGODB_CONNECTION_STRING>
+# Get from: https://upstash.com -> Create Redis Database -> REST URL
+REDIS_URL=<YOUR_REDIS_URL>
 
-# Authentication
-JWT_SECRET=your-super-secret-jwt-key-min-32-chars
-JWT_REFRESH_SECRET=your-refresh-secret-key-min-32-chars
-ADMIN_API_KEY=your-admin-api-key
-TIME_ADMIN_KEY=your-time-admin-key
+# Authentication (generate random strings)
+JWT_SECRET=<GENERATE_32_CHAR_RANDOM_STRING>
+JWT_REFRESH_SECRET=<GENERATE_32_CHAR_RANDOM_STRING>
+ADMIN_API_KEY=<YOUR_ADMIN_KEY>
+TIME_ADMIN_KEY=<YOUR_ADMIN_KEY>
 
 # ========================================
 # BROKER API KEYS
 # ========================================
 
-# Alpaca (Stock/Crypto Trading)
-ALPACA_API_KEY=your-alpaca-key
-ALPACA_API_SECRET=your-alpaca-secret
-ALPACA_PAPER=true  # Set to false for live trading
+# Alpaca (Stock/Crypto Trading) - FREE at https://alpaca.markets
+ALPACA_API_KEY=<FROM_ALPACA_DASHBOARD>
+ALPACA_SECRET_KEY=<FROM_ALPACA_DASHBOARD>
+ALPACA_PAPER=true
 
-# Binance (Crypto)
-BINANCE_API_KEY=your-binance-key
-BINANCE_API_SECRET=your-binance-secret
+# Binance (Crypto) - FREE at https://binance.com/en/my/settings/api-management
+BINANCE_API_KEY=<FROM_BINANCE>
+BINANCE_SECRET=<FROM_BINANCE>
 
-# Coinbase (Crypto)
-COINBASE_API_KEY=your-coinbase-key
-COINBASE_API_SECRET=your-coinbase-secret
+# Kraken (Crypto) - FREE at https://kraken.com/u/security/api
+KRAKEN_API_KEY=<FROM_KRAKEN>
+KRAKEN_SECRET=<FROM_KRAKEN>
 
-# OANDA (Forex)
-OANDA_API_KEY=your-oanda-token
-OANDA_ACCOUNT_ID=your-account-id
-
-# Interactive Brokers
-IBKR_GATEWAY_HOST=localhost
-IBKR_GATEWAY_PORT=5000
+# OANDA (Forex) - FREE at https://oanda.com -> Manage API Access
+OANDA_API_KEY=<FROM_OANDA>
+OANDA_ACCOUNT_ID=<YOUR_ACCOUNT_ID>
 
 # ========================================
-# MARKET DATA
+# MARKET DATA (ALL FREE!)
 # ========================================
 
-# Finnhub
-FINNHUB_API_KEY=your-finnhub-key
+# Finnhub - FREE at https://finnhub.io
+FINNHUB_API_KEY=<FROM_FINNHUB>
 
-# Financial Modeling Prep
-FMP_API_KEY=your-fmp-key
+# Financial Modeling Prep - FREE at https://financialmodelingprep.com
+FMP_API_KEY=<FROM_FMP>
 
-# FRED Economic Data
-FRED_API_KEY=your-fred-key
+# FRED Economic Data - FREE at https://fred.stlouisfed.org/docs/api/api_key.html
+FRED_API_KEY=<FROM_FRED>
 
-# TwelveData
-TWELVEDATA_API_KEY=your-twelvedata-key
+# TwelveData - FREE at https://twelvedata.com
+TWELVE_DATA_API_KEY=<FROM_TWELVEDATA>
 
-# ========================================
-# MARKETING BOT (Optional)
-# ========================================
-
-# Twitter/X
-TWITTER_API_KEY=your-twitter-api-key
-TWITTER_API_SECRET=your-twitter-api-secret
-TWITTER_ACCESS_TOKEN=your-access-token
-TWITTER_ACCESS_TOKEN_SECRET=your-access-token-secret
-
-# Discord
-DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/xxx/xxx
-
-# Telegram
-TELEGRAM_BOT_TOKEN=your-bot-token
-TELEGRAM_CHANNEL_ID=@your_channel
-
-# LinkedIn
-LINKEDIN_ACCESS_TOKEN=your-linkedin-token
-LINKEDIN_COMPANY_ID=your-company-id
-
-# Reddit
-REDDIT_CLIENT_ID=your-client-id
-REDDIT_CLIENT_SECRET=your-client-secret
-REDDIT_REFRESH_TOKEN=your-refresh-token
-REDDIT_SUBREDDIT=your_subreddit
+# Alpha Vantage - FREE at https://alphavantage.co/support/#api-key
+ALPHA_VANTAGE_API_KEY=<FROM_ALPHAVANTAGE>
 
 # ========================================
-# WEB3/DEFI (Optional)
+# MARKETING BOT (Optional - Mixed Free/Paid)
 # ========================================
 
-# WalletConnect
-NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your-project-id
+# Discord - FREE at https://discord.com/developers -> Webhooks
+DISCORD_WEBHOOK_URL=<YOUR_WEBHOOK_URL>
 
-# Alchemy (Blockchain RPC)
-ALCHEMY_API_KEY=your-alchemy-key
+# Telegram - FREE at @BotFather on Telegram
+TELEGRAM_BOT_TOKEN=<FROM_BOTFATHER>
+TELEGRAM_CHANNEL_ID=<YOUR_CHANNEL>
+
+# Reddit - FREE at https://reddit.com/prefs/apps
+REDDIT_CLIENT_ID=<FROM_REDDIT>
+REDDIT_CLIENT_SECRET=<FROM_REDDIT>
+
+# Twitter/X - $100/mo at https://developer.twitter.com
+TWITTER_API_KEY=<FROM_TWITTER>
+TWITTER_API_SECRET=<FROM_TWITTER>
+TWITTER_ACCESS_TOKEN=<FROM_TWITTER>
+TWITTER_ACCESS_TOKEN_SECRET=<FROM_TWITTER>
 
 # ========================================
-# PAYMENT PROCESSING (If using real payments)
+# WEB3/DEFI (FREE!)
 # ========================================
 
-# Stripe (Alternative to TIME Pay)
-STRIPE_SECRET_KEY=sk_live_xxx
-STRIPE_PUBLISHABLE_KEY=pk_live_xxx
-STRIPE_WEBHOOK_SECRET=whsec_xxx
+# WalletConnect - FREE at https://cloud.walletconnect.com
+NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=<FROM_WALLETCONNECT>
+
+# Alchemy - FREE at https://alchemy.com
+ALCHEMY_API_KEY=<FROM_ALCHEMY>
 
 # ========================================
-# EMAIL/NOTIFICATIONS
+# AI (Optional)
 # ========================================
 
-# SendGrid (or other email service)
-SENDGRID_API_KEY=your-sendgrid-key
-EMAIL_FROM=noreply@time-trading.app
+# OpenAI - Pay-per-use at https://platform.openai.com
+OPENAI_API_KEY=<FROM_OPENAI>
 
-# Twilio (SMS - optional)
-TWILIO_ACCOUNT_SID=your-account-sid
-TWILIO_AUTH_TOKEN=your-auth-token
-TWILIO_PHONE_NUMBER=+1234567890
+# ========================================
+# EMAIL (FREE tier available)
+# ========================================
+
+# Resend - FREE 100 emails/day at https://resend.com
+RESEND_API_KEY=<FROM_RESEND>
 ```
 
 ---
