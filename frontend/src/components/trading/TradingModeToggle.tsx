@@ -439,8 +439,8 @@ export function TradingModeIndicator() {
         if (data.success) {
           setMode(data.data.mode);
         }
-      } catch (err) {
-        console.error('Failed to fetch trading mode');
+      } catch {
+        // Trading mode fetch failed - keep default
       } finally {
         setLoading(false);
       }

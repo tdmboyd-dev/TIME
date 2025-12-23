@@ -7,7 +7,7 @@
  * Can be placed in header, sidebar, or any trading page.
  */
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useTradingMode } from '@/hooks/useTradingMode';
 import {
   AlertTriangle,
@@ -16,6 +16,7 @@ import {
   ShieldAlert,
   Loader2,
   ChevronDown,
+  X,
 } from 'lucide-react';
 
 interface TradingModeIndicatorProps {
@@ -46,6 +47,12 @@ export function TradingModeIndicator({
   const [showDropdown, setShowDropdown] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [isToggling, setIsToggling] = useState(false);
+  const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  const showNotification = useCallback((type: 'success' | 'error', message: string) => {
+    setNotification({ type, message });
+    setTimeout(() => setNotification(null), 5000);
+  }, []);
 
   const handleToggle = async () => {
     if (isPractice && !liveUnlocked) {
@@ -73,7 +80,7 @@ export function TradingModeIndicator({
       // First unlock live trading
       const unlockResult = await unlockLiveTrading('I_ACCEPT_ALL_TRADING_RISKS_AND_RESPONSIBILITY');
       if (!unlockResult.success) {
-        alert(unlockResult.message);
+        showNotification('error', unlockResult.message);
         setIsToggling(false);
         setShowConfirmation(false);
         return;
@@ -83,7 +90,9 @@ export function TradingModeIndicator({
     // Then switch to live mode
     const result = await toggleMode('I_UNDERSTAND_LIVE_TRADING_RISKS');
     if (!result.success) {
-      alert(result.message);
+      showNotification('error', result.message);
+    } else {
+      showNotification('success', 'Switched to LIVE mode');
     }
 
     setIsToggling(false);
@@ -137,6 +146,18 @@ export function TradingModeIndicator({
 
   return (
     <div className="relative">
+      {/* Toast Notification */}
+      {notification && (
+        <div className={`fixed top-4 right-4 z-50 flex items-center gap-2 px-4 py-3 rounded-lg shadow-lg ${
+          notification.type === 'success' ? 'bg-green-500/20 border border-green-500/50 text-green-400' : 'bg-red-500/20 border border-red-500/50 text-red-400'
+        }`}>
+          {notification.type === 'success' ? <CheckCircle className="w-5 h-5" /> : <AlertTriangle className="w-5 h-5" />}
+          <span className="text-sm font-medium">{notification.message}</span>
+          <button onClick={() => setNotification(null)} className="ml-2 hover:opacity-80">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
       {/* Main Indicator */}
       <div
         className={`flex items-center gap-3 px-4 py-2 rounded-lg cursor-pointer transition-colors ${

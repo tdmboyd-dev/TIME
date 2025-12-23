@@ -29,60 +29,10 @@ const statusColors: Record<string, string> = {
   error: 'bg-red-500',
 };
 
-const defaultBots: BotData[] = [
-  {
-    id: '1',
-    name: 'Trend Follower Alpha',
-    source: 'github',
-    status: 'active',
-    performance: {
-      winRate: 68.5,
-      profitFactor: 2.34,
-      totalTrades: 156,
-      totalPnL: 4523.87,
-    },
-  },
-  {
-    id: '2',
-    name: 'Mean Reversion Bot',
-    source: 'mql5',
-    status: 'active',
-    performance: {
-      winRate: 72.1,
-      profitFactor: 1.89,
-      totalTrades: 234,
-      totalPnL: 3218.45,
-    },
-  },
-  {
-    id: '3',
-    name: 'Scalper Pro V2',
-    source: 'user_uploaded',
-    status: 'paused',
-    performance: {
-      winRate: 61.3,
-      profitFactor: 1.45,
-      totalTrades: 892,
-      totalPnL: 1876.23,
-    },
-  },
-  {
-    id: '4',
-    name: 'Momentum Hunter',
-    source: 'synthesized',
-    status: 'active',
-    performance: {
-      winRate: 58.9,
-      profitFactor: 1.67,
-      totalTrades: 78,
-      totalPnL: 2145.67,
-    },
-  },
-];
+// NO MOCK DATA - All bots come from real API endpoints
 
 export function ActiveBots({ bots }: ActiveBotsProps) {
   const router = useRouter();
-  const displayBots = bots.length > 0 ? bots : defaultBots;
 
   const handleViewAll = () => {
     router.push('/bots');
@@ -95,8 +45,8 @@ export function ActiveBots({ bots }: ActiveBotsProps) {
       await fetch(`${API_BASE}/bots/${botId}/${action}`, { method: 'POST' });
       // Refresh page to show updated status
       window.location.reload();
-    } catch (error) {
-      console.error('Failed to toggle bot:', error);
+    } catch {
+      // Bot toggle failed - page will reload anyway
     }
   };
 
@@ -117,7 +67,14 @@ export function ActiveBots({ bots }: ActiveBotsProps) {
         </button>
       </div>
 
-      <div className="overflow-x-auto">
+      {bots.length === 0 ? (
+        <div className="text-center py-8">
+          <Bot className="w-12 h-12 text-slate-600 mx-auto mb-3" />
+          <p className="text-slate-400">No active bots</p>
+          <p className="text-slate-500 text-sm mt-1">Connect to backend to load bot data</p>
+        </div>
+      ) : (
+        <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
             <tr className="text-left text-xs text-slate-500 border-b border-slate-700/50">
@@ -131,7 +88,7 @@ export function ActiveBots({ bots }: ActiveBotsProps) {
             </tr>
           </thead>
           <tbody className="text-sm">
-            {displayBots.map((bot) => (
+            {bots.map((bot) => (
               <tr
                 key={bot.id}
                 className="border-b border-slate-700/30 hover:bg-slate-800/30 transition-colors"
@@ -222,18 +179,21 @@ export function ActiveBots({ bots }: ActiveBotsProps) {
           </tbody>
         </table>
       </div>
+      )}
 
-      <div className="mt-4 pt-4 border-t border-slate-700/50 flex items-center justify-between text-sm">
-        <span className="text-slate-400">
-          {displayBots.filter(b => b.status === 'active' || b.status === 'running').length} bots running
-        </span>
-        <span className="text-green-400 font-medium">
-          Total P&L: ${displayBots.reduce((sum, b) => sum + b.performance.totalPnL, 0).toLocaleString(undefined, {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          })}
-        </span>
-      </div>
+      {bots.length > 0 && (
+        <div className="mt-4 pt-4 border-t border-slate-700/50 flex items-center justify-between text-sm">
+          <span className="text-slate-400">
+            {bots.filter(b => b.status === 'active' || b.status === 'running').length} bots running
+          </span>
+          <span className="text-green-400 font-medium">
+            Total P&L: ${bots.reduce((sum, b) => sum + b.performance.totalPnL, 0).toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}
+          </span>
+        </div>
+      )}
     </div>
   );
 }

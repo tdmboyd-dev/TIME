@@ -21,10 +21,8 @@ const chains = [mainnet, polygon, arbitrum, optimism, base, avalanche, bsc] as c
 // Without a valid project ID, WalletConnect modal will show 403 errors but injected wallets (MetaMask) still work
 const WALLETCONNECT_PROJECT_ID = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID;
 
-// Log warning if no project ID is configured (only in development)
-if (!WALLETCONNECT_PROJECT_ID && typeof window !== 'undefined') {
-  console.warn('[Web3Provider] NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID not set. WalletConnect features limited. Get a free project ID at https://cloud.walletconnect.com');
-}
+// WalletConnect requires a project ID for full functionality
+// Get one at https://cloud.walletconnect.com (free tier available)
 
 // Configure wagmi with RainbowKit
 // Note: Without valid projectId, WalletConnect won't work but MetaMask/injected wallets still function

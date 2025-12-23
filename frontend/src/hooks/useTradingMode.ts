@@ -81,8 +81,7 @@ export function useTradingMode(): UseTradingModeReturn {
           error: 'Failed to fetch trading mode status',
         }));
       }
-    } catch (error) {
-      console.error('Trading mode fetch error:', error);
+    } catch {
       setStatus(prev => ({
         ...prev,
         isLoading: false,

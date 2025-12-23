@@ -157,9 +157,9 @@ export const useTimeStore = create<TimeState>()(
         evolutionMode: state.evolutionMode,
         userPreferences: state.userPreferences,
       }),
-      // Add onRehydrateStorage to log when hydration completes
-      onRehydrateStorage: () => (state) => {
-        console.log('TIME Store hydrated:', state?.evolutionMode, state?.userPreferences);
+      // Hydration callback - state is restored from localStorage
+      onRehydrateStorage: () => () => {
+        // Hydration complete - persisted state restored
       },
     }
   )

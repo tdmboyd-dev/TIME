@@ -51,8 +51,7 @@ export function LiveChart() {
         setPrices(formattedPrices);
         setError(null);
       }
-    } catch (err) {
-      console.error('Failed to fetch market data:', err);
+    } catch {
       setError('Failed to load market data');
     } finally {
       setIsLoading(false);

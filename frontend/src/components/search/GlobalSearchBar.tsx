@@ -97,8 +97,7 @@ export function GlobalSearchBar() {
         const symbols = data.data.slice(0, 5).map((r: SearchResult) => r.symbol);
         fetchQuickQuotes(symbols);
       }
-    } catch (error) {
-      console.error('Search error:', error);
+    } catch {
       setResults([]);
     } finally {
       setLoading(false);

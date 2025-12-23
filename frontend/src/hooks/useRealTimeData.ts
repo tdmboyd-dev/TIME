@@ -51,8 +51,8 @@ export function useRealTimeData() {
             ];
         setHealth(healthItems);
       }
-    } catch (error) {
-      console.error('Failed to fetch health:', error);
+    } catch {
+      // Health check failed - show offline state
       setConnected(false);
     }
   }, [setConnected, setHealth]);
@@ -79,8 +79,8 @@ export function useRealTimeData() {
         totalInsightsGenerated: 0, // Will be updated when we have insights API
         totalStrategiesSynthesized: 0, // Will be updated when we have strategies API
       });
-    } catch (error) {
-      console.error('Failed to fetch admin status:', error);
+    } catch {
+      // Admin status unavailable - use zero values
       setMetrics({
         totalBotsAbsorbed: 0,
         totalTradesAnalyzed: 0,
@@ -112,8 +112,8 @@ export function useRealTimeData() {
       } else {
         setRegime('trending_up', 68);
       }
-    } catch (error) {
-      console.error('Failed to fetch regime:', error);
+    } catch {
+      // Regime fetch failed - use default
       setRegime('trending_up', 68);
     }
   }, [setRegime]);
@@ -139,8 +139,8 @@ export function useRealTimeData() {
         }));
         setBots(formattedBots);
       }
-    } catch (error) {
-      console.error('Failed to fetch bots:', error);
+    } catch {
+      // Bots fetch failed - keep existing state
     }
   }, [setBots]);
 
@@ -199,8 +199,8 @@ export function useRealTimeData() {
       }
 
       setInsights(insights);
-    } catch (error) {
-      console.error('Failed to generate insights:', error);
+    } catch {
+      // Insights generation failed - keep existing state
     }
   }, [setInsights]);
 
@@ -213,30 +213,22 @@ export function useRealTimeData() {
         fetch(`${API_BASE}/real-market/crypto/BTC`),
       ]);
 
-      // Process stock data
+      // Process stock data - data available for use
       if (stockRes.status === 'fulfilled') {
-        const stockData = await stockRes.value.json();
-        if (stockData.success) {
-          console.log('[RealTimeData] SPY:', stockData.data?.price);
-        }
+        await stockRes.value.json();
       }
 
-      // Process crypto data
+      // Process crypto data - data available for use
       if (cryptoRes.status === 'fulfilled') {
-        const cryptoData = await cryptoRes.value.json();
-        if (cryptoData.success) {
-          console.log('[RealTimeData] BTC:', cryptoData.data?.price);
-        }
+        await cryptoRes.value.json();
       }
-    } catch (error) {
-      console.error('Failed to fetch market overview:', error);
+    } catch {
+      // Market overview fetch failed - non-critical
     }
   }, []);
 
   // Initial fetch on mount
   useEffect(() => {
-    console.log('[RealTimeData] Initializing real-time data connection...');
-
     // Fetch all data
     fetchHealth();
     fetchGovernorStatus();
