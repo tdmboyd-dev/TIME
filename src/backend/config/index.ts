@@ -164,6 +164,24 @@ export const config = {
     maxSlippage: 0.005, // 0.5% max slippage
     maxLatency: 1000, // 1000ms max latency
   },
+
+  // Social Media Marketing (FREE platforms)
+  marketing: {
+    discord: {
+      webhookUrl: process.env.DISCORD_WEBHOOK_URL || '',
+    },
+    telegram: {
+      botToken: process.env.TELEGRAM_BOT_TOKEN || '',
+      channelId: process.env.TELEGRAM_CHANNEL_ID || '',
+    },
+    reddit: {
+      clientId: process.env.REDDIT_CLIENT_ID || '',
+      clientSecret: process.env.REDDIT_CLIENT_SECRET || '',
+      username: process.env.REDDIT_USERNAME || '',
+      password: process.env.REDDIT_PASSWORD || '',
+      subreddit: process.env.REDDIT_SUBREDDIT || 'algotrading',
+    },
+  },
 };
 
 export type Config = typeof config;
