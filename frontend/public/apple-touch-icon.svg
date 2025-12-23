@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180" fill="none">
+  <defs>
+    <linearGradient id="appleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#8b5cf6"/>
+      <stop offset="100%" stop-color="#06b6d4"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="180" height="180" rx="40" fill="#0f172a"/>
+
+  <!-- Chart line (M pattern - consolidation) -->
+  <polyline
+    points="22,124 45,56 68,101 90,45 112,113"
+    fill="none"
+    stroke="url(#appleGrad)"
+    stroke-width="10"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+
+  <!-- Candlestick (I - the trading candle) -->
+  <line x1="135" y1="34" x2="135" y2="146" stroke="#22c55e" stroke-width="8"/>
+  <rect x="118" y="79" width="34" height="45" rx="4" fill="#22c55e"/>
+
+  <!-- Support/Resistance lines -->
+  <line x1="11" y1="45" x2="101" y2="45" stroke="#ef4444" stroke-width="4" opacity="0.5" stroke-dasharray="8,4"/>
+  <line x1="11" y1="135" x2="101" y2="135" stroke="#22c55e" stroke-width="4" opacity="0.5" stroke-dasharray="8,4"/>
+</svg>
