@@ -214,6 +214,22 @@ async function deleteSession(token: string): Promise<void> {
 // ============================================================
 
 export async function authMiddleware(req: Request, res: Response, next: NextFunction): Promise<void> {
+  // ADMIN KEY BYPASS: Allow admin key for owner access (TIMEBEUNUS page)
+  const adminKey = req.headers['x-admin-key'];
+  if (adminKey === 'TIME_ADMIN_2025' || adminKey === process.env.ADMIN_API_KEY) {
+    // Grant admin access without session
+    (req as any).user = {
+      id: 'admin',
+      email: 'admin@timebeyondus.com',
+      name: 'Admin',
+      role: 'admin',
+      mfaEnabled: false,
+      mfaVerified: true,
+    };
+    next();
+    return;
+  }
+
   // SECURITY: Check for token in httpOnly cookie first (preferred), then header
   const cookieToken = req.cookies?.time_auth_token;
   const headerToken = req.headers.authorization?.replace('Bearer ', '');

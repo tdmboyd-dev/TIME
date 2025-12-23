@@ -307,7 +307,9 @@ export default function TIMEBEUNUSPage() {
   // Fetch real trade history
   const fetchTrades = async () => {
     try {
-      const response = await fetch(`${API_BASE}/trading/trades?limit=10`);
+      const response = await fetch(`${API_BASE}/trading/trades?limit=10`, {
+        headers: getAdminHeaders(),
+      });
       if (response.ok) {
         const data = await response.json();
         if (data.success && data.data) {
@@ -322,7 +324,9 @@ export default function TIMEBEUNUSPage() {
   // Fetch real performance metrics
   const fetchPerformance = async () => {
     try {
-      const response = await fetch(`${API_BASE}/trading/stats`);
+      const response = await fetch(`${API_BASE}/trading/stats`, {
+        headers: getAdminHeaders(),
+      });
       if (response.ok) {
         const data = await response.json();
         if (data.success && data.data) {
@@ -363,7 +367,9 @@ export default function TIMEBEUNUSPage() {
   // Fetch real strategies
   const fetchStrategies = async () => {
     try {
-      const response = await fetch(`${API_BASE}/strategies?limit=5`);
+      const response = await fetch(`${API_BASE}/strategies?limit=5`, {
+        headers: getAdminHeaders(),
+      });
       if (response.ok) {
         const data = await response.json();
         if (data.strategies && Array.isArray(data.strategies)) {
