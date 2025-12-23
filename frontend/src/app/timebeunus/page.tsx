@@ -10,6 +10,7 @@ import {
   TrendingUp as Invest, Banknote, Power, XCircle
 } from 'lucide-react';
 import clsx from 'clsx';
+import { TimebeunusLogo, TimebeunusIcon, TimebeunusWordmark } from '@/components/branding/TimebeunusLogo';
 
 import { API_BASE, getAuthHeaders } from '@/lib/api';
 
@@ -670,11 +671,10 @@ export default function TIMEBEUNUSPage() {
         <div className="absolute top-0 right-0 w-64 h-64 bg-red-500/10 rounded-full blur-3xl" />
         <div className="relative z-10 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className="p-3 rounded-xl bg-gradient-to-br from-red-500 to-orange-500 shadow-lg shadow-red-500/30">
-              <Crown className="w-8 h-8 text-white" />
-            </div>
+            {/* THE FANG SINGULARITY - Destroyer Logo */}
+            <TimebeunusLogo size="lg" animated mode={dominanceMode as any} />
             <div>
-              <h1 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-red-400 via-orange-400 to-yellow-400">TIMEBEUNUS</h1>
+              <TimebeunusWordmark size="lg" />
               <p className="text-red-300/80">The Industry Destroyer - REAL DATA</p>
             </div>
             <div className="ml-4">
