@@ -212,60 +212,65 @@ export interface TransactionFees {
   fiatWithdrawal: { method: string; fee: number; percent: number }[];
 }
 
+/**
+ * TRANSACTION FEES - MAXIMUM REVENUE (December 2025)
+ * Strategy: Match or slightly beat industry - don't undercut significantly
+ * Aligned with PlatformFeeService.ts - single source of truth
+ */
 const TRANSACTION_FEES: TransactionFees = {
-  // Stock trading - LOWER than most platforms
+  // Stock trading - Per-trade fee (whichever is greater)
   stockTrade: {
-    percent: 0,        // Commission-free like the big players
-    minFee: 0,
-    maxFee: 0,
+    percent: 0.5,      // 0.5% - matches industry average
+    minFee: 1.99,      // $1.99 minimum - premium for premium service
+    maxFee: 500,       // $500 cap
   },
 
-  // Options - Competitive
+  // Options - Match industry
   optionsTrade: {
-    perContract: 0.50, // vs $0.65 industry avg
+    perContract: 0.65, // $0.65 - matches TD Ameritrade exactly
     baseFee: 0,
   },
 
-  // Crypto - Very competitive
+  // Crypto - Match Coinbase Pro tier (not retail)
   cryptoTrade: {
-    percent: 0.25,     // vs 0.5-1.5% industry avg
-    minFee: 0.10,
+    percent: 1.25,     // 1.25% - beats Coinbase retail (1.5-4.5%) but matches pro tier
+    minFee: 1.00,      // $1 minimum
   },
 
-  // Forex - Minimal spread markup
+  // Forex - Standard spread
   forexTrade: {
-    spreadMarkup: 0.2, // Only 0.2 pips added
+    spreadMarkup: 0.5, // 0.5 pips - standard for retail forex
   },
 
-  // NFT Marketplace - Fair to creators
+  // NFT Marketplace - Match OpenSea
   nftListing: {
-    flat: 0,           // FREE listings!
+    flat: 0,           // FREE listings - attracts sellers
   },
   nftSale: {
-    sellerPercent: 2.0,  // vs 2.5% on major platforms
-    buyerPercent: 0,      // No buyer fee!
+    sellerPercent: 2.5,  // 2.5% - matches OpenSea exactly
+    buyerPercent: 0,      // No buyer fee - competitive advantage
   },
   nftRoyalty: {
     maxPercent: 10,       // Max royalty %
-    platformCut: 10,      // We take 10% of royalties (0.1-1% of sale)
+    platformCut: 15,      // 15% of royalties (increased from 10%)
   },
 
-  // Copy trading - ONLY on profits
-  copyTradingProfitShare: 20, // 20% of PROFITS only (not losses)
-  signalProviderCut: 70,      // Provider gets 70%, platform 30%
+  // Copy trading - Premium pricing
+  copyTradingProfitShare: 30, // 30% of PROFITS - industry is 20-50%, we're in the middle
+  signalProviderCut: 60,      // Provider gets 60%, platform 40%
 
-  // Withdrawals
+  // Withdrawals - Standard fees
   cryptoWithdrawal: [
-    { network: 'ethereum', fee: 5.00 },
-    { network: 'polygon', fee: 0.10 },
-    { network: 'solana', fee: 0.01 },
-    { network: 'arbitrum', fee: 0.50 },
-    { network: 'base', fee: 0.25 },
+    { network: 'ethereum', fee: 8.00 },   // ETH gas is expensive
+    { network: 'polygon', fee: 0.25 },
+    { network: 'solana', fee: 0.05 },
+    { network: 'arbitrum', fee: 1.00 },
+    { network: 'base', fee: 0.50 },
   ],
   fiatWithdrawal: [
-    { method: 'ACH', fee: 0, percent: 0 },          // FREE!
-    { method: 'Wire', fee: 25, percent: 0 },
-    { method: 'Instant', fee: 0, percent: 1.5 },   // Same day
+    { method: 'ACH', fee: 0, percent: 0.15 },      // 0.15% on all ACH (covers costs)
+    { method: 'Wire', fee: 45, percent: 0 },       // $45 (industry is $25-50)
+    { method: 'Instant', fee: 0, percent: 2.0 },   // 2.0% - matches Cash App/Venmo
   ],
 };
 
@@ -730,55 +735,74 @@ export class RevenueEngine extends EventEmitter {
 
   /**
    * Get price comparison with competitors (for marketing)
+   * Updated December 2025 - MAXIMIZED REVENUE pricing
    */
   public getPriceComparison(): {
     feature: string;
     timeFee: string;
     industryAvg: string;
-    savings: string;
+    positioning: string;
   }[] {
     return [
       {
         feature: 'Stock Trading',
-        timeFee: '$0',
-        industryAvg: '$0',
-        savings: 'Same as best',
+        timeFee: '$1.99 or 0.5%',
+        industryAvg: '$0-0.5%',
+        positioning: 'Premium service, transparent pricing',
       },
       {
         feature: 'Options (per contract)',
-        timeFee: '$0.50',
+        timeFee: '$0.65',
         industryAvg: '$0.65',
-        savings: '23% less',
+        positioning: 'Matches TD Ameritrade',
       },
       {
         feature: 'Crypto Trading',
-        timeFee: '0.25%',
-        industryAvg: '0.5-1.5%',
-        savings: 'Up to 83% less',
+        timeFee: '1.25%',
+        industryAvg: '1.5-4.5%',
+        positioning: 'Beats Coinbase retail',
       },
       {
         feature: 'NFT Sales (seller)',
-        timeFee: '2.0%',
+        timeFee: '2.5%',
         industryAvg: '2.5%',
-        savings: '20% less',
+        positioning: 'Matches OpenSea',
       },
       {
         feature: 'NFT Sales (buyer)',
         timeFee: '$0',
         industryAvg: '0-2.5%',
-        savings: '100% less',
+        positioning: 'Competitive advantage',
       },
       {
         feature: 'Copy Trading',
-        timeFee: '20% of profits',
-        industryAvg: '25-30% of profits',
-        savings: '20-33% less',
+        timeFee: '30% of profits',
+        industryAvg: '20-50%',
+        positioning: 'Middle of range',
+      },
+      {
+        feature: 'Performance Fee',
+        timeFee: '22%',
+        industryAvg: '20%',
+        positioning: 'Slightly above standard',
+      },
+      {
+        feature: 'AUM Fee',
+        timeFee: '1.0%',
+        industryAvg: '0.25-2%',
+        positioning: 'Standard wealth management',
+      },
+      {
+        feature: 'Bot Marketplace',
+        timeFee: '30%',
+        industryAvg: '30%',
+        positioning: 'Matches app stores',
       },
       {
         feature: 'Pro Subscription',
         timeFee: '$79/mo',
         industryAvg: '$100-200/mo',
-        savings: '20-60% less',
+        positioning: 'Competitive, value-packed',
       },
     ];
   }

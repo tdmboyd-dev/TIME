@@ -149,7 +149,8 @@
       "Bash(dir \"C:\\\\Users\\\\Timeb\\\\OneDrive\\\\TIME\\\\backend\\\\src\" /b)",
       "Bash(npx vercel --prod)",
       "Bash(fly deploy:*)",
-      "Bash(flyctl deploy:*)"
+      "Bash(flyctl deploy:*)",
+      "Bash(npm run build:backend:*)"
     ]
   }
 }

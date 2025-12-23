@@ -2825,7 +2825,7 @@ export class AutoPilotCapitalEngine extends EventEmitter {
     // Simulate closing all positions
     const positionsClosed = Math.floor(Math.random() * 5) + 1;
     const slippageFee = pilot.currentValue * 0.001; // 0.1% slippage
-    const platformFee = pilot.currentValue * 0.002; // 0.2% platform fee
+    const platformFee = pilot.currentValue * 0.005; // 0.5% platform fee (updated Dec 2025)
     const totalFees = slippageFee + platformFee;
     const netAmount = pilot.currentValue - totalFees;
 
@@ -2891,7 +2891,7 @@ export class AutoPilotCapitalEngine extends EventEmitter {
     // Calculate withdrawal
     const positionsClosed = amount > pilot.currentValue * 0.5 ? Math.floor(Math.random() * 3) + 1 : 0;
     const slippageFee = amount * 0.001; // 0.1% slippage
-    const platformFee = amount * 0.002; // 0.2% platform fee
+    const platformFee = amount * 0.005; // 0.5% platform fee (updated Dec 2025)
     const totalFees = slippageFee + platformFee;
     const netAmount = amount - totalFees;
 

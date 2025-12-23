@@ -172,7 +172,8 @@ class GiftAccessService extends EventEmitter {
     },
   ];
 
-  // Current pricing (REVISED - MORE PROFITABLE)
+  // Current pricing (OPTIMIZED - INDUSTRY COMPETITIVE, MAXIMUM REVENUE)
+  // Last updated: December 2025
   public pricing: PricingConfig = {
     tiers: {
       FREE: {
@@ -206,12 +207,12 @@ class GiftAccessService extends EventEmitter {
         limits: { maxBots: -1, maxCapital: -1, maxTrades: -1 },
       },
     },
-    perTradeFee: 0.99,
-    perTradePercent: 0.002, // 0.2%
-    cryptoSpread: 0.005, // 0.5%
-    performanceFee: 0.15, // 15%
-    aumFee: 0.005, // 0.5%
-    marketplaceCut: 0.25, // 25%
+    perTradeFee: 1.99,        // $1.99 flat - premium service, premium pricing
+    perTradePercent: 0.005,   // 0.5% - matches industry average
+    cryptoSpread: 0.0125,     // 1.25% - beats Coinbase retail, matches pro tier
+    performanceFee: 0.22,     // 22% - slightly above industry standard 20%
+    aumFee: 0.01,             // 1.0% annually - standard wealth management fee
+    marketplaceCut: 0.30,     // 30% - matches app stores exactly
   };
 
   constructor() {

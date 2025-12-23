@@ -158,8 +158,8 @@ export interface BotRental {
   tradesDuringRental: number;
 
   // Revenue split
-  platformFee: number; // TIME takes 20%
-  ownerShare: number; // Bot owner gets 80%
+  platformFee: number; // TIME takes 30%
+  ownerShare: number; // Bot owner gets 70%
 }
 
 export interface BotReview {
@@ -362,9 +362,9 @@ export class BotMarketplace extends EventEmitter {
         break;
     }
 
-    // Calculate revenue split (TIME: 20%, Owner: 80%)
-    const platformFee = plan.priceUsd * 0.20;
-    const ownerShare = plan.priceUsd * 0.80;
+    // Calculate revenue split (TIME: 30%, Owner: 70%) - matches app stores
+    const platformFee = plan.priceUsd * 0.30;
+    const ownerShare = plan.priceUsd * 0.70;
 
     const rental: BotRental = {
       id: uuidv4(),
