@@ -7,7 +7,8 @@ import {
   RefreshCw, ChevronRight, AlertTriangle, CheckCircle, Clock, DollarSign,
   Percent, ArrowUpRight, ArrowDownRight, Loader2, X, Info, Wifi, WifiOff,
   Swords, Star, Wallet, PiggyBank, Coins, ToggleLeft, ToggleRight, Lightbulb,
-  TrendingUp as Invest, Banknote, Power, XCircle
+  TrendingUp as Invest, Banknote, Power, XCircle, ChevronDown, ChevronUp,
+  ExternalLink, BookOpen, Key, Server, Plug, HelpCircle, Copy, Check
 } from 'lucide-react';
 import clsx from 'clsx';
 import { TimebeunusLogo, TimebeunusIcon, TimebeunusWordmark } from '@/components/branding/TimebeunusLogo';
@@ -234,6 +235,43 @@ export default function TIMEBEUNUSPage() {
   const [isExecutingTrade, setIsExecutingTrade] = useState(false);
   const [ownerPanelTab, setOwnerPanelTab] = useState<'trade' | 'positions' | 'automation' | 'yield' | 'suggestions'>('trade');
   const [platformFees, setPlatformFees] = useState({ totalFeesCollected: 0, moneyMachineFee: 0.1, dropbotFee: 0.1 });
+
+  // Get Started Guide State
+  const [showGetStarted, setShowGetStarted] = useState(false);
+  const [copiedText, setCopiedText] = useState<string | null>(null);
+  const [brokerStatus, setBrokerStatus] = useState<{
+    alpaca: boolean;
+    binance: boolean;
+    kraken: boolean;
+    oanda: boolean;
+  }>({ alpaca: false, binance: false, kraken: false, oanda: false });
+
+  // Copy to clipboard helper
+  const copyToClipboard = (text: string, label: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedText(label);
+    setTimeout(() => setCopiedText(null), 2000);
+  };
+
+  // Check broker connections
+  const checkBrokerConnections = async () => {
+    try {
+      const response = await fetch(`${API_BASE}/brokers/status`, { headers: getAdminHeaders() });
+      if (response.ok) {
+        const data = await response.json();
+        if (data.brokers) {
+          setBrokerStatus({
+            alpaca: data.brokers.some((b: any) => b.type === 'alpaca' && b.connected),
+            binance: data.brokers.some((b: any) => b.type === 'binance' && b.connected),
+            kraken: data.brokers.some((b: any) => b.type === 'kraken' && b.connected),
+            oanda: data.brokers.some((b: any) => b.type === 'oanda' && b.connected),
+          });
+        }
+      }
+    } catch {
+      // Silently fail
+    }
+  };
 
   // Real-time activity log
   const [activityLog, setActivityLog] = useState<ActivityLogEntry[]>([]);
@@ -816,6 +854,18 @@ export default function TIMEBEUNUSPage() {
           </div>
           <div className="flex items-center gap-3">
             <button
+              onClick={() => { setShowGetStarted(!showGetStarted); checkBrokerConnections(); }}
+              className={clsx(
+                'flex items-center gap-2 px-4 py-2 rounded-lg border transition-all',
+                showGetStarted
+                  ? 'border-yellow-500 bg-yellow-500/20 text-yellow-400'
+                  : 'border-yellow-500/50 bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500/20'
+              )}
+            >
+              <HelpCircle className="w-4 h-4" />Get Set Up
+              {showGetStarted ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            </button>
+            <button
               onClick={() => {
                 fetchSignals();
                 fetchTrades();
@@ -856,6 +906,256 @@ export default function TIMEBEUNUSPage() {
           <div className="text-center"><p className="text-xs text-slate-400 mb-1">vs Competitors</p><p className={clsx('text-2xl font-bold', performance.isBeatingCompetitors ? 'text-green-400' : 'text-red-400')}>{performance.isBeatingCompetitors ? 'WINNING' : 'LEARNING'}</p></div>
         </div>
       </div>
+
+      {/* GET STARTED DROPDOWN PANEL */}
+      {showGetStarted && (
+        <div className="bg-gradient-to-br from-yellow-900/20 via-orange-900/10 to-slate-900 border border-yellow-500/30 rounded-2xl p-6 animate-in slide-in-from-top duration-300">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-xl font-bold text-yellow-400 flex items-center gap-2">
+              <BookOpen className="w-6 h-6" />Get Set Up Guide
+            </h3>
+            <button onClick={() => setShowGetStarted(false)} className="text-slate-400 hover:text-white">
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          {/* Quick Actions */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <button
+              onClick={() => setShowManualTradeModal(true)}
+              className="flex flex-col items-center gap-2 p-4 bg-green-500/10 border border-green-500/30 rounded-xl hover:bg-green-500/20 transition-all"
+            >
+              <DollarSign className="w-8 h-8 text-green-400" />
+              <span className="text-sm font-medium text-green-400">New Trade</span>
+              <span className="text-xs text-slate-500">Execute a trade</span>
+            </button>
+            <button
+              onClick={handleStart}
+              disabled={isActive}
+              className={clsx(
+                'flex flex-col items-center gap-2 p-4 rounded-xl transition-all',
+                isActive
+                  ? 'bg-slate-800/50 border border-slate-700 opacity-50'
+                  : 'bg-blue-500/10 border border-blue-500/30 hover:bg-blue-500/20'
+              )}
+            >
+              <Play className="w-8 h-8 text-blue-400" />
+              <span className="text-sm font-medium text-blue-400">Start Bot</span>
+              <span className="text-xs text-slate-500">{isActive ? 'Already running' : 'Begin auto-trading'}</span>
+            </button>
+            <a
+              href="/brokers"
+              className="flex flex-col items-center gap-2 p-4 bg-purple-500/10 border border-purple-500/30 rounded-xl hover:bg-purple-500/20 transition-all"
+            >
+              <Plug className="w-8 h-8 text-purple-400" />
+              <span className="text-sm font-medium text-purple-400">Connect Broker</span>
+              <span className="text-xs text-slate-500">Add API keys</span>
+            </a>
+            <a
+              href="/settings"
+              className="flex flex-col items-center gap-2 p-4 bg-slate-500/10 border border-slate-500/30 rounded-xl hover:bg-slate-500/20 transition-all"
+            >
+              <Settings className="w-8 h-8 text-slate-400" />
+              <span className="text-sm font-medium text-slate-400">Settings</span>
+              <span className="text-xs text-slate-500">Configure platform</span>
+            </a>
+          </div>
+
+          {/* Step by Step Guide */}
+          <div className="space-y-4">
+            <h4 className="font-semibold text-white flex items-center gap-2">
+              <Target className="w-5 h-5 text-yellow-400" />Step-by-Step Setup
+            </h4>
+
+            {/* Step 1: Broker Connection */}
+            <div className="p-4 bg-slate-800/50 rounded-xl border border-slate-700">
+              <div className="flex items-start justify-between">
+                <div className="flex items-start gap-3">
+                  <div className={clsx(
+                    'w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold',
+                    Object.values(brokerStatus).some(b => b) ? 'bg-green-500 text-white' : 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/50'
+                  )}>
+                    {Object.values(brokerStatus).some(b => b) ? <Check className="w-4 h-4" /> : '1'}
+                  </div>
+                  <div>
+                    <h5 className="font-medium text-white">Connect a Broker</h5>
+                    <p className="text-sm text-slate-400 mt-1">Get API keys from Alpaca, Binance, or OANDA</p>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      <span className={clsx('text-xs px-2 py-1 rounded', brokerStatus.alpaca ? 'bg-green-500/20 text-green-400' : 'bg-slate-700 text-slate-400')}>
+                        Alpaca {brokerStatus.alpaca && '✓'}
+                      </span>
+                      <span className={clsx('text-xs px-2 py-1 rounded', brokerStatus.binance ? 'bg-green-500/20 text-green-400' : 'bg-slate-700 text-slate-400')}>
+                        Binance {brokerStatus.binance && '✓'}
+                      </span>
+                      <span className={clsx('text-xs px-2 py-1 rounded', brokerStatus.oanda ? 'bg-green-500/20 text-green-400' : 'bg-slate-700 text-slate-400')}>
+                        OANDA {brokerStatus.oanda && '✓'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <a
+                  href="https://alpaca.markets"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300"
+                >
+                  Get Alpaca Keys <ExternalLink className="w-3 h-3" />
+                </a>
+              </div>
+            </div>
+
+            {/* Step 2: Test Connection */}
+            <div className="p-4 bg-slate-800/50 rounded-xl border border-slate-700">
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-full bg-yellow-500/20 text-yellow-400 border border-yellow-500/50 flex items-center justify-center text-sm font-bold">
+                  2
+                </div>
+                <div className="flex-1">
+                  <h5 className="font-medium text-white">Test Your First Trade</h5>
+                  <p className="text-sm text-slate-400 mt-1">Execute a paper trade to verify connection</p>
+                  <div className="flex gap-2 mt-3">
+                    <button
+                      onClick={() => {
+                        setManualTradeSymbol('AAPL');
+                        setManualTradeQuantity('1');
+                        setManualTradeAction('buy');
+                        setShowManualTradeModal(true);
+                      }}
+                      className="flex items-center gap-2 px-3 py-2 bg-green-500/10 border border-green-500/30 rounded-lg text-sm text-green-400 hover:bg-green-500/20"
+                    >
+                      <DollarSign className="w-4 h-4" />Buy 1 AAPL (Test)
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Step 3: Start Bot */}
+            <div className="p-4 bg-slate-800/50 rounded-xl border border-slate-700">
+              <div className="flex items-start gap-3">
+                <div className={clsx(
+                  'w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold',
+                  isActive ? 'bg-green-500 text-white' : 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/50'
+                )}>
+                  {isActive ? <Check className="w-4 h-4" /> : '3'}
+                </div>
+                <div className="flex-1">
+                  <h5 className="font-medium text-white">Start Auto-Trading</h5>
+                  <p className="text-sm text-slate-400 mt-1">Enable the bot to trade automatically</p>
+                  <div className="flex gap-2 mt-3">
+                    {isActive ? (
+                      <span className="flex items-center gap-2 px-3 py-2 bg-green-500/20 border border-green-500/50 rounded-lg text-sm text-green-400">
+                        <CheckCircle className="w-4 h-4" />Bot is Running
+                      </span>
+                    ) : (
+                      <button
+                        onClick={handleStart}
+                        className="flex items-center gap-2 px-3 py-2 bg-blue-500/10 border border-blue-500/30 rounded-lg text-sm text-blue-400 hover:bg-blue-500/20"
+                      >
+                        <Play className="w-4 h-4" />Start Bot Now
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Step 4: Configure Settings */}
+            <div className="p-4 bg-slate-800/50 rounded-xl border border-slate-700">
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-full bg-yellow-500/20 text-yellow-400 border border-yellow-500/50 flex items-center justify-center text-sm font-bold">
+                  4
+                </div>
+                <div className="flex-1">
+                  <h5 className="font-medium text-white">Configure Automations</h5>
+                  <p className="text-sm text-slate-400 mt-1">Choose what the bot should do automatically</p>
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    <button
+                      onClick={() => setOwnerPanelTab('automation')}
+                      className="flex items-center gap-2 px-3 py-2 bg-purple-500/10 border border-purple-500/30 rounded-lg text-sm text-purple-400 hover:bg-purple-500/20"
+                    >
+                      <Settings className="w-4 h-4" />Open Automation Settings
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Reference */}
+          <div className="mt-6 p-4 bg-slate-800/30 rounded-xl border border-slate-700">
+            <h4 className="font-semibold text-white mb-3 flex items-center gap-2">
+              <Key className="w-5 h-5 text-yellow-400" />Admin Access Info
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <p className="text-xs text-slate-500 mb-1">Admin Key (for API calls)</p>
+                <div className="flex items-center gap-2">
+                  <code className="flex-1 px-3 py-2 bg-slate-900 rounded text-sm text-green-400 font-mono">TIME_ADMIN_2025</code>
+                  <button
+                    onClick={() => copyToClipboard('TIME_ADMIN_2025', 'admin-key')}
+                    className="p-2 bg-slate-700 rounded hover:bg-slate-600"
+                  >
+                    {copiedText === 'admin-key' ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4 text-slate-400" />}
+                  </button>
+                </div>
+              </div>
+              <div>
+                <p className="text-xs text-slate-500 mb-1">API Base URL</p>
+                <div className="flex items-center gap-2">
+                  <code className="flex-1 px-3 py-2 bg-slate-900 rounded text-sm text-blue-400 font-mono truncate">https://time-backend-hosting.fly.dev/api/v1</code>
+                  <button
+                    onClick={() => copyToClipboard('https://time-backend-hosting.fly.dev/api/v1', 'api-url')}
+                    className="p-2 bg-slate-700 rounded hover:bg-slate-600"
+                  >
+                    {copiedText === 'api-url' ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4 text-slate-400" />}
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div className="mt-4 flex items-center gap-2 text-sm text-yellow-400">
+              <Crown className="w-4 h-4" />
+              <span>As owner, you have <strong>0% fees</strong> and <strong>unlimited access</strong></span>
+            </div>
+          </div>
+
+          {/* Links */}
+          <div className="mt-4 flex flex-wrap gap-3">
+            <a
+              href="https://alpaca.markets"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 px-4 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-sm text-slate-400 hover:text-white hover:border-slate-600"
+            >
+              <ExternalLink className="w-4 h-4" />Alpaca (Stocks)
+            </a>
+            <a
+              href="https://www.binance.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 px-4 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-sm text-slate-400 hover:text-white hover:border-slate-600"
+            >
+              <ExternalLink className="w-4 h-4" />Binance (Crypto)
+            </a>
+            <a
+              href="https://www.oanda.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 px-4 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-sm text-slate-400 hover:text-white hover:border-slate-600"
+            >
+              <ExternalLink className="w-4 h-4" />OANDA (Forex)
+            </a>
+            <a
+              href="https://financialmodelingprep.com/developer"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 px-4 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-sm text-slate-400 hover:text-white hover:border-slate-600"
+            >
+              <ExternalLink className="w-4 h-4" />FMP (Market Data)
+            </a>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Alpha Signals - REAL DATA */}
@@ -1387,6 +1687,113 @@ export default function TIMEBEUNUSPage() {
                   <p className={clsx('text-sm', dominanceMode === mode.id ? 'text-white/90' : 'text-slate-400')}>{mode.plainEnglish}</p>
                 </button>
               ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Manual Trade Modal (New Trade button) */}
+      {showManualTradeModal && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+          <div className="bg-slate-900 border border-slate-700 rounded-2xl p-6 max-w-md w-full mx-4">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                <DollarSign className="w-5 h-5 text-green-400" />New Trade
+              </h3>
+              <button onClick={() => setShowManualTradeModal(false)} className="text-slate-400 hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm text-slate-400 mb-2 block">Symbol</label>
+                <input
+                  type="text"
+                  value={manualTradeSymbol}
+                  onChange={(e) => setManualTradeSymbol(e.target.value.toUpperCase())}
+                  className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-white text-lg font-bold focus:outline-none focus:border-green-500"
+                  placeholder="AAPL, TSLA, BTC..."
+                />
+              </div>
+              <div>
+                <label className="text-sm text-slate-400 mb-2 block">Action</label>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setManualTradeAction('buy')}
+                    className={clsx(
+                      'flex-1 py-3 rounded-lg font-bold text-lg transition-all',
+                      manualTradeAction === 'buy'
+                        ? 'bg-green-500 text-white'
+                        : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+                    )}
+                  >
+                    BUY
+                  </button>
+                  <button
+                    onClick={() => setManualTradeAction('sell')}
+                    className={clsx(
+                      'flex-1 py-3 rounded-lg font-bold text-lg transition-all',
+                      manualTradeAction === 'sell'
+                        ? 'bg-red-500 text-white'
+                        : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+                    )}
+                  >
+                    SELL
+                  </button>
+                </div>
+              </div>
+              <div>
+                <label className="text-sm text-slate-400 mb-2 block">Quantity</label>
+                <input
+                  type="number"
+                  value={manualTradeQuantity}
+                  onChange={(e) => setManualTradeQuantity(e.target.value)}
+                  className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-white text-lg font-bold focus:outline-none focus:border-green-500"
+                  placeholder="10"
+                />
+              </div>
+              <div className="flex gap-2">
+                {[10, 50, 100, 500].map(qty => (
+                  <button
+                    key={qty}
+                    onClick={() => setManualTradeQuantity(qty.toString())}
+                    className={clsx(
+                      'flex-1 py-2 rounded-lg text-sm font-medium transition-all',
+                      manualTradeQuantity === qty.toString()
+                        ? 'bg-yellow-500 text-black'
+                        : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+                    )}
+                  >
+                    {qty}
+                  </button>
+                ))}
+              </div>
+              <div className="p-3 bg-slate-800/50 rounded-lg border border-slate-700">
+                <p className="text-xs text-slate-500 mb-1">Order Summary</p>
+                <p className="text-white font-bold">
+                  {manualTradeAction.toUpperCase()} {manualTradeQuantity || '0'} shares of {manualTradeSymbol || '---'}
+                </p>
+                <p className="text-xs text-yellow-400 mt-1">Owner Rate: 0% fees</p>
+              </div>
+              <button
+                onClick={executeManualTrade}
+                disabled={isExecutingTrade || !manualTradeSymbol || !manualTradeQuantity}
+                className={clsx(
+                  'w-full py-4 rounded-xl font-bold text-lg transition-all',
+                  manualTradeAction === 'buy'
+                    ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white hover:from-green-600 hover:to-emerald-600'
+                    : 'bg-gradient-to-r from-red-500 to-orange-500 text-white hover:from-red-600 hover:to-orange-600',
+                  (isExecutingTrade || !manualTradeSymbol || !manualTradeQuantity) && 'opacity-50 cursor-not-allowed'
+                )}
+              >
+                {isExecutingTrade ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <Loader2 className="w-5 h-5 animate-spin" />Executing...
+                  </span>
+                ) : (
+                  `${manualTradeAction.toUpperCase()} ${manualTradeSymbol || 'SYMBOL'}`
+                )}
+              </button>
             </div>
           </div>
         </div>
