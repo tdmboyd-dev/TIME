@@ -408,6 +408,70 @@ router.get('/trades', authMiddleware, (req: Request, res: Response) => {
 });
 
 /**
+ * POST /trading/trades
+ * Execute a manual trade through connected broker
+ * SECURITY: Requires authentication
+ */
+router.post('/trades', authMiddleware, checkTradeLimit, async (req: Request, res: Response) => {
+  try {
+    const { symbol, direction, quantity, orderType = 'market', limitPrice, stopLoss, takeProfit } = req.body;
+
+    if (!symbol || !direction || !quantity) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required fields: symbol, direction, quantity',
+      });
+    }
+
+    const brokerManager = BrokerManager.getInstance();
+    const status = brokerManager.getStatus();
+
+    if (status.connectedBrokers === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'No brokers connected. Go to Settings → Brokers to connect a trading account.',
+      });
+    }
+
+    const connectedBroker = status.brokers.find(b => b.connected);
+    if (!connectedBroker) {
+      return res.status(400).json({
+        success: false,
+        error: 'No connected broker available',
+      });
+    }
+
+    const orderResult = await brokerManager.submitOrder({
+      symbol: symbol.replace('/', ''),
+      side: direction === 'long' ? 'buy' : 'sell',
+      type: orderType as 'market' | 'limit' | 'stop',
+      quantity: Number(quantity),
+      price: limitPrice ? Number(limitPrice) : undefined,
+      stopLoss: stopLoss ? Number(stopLoss) : undefined,
+      takeProfit: takeProfit ? Number(takeProfit) : undefined,
+    }, undefined, connectedBroker.id);
+
+    const user = (req as any).user;
+    const tradeValue = Number(quantity) * ((orderResult.order as any)?.filledAvgPrice || 100);
+    const fee = calculateTradeFee(tradeValue, user);
+
+    res.json({
+      success: true,
+      message: 'Trade executed via ' + connectedBroker.name,
+      data: {
+        order: orderResult.order,
+        broker: connectedBroker.id,
+        fee: fee,
+      },
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to execute trade',
+    });
+  }
+});
+/**
  * GET /trading/trades/open
  * Get all open positions
  * SECURITY: Requires authentication

@@ -761,7 +761,7 @@ function createApp(): express.Application {
       const tp = document.getElementById('tradeTP').value;
 
       try {
-        const res = await fetch('/api/v1/trades', {
+        const res = await fetch('/api/v1/trading/trades', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -1372,7 +1372,7 @@ function createApp(): express.Application {
         const limitPrice = document.getElementById('limitPrice').value;
 
         try {
-          const res = await fetch('/api/v1/trades', {
+          const res = await fetch('/api/v1/trading/trades', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -5031,7 +5031,7 @@ Your portfolio will be created and managed automatically. You'll receive alerts 
         health: '/health',
         bots: '/api/v1/bots',
         strategies: '/api/v1/strategies',
-        trades: '/api/v1/trades',
+        trades: '/api/v1/trading/trades',
         learn: '/api/v1/learn',
         admin: '/api/v1/admin',
       },

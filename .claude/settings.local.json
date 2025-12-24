@@ -152,7 +152,9 @@
       "Bash(flyctl deploy:*)",
       "Bash(npm run build:backend:*)",
       "Bash(fly status:*)",
-      "Bash(fly machines restart:*)"
+      "Bash(fly machines restart:*)",
+      "Bash(dir C:UsersTimebOneDriveTIME /b)",
+      "Bash(git checkout:*)"
     ]
   }
 }
