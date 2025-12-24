@@ -133,7 +133,7 @@ router.get('/settings', authMiddleware, async (req: Request, res: Response) => {
     const dbUser = await userRepository.findById(user.id);
     const settings = (dbUser as any)?.settings || DEFAULT_SETTINGS;
 
-    res.json({ settings });
+    res.json({ success: true, settings });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }

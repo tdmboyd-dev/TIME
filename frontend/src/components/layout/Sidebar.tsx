@@ -150,7 +150,7 @@ const navigation = [
   { name: 'Admin Portal', href: '/admin-portal', icon: Crown, isNew: true },
   // Admin-Only Features
   { name: 'TIMEBEUNUS', href: '/timebeunus', icon: Brain, adminOnly: true },
-  { name: 'DROPBOT AutoPilot', href: '/autopilot', icon: Rocket, adminOnly: true },
+  { name: 'DROPBOT AutoPilot', href: '/autopilot', icon: Rocket, isPremium: true },
   { name: 'Gift Access', href: '/gift-access', icon: Gift, adminOnly: true, isNew: true },
 ];
 

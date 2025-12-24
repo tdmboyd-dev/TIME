@@ -613,6 +613,18 @@ router.get('/me', authMiddleware, async (req: Request, res: Response) => {
   const fullUser = await userRepository.findById(user.id);
   const consentStatus = consentManager.getConsent(user.id);
 
+  // Get full broker connection status
+  const brokerConnections = fullUser?.brokerConnections || [];
+  const BrokerManager = require('../brokers/broker_manager').BrokerManager;
+  const brokerManager = BrokerManager.getInstance();
+  const brokerStatus = brokerManager.getStatus();
+
+  // Enrich broker connections with live status
+  const enrichedBrokerConnections = brokerConnections.map((conn: any) => ({
+    ...conn,
+    isLive: brokerStatus.brokers.some((b: any) => b.id === conn.brokerId && b.connected),
+  }));
+
   res.json({
     user: {
       id: user.id,
@@ -622,10 +634,13 @@ router.get('/me', authMiddleware, async (req: Request, res: Response) => {
       createdAt: fullUser?.createdAt,
       settings: fullUser?.settings,
       mfaEnabled: user.mfaEnabled,
+      subscription: (fullUser as any)?.subscription,
     },
     consent: consentStatus,
     hasValidConsent: consentManager.hasValidConsent(user.id),
-    brokerConnections: fullUser?.brokerConnections?.length || 0,
+    brokerConnections: enrichedBrokerConnections,
+    brokerConnectionCount: brokerConnections.length,
+    connectedBrokers: brokerStatus.connectedBrokers,
   });
 });
 
