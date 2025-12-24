@@ -176,7 +176,10 @@ export interface AutoPilotTrade {
   // Learning moment
   educationalTip?: string;        // What can user learn from this
 
-  status: 'pending' | 'executed' | 'partial' | 'failed';
+  status: 'pending' | 'executed' | 'partial' | 'failed' | 'blocked';
+
+  // Error info (when trade fails or is blocked)
+  error?: string;
 }
 
 // Portfolio snapshot with explanations
@@ -337,7 +340,7 @@ export interface WatchModeStream {
   liveCommentary: {
     timestamp: Date;
     message: string;
-    type: 'info' | 'trade' | 'alert' | 'education';
+    type: 'info' | 'trade' | 'alert' | 'education' | 'error';
   }[];
 
   // Market context
@@ -2412,11 +2415,53 @@ export class AutoPilotCapitalEngine extends EventEmitter {
 
           logger.info(`🔴 LIVE ORDER FILLED: ${realOrderId} @ $${trade.price}`);
         } catch (brokerError) {
-          logger.error(`❌ Broker order failed, falling back to paper:`, brokerError as object);
-          // Fall through to paper trading
+          // CRITICAL FIX: Do NOT silently fall back to paper - alert user!
+          logger.error(`❌ LIVE TRADE FAILED - BROKER ERROR:`, brokerError as object);
+          trade.status = 'failed';
+          trade.error = `Broker execution failed: ${(brokerError as Error).message}`;
+
+          // Emit error event so frontend knows trade failed
+          this.emit('trade_failed', {
+            pilotId,
+            trade,
+            error: (brokerError as Error).message,
+            reason: 'BROKER_ERROR'
+          });
+
+          // Add failure to commentary
+          if (watchStream) {
+            watchStream.liveCommentary.push({
+              timestamp: new Date(),
+              message: `❌ LIVE TRADE FAILED: ${(brokerError as Error).message}. Trade NOT executed.`,
+              type: 'error'
+            });
+          }
+
+          // Do NOT continue to paper trading - return early
+          return;
         }
       } else {
-        logger.warn(`⚠️ Live trading enabled but no brokers connected - using paper mode`);
+        // CRITICAL FIX: Do NOT silently use paper mode - alert user!
+        logger.error(`❌ LIVE TRADE BLOCKED - NO BROKERS CONNECTED`);
+        trade.status = 'blocked';
+        trade.error = 'No brokers connected. Connect a broker to enable live trading.';
+
+        this.emit('trade_blocked', {
+          pilotId,
+          trade,
+          reason: 'NO_BROKER_CONNECTED'
+        });
+
+        if (watchStream) {
+          watchStream.liveCommentary.push({
+            timestamp: new Date(),
+            message: `❌ LIVE TRADE BLOCKED: No brokers connected. Go to Settings → Brokers to connect.`,
+            type: 'error'
+          });
+        }
+
+        // Do NOT continue to paper trading - return early
+        return;
       }
     }
 

@@ -1,11 +1,109 @@
 # DROP THIS TO COPILOT - QUICK REFERENCE
 
 **Last Updated:** 2025-12-23
+**Version:** v47.0.0 - CRITICAL TRADING FIXES + FULL AUDIT
 **Purpose:** Quick summary for Copilot/Claude when starting new sessions
 
 ---
 
-## 🔐 LATEST UPDATES (2025-12-23) - ADMIN & TIER ACCESS EDITION (v45.0.0)
+## 🚨 CRITICAL FIXES (2025-12-23) - v47.0.0
+
+### Session Summary — Trading Execution Fixes + Full 40-Page Audit
+
+| Feature | Status | Details |
+|---------|--------|---------|
+| TRADING_MODE=live | ✅ FIXED | Added to .env - was missing! |
+| Silent Paper Fallback | ✅ FIXED | Dropbot now throws errors, not silent fallback |
+| TimbeunusTradeService | ✅ FIXED | Rejects trades when no broker connected |
+| 40-Page Audit | ✅ COMPLETE | All pages tested and documented |
+| Fee Structure | ✅ MAXIMIZED | All fees match/beat industry |
+| Marketing Auto-Post | ✅ DEPLOYED | Auto-post every 2 hours |
+
+### Critical Issues Found & Fixed
+
+1. **TRADING_MODE=live missing from .env** - Broker manager defaulted to PAPER mode
+2. **Silent paper fallback in dropbot.ts** - Now throws proper errors
+3. **Paper simulation in TimbeunusTradeService** - Now rejects if no broker
+
+---
+
+## 🔐 PREVIOUS: MAXIMIZED FEE STRUCTURE (v46.1.0)
+
+### Session Summary — Fee Optimization + Marketing Bot Auto-Posting
+
+| Feature | Status | Details |
+|---------|--------|---------|
+| Fee Structure | ✅ MAXIMIZED | All fees increased to match/beat industry |
+| Marketing Auto-Post | ✅ DEPLOYED | Auto-post every 2 hours with 30+ content pieces |
+| Fly.io Deploy | ✅ LIVE | https://time-backend-hosting.fly.dev/ |
+| GitHub Push | ✅ PUSHED | v46.0.0 + v46.1.0 |
+
+---
+
+## 💰 FEE STRUCTURE (v46.0.0 - MAXIMIZED)
+
+### Transaction Fees (UPDATED Dec 2025)
+
+| Fee Type | OLD | NEW | Change |
+|----------|-----|-----|--------|
+| Per-trade flat | $0.99 | **$1.99** | +100% |
+| Per-trade % | 0.2% | **0.5%** | +150% |
+| Crypto spread | 0.5% | **1.25%** | +150% |
+| Performance fee | 15% | **22%** | +47% |
+| AUM fee | 0.5%/yr | **1.0%/yr** | +100% |
+| Copy trading total | 20% | **30%** | +50% |
+| Platform copy cut | 30% | **40%** | +33% |
+| Marketplace cut | 25% | **30%** | +20% |
+| NFT seller fee | 2% | **2.5%** | +25% |
+| NFT royalty cut | 10% | **15%** | +50% |
+| Options/contract | $0.50 | **$0.65** | +30% |
+| ACH withdrawal | Free | **0.15%** | New |
+| Wire withdrawal | $25 | **$45** | +80% |
+| Instant withdrawal | 1.5% | **2.0%** | +33% |
+
+### Fee Files (Single Source of Truth)
+- `src/backend/services/GiftAccessService.ts` - Main pricing config
+- `src/backend/services/PlatformFeeService.ts` - Fee calculations + all methods
+- `src/backend/monetization/revenue_engine.ts` - Transaction fees
+- `src/backend/middleware/tierAccess.ts` - Fee enforcement (uses GiftAccessService)
+
+### OWNER BYPASS
+Admin/Owner users pay **$0** on ALL fees. Checked via `isOwnerOrAdmin(user)` in tierAccess.ts.
+
+---
+
+## 📢 MARKETING BOT AUTO-POSTING (v46.1.0)
+
+### How to Enable
+```typescript
+import { getMarketingBot } from './marketing/MarketingBot';
+const bot = getMarketingBot();
+
+// Configure platforms first
+bot.configurePlatform({ platform: 'twitter', enabled: true, apiKey: '...' });
+
+// Start auto-posting
+bot.startAutoPosting({
+  intervalMinutes: 60,      // Post every hour
+  maxPostsPerDay: 16,       // Max 16 posts/day
+  quietHoursStart: 23,      // No posts 11 PM - 7 AM
+  quietHoursEnd: 7,
+  platforms: ['twitter', 'linkedin', 'discord', 'telegram'],
+  contentTypes: ['tip', 'feature', 'educational', 'engagement'],
+  includeEmojis: true,
+});
+```
+
+### Content Library (30+ pieces)
+- Trading tips (10)
+- Feature highlights (8)
+- Educational content (7)
+- Engagement posts (5)
+- Promotions (4)
+
+---
+
+## 🔐 PREVIOUS: ADMIN & TIER ACCESS EDITION (v45.0.0)
 
 ### Session Summary — Master Admin + Tier Access Controls
 
@@ -68,17 +166,22 @@
 | White-Label | ❌ | ❌ | ❌ | ❌ | ✅ |
 | API Access | ❌ | ❌ | ❌ | ❌ | ✅ |
 
-### Transaction Fees
+### Transaction Fees (MAXIMIZED v46.0.0)
 
 | Fee Type | Amount | Notes |
 |----------|--------|-------|
-| Per-trade fee | $0.99 or 0.2% | Whichever is greater |
-| Crypto spread | 0.5% | Built into crypto prices |
-| Performance fee | 15% | On profits only |
-| AUM fee | 0.5% | Annual |
-| Marketplace cut | 25% | Bot rental revenue share |
+| Per-trade fee | **$1.99 or 0.5%** | Whichever is greater |
+| Crypto spread | **1.25%** | Beats Coinbase retail |
+| Performance fee | **22%** | Above industry standard |
+| AUM fee | **1.0%** | Annual - standard wealth mgmt |
+| Marketplace cut | **30%** | Matches app stores |
+| Copy trading | **30%** (you get 40%) | Of profits only |
+| Options | **$0.65/contract** | Matches TD Ameritrade |
+| NFT seller | **2.5%** | Matches OpenSea |
+| Wire withdrawal | **$45** | Flat fee |
+| Instant withdrawal | **2.0%** | Matches Cash App |
 
-**OWNER BYPASS:** Admin/Owner users pay 0% on all fees.
+**OWNER BYPASS:** Admin/Owner users pay **$0** on ALL fees.
 
 ---
 

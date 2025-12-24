@@ -34,6 +34,7 @@ export interface ManualTrade {
   filledPrice?: number;
   pnl?: number;
   createdAt: Date;
+  notes?: string;  // Error messages or explanations
 }
 
 export interface Position {
@@ -150,11 +151,12 @@ class TimbeunusTradeService {
           this.updatePosition(symbol, action, quantity, trade.filledPrice || 0);
         }
       } else {
-        // Simulate for paper trading
-        trade.status = 'filled';
-        trade.filledAt = new Date();
-        trade.filledPrice = limitPrice || 100; // Mock price
-        this.updatePosition(symbol, action, quantity, trade.filledPrice);
+        // CRITICAL: No brokers connected - reject trade, don't simulate
+        logger.error('NO BROKERS CONNECTED - Trade rejected. Connect a broker first.');
+        trade.status = 'rejected';
+        trade.notes = 'No brokers connected. Go to Settings → Brokers to connect a trading account.';
+        this.trades.push(trade);
+        return trade;
       }
 
       this.trades.push(trade);
