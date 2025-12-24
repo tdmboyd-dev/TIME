@@ -83,21 +83,48 @@ export class TDBroker extends EventEmitter {
     return `${baseUrl}?${params.toString()}`;
   }
 
-  // Exchange code for tokens
+  // Exchange code for tokens - REQUIRES REAL TD AMERITRADE API SETUP
   async exchangeCode(code: string): Promise<{
     accessToken: string;
     refreshToken: string;
     expiresIn: number;
   }> {
-    // In production, make actual API call
-    // For now, simulate
-    logger.info('Exchanging authorization code for tokens');
+    logger.info('Exchanging authorization code for TD Ameritrade tokens');
 
-    return {
-      accessToken: 'simulated_access_token',
-      refreshToken: 'simulated_refresh_token',
-      expiresIn: 1800,
-    };
+    // TD Ameritrade OAuth token exchange
+    const tokenUrl = 'https://api.tdameritrade.com/v1/oauth2/token';
+
+    try {
+      const response = await fetch(tokenUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          grant_type: 'authorization_code',
+          access_type: 'offline',
+          code: code,
+          client_id: `${this.config.clientId}@AMER.OAUTHAP`,
+          redirect_uri: this.config.redirectUri,
+        }).toString(),
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(`TD Ameritrade token exchange failed: ${response.status} - ${error}`);
+      }
+
+      const data = await response.json() as { access_token: string; refresh_token: string; expires_in: number };
+
+      return {
+        accessToken: data.access_token,
+        refreshToken: data.refresh_token,
+        expiresIn: data.expires_in,
+      };
+    } catch (error) {
+      logger.error('TD Ameritrade token exchange failed:', error as object);
+      throw new Error(`TD Ameritrade OAuth failed: ${(error as Error).message}. Ensure TD_CLIENT_ID and TD_REDIRECT_URI are configured.`);
+    }
   }
 
   // Connect with tokens
@@ -140,19 +167,44 @@ export class TDBroker extends EventEmitter {
     return this.connected;
   }
 
-  // Refresh access token
+  // Refresh access token - REAL TD AMERITRADE API CALL
   async refreshAccessToken(): Promise<boolean> {
     if (!this.config.refreshToken) {
+      logger.error('No refresh token available for TD Ameritrade');
       return false;
     }
 
+    const tokenUrl = 'https://api.tdameritrade.com/v1/oauth2/token';
+
     try {
-      // Simulated token refresh
-      this.config.accessToken = 'new_simulated_access_token';
-      logger.info('Access token refreshed');
+      const response = await fetch(tokenUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          grant_type: 'refresh_token',
+          refresh_token: this.config.refreshToken,
+          client_id: `${this.config.clientId}@AMER.OAUTHAP`,
+        }).toString(),
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(`Token refresh failed: ${response.status} - ${error}`);
+      }
+
+      const data = await response.json() as { access_token: string; refresh_token?: string };
+      this.config.accessToken = data.access_token;
+
+      if (data.refresh_token) {
+        this.config.refreshToken = data.refresh_token;
+      }
+
+      logger.info('TD Ameritrade access token refreshed');
       return true;
     } catch (error) {
-      logger.error('Failed to refresh token', { error: error instanceof Error ? error.message : String(error) });
+      logger.error('Failed to refresh TD Ameritrade token:', error as object);
       return false;
     }
   }

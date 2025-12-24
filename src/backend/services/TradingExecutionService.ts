@@ -46,14 +46,21 @@ interface CandleData {
  */
 function analyzeWithAllStrategies(prices: number[]): StrategyAnalysis {
   // Convert prices to candles for the real engine
-  const candles: Candle[] = prices.map((price, i) => ({
-    timestamp: new Date(Date.now() - (prices.length - i) * 60000),
-    open: price,
-    high: price * (1 + Math.random() * 0.003),
-    low: price * (1 - Math.random() * 0.003),
-    close: price,
-    volume: 1000000 + Math.random() * 500000,
-  }));
+  // Note: For accurate analysis, use getCandles() to fetch real OHLCV data
+  // This fallback estimates OHLC from close prices with typical spread
+  const candles: Candle[] = prices.map((price, i) => {
+    const prevPrice = i > 0 ? prices[i - 1] : price;
+    const change = Math.abs(price - prevPrice);
+    const spreadEstimate = Math.max(change * 0.5, price * 0.001); // Estimated typical spread
+    return {
+      timestamp: new Date(Date.now() - (prices.length - i) * 60000),
+      open: prevPrice,
+      high: Math.max(price, prevPrice) + spreadEstimate,
+      low: Math.min(price, prevPrice) - spreadEstimate,
+      close: price,
+      volume: 0, // Volume unknown - analysis should not rely on volume
+    };
+  });
 
   // Use REAL strategy analysis - no more stubs!
   return realStrategyAnalysis(candles);
@@ -141,54 +148,22 @@ async function getCandles(symbol: string, timeframe: string, from: number, to: n
       }
     }
 
-    // If no API keys, generate realistic market data
-    logger.warn(`No API keys configured - generating simulated candles for ${symbol}`);
-    return generateRealisticCandles(symbol, from, to);
+    // If no API keys, throw error - real market data is REQUIRED
+    logger.error(`NO API KEYS CONFIGURED - Cannot fetch market data for ${symbol}. Configure TWELVE_DATA_API_KEY or FINNHUB_API_KEY.`);
+    throw new Error(`Market data unavailable for ${symbol}. Please configure at least one market data API key (TWELVE_DATA_API_KEY or FINNHUB_API_KEY).`);
   } catch (error) {
     logger.error('Failed to fetch candles:', error as object);
-    return generateRealisticCandles(symbol, from, to);
+    throw new Error(`Market data fetch failed for ${symbol}: ${(error as Error).message}. Ensure market data APIs are configured and accessible.`);
   }
 }
 
 /**
- * Generate realistic market candles when APIs are unavailable
- * Uses proper market microstructure simulation
+ * @deprecated - NO LONGER USED
+ * Real market data is now REQUIRED for all trading operations.
+ * This function is kept for reference but will throw if called.
  */
-function generateRealisticCandles(symbol: string, from: number, to: number): CandleData[] {
-  const candles: CandleData[] = [];
-  const periods = Math.min(100, Math.floor((to - from) / 3600));
-
-  // Base price based on symbol
-  let price = symbol.includes('BTC') ? 45000 + Math.random() * 5000 :
-              symbol.includes('ETH') ? 3000 + Math.random() * 500 :
-              symbol.includes('SPY') ? 450 + Math.random() * 20 :
-              100 + Math.random() * 50;
-
-  // Add some trending behavior
-  const trend = (Math.random() - 0.5) * 0.0005; // Slight trend bias
-
-  for (let i = 0; i < periods; i++) {
-    const volatility = 0.02 + Math.random() * 0.01; // 2-3% volatility
-    const change = (Math.random() - 0.5) * volatility + trend;
-
-    const open = price;
-    price = price * (1 + change);
-
-    // Create realistic OHLC data
-    const bodyRange = Math.abs(price - open);
-    const wickMultiplier = 0.3 + Math.random() * 0.5;
-
-    candles.push({
-      timestamp: new Date((from + i * 3600) * 1000),
-      open,
-      high: Math.max(open, price) * (1 + bodyRange * wickMultiplier / price),
-      low: Math.min(open, price) * (1 - bodyRange * wickMultiplier / price),
-      close: price,
-      volume: 1000000 + Math.random() * 2000000,
-    });
-  }
-
-  return candles;
+function generateRealisticCandles(_symbol: string, _from: number, _to: number): CandleData[] {
+  throw new Error('Simulated candle generation is disabled. Real market data is required for production trading.');
 }
 
 // ============================================

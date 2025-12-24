@@ -646,22 +646,25 @@ export class AbsorbedSuperBots extends EventEmitter {
       },
     ];
 
-    // Create all bots with default performance
+    // Create all bots with performance based on bot properties
     superBots.forEach((bot, i) => {
       const id = `super-bot-${(i + 1).toString().padStart(3, '0')}`;
+      // Calculate performance based on bot's expectedROI and riskLevel
+      const riskMultiplier = bot.riskLevel === 'low' ? 0.7 : bot.riskLevel === 'medium' ? 1.0 : 1.3;
+      const baseWinRate = 55 + (bot.expectedROI / 2);  // Higher ROI = higher win rate needed
       this.bots.set(id, {
         ...bot,
         id,
         performance: {
-          winRate: 55 + Math.random() * 20,
-          profitFactor: 1.2 + Math.random() * 0.8,
-          sharpeRatio: 1 + Math.random() * 1.5,
-          maxDrawdown: 5 + Math.random() * 15,
-          totalTrades: Math.floor(Math.random() * 1000),
-          totalProfit: Math.random() * 50000,
-          avgTradeReturn: 0.5 + Math.random() * 2,
-          consecutiveWins: Math.floor(Math.random() * 10),
-          consecutiveLosses: Math.floor(Math.random() * 5),
+          winRate: Math.min(85, baseWinRate * riskMultiplier),
+          profitFactor: 1.2 + (bot.expectedROI / 30),
+          sharpeRatio: 1.0 + (bot.expectedROI / 20),
+          maxDrawdown: bot.riskLevel === 'low' ? 8 : bot.riskLevel === 'medium' ? 12 : 18,
+          totalTrades: 0,  // No trades until bot actually trades
+          totalProfit: 0,  // No profit until bot actually trades
+          avgTradeReturn: bot.expectedROI / 100,  // Based on expected ROI
+          consecutiveWins: 0,
+          consecutiveLosses: 0,
         },
       });
     });
@@ -672,37 +675,61 @@ export class AbsorbedSuperBots extends EventEmitter {
 
   // ============== BOT OPERATIONS ==============
 
-  generateSignal(botId: string, symbol: string): TradeSignal | null {
+  generateSignal(botId: string, symbol: string, marketData?: { price: number; trend: 'up' | 'down' | 'neutral' }): TradeSignal | null {
     const bot = this.bots.get(botId);
     if (!bot || !bot.isActive) return null;
 
-    // Generate signal based on bot's abilities
-    const abilities_used = bot.abilities
-      .filter(() => Math.random() > 0.5)
-      .map(a => a.name);
+    // Require real market data to generate signals
+    if (!marketData) {
+      console.warn(`[AbsorbedSuperBots] Cannot generate signal without market data for ${symbol}`);
+      return null;
+    }
 
-    const confidence = 60 + Math.random() * 35;
-    const action = Math.random() > 0.5 ? 'BUY' : Math.random() > 0.5 ? 'SELL' : 'HOLD';
+    // Use all abilities for analysis
+    const abilities_used = bot.abilities.map(a => a.name);
+
+    // Determine action based on market trend and bot's strategy type
+    let action: 'BUY' | 'SELL' | 'HOLD' = 'HOLD';
+    let confidence = 50;
+
+    // Trend following bots buy in uptrends, mean reversion bots buy in downtrends
+    const isTrendFollower = bot.abilities.some(a =>
+      a.name.toLowerCase().includes('trend') || a.name.toLowerCase().includes('momentum')
+    );
+
+    if (isTrendFollower) {
+      if (marketData.trend === 'up') { action = 'BUY'; confidence = 70; }
+      else if (marketData.trend === 'down') { action = 'SELL'; confidence = 70; }
+    } else {
+      // Mean reversion
+      if (marketData.trend === 'down') { action = 'BUY'; confidence = 65; }
+      else if (marketData.trend === 'up') { action = 'SELL'; confidence = 65; }
+    }
+
+    // Adjust confidence based on bot's expected ROI
+    confidence = Math.min(90, confidence + (bot.expectedROI / 5));
 
     const signal: TradeSignal = {
       botId,
       symbol,
       action,
       confidence,
-      positionSize: 0.05 + Math.random() * 0.1,
-      reasoning: `${bot.name} detected opportunity using ${abilities_used.join(', ')}`,
+      positionSize: bot.riskLevel === 'low' ? 0.05 : bot.riskLevel === 'medium' ? 0.10 : 0.15,
+      reasoning: `${bot.name} detected ${marketData.trend} trend using ${abilities_used.join(', ')}`,
       abilities_used,
       timestamp: new Date(),
     };
 
     if (action !== 'HOLD') {
-      signal.entryPrice = 100 + Math.random() * 100;
+      signal.entryPrice = marketData.price;
+      const targetPercent = bot.expectedROI / 100;  // Use expected ROI for target
+      const stopPercent = targetPercent / 2;  // Stop at half the target
       signal.targetPrice = signal.action === 'BUY'
-        ? signal.entryPrice * (1 + Math.random() * 0.1)
-        : signal.entryPrice * (1 - Math.random() * 0.1);
+        ? signal.entryPrice * (1 + targetPercent)
+        : signal.entryPrice * (1 - targetPercent);
       signal.stopLoss = signal.action === 'BUY'
-        ? signal.entryPrice * (1 - Math.random() * 0.05)
-        : signal.entryPrice * (1 + Math.random() * 0.05);
+        ? signal.entryPrice * (1 - stopPercent)
+        : signal.entryPrice * (1 + stopPercent);
     }
 
     this.activeSignals.set(`${botId}-${Date.now()}`, signal);

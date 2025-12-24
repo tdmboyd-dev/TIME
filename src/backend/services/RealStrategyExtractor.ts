@@ -327,18 +327,24 @@ export function createSMACrossoverStrategy(shortPeriod: number = 7, longPeriod: 
 
       // Golden cross (bullish)
       if (prevShort <= prevLong && currentShort > currentLong) {
+        // Confidence based on crossover strength (how far short crossed above long)
+        const crossStrength = Math.abs((currentShort - currentLong) / currentLong);
+        const confidence = Math.min(0.85, 0.65 + crossStrength * 2);
         return {
           direction: 'long',
-          confidence: 0.65 + Math.random() * 0.15,  // 65-80%
+          confidence,
           reason: `SMA Golden Cross: ${shortPeriod} crossed above ${longPeriod}`,
         };
       }
 
       // Death cross (bearish)
       if (prevShort >= prevLong && currentShort < currentLong) {
+        // Confidence based on crossover strength
+        const crossStrength = Math.abs((currentLong - currentShort) / currentLong);
+        const confidence = Math.min(0.85, 0.65 + crossStrength * 2);
         return {
           direction: 'short',
-          confidence: 0.65 + Math.random() * 0.15,
+          confidence,
           reason: `SMA Death Cross: ${shortPeriod} crossed below ${longPeriod}`,
         };
       }
@@ -373,18 +379,24 @@ export function createRSIStrategy(period: number = 14, oversold: number = 30, ov
 
       // Oversold bounce (bullish)
       if (prevRSI < oversold && currentRSI >= oversold) {
+        // Confidence based on how oversold it was (lower = more confident)
+        const oversoldDepth = Math.max(0, (oversold - prevRSI) / oversold);
+        const confidence = Math.min(0.85, 0.60 + oversoldDepth * 0.25);
         return {
           direction: 'long',
-          confidence: 0.60 + Math.random() * 0.20,
+          confidence,
           reason: `RSI bounced from oversold (${currentRSI.toFixed(1)})`,
         };
       }
 
       // Overbought reversal (bearish)
       if (prevRSI > overbought && currentRSI <= overbought) {
+        // Confidence based on how overbought it was (higher = more confident)
+        const overboughtExcess = Math.max(0, (prevRSI - overbought) / (100 - overbought));
+        const confidence = Math.min(0.85, 0.60 + overboughtExcess * 0.25);
         return {
           direction: 'short',
-          confidence: 0.60 + Math.random() * 0.20,
+          confidence,
           reason: `RSI dropped from overbought (${currentRSI.toFixed(1)})`,
         };
       }
@@ -424,18 +436,28 @@ export function createMACDStrategy(fastPeriod: number = 12, slowPeriod: number =
 
       // MACD crossed above signal (bullish)
       if (prevMACD <= prevSignal && currentMACD > currentSignal) {
+        // Confidence based on histogram strength (MACD - Signal)
+        const histogram = Math.abs(currentMACD - currentSignal);
+        const avgPrice = closes[closes.length - 1];
+        const normalizedHistogram = histogram / avgPrice * 100;
+        const confidence = Math.min(0.85, 0.62 + normalizedHistogram * 0.5);
         return {
           direction: 'long',
-          confidence: 0.62 + Math.random() * 0.18,
+          confidence,
           reason: `MACD bullish crossover`,
         };
       }
 
       // MACD crossed below signal (bearish)
       if (prevMACD >= prevSignal && currentMACD < currentSignal) {
+        // Confidence based on histogram strength
+        const histogram = Math.abs(currentSignal - currentMACD);
+        const avgPrice = closes[closes.length - 1];
+        const normalizedHistogram = histogram / avgPrice * 100;
+        const confidence = Math.min(0.85, 0.62 + normalizedHistogram * 0.5);
         return {
           direction: 'short',
-          confidence: 0.62 + Math.random() * 0.18,
+          confidence,
           reason: `MACD bearish crossover`,
         };
       }
@@ -474,18 +496,26 @@ export function createBollingerBandsStrategy(period: number = 20, stdDev: number
 
       // Price bounced off lower band (bullish)
       if (prevClose <= prevLower && currentClose > currentLower) {
+        // Confidence based on how far below the band it went
+        const bandWidth = currentUpper - currentLower;
+        const penetration = Math.max(0, (currentLower - prevClose) / bandWidth);
+        const confidence = Math.min(0.85, 0.58 + penetration * 0.25);
         return {
           direction: 'long',
-          confidence: 0.58 + Math.random() * 0.22,
+          confidence,
           reason: `Price bounced off lower Bollinger Band`,
         };
       }
 
       // Price rejected from upper band (bearish)
       if (prevClose >= prevUpper && currentClose < currentUpper) {
+        // Confidence based on how far above the band it went
+        const bandWidth = currentUpper - currentLower;
+        const penetration = Math.max(0, (prevClose - currentUpper) / bandWidth);
+        const confidence = Math.min(0.85, 0.58 + penetration * 0.25);
         return {
           direction: 'short',
-          confidence: 0.58 + Math.random() * 0.22,
+          confidence,
           reason: `Price rejected from upper Bollinger Band`,
         };
       }
@@ -523,18 +553,21 @@ export function createSupertrendStrategy(period: number = 10, multiplier: number
 
       // Trend changed to bullish
       if (prevDir === -1 && currentDir === 1) {
+        // Confidence is high for Supertrend since it's a lagging indicator that confirms trends
+        const confidence = 0.75;
         return {
           direction: 'long',
-          confidence: 0.68 + Math.random() * 0.15,
+          confidence,
           reason: `Supertrend flipped bullish`,
         };
       }
 
       // Trend changed to bearish
       if (prevDir === 1 && currentDir === -1) {
+        const confidence = 0.75;
         return {
           direction: 'short',
-          confidence: 0.68 + Math.random() * 0.15,
+          confidence,
           reason: `Supertrend flipped bearish`,
         };
       }
@@ -567,18 +600,24 @@ export function createMomentumStrategy(window: number = 14): ExtractedStrategy {
 
       // Momentum turning positive
       if (prevMomentum <= 0 && momentum > 0) {
+        // Confidence based on momentum strength
+        const momentumStrength = Math.min(0.25, Math.abs(momentum));
+        const confidence = Math.min(0.80, 0.55 + momentumStrength);
         return {
           direction: 'long',
-          confidence: 0.55 + Math.random() * 0.20,
+          confidence,
           reason: `Momentum turned positive (${(momentum * 100).toFixed(2)}%)`,
         };
       }
 
       // Momentum turning negative
       if (prevMomentum >= 0 && momentum < 0) {
+        // Confidence based on momentum strength
+        const momentumStrength = Math.min(0.25, Math.abs(momentum));
+        const confidence = Math.min(0.80, 0.55 + momentumStrength);
         return {
           direction: 'short',
-          confidence: 0.55 + Math.random() * 0.20,
+          confidence,
           reason: `Momentum turned negative (${(momentum * 100).toFixed(2)}%)`,
         };
       }
@@ -615,17 +654,23 @@ export function createContrarianStrategy(window: number = 3): ExtractedStrategy 
 
       // Contrarian: buy after drops, sell after rises
       if (avgReturn < -0.01) {  // More than 1% drop on average
+        // Confidence based on how extreme the drop was
+        const dropSeverity = Math.min(0.25, Math.abs(avgReturn) * 5);
+        const confidence = Math.min(0.75, 0.52 + dropSeverity);
         return {
           direction: 'long',
-          confidence: 0.52 + Math.random() * 0.20,
+          confidence,
           reason: `Contrarian buy after ${(avgReturn * 100).toFixed(2)}% avg drop`,
         };
       }
 
       if (avgReturn > 0.01) {  // More than 1% rise on average
+        // Confidence based on how extreme the rise was
+        const riseSeverity = Math.min(0.25, Math.abs(avgReturn) * 5);
+        const confidence = Math.min(0.75, 0.52 + riseSeverity);
         return {
           direction: 'short',
-          confidence: 0.52 + Math.random() * 0.20,
+          confidence,
           reason: `Contrarian sell after ${(avgReturn * 100).toFixed(2)}% avg rise`,
         };
       }

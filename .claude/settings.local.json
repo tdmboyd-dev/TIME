@@ -150,7 +150,9 @@
       "Bash(npx vercel --prod)",
       "Bash(fly deploy:*)",
       "Bash(flyctl deploy:*)",
-      "Bash(npm run build:backend:*)"
+      "Bash(npm run build:backend:*)",
+      "Bash(fly status:*)",
+      "Bash(fly machines restart:*)"
     ]
   }
 }

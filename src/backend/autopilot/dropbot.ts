@@ -1305,18 +1305,29 @@ export class AutoSkimEngine extends EventEmitter {
   }
 
   private getSkimmableAssets(config: AutoSkimConfig): { symbol: string; name: string; price: number }[] {
-    const allAssets = [
-      { symbol: 'BTC', name: 'Bitcoin', price: 42500 + (Math.random() - 0.5) * 500 },
-      { symbol: 'ETH', name: 'Ethereum', price: 2250 + (Math.random() - 0.5) * 50 },
-      { symbol: 'SOL', name: 'Solana', price: 98 + (Math.random() - 0.5) * 5 },
-      { symbol: 'SPY', name: 'S&P 500 ETF', price: 478 + (Math.random() - 0.5) * 2 },
-      { symbol: 'QQQ', name: 'Nasdaq 100 ETF', price: 405 + (Math.random() - 0.5) * 2 },
-      { symbol: 'AAPL', name: 'Apple', price: 195 + (Math.random() - 0.5) * 2 },
-      { symbol: 'MSFT', name: 'Microsoft', price: 378 + (Math.random() - 0.5) * 2 },
-      { symbol: 'NVDA', name: 'NVIDIA', price: 495 + (Math.random() - 0.5) * 5 },
-      { symbol: 'EUR/USD', name: 'Euro/Dollar', price: 1.0875 + (Math.random() - 0.5) * 0.001 },
-      { symbol: 'GOLD', name: 'Gold', price: 2050 + (Math.random() - 0.5) * 10 },
+    // NOTE: AutoSkim requires real market data connection to function properly
+    // These are reference prices that should be updated by the market data feed
+    // In production, prices come from connected brokers and market data providers
+    const cachedAssets = [
+      { symbol: 'BTC', name: 'Bitcoin', price: this.lastPrices.get('BTC') || 42500 },
+      { symbol: 'ETH', name: 'Ethereum', price: this.lastPrices.get('ETH') || 2250 },
+      { symbol: 'SOL', name: 'Solana', price: this.lastPrices.get('SOL') || 98 },
+      { symbol: 'SPY', name: 'S&P 500 ETF', price: this.lastPrices.get('SPY') || 478 },
+      { symbol: 'QQQ', name: 'Nasdaq 100 ETF', price: this.lastPrices.get('QQQ') || 405 },
+      { symbol: 'AAPL', name: 'Apple', price: this.lastPrices.get('AAPL') || 195 },
+      { symbol: 'MSFT', name: 'Microsoft', price: this.lastPrices.get('MSFT') || 378 },
+      { symbol: 'NVDA', name: 'NVIDIA', price: this.lastPrices.get('NVDA') || 495 },
+      { symbol: 'EUR/USD', name: 'Euro/Dollar', price: this.lastPrices.get('EUR/USD') || 1.0875 },
+      { symbol: 'GOLD', name: 'Gold', price: this.lastPrices.get('GOLD') || 2050 },
     ];
+
+    // Warn if using stale/default prices
+    const hasRealPrices = this.lastPrices.size > 0;
+    if (!hasRealPrices) {
+      logger.warn('AutoSkim using default prices - connect market data for accurate pricing');
+    }
+
+    const allAssets = cachedAssets;
 
     // Update price tracking
     for (const asset of allAssets) {
@@ -2543,21 +2554,40 @@ export class AutoPilotCapitalEngine extends EventEmitter {
     const trades = this.trades.get(pilotId) || [];
     if (!pilot) return;
 
-    // Simulate performance (in production, would calculate from actual trades)
-    const dayReturn = (Math.random() - 0.4) * 0.02; // -0.8% to +1.2%
-    pilot.currentValue = pilot.currentValue * (1 + dayReturn);
-    pilot.totalReturn = pilot.currentValue - pilot.totalDeposited;
-    pilot.totalReturnPercent = (pilot.totalReturn / pilot.totalDeposited) * 100;
+    // Calculate REAL performance from actual executed trades
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-    // Update best/worst day
-    if (dayReturn > pilot.bestDay.return) {
-      pilot.bestDay = { date: new Date(), return: dayReturn };
-    }
-    if (dayReturn < pilot.worstDay.return) {
-      pilot.worstDay = { date: new Date(), return: dayReturn };
+    // Get today's trades
+    const todaysTrades = trades.filter(t => {
+      const tradeDate = new Date(t.timestamp);
+      tradeDate.setHours(0, 0, 0, 0);
+      return tradeDate.getTime() === today.getTime();
+    });
+
+    // Calculate today's return from actual trades
+    const todaysPnL = todaysTrades.reduce((sum, t) => sum + (t.profitLoss || 0), 0);
+    const dayReturn = pilot.currentValue > 0 ? todaysPnL / pilot.currentValue : 0;
+
+    // Update current value from actual trade P&L
+    const totalPnL = trades.reduce((sum, t) => sum + (t.profitLoss || 0), 0);
+    pilot.currentValue = pilot.totalDeposited + totalPnL;
+    pilot.totalReturn = totalPnL;
+    pilot.totalReturnPercent = pilot.totalDeposited > 0
+      ? (pilot.totalReturn / pilot.totalDeposited) * 100
+      : 0;
+
+    // Update best/worst day only if we have actual trades today
+    if (todaysTrades.length > 0) {
+      if (dayReturn > pilot.bestDay.return) {
+        pilot.bestDay = { date: new Date(), return: dayReturn };
+      }
+      if (dayReturn < pilot.worstDay.return) {
+        pilot.worstDay = { date: new Date(), return: dayReturn };
+      }
     }
 
-    // Win rate
+    // Win rate from actual trades
     const wins = trades.filter(t => (t.profitLoss || 0) > 0).length;
     pilot.winRate = trades.length > 0 ? wins / trades.length : 0;
 
