@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { TimeLogo, TimeIcon } from '@/components/branding/TimeLogo';
 
 /**
  * TIME Registration Page
@@ -137,12 +138,10 @@ export default function RegisterPage() {
 
         <div className="relative z-10 flex flex-col justify-center px-12 text-white">
           <div className="flex items-center gap-4 mb-8">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-400 to-purple-600 flex items-center justify-center shadow-2xl">
-              <span className="text-3xl font-black">T</span>
-            </div>
+            <TimeIcon size={64} animated />
             <div>
-              <h1 className="text-4xl font-black tracking-tight">TIME</h1>
-              <p className="text-sm text-white/60 tracking-widest">META-INTELLIGENCE</p>
+              <TimeLogo size="lg" animated />
+              <p className="text-sm text-white/60 tracking-widest -mt-1">META-INTELLIGENCE</p>
             </div>
           </div>
 
@@ -191,14 +190,14 @@ export default function RegisterPage() {
       <div className="w-full lg:w-1/2 flex items-center justify-center bg-slate-950 p-8">
         <div className="w-full max-w-md">
           {/* Mobile Logo */}
-          <div className="lg:hidden flex items-center gap-3 mb-8">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-400 to-purple-600 flex items-center justify-center">
-              <span className="text-2xl font-black text-white">T</span>
+          <div className="lg:hidden text-center mb-8">
+            <div className="flex justify-center mb-4">
+              <TimeIcon size={72} animated />
             </div>
-            <div>
-              <h1 className="text-2xl font-black text-white">TIME</h1>
-              <p className="text-xs text-white/60">META-INTELLIGENCE</p>
+            <div className="flex justify-center mb-2">
+              <TimeLogo size="md" animated />
             </div>
+            <p className="text-sm text-white/60 tracking-widest">META-INTELLIGENCE</p>
           </div>
 
           {/* Step: Details */}

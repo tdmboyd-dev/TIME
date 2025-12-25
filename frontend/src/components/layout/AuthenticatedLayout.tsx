@@ -5,6 +5,7 @@ import { Sidebar, SidebarProvider, MobileMenuButton } from './Sidebar';
 import { TopNav } from './TopNav';
 import { AuthProvider, useAuth } from '@/providers/AuthProvider';
 import { Web3Provider } from '@/providers/Web3Provider';
+import { TimeIcon } from '@/components/branding/TimeLogo';
 
 // Routes that don't need the dashboard layout
 const publicRoutes = ['/login', '/register', '/admin-login', '/forgot-password', '/reset-password'];
@@ -32,7 +33,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
             {/* Mobile header with menu button */}
             <div className="lg:hidden flex items-center gap-3 px-4 py-3 bg-slate-900/80 border-b border-slate-700/50">
               <MobileMenuButton />
-              <span className="text-lg font-bold text-white">TIME</span>
+              <TimeIcon size={28} animated />
             </div>
             <TopNav />
             <main className="flex-1 overflow-y-auto p-4 lg:p-6">

@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { API_BASE } from '@/lib/api';
+import { TimeIcon } from '@/components/branding/TimeLogo';
 
 interface User {
   id: string;
@@ -135,8 +136,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-cyan-400 to-purple-600 flex items-center justify-center mb-4 animate-pulse">
-            <span className="text-3xl font-black text-white">T</span>
+          <div className="mx-auto mb-4">
+            <TimeIcon size={64} animated />
           </div>
           <p className="text-white/60">Loading...</p>
         </div>

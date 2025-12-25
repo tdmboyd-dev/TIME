@@ -149,10 +149,10 @@ export function TimeLogo({
             strokeWidth="2"
             style={{ transition: 'stroke 0.7s ease-in-out' }}
           />
-          {/* Candle body */}
+          {/* Candle body - Green UP (top), Red DOWN (bottom) */}
           <rect
             x={letterWidth * 0.3}
-            y={isBullish ? height * 0.5 : height * 0.3}
+            y={isBullish ? height * 0.3 : height * 0.5}
             width={letterWidth * 0.28}
             height={height * 0.2}
             rx="2"
@@ -300,7 +300,7 @@ export function TimeIcon({
         filter="url(#iconGlow)"
       />
 
-      {/* Candle (I reference) */}
+      {/* Candle (I reference) - Green UP (top), Red DOWN (bottom) */}
       <g style={{ transition: 'all 0.7s ease-in-out' }}>
         <line
           x1="24" y1="8"
@@ -311,7 +311,7 @@ export function TimeIcon({
         />
         <rect
           x="22"
-          y={isBullish ? 14 : 10}
+          y={isBullish ? 10 : 14}
           width="4"
           height="6"
           rx="1"
