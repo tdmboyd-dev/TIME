@@ -29,12 +29,16 @@ import {
 import { AlpacaBroker } from './alpaca_broker';
 import { OANDABroker } from './oanda_broker';
 import { SnapTradeBroker, createSnapTradeBroker } from './snaptrade_broker';
+import { CoinbaseBroker } from './coinbase_broker';
+import { WebullBroker } from './webull_broker';
+import { TDAmeritradeBroker } from './td_ameritrade_broker';
+import { RobinhoodBroker } from './robinhood_broker';
 // Note: Interactive Brokers is supported via SnapTrade aggregation (92+ brokers)
 
 const logger = createComponentLogger('BrokerManager');
 
 // Supported broker types
-export type BrokerType = 'alpaca' | 'oanda' | 'snaptrade' | 'interactive_brokers' | 'mt4' | 'mt5';
+export type BrokerType = 'alpaca' | 'oanda' | 'snaptrade' | 'interactive_brokers' | 'mt4' | 'mt5' | 'coinbase' | 'webull' | 'td_ameritrade' | 'robinhood';
 
 // Broker connection status
 interface BrokerConnection {
@@ -251,6 +255,18 @@ export class BrokerManager extends EventEmitter implements TIMEComponent {
           throw new Error('OANDA requires accountId in config');
         }
         broker = new OANDABroker(config as any);
+        break;
+      case 'coinbase':
+        broker = new CoinbaseBroker(config as any);
+        break;
+      case 'webull':
+        broker = new WebullBroker(config as any);
+        break;
+      case 'td_ameritrade':
+        broker = new TDAmeritradeBroker(config as any);
+        break;
+      case 'robinhood':
+        broker = new RobinhoodBroker(config as any);
         break;
       case 'interactive_brokers':
         // IB is accessed via SnapTrade aggregation (92+ brokers including IB)

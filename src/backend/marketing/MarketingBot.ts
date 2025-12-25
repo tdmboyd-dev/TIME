@@ -123,7 +123,7 @@ export interface AutoPostConfig {
 
 // Pre-built content for auto-posting
 const AUTO_POST_CONTENT_LIBRARY = [
-  // Trading Tips
+  // Trading Tips (15 pieces)
   { type: 'tip', content: "Never invest more than you can afford to lose. Start small, learn the patterns, then scale up." },
   { type: 'tip', content: "The best time to buy is when everyone else is scared. The best time to sell is when everyone else is greedy." },
   { type: 'tip', content: "Diversification isn't just about different stocks - it's about different asset classes, sectors, and strategies." },
@@ -134,8 +134,13 @@ const AUTO_POST_CONTENT_LIBRARY = [
   { type: 'tip', content: "Your trading journal is your best teacher. Document every trade and review weekly." },
   { type: 'tip', content: "Position sizing is more important than entry timing. Small positions survive mistakes." },
   { type: 'tip', content: "NEWS moves markets short-term. FUNDAMENTALS move markets long-term. Trade accordingly." },
+  { type: 'tip', content: "Don't chase pumps. The best entries happen when nobody's talking about it." },
+  { type: 'tip', content: "Risk-reward ratio should be at least 1:2. Don't risk $100 to make $50." },
+  { type: 'tip', content: "Trading success = Strategy + Discipline + Risk Management. Missing one = failure." },
+  { type: 'tip', content: "Winners average their winners, losers average their losers. Cut losses quick, let profits run." },
+  { type: 'tip', content: "The best traders are boring. They follow their system religiously, no exceptions." },
 
-  // Feature Highlights
+  // Feature Highlights (15 pieces)
   { type: 'feature', content: "TIME's AI bots analyze 10,000+ data points per second to find profitable opportunities you'd miss." },
   { type: 'feature', content: "Our Tax-Loss Harvesting bot has saved users an average of 23% on their tax bills. Automatically." },
   { type: 'feature', content: "Copy the exact trades of our top-performing users with one click. No experience required." },
@@ -144,8 +149,15 @@ const AUTO_POST_CONTENT_LIBRARY = [
   { type: 'feature', content: "Backtest any strategy against 10+ years of historical data before risking real money." },
   { type: 'feature', content: "Multi-broker support: Alpaca, Binance, OANDA, Kraken - all in one dashboard." },
   { type: 'feature', content: "Dynasty Trust AI: Build generational wealth with strategies that compound for decades." },
+  { type: 'feature', content: "182+ AI bots working in harmony. Each bot specializes in different market conditions." },
+  { type: 'feature', content: "DROPBOT AutoPilot: Set it and forget it. Our AI handles entry, exit, and risk management." },
+  { type: 'feature', content: "Ultimate Money Machine: Combines 5 proven strategies for consistent returns in any market." },
+  { type: 'feature', content: "Social Trading: Follow top performers and automatically copy their winning trades." },
+  { type: 'feature', content: "Risk Profile AI: Analyzes your risk tolerance and builds a personalized portfolio." },
+  { type: 'feature', content: "Big Moves Alerts: Get notified seconds before major price movements. Be first, not last." },
+  { type: 'feature', content: "Bot Marketplace: Browse, test, and deploy community-built strategies in minutes." },
 
-  // Educational
+  // Educational Content (10 pieces)
   { type: 'educational', content: "What is RSI? Relative Strength Index measures momentum. Over 70 = overbought, under 30 = oversold." },
   { type: 'educational', content: "Dollar-Cost Averaging: Invest the same amount regularly, regardless of price. Simple but powerful." },
   { type: 'educational', content: "Market Cap = Share Price x Shares Outstanding. It's the total value of a company." },
@@ -153,19 +165,35 @@ const AUTO_POST_CONTENT_LIBRARY = [
   { type: 'educational', content: "Options 101: Calls = bet on up, Puts = bet on down. Time decay works against buyers." },
   { type: 'educational', content: "What's a limit order? You set the price. What's a market order? You accept whatever price is available." },
   { type: 'educational', content: "Volatility is measured by VIX. High VIX = fear in the market. Low VIX = complacency." },
+  { type: 'educational', content: "Support & Resistance: Price levels where buying/selling pressure concentrates. Key for entries/exits." },
+  { type: 'educational', content: "MACD: Moving Average Convergence Divergence shows trend changes. Crossovers signal buy/sell." },
+  { type: 'educational', content: "Bollinger Bands: Price volatility indicator. Squeeze = low volatility, expansion = high volatility." },
 
-  // Engagement
+  // Engagement Posts (10 pieces)
   { type: 'engagement', content: "What's your go-to strategy for volatile markets? Comment below!" },
   { type: 'engagement', content: "Poll: Do you prefer day trading or long-term investing? Reply with your choice!" },
   { type: 'engagement', content: "What was your first investment ever? We love hearing your stories!" },
   { type: 'engagement', content: "If you could give one piece of advice to beginner traders, what would it be?" },
   { type: 'engagement', content: "What's on your watchlist this week? Share your top picks!" },
+  { type: 'engagement', content: "Biggest trading mistake you ever made? Let's learn from each other." },
+  { type: 'engagement', content: "Which bot strategy would you try first: Momentum, Mean Reversion, or Arbitrage?" },
+  { type: 'engagement', content: "Morning traders: What's your pre-market routine? Coffee first or charts first?" },
+  { type: 'engagement', content: "Red day or green day? Show us your P&L and what you learned!" },
+  { type: 'engagement', content: "Tag someone who needs to see this!" },
 
-  // Promotions
+  // Promotions (5 pieces)
   { type: 'promotion', content: "Start trading with as little as $1. No minimums, no barriers. Just results." },
   { type: 'promotion', content: "Free tier includes 3 AI bots, paper trading, and real-time alerts. No credit card required." },
   { type: 'promotion', content: "PRO users get 22% more returns on average. Upgrade today and see the difference." },
   { type: 'promotion', content: "Refer a friend, get $10 credit. They get 30 days free. Everyone wins!" },
+  { type: 'promotion', content: "Limited time: First month FREE on any premium plan. Use code TIMEFREE at checkout." },
+
+  // Announcements (5 pieces)
+  { type: 'announcement', content: "NEW: LIVE Bot Trading is now available! Watch your bots trade in real-time with millisecond updates." },
+  { type: 'announcement', content: "Just launched: Community Chat! Connect with 10,000+ traders, share strategies, get instant help." },
+  { type: 'announcement', content: "Platform update: Bot Marketplace is live with 500+ community strategies. Find your edge!" },
+  { type: 'announcement', content: "Big news: TIME now supports options trading! 182 bots + options = unlimited possibilities." },
+  { type: 'announcement', content: "We've processed over $1 billion in trades! Thank you to our amazing community." },
 ];
 
 // Marketing Bot Engine

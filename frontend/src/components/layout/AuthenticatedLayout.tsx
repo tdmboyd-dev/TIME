@@ -6,8 +6,10 @@ import { Sidebar, SidebarProvider, MobileMenuButton } from './Sidebar';
 import { TopNav } from './TopNav';
 import { AuthProvider, useAuth } from '@/providers/AuthProvider';
 import { Web3Provider } from '@/providers/Web3Provider';
+import { NotificationProvider } from '@/components/notifications/NotificationProvider';
 import { TimeIcon } from '@/components/branding/TimeLogo';
 import { ErrorBoundary, PageErrorBoundary } from '@/components/ErrorBoundary';
+import { AIChatWidget } from '@/components/support/AIChatWidget';
 
 // PWA Service Worker Registration
 function PWARegistration() {
@@ -64,6 +66,8 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
               </main>
             </div>
           </div>
+          {/* AI Chat Support Widget */}
+          <AIChatWidget />
         </SidebarProvider>
       </PageErrorBoundary>
     );
@@ -77,8 +81,10 @@ export function AuthenticatedLayout({ children }: { children: React.ReactNode })
   return (
     <Web3Provider>
       <AuthProvider>
-        <PWARegistration />
-        <LayoutContent>{children}</LayoutContent>
+        <NotificationProvider>
+          <PWARegistration />
+          <LayoutContent>{children}</LayoutContent>
+        </NotificationProvider>
       </AuthProvider>
     </Web3Provider>
   );

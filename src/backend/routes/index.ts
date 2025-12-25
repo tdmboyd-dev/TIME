@@ -91,6 +91,18 @@ import marketingRoutes from './marketing';
 // PUBLIC API - External trader integration
 import publicApiRoutes from './public_api';
 
+// ANALYTICS - Comprehensive analytics dashboard
+import analyticsRoutes from './analytics';
+
+// NOTIFICATIONS - Push notification system
+import notificationRoutes from './notifications';
+
+// EMAIL CAMPAIGNS - Drip campaigns, automation, A/B testing
+import campaignsRoutes from './campaigns';
+
+// SUPPORT SYSTEM - 24/7 AI chat support
+import supportRoutes from './support';
+
 const router = Router();
 
 // Mount routes
@@ -188,6 +200,18 @@ router.use('/marketing', marketingRoutes);
 
 // PUBLIC API - External trader integration (no auth required for docs, API key for trading)
 router.use('/public', publicApiRoutes);
+
+// ANALYTICS - Comprehensive analytics dashboard (admin only)
+router.use('/analytics', analyticsRoutes);
+
+// NOTIFICATIONS - Push notification system with Web Push API
+router.use('/notifications', notificationRoutes);
+
+// EMAIL CAMPAIGNS - Drip campaigns with A/B testing & automation
+router.use('/campaigns', campaignsRoutes);
+
+// SUPPORT SYSTEM - 24/7 AI chat support, tickets, FAQs
+router.use('/support', supportRoutes);
 
 export default router;
 

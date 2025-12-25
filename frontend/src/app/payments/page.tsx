@@ -28,6 +28,7 @@ import {
 import clsx from 'clsx';
 
 const API_BASE = 'https://time-backend-hosting.fly.dev/api/v1';
+const STRIPE_API = `${API_BASE}/stripe`;
 
 interface PaymentMethod {
   id: string;
@@ -55,6 +56,30 @@ interface Transaction {
   method: string;
 }
 
+interface SubscriptionTier {
+  id: string;
+  name: string;
+  price: number;
+  interval: string;
+  features: string[];
+  limits: {
+    bots?: number;
+    strategies?: number;
+    backtests?: number;
+    apiCalls?: number;
+    support?: string;
+  };
+}
+
+interface UserSubscription {
+  id: string;
+  tier: string;
+  status: 'active' | 'canceled' | 'past_due' | 'unpaid' | 'incomplete' | 'trialing';
+  currentPeriodStart: string;
+  currentPeriodEnd: string;
+  cancelAtPeriodEnd: boolean;
+}
+
 export default function PaymentsPage() {
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -74,10 +99,41 @@ export default function PaymentsPage() {
   const [notification, setNotification] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<PaymentMethod | null>(null);
 
+  // Stripe subscription state
+  const [subscriptionTiers, setSubscriptionTiers] = useState<SubscriptionTier[]>([]);
+  const [currentSubscription, setCurrentSubscription] = useState<UserSubscription | null>(null);
+  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
+  const [isSubscriptionLoading, setIsSubscriptionLoading] = useState(false);
+
   const showNotification = (type: 'success' | 'error' | 'info', message: string) => {
     setNotification({ type, message });
     setTimeout(() => setNotification(null), 5000);
   };
+
+  const fetchSubscriptionData = useCallback(async () => {
+    try {
+      const [tiersRes, subRes] = await Promise.all([
+        fetch(`${STRIPE_API}/tiers`).catch(() => null),
+        fetch(`${STRIPE_API}/subscription`).catch(() => null),
+      ]);
+
+      if (tiersRes?.ok) {
+        const tiersData = await tiersRes.json();
+        if (tiersData.success && Array.isArray(tiersData.tiers)) {
+          setSubscriptionTiers(tiersData.tiers);
+        }
+      }
+
+      if (subRes?.ok) {
+        const subData = await subRes.json();
+        if (subData.success) {
+          setCurrentSubscription(subData.subscription);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch subscription data:', error);
+    }
+  }, []);
 
   const fetchData = useCallback(async () => {
     try {
@@ -129,11 +185,57 @@ export default function PaymentsPage() {
 
   useEffect(() => {
     fetchData();
-  }, [fetchData]);
+    fetchSubscriptionData();
+  }, [fetchData, fetchSubscriptionData]);
 
   const handleRefresh = () => {
     setIsRefreshing(true);
     fetchData();
+    fetchSubscriptionData();
+  };
+
+  const handleSubscribe = async (tierId: string) => {
+    setIsSubscriptionLoading(true);
+    try {
+      const response = await fetch(`${STRIPE_API}/create-checkout`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tierId }),
+      });
+
+      const data = await response.json();
+      if (data.success && data.url) {
+        window.location.href = data.url;
+      } else {
+        showNotification('error', data.error || 'Failed to create checkout session');
+      }
+    } catch (error) {
+      showNotification('error', 'Failed to start subscription process');
+    } finally {
+      setIsSubscriptionLoading(false);
+    }
+  };
+
+  const handleManageSubscription = async () => {
+    setIsSubscriptionLoading(true);
+    try {
+      const response = await fetch(`${STRIPE_API}/create-portal`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      });
+
+      const data = await response.json();
+      if (data.success && data.url) {
+        window.location.href = data.url;
+      } else {
+        showNotification('error', data.error || 'Failed to open customer portal');
+      }
+    } catch (error) {
+      showNotification('error', 'Failed to open subscription management');
+    } finally {
+      setIsSubscriptionLoading(false);
+    }
   };
 
   const formatCurrency = (amount: number) => {
@@ -310,6 +412,128 @@ export default function PaymentsPage() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Subscription Tiers */}
+      <div className="card p-6">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h2 className="text-xl font-bold text-white">Subscription Plans</h2>
+            <p className="text-slate-400 mt-1">Upgrade your trading capabilities</p>
+          </div>
+          {currentSubscription && currentSubscription.status === 'active' && (
+            <button
+              onClick={handleManageSubscription}
+              disabled={isSubscriptionLoading}
+              className="btn-secondary flex items-center gap-2"
+            >
+              {isSubscriptionLoading ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <CreditCard className="w-4 h-4" />
+              )}
+              Manage Subscription
+            </button>
+          )}
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+          {subscriptionTiers.map((tier) => {
+            const isCurrentTier = currentSubscription?.tier === tier.id;
+            const isFree = tier.id === 'free';
+            const isActive = currentSubscription?.status === 'active';
+
+            return (
+              <div
+                key={tier.id}
+                className={clsx(
+                  'relative p-6 rounded-xl border-2 transition-all',
+                  isCurrentTier
+                    ? 'bg-time-primary/10 border-time-primary shadow-lg shadow-time-primary/20'
+                    : 'bg-slate-800/50 border-slate-700 hover:border-slate-600',
+                  tier.id === 'pro' && 'ring-2 ring-purple-500/50'
+                )}
+              >
+                {tier.id === 'pro' && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-purple-500 rounded-full text-xs font-bold text-white">
+                    POPULAR
+                  </div>
+                )}
+                {isCurrentTier && (
+                  <div className="absolute -top-3 right-4 px-3 py-1 bg-time-primary rounded-full text-xs font-bold text-white">
+                    CURRENT PLAN
+                  </div>
+                )}
+
+                <div className="text-center mb-4">
+                  <h3 className="text-lg font-bold text-white mb-2">{tier.name}</h3>
+                  <div className="flex items-baseline justify-center gap-1">
+                    <span className="text-3xl font-bold text-white">${tier.price}</span>
+                    <span className="text-slate-400">/{tier.interval}</span>
+                  </div>
+                </div>
+
+                <ul className="space-y-2 mb-6 min-h-[200px]">
+                  {tier.features.map((feature, idx) => (
+                    <li key={idx} className="flex items-start gap-2 text-sm">
+                      <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" />
+                      <span className="text-slate-300">{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                {!isFree && (
+                  <button
+                    onClick={() => handleSubscribe(tier.id)}
+                    disabled={isCurrentTier || isSubscriptionLoading}
+                    className={clsx(
+                      'w-full py-3 rounded-lg font-medium transition-all',
+                      isCurrentTier
+                        ? 'bg-slate-700 text-slate-400 cursor-not-allowed'
+                        : tier.id === 'pro'
+                        ? 'bg-purple-500 hover:bg-purple-600 text-white'
+                        : 'bg-time-primary hover:bg-time-primary/80 text-white'
+                    )}
+                  >
+                    {isSubscriptionLoading ? (
+                      <Loader2 className="w-5 h-5 animate-spin mx-auto" />
+                    ) : isCurrentTier ? (
+                      'Current Plan'
+                    ) : isActive ? (
+                      'Change Plan'
+                    ) : (
+                      'Subscribe'
+                    )}
+                  </button>
+                )}
+                {isFree && (
+                  <div className="w-full py-3 rounded-lg bg-slate-700 text-slate-400 text-center font-medium">
+                    {isCurrentTier ? 'Current Plan' : 'Always Free'}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {currentSubscription && (
+          <div className="mt-6 p-4 bg-slate-800/50 rounded-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-slate-400">Current billing period</p>
+                <p className="text-white font-medium">
+                  {new Date(currentSubscription.currentPeriodStart).toLocaleDateString()} - {new Date(currentSubscription.currentPeriodEnd).toLocaleDateString()}
+                </p>
+              </div>
+              {currentSubscription.cancelAtPeriodEnd && (
+                <div className="flex items-center gap-2 px-3 py-1 bg-yellow-500/20 rounded-full">
+                  <AlertCircle className="w-4 h-4 text-yellow-400" />
+                  <span className="text-sm text-yellow-400 font-medium">Cancels on {new Date(currentSubscription.currentPeriodEnd).toLocaleDateString()}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Quick Stats */}

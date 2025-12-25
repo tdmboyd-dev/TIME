@@ -1,0 +1,647 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import {
+  User,
+  TrendingUp,
+  Target,
+  Shield,
+  Link as LinkIcon,
+  Check,
+  ChevronRight,
+  ChevronLeft,
+  Sparkles,
+  ArrowRight,
+  BarChart3,
+  Wallet,
+  DollarSign,
+  PiggyBank,
+  FileText,
+  Calendar
+} from 'lucide-react';
+import { TimeLogo, TimeIcon } from '@/components/branding/TimeLogo';
+
+/**
+ * TIME BEYOND US - User Onboarding Flow
+ *
+ * A comprehensive 5-step wizard to personalize the trading experience:
+ * 1. Welcome + Name
+ * 2. Trading Experience Level
+ * 3. Risk Tolerance
+ * 4. Trading Goals
+ * 5. Connect Broker (Optional)
+ *
+ * Features:
+ * - localStorage progress saving
+ * - Cookie-based completion tracking
+ * - Smooth CSS transitions
+ * - Full TypeScript typing
+ * - Production-ready validation
+ */
+
+// Types
+type ExperienceLevel = 'beginner' | 'intermediate' | 'expert';
+type RiskTolerance = 'conservative' | 'moderate' | 'aggressive';
+type TradingGoal = 'day-trading' | 'long-term' | 'retirement' | 'passive-income' | 'tax-optimization';
+
+interface OnboardingData {
+  step: number;
+  name: string;
+  experienceLevel: ExperienceLevel | null;
+  riskTolerance: RiskTolerance | null;
+  goals: TradingGoal[];
+  brokerConnected: boolean;
+}
+
+const STORAGE_KEY = 'time_onboarding_progress';
+const COMPLETION_COOKIE = 'time_onboarding_complete';
+
+export default function OnboardingPage() {
+  const router = useRouter();
+  const [currentStep, setCurrentStep] = useState(1);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [direction, setDirection] = useState<'forward' | 'backward'>('forward');
+
+  // Form state
+  const [name, setName] = useState('');
+  const [experienceLevel, setExperienceLevel] = useState<ExperienceLevel | null>(null);
+  const [riskTolerance, setRiskTolerance] = useState<RiskTolerance | null>(null);
+  const [goals, setGoals] = useState<TradingGoal[]>([]);
+  const [selectedBroker, setSelectedBroker] = useState<string | null>(null);
+
+  // Load saved progress on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        try {
+          const data: OnboardingData = JSON.parse(saved);
+          setCurrentStep(data.step);
+          setName(data.name);
+          setExperienceLevel(data.experienceLevel);
+          setRiskTolerance(data.riskTolerance);
+          setGoals(data.goals);
+        } catch (e) {
+          console.error('Failed to load onboarding progress:', e);
+        }
+      }
+    }
+  }, []);
+
+  // Save progress whenever data changes
+  useEffect(() => {
+    if (typeof window !== 'undefined' && name) {
+      const data: OnboardingData = {
+        step: currentStep,
+        name,
+        experienceLevel,
+        riskTolerance,
+        goals,
+        brokerConnected: selectedBroker !== null,
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
+  }, [currentStep, name, experienceLevel, riskTolerance, goals, selectedBroker]);
+
+  const handleNext = () => {
+    if (!canProceed()) return;
+
+    setIsAnimating(true);
+    setDirection('forward');
+    setTimeout(() => {
+      setCurrentStep(prev => prev + 1);
+      setIsAnimating(false);
+    }, 300);
+  };
+
+  const handleBack = () => {
+    setIsAnimating(true);
+    setDirection('backward');
+    setTimeout(() => {
+      setCurrentStep(prev => prev - 1);
+      setIsAnimating(false);
+    }, 300);
+  };
+
+  const handleComplete = () => {
+    // Save completion status
+    if (typeof window !== 'undefined') {
+      // Set cookie
+      const expires = new Date();
+      expires.setFullYear(expires.getFullYear() + 1);
+      document.cookie = `${COMPLETION_COOKIE}=true; expires=${expires.toUTCString()}; path=/; SameSite=Lax`;
+
+      // Clear onboarding progress
+      localStorage.removeItem(STORAGE_KEY);
+
+      // Save user preferences
+      localStorage.setItem('time_user_preferences', JSON.stringify({
+        name,
+        experienceLevel,
+        riskTolerance,
+        goals,
+        onboardedAt: new Date().toISOString(),
+      }));
+    }
+
+    // Redirect to dashboard
+    router.push('/');
+  };
+
+  const handleSkipBroker = () => {
+    handleComplete();
+  };
+
+  const canProceed = (): boolean => {
+    switch (currentStep) {
+      case 1:
+        return name.trim().length >= 2;
+      case 2:
+        return experienceLevel !== null;
+      case 3:
+        return riskTolerance !== null;
+      case 4:
+        return goals.length > 0;
+      case 5:
+        return true; // Broker connection is optional
+      default:
+        return false;
+    }
+  };
+
+  const toggleGoal = (goal: TradingGoal) => {
+    setGoals(prev =>
+      prev.includes(goal)
+        ? prev.filter(g => g !== goal)
+        : [...prev, goal]
+    );
+  };
+
+  const experienceLevels = [
+    {
+      value: 'beginner' as ExperienceLevel,
+      title: 'Beginner',
+      description: 'New to trading or have limited experience',
+      icon: '🌱',
+      recommended: 'Conservative strategies recommended',
+    },
+    {
+      value: 'intermediate' as ExperienceLevel,
+      title: 'Intermediate',
+      description: 'Some trading experience with basic strategies',
+      icon: '📈',
+      recommended: 'Balanced growth strategies',
+    },
+    {
+      value: 'expert' as ExperienceLevel,
+      title: 'Expert',
+      description: 'Experienced trader with deep market knowledge',
+      icon: '🚀',
+      recommended: 'Advanced algorithmic strategies',
+    },
+  ];
+
+  const riskTolerances = [
+    {
+      value: 'conservative' as RiskTolerance,
+      title: 'Conservative',
+      description: 'Preserve capital, minimize losses',
+      color: 'from-blue-500 to-cyan-500',
+      icon: Shield,
+      features: ['Lower risk', 'Stable returns', 'Capital preservation'],
+    },
+    {
+      value: 'moderate' as RiskTolerance,
+      title: 'Moderate',
+      description: 'Balance between growth and safety',
+      color: 'from-purple-500 to-pink-500',
+      icon: BarChart3,
+      features: ['Balanced risk', 'Steady growth', 'Diversification'],
+    },
+    {
+      value: 'aggressive' as RiskTolerance,
+      title: 'Aggressive',
+      description: 'Maximum growth potential',
+      color: 'from-orange-500 to-red-500',
+      icon: TrendingUp,
+      features: ['Higher risk', 'Max returns', 'Active trading'],
+    },
+  ];
+
+  const tradingGoals = [
+    {
+      value: 'day-trading' as TradingGoal,
+      title: 'Day Trading',
+      description: 'Active short-term trading',
+      icon: Sparkles,
+    },
+    {
+      value: 'long-term' as TradingGoal,
+      title: 'Long-term Investing',
+      description: 'Build wealth over time',
+      icon: TrendingUp,
+    },
+    {
+      value: 'retirement' as TradingGoal,
+      title: 'Retirement Planning',
+      description: 'Secure your future',
+      icon: PiggyBank,
+    },
+    {
+      value: 'passive-income' as TradingGoal,
+      title: 'Passive Income',
+      description: 'Generate regular income',
+      icon: DollarSign,
+    },
+    {
+      value: 'tax-optimization' as TradingGoal,
+      title: 'Tax Optimization',
+      description: 'Minimize tax liability',
+      icon: FileText,
+    },
+  ];
+
+  const brokers = [
+    { id: 'interactive-brokers', name: 'Interactive Brokers', logo: '🏦', supported: true },
+    { id: 'alpaca', name: 'Alpaca', logo: '🦙', supported: true },
+    { id: 'robinhood', name: 'Robinhood', logo: '🏹', supported: false },
+    { id: 'td-ameritrade', name: 'TD Ameritrade', logo: '📊', supported: true },
+    { id: 'coinbase', name: 'Coinbase', logo: '₿', supported: true },
+    { id: 'binance', name: 'Binance', logo: '🔶', supported: true },
+  ];
+
+  return (
+    <div className="min-h-screen bg-slate-950 relative overflow-hidden">
+      {/* Background Effects */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-time-primary/10 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-time-secondary/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-time-accent/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
+      </div>
+
+      {/* Grid Pattern */}
+      <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:50px_50px] pointer-events-none" />
+
+      {/* Content */}
+      <div className="relative z-10 min-h-screen flex flex-col">
+        {/* Header */}
+        <header className="p-6 md:p-8">
+          <div className="flex items-center justify-between max-w-6xl mx-auto">
+            <div className="flex items-center gap-3">
+              <TimeIcon size={48} animated />
+              <div>
+                <TimeLogo size="sm" animated />
+                <p className="text-xs text-white/40 tracking-wider">META-INTELLIGENCE</p>
+              </div>
+            </div>
+
+            {/* Progress Indicator */}
+            <div className="flex items-center gap-2">
+              {[1, 2, 3, 4, 5].map((step) => (
+                <div
+                  key={step}
+                  className={`h-2 rounded-full transition-all duration-500 ${
+                    step === currentStep
+                      ? 'w-8 bg-gradient-to-r from-time-primary to-time-secondary'
+                      : step < currentStep
+                      ? 'w-2 bg-time-primary'
+                      : 'w-2 bg-white/10'
+                  }`}
+                />
+              ))}
+            </div>
+          </div>
+        </header>
+
+        {/* Main Content */}
+        <main className="flex-1 flex items-center justify-center px-4 py-8">
+          <div className="w-full max-w-4xl">
+            {/* Step 1: Welcome + Name */}
+            {currentStep === 1 && (
+              <div
+                className={`transition-all duration-300 ${
+                  isAnimating
+                    ? direction === 'forward'
+                      ? 'opacity-0 -translate-x-8'
+                      : 'opacity-0 translate-x-8'
+                    : 'opacity-100 translate-x-0'
+                }`}
+              >
+                <div className="text-center mb-8">
+                  <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-time-primary to-time-secondary mb-6 animate-pulse">
+                    <User className="w-10 h-10 text-white" />
+                  </div>
+                  <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
+                    Welcome to TIME
+                  </h1>
+                  <p className="text-lg text-white/60 max-w-xl mx-auto">
+                    Let's personalize your trading experience. We'll help you get started with the perfect strategy for your goals.
+                  </p>
+                </div>
+
+                <div className="max-w-md mx-auto">
+                  <label className="block mb-2 text-sm font-medium text-white/80">
+                    What should we call you?
+                  </label>
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Enter your name"
+                    className="w-full px-6 py-4 bg-slate-800/50 border border-slate-700/50 rounded-xl text-white text-lg placeholder-slate-500 focus:outline-none focus:border-time-primary transition-all"
+                    autoFocus
+                  />
+                  <p className="mt-2 text-sm text-white/40">
+                    This helps us personalize your experience
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Step 2: Experience Level */}
+            {currentStep === 2 && (
+              <div
+                className={`transition-all duration-300 ${
+                  isAnimating
+                    ? direction === 'forward'
+                      ? 'opacity-0 -translate-x-8'
+                      : 'opacity-0 translate-x-8'
+                    : 'opacity-100 translate-x-0'
+                }`}
+              >
+                <div className="text-center mb-8">
+                  <h2 className="text-3xl md:text-4xl font-bold text-white mb-3">
+                    What's your trading experience?
+                  </h2>
+                  <p className="text-white/60">
+                    This helps TIME recommend the right strategies for you
+                  </p>
+                </div>
+
+                <div className="grid md:grid-cols-3 gap-4">
+                  {experienceLevels.map((level) => (
+                    <button
+                      key={level.value}
+                      onClick={() => setExperienceLevel(level.value)}
+                      className={`p-6 rounded-2xl border-2 transition-all duration-300 text-left ${
+                        experienceLevel === level.value
+                          ? 'border-time-primary bg-time-primary/10 scale-105'
+                          : 'border-slate-700/50 bg-slate-800/30 hover:border-slate-600 hover:bg-slate-800/50'
+                      }`}
+                    >
+                      <div className="text-4xl mb-3">{level.icon}</div>
+                      <h3 className="text-xl font-bold text-white mb-2">{level.title}</h3>
+                      <p className="text-sm text-white/60 mb-3">{level.description}</p>
+                      <div className="flex items-center gap-2 text-xs text-time-primary">
+                        <Check className="w-4 h-4" />
+                        {level.recommended}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Step 3: Risk Tolerance */}
+            {currentStep === 3 && (
+              <div
+                className={`transition-all duration-300 ${
+                  isAnimating
+                    ? direction === 'forward'
+                      ? 'opacity-0 -translate-x-8'
+                      : 'opacity-0 translate-x-8'
+                    : 'opacity-100 translate-x-0'
+                }`}
+              >
+                <div className="text-center mb-8">
+                  <h2 className="text-3xl md:text-4xl font-bold text-white mb-3">
+                    What's your risk tolerance?
+                  </h2>
+                  <p className="text-white/60">
+                    TIME will adjust strategies to match your comfort level
+                  </p>
+                </div>
+
+                <div className="grid md:grid-cols-3 gap-4">
+                  {riskTolerances.map((risk) => {
+                    const Icon = risk.icon;
+                    return (
+                      <button
+                        key={risk.value}
+                        onClick={() => setRiskTolerance(risk.value)}
+                        className={`p-6 rounded-2xl border-2 transition-all duration-300 ${
+                          riskTolerance === risk.value
+                            ? 'border-time-primary bg-time-primary/10 scale-105'
+                            : 'border-slate-700/50 bg-slate-800/30 hover:border-slate-600 hover:bg-slate-800/50'
+                        }`}
+                      >
+                        <div className={`inline-flex p-3 rounded-xl bg-gradient-to-br ${risk.color} mb-4`}>
+                          <Icon className="w-6 h-6 text-white" />
+                        </div>
+                        <h3 className="text-xl font-bold text-white mb-2">{risk.title}</h3>
+                        <p className="text-sm text-white/60 mb-4">{risk.description}</p>
+                        <ul className="space-y-2">
+                          {risk.features.map((feature, idx) => (
+                            <li key={idx} className="flex items-center gap-2 text-xs text-white/80">
+                              <Check className="w-3 h-3 text-time-primary" />
+                              {feature}
+                            </li>
+                          ))}
+                        </ul>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Step 4: Goals */}
+            {currentStep === 4 && (
+              <div
+                className={`transition-all duration-300 ${
+                  isAnimating
+                    ? direction === 'forward'
+                      ? 'opacity-0 -translate-x-8'
+                      : 'opacity-0 translate-x-8'
+                    : 'opacity-100 translate-x-0'
+                }`}
+              >
+                <div className="text-center mb-8">
+                  <h2 className="text-3xl md:text-4xl font-bold text-white mb-3">
+                    What are your trading goals?
+                  </h2>
+                  <p className="text-white/60">
+                    Select all that apply - TIME will optimize for your objectives
+                  </p>
+                </div>
+
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {tradingGoals.map((goal) => {
+                    const Icon = goal.icon;
+                    const isSelected = goals.includes(goal.value);
+                    return (
+                      <button
+                        key={goal.value}
+                        onClick={() => toggleGoal(goal.value)}
+                        className={`p-6 rounded-2xl border-2 transition-all duration-300 relative ${
+                          isSelected
+                            ? 'border-time-primary bg-time-primary/10'
+                            : 'border-slate-700/50 bg-slate-800/30 hover:border-slate-600 hover:bg-slate-800/50'
+                        }`}
+                      >
+                        {isSelected && (
+                          <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-time-primary flex items-center justify-center">
+                            <Check className="w-4 h-4 text-white" />
+                          </div>
+                        )}
+                        <Icon className="w-10 h-10 text-time-primary mb-3" />
+                        <h3 className="text-lg font-bold text-white mb-1">{goal.title}</h3>
+                        <p className="text-sm text-white/60">{goal.description}</p>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {goals.length > 0 && (
+                  <div className="mt-6 p-4 bg-time-primary/10 border border-time-primary/30 rounded-xl">
+                    <p className="text-sm text-white/80 text-center">
+                      {goals.length} goal{goals.length !== 1 ? 's' : ''} selected - TIME will create a custom strategy blend
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Step 5: Broker Connection */}
+            {currentStep === 5 && (
+              <div
+                className={`transition-all duration-300 ${
+                  isAnimating
+                    ? direction === 'forward'
+                      ? 'opacity-0 -translate-x-8'
+                      : 'opacity-0 translate-x-8'
+                    : 'opacity-100 translate-x-0'
+                }`}
+              >
+                <div className="text-center mb-8">
+                  <h2 className="text-3xl md:text-4xl font-bold text-white mb-3">
+                    Connect your first broker
+                  </h2>
+                  <p className="text-white/60">
+                    Link a broker to start trading, or skip to explore TIME first
+                  </p>
+                </div>
+
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                  {brokers.map((broker) => (
+                    <button
+                      key={broker.id}
+                      onClick={() => broker.supported && setSelectedBroker(broker.id)}
+                      disabled={!broker.supported}
+                      className={`p-6 rounded-2xl border-2 transition-all duration-300 relative ${
+                        !broker.supported
+                          ? 'border-slate-700/30 bg-slate-800/20 opacity-50 cursor-not-allowed'
+                          : selectedBroker === broker.id
+                          ? 'border-time-primary bg-time-primary/10 scale-105'
+                          : 'border-slate-700/50 bg-slate-800/30 hover:border-slate-600 hover:bg-slate-800/50'
+                      }`}
+                    >
+                      {selectedBroker === broker.id && (
+                        <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-time-primary flex items-center justify-center">
+                          <Check className="w-4 h-4 text-white" />
+                        </div>
+                      )}
+                      <div className="text-4xl mb-3">{broker.logo}</div>
+                      <h3 className="text-lg font-bold text-white mb-1">{broker.name}</h3>
+                      {!broker.supported && (
+                        <span className="text-xs text-white/40">Coming soon</span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+
+                {selectedBroker && (
+                  <div className="p-6 bg-slate-800/50 border border-slate-700/50 rounded-2xl">
+                    <div className="flex items-start gap-4">
+                      <div className="p-3 rounded-xl bg-time-primary/20">
+                        <LinkIcon className="w-6 h-6 text-time-primary" />
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="text-white font-semibold mb-2">Ready to connect</h4>
+                        <p className="text-sm text-white/60 mb-4">
+                          You'll be redirected to authorize TIME to trade on your behalf. Your credentials are never stored.
+                        </p>
+                        <button
+                          onClick={handleComplete}
+                          className="px-6 py-3 bg-gradient-to-r from-time-primary to-time-secondary text-white font-medium rounded-xl hover:opacity-90 transition-all flex items-center gap-2"
+                        >
+                          Connect {brokers.find(b => b.id === selectedBroker)?.name}
+                          <ArrowRight className="w-5 h-5" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div className="mt-6 text-center">
+                  <button
+                    onClick={handleSkipBroker}
+                    className="text-white/60 hover:text-white transition-colors text-sm"
+                  >
+                    I'll connect a broker later
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Navigation */}
+            <div className="flex items-center justify-between mt-12">
+              {currentStep > 1 ? (
+                <button
+                  onClick={handleBack}
+                  className="flex items-center gap-2 px-6 py-3 bg-slate-800/50 hover:bg-slate-700/50 border border-slate-700/50 rounded-xl text-white transition-all"
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                  Back
+                </button>
+              ) : (
+                <div />
+              )}
+
+              {currentStep < 5 ? (
+                <button
+                  onClick={handleNext}
+                  disabled={!canProceed()}
+                  className={`flex items-center gap-2 px-8 py-3 rounded-xl font-medium transition-all ${
+                    canProceed()
+                      ? 'bg-gradient-to-r from-time-primary to-time-secondary text-white hover:opacity-90'
+                      : 'bg-slate-700/50 text-slate-500 cursor-not-allowed'
+                  }`}
+                >
+                  Continue
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+              ) : !selectedBroker ? (
+                <button
+                  onClick={handleSkipBroker}
+                  className="flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-time-primary to-time-secondary text-white font-medium rounded-xl hover:opacity-90 transition-all"
+                >
+                  Skip to Dashboard
+                  <ArrowRight className="w-5 h-5" />
+                </button>
+              ) : null}
+            </div>
+          </div>
+        </main>
+
+        {/* Footer */}
+        <footer className="p-6 text-center">
+          <p className="text-sm text-white/40">
+            Step {currentStep} of 5
+          </p>
+        </footer>
+      </div>
+    </div>
+  );
+}

@@ -80,44 +80,90 @@ self.addEventListener('fetch', (event) => {
 
 // Push notification support
 self.addEventListener('push', (event) => {
-  if (!event.data) return;
+  console.log('[SW] Push notification received');
 
-  const data = event.data.json();
-  const options = {
-    body: data.body || 'New trading signal',
+  let data = {
+    title: 'TIME BEYOND US',
+    body: 'You have a new notification',
     icon: '/icon.svg',
     badge: '/icon.svg',
-    vibrate: [100, 50, 100],
-    data: {
-      url: data.url || '/autopilot',
-    },
-    actions: [
-      { action: 'view', title: 'View Trade' },
+    data: {},
+  };
+
+  try {
+    if (event.data) {
+      const payload = event.data.json();
+      data = {
+        ...data,
+        ...payload,
+      };
+    }
+  } catch (error) {
+    console.error('[SW] Error parsing push notification data:', error);
+  }
+
+  const options = {
+    body: data.body,
+    icon: data.icon || '/icon.svg',
+    badge: data.badge || '/icon.svg',
+    vibrate: [200, 100, 200],
+    tag: data.data?.type || 'notification',
+    requireInteraction: data.data?.priority === 'critical',
+    data: data.data,
+    actions: data.data?.url ? [
+      { action: 'view', title: 'View' },
+      { action: 'dismiss', title: 'Dismiss' },
+    ] : [
       { action: 'dismiss', title: 'Dismiss' },
     ],
   };
 
   event.waitUntil(
-    self.registration.showNotification(data.title || 'TIME BEYOND US', options)
+    self.registration.showNotification(data.title, options)
+  );
+
+  // Notify all clients about the new notification
+  event.waitUntil(
+    self.clients.matchAll({ includeUncontrolled: true, type: 'window' }).then((clients) => {
+      console.log(`[SW] Notifying ${clients.length} client(s) about push notification`);
+      clients.forEach((client) => {
+        client.postMessage({
+          type: 'PUSH_NOTIFICATION',
+          payload: data,
+        });
+      });
+    })
   );
 });
 
 // Notification click handler
 self.addEventListener('notificationclick', (event) => {
+  console.log('[SW] Notification clicked:', event.action);
   event.notification.close();
 
   if (event.action === 'dismiss') return;
 
+  const url = event.notification.data?.url || '/';
+
   event.waitUntil(
-    clients.matchAll({ type: 'window' }).then((clientList) => {
-      // Focus existing window or open new one
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      // Focus existing window
       for (const client of clientList) {
-        if (client.url === event.notification.data.url && 'focus' in client) {
-          return client.focus();
+        if (client.url.includes(self.location.origin) && 'focus' in client) {
+          return client.focus().then(() => {
+            // Navigate to the notification URL
+            if (url !== '/') {
+              client.postMessage({
+                type: 'NAVIGATE',
+                url: url,
+              });
+            }
+          });
         }
       }
+      // No window open, open new one
       if (clients.openWindow) {
-        return clients.openWindow(event.notification.data.url);
+        return clients.openWindow(url);
       }
     })
   );

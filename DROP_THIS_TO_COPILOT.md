@@ -1,8 +1,289 @@
 # DROP THIS TO COPILOT - QUICK REFERENCE
 
 **Last Updated:** 2025-12-25
-**Version:** v51.2.0 - FULL SECURITY HARDENING COMPLETE
+**Version:** v58.0.0 - 24/7 AI SUPPORT SYSTEM COMPLETE
 **Purpose:** Quick summary for Copilot/Claude when starting new sessions
+
+---
+
+## 🎧 v58.0.0 - 24/7 AI SUPPORT SYSTEM (2025-12-25)
+
+**Comprehensive customer support with AI chat, tickets, and FAQs:**
+
+**Created Files:**
+- `src/backend/support/ai_chat_handler.ts` - GPT-4 chat with context, intent detection, rate limiting
+- `src/backend/routes/support.ts` - Support API (chat, tickets, FAQs)
+- `src/backend/support/seed_faqs.ts` - Pre-seeded common questions
+- `frontend/src/components/support/AIChatWidget.tsx` - Floating chat widget (bottom-right)
+- `frontend/src/app/support/page.tsx` - Full support page with 3 tabs
+- `SUPPORT_SYSTEM.md` - Complete documentation
+
+**Updated Files:**
+- `src/backend/database/schemas.ts` - Added SupportTicket, ChatHistory, SupportFAQ schemas
+- `src/backend/routes/index.ts` - Added support routes
+- `frontend/src/components/layout/Sidebar.tsx` - Added Support link
+- `frontend/src/components/layout/AuthenticatedLayout.tsx` - Added chat widget
+
+**Features:**
+- ✅ 24/7 AI chat with GPT-4 (instant responses, platform knowledge)
+- ✅ Support ticket system (create, view, message threading)
+- ✅ FAQ database (10+ pre-seeded, voting, search)
+- ✅ Floating chat widget (always accessible, session persistence)
+- ✅ Intent detection (trading, broker, bot, billing, technical, etc.)
+- ✅ Rate limiting (20 msg/hour prevents abuse)
+- ✅ Smart escalation (AI → human when needed)
+- ✅ Full support page (AI chat, tickets, contact form)
+
+**API Endpoints:**
+- POST `/api/support/chat` - Send message to AI
+- GET `/api/support/history` - Get chat sessions
+- POST `/api/support/ticket` - Create ticket
+- GET `/api/support/tickets` - Get user's tickets
+- GET `/api/support/faq` - Get FAQs (public)
+- POST `/api/support/faq/:id/vote` - Vote helpful/unhelpful
+
+**Environment:** Uses existing `OPENAI_API_KEY`
+
+---
+
+## 🏦 v57.0.0 - BROKER INTEGRATIONS (2025-12-25)
+
+**Added 4 major broker integrations:**
+1. **Coinbase** - Crypto trading with OAuth 2.0 + WebSocket streaming
+2. **Webull** - Stocks/Options/Crypto with paper trading support
+3. **TD Ameritrade** - Stocks/Options/Futures/Forex with thinkorswim
+4. **Robinhood** - Stocks/Options/Crypto with MFA support
+
+**Total brokers:** 8 (Alpaca, OANDA, IB, MT4/MT5, Coinbase, Webull, TD Ameritrade, Robinhood)
+
+**Files:**
+- `src/backend/brokers/coinbase_broker.ts` - Full WebSocket + OAuth
+- `src/backend/brokers/webull_broker.ts` - Multi-asset + paper trading
+- `src/backend/brokers/td_ameritrade_broker.ts` - OAuth + auto token refresh
+- `src/backend/brokers/robinhood_broker.ts` - Device token + MFA
+- `BROKER_INTEGRATIONS.md` - Complete documentation
+
+**Updated:** `broker_manager.ts`, `.env.example`, TIMEBEUNUS.md
+
+---
+
+## 📧 v55.0.0 - EMAIL DRIP CAMPAIGNS (2025-12-25)
+
+### NEW: Email Marketing Automation with A/B Testing
+
+**Created Files:**
+- `src/backend/email/drip_campaign_service.ts` - Core campaign engine
+- `src/backend/email/campaign_templates.ts` - Pre-built templates
+- `src/backend/routes/campaigns.ts` - Campaign API (15+ endpoints)
+- `frontend/src/app/email-campaigns/page.tsx` - Admin campaign UI
+
+**Updated Files:**
+- `src/backend/routes/index.ts` - Added campaigns route
+- `frontend/src/components/layout/Sidebar.tsx` - Already had Email Campaigns link
+
+**Campaign System Features:**
+- ✅ 4 campaign types: Welcome Series, Upgrade Nudge, Inactive User, Feature Education
+- ✅ Automated email scheduling (Day 0, 1, 3, 7, 14)
+- ✅ A/B testing with variant tracking
+- ✅ Email tracking: opens, clicks, bounces, unsubscribes
+- ✅ Campaign analytics: open rate, click rate, conversion rate
+- ✅ Pre-built templates ready to install
+- ✅ Template system with TIME branding
+- ✅ Manual trigger for specific users
+- ✅ Pause/Resume/Delete campaigns
+
+**Pre-built Templates:**
+1. Welcome Series (5 emails) - Onboard new users
+2. Upgrade Nudge (3 emails) - Convert to premium
+3. Inactive User (3 emails) - Re-engage inactive users
+4. Feature Education (3 emails) - Weekly tips & strategies
+
+**Campaign API Endpoints:**
+```
+POST   /api/campaigns/create
+GET    /api/campaigns
+GET    /api/campaigns/:id
+PUT    /api/campaigns/:id
+DELETE /api/campaigns/:id
+POST   /api/campaigns/:id/trigger
+POST   /api/campaigns/:id/pause
+POST   /api/campaigns/:id/resume
+GET    /api/campaigns/:id/stats
+GET    /api/campaigns/templates/all
+POST   /api/campaigns/templates/install
+POST   /api/campaigns/track/open
+POST   /api/campaigns/track/click
+POST   /api/campaigns/unsubscribe
+POST   /api/campaigns/process-scheduled
+```
+
+**Admin UI Features:**
+- Campaign dashboard with stats cards
+- Template browser and installer
+- Campaign stats modal with A/B test results
+- Pause/Resume/Delete actions
+- Real-time refresh
+
+---
+
+## 🌐 v54.0.0 - SOCIAL TRADING FEATURES (2025-12-25)
+
+### NEW: Leaderboard + Community Chat
+
+**Created Files:**
+- `frontend/src/app/leaderboard/page.tsx` - Top 50 trader leaderboard with rankings
+- `frontend/src/app/chat/page.tsx` - Multi-channel community chat
+
+**Updated Files:**
+- `src/backend/routes/social.ts` - Added follow/unfollow endpoints
+- `src/backend/routes/chat.ts` - Added channel messaging + reactions
+
+**Leaderboard Features:**
+- ✅ Ranked top 50 traders by profit %
+- ✅ Filters: Daily/Weekly/Monthly/All-Time + Asset Classes
+- ✅ Search by username
+- ✅ Follow/Unfollow traders
+- ✅ Copy trading integration
+- ✅ Risk scoring, win rates, verified/PRO badges
+- ✅ Crown/Medal/Award icons for top 3
+- ✅ Responsive table with stats overview
+
+**Community Chat Features:**
+- ✅ 5 channels: #general, #stocks, #crypto, #forex, #bots
+- ✅ Real-time messaging (simulated WebSocket)
+- ✅ Emoji reactions (8 emojis: 👍 ❤️ 🚀 💯 🔥 👀 😂 🎯)
+- ✅ @mentions (highlighted in green)
+- ✅ Reply to messages
+- ✅ Pinned messages
+- ✅ Online user count
+- ✅ Unread message badges
+- ✅ Auto-scroll, timestamps, verified/PRO badges
+
+**Backend API Routes:**
+```
+POST   /api/social/follow/:userId
+DELETE /api/social/follow/:userId
+GET    /api/social/followers
+GET    /api/social/following
+
+GET    /api/chat/channels
+GET    /api/chat/messages/:channel
+POST   /api/chat/messages/:channel
+POST   /api/chat/messages/:messageId/reaction
+GET    /api/chat/online-users/:channel
+```
+
+**Design:**
+- Dark theme (slate-900, slate-800)
+- time-primary green accent
+- Lucide icons throughout
+- Gradient avatars (from-time-primary to-purple-500)
+- Fully responsive
+- Production-ready TypeScript
+
+---
+
+## 💳 v53.0.0 - STRIPE PAYMENT INTEGRATION (2025-12-25)
+
+### NEW: Production-Ready Stripe Subscription System
+
+**Files Created:**
+- `src/backend/payments/stripe_service.ts` - Stripe SDK service
+- `src/backend/routes/stripe.ts` - API routes for checkout/portal/webhooks
+- `frontend/src/app/payments/page.tsx` - UPDATED with subscription UI
+
+**Subscription Tiers:**
+| Tier | Price | Key Features |
+|------|-------|--------------|
+| FREE | $0/mo | 5 bots, 10 backtests/mo |
+| STARTER | $24.99/mo | 25 bots, 50 backtests/mo |
+| PRO | $79/mo | 100 bots, unlimited backtests (POPULAR) |
+| UNLIMITED | $149/mo | Unlimited everything + API access |
+| ENTERPRISE | $499/mo | White-label + dedicated manager |
+
+**Features:**
+- ✅ Stripe Checkout integration (redirects to Stripe for payment)
+- ✅ Customer Portal (manage subscription, cancel, update payment)
+- ✅ Webhook handling (subscription created/updated/deleted, payments)
+- ✅ Real-time subscription status tracking
+- ✅ Current plan indicator with badges
+- ✅ "Manage Subscription" button → Opens Stripe portal
+- ✅ Billing period display
+- ✅ Cancellation warnings
+- ✅ Full TypeScript typing
+- ✅ Production-ready error handling
+
+**API Endpoints:**
+- `POST /api/stripe/create-checkout` - Create checkout session
+- `POST /api/stripe/create-portal` - Open customer portal
+- `POST /api/stripe/webhook` - Handle Stripe events (public)
+- `GET /api/stripe/subscription` - Get current subscription
+- `GET /api/stripe/tiers` - Get all tiers
+- `POST /api/stripe/cancel` - Cancel at period end
+- `POST /api/stripe/reactivate` - Reactivate subscription
+
+**Environment Variables Required:**
+```env
+STRIPE_SECRET_KEY=sk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+STRIPE_PRICE_STARTER=price_...
+STRIPE_PRICE_PRO=price_...
+STRIPE_PRICE_UNLIMITED=price_...
+STRIPE_PRICE_ENTERPRISE=price_...
+FRONTEND_URL=http://localhost:3000
+```
+
+**User Flow:**
+1. View tiers on /payments
+2. Click "Subscribe" → Redirect to Stripe Checkout
+3. Complete payment
+4. Webhook updates subscription
+5. Return to /payments?success=true
+6. See "CURRENT PLAN" badge + "Manage Subscription" button
+
+---
+
+## 🎯 v52.0.0 - USER ONBOARDING FLOW (2025-12-25)
+
+### NEW: Complete 5-Step Onboarding Wizard
+
+**File:** `frontend/src/app/onboarding/page.tsx`
+
+A comprehensive user onboarding flow that personalizes the trading experience:
+
+| Step | Feature | Details |
+|------|---------|---------|
+| 1 | Welcome + Name | Personalized greeting, name capture |
+| 2 | Experience Level | Beginner/Intermediate/Expert with recommendations |
+| 3 | Risk Tolerance | Conservative/Moderate/Aggressive with feature lists |
+| 4 | Trading Goals | Multi-select: Day Trading, Long-term, Retirement, Passive Income, Tax Optimization |
+| 5 | Broker Connection | Optional broker linking (can skip) |
+
+**Features:**
+- ✅ localStorage progress saving (resume anytime)
+- ✅ Cookie-based completion tracking (`time_onboarding_complete=true`)
+- ✅ Smooth CSS transitions between steps
+- ✅ Full TypeScript typing
+- ✅ Production-ready validation
+- ✅ Dark theme with gradient animations
+- ✅ Responsive design (mobile + desktop)
+- ✅ Redirects to dashboard on completion
+
+**Design:**
+- Uses existing TIME design system (slate colors, time-primary green)
+- Animated background gradients
+- Grid pattern overlay
+- Progress indicator (5 dots)
+- Lucide icons throughout
+- Hover effects and scale animations
+
+**User Flow:**
+1. Enter name → 2. Select experience → 3. Choose risk level → 4. Pick goals → 5. Connect broker or skip → Dashboard
+
+**Storage:**
+- Progress: `localStorage.time_onboarding_progress`
+- Completion: `document.cookie.time_onboarding_complete`
+- Preferences: `localStorage.time_user_preferences`
 
 ---
 

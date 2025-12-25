@@ -130,6 +130,12 @@ import {
   Gem,
   X,
   Menu,
+  Megaphone,
+  Mail,
+  MessageCircle,
+  Trophy,
+  Headphones,
+  Sparkles,
 } from 'lucide-react';
 import clsx from 'clsx';
 import { TradingModeIndicator } from '@/components/trading/TradingModeToggle';
@@ -156,6 +162,8 @@ const navigation = [
   { name: 'Bots', href: '/bots', icon: Bot },
   { name: 'Bot Marketplace', href: '/marketplace', icon: Store, isNew: true },
   { name: 'Social Trading', href: '/social', icon: Users },
+  { name: 'Leaderboard', href: '/leaderboard', icon: Trophy, isNew: true },
+  { name: 'Community Chat', href: '/chat', icon: MessageCircle, isNew: true },
   { name: 'Robo Advisor', href: '/robo', icon: Bot },
   { name: 'Invest', href: '/invest', icon: PiggyBank },
   { name: 'DeFi', href: '/defi', icon: Coins },
@@ -166,15 +174,21 @@ const navigation = [
   // Connections
   { name: 'Broker Connect', href: '/brokers', icon: Link2 },
   { name: 'Payments', href: '/payments', icon: CreditCard },
+  { name: 'Notifications', href: '/notifications', icon: Bell, isNew: true },
   // Wealth & Planning
   { name: 'Wealth Management', href: '/wealth', icon: Landmark, isNew: true },
   { name: 'Retirement', href: '/retirement', icon: Umbrella, isNew: true },
   { name: 'Account Transfers', href: '/transfers', icon: Building2, isNew: true },
   { name: 'Tax Optimization', href: '/tax', icon: Leaf, isNew: true },
   { name: 'Investment Goals', href: '/goals', icon: Target, isNew: true },
+  // Support
+  { name: 'Support', href: '/support', icon: Headphones, isNew: true },
   // Settings (visible to all)
   { name: 'Settings', href: '/settings', icon: Settings },
   // ADMIN-ONLY FEATURES - Hidden from regular users
+  { name: 'Analytics', href: '/analytics', icon: BarChart3, adminOnly: true, isNew: true },
+  { name: 'Marketing Hub', href: '/marketing', icon: Megaphone, adminOnly: true, isNew: true },
+  { name: 'Email Campaigns', href: '/email-campaigns', icon: Mail, adminOnly: true, isNew: true },
   { name: 'Announcement Bot', href: '/admin-bot', icon: Bot, adminOnly: true, isNew: true },
   { name: 'AI Trade God', href: '/ai-trade-god', icon: Zap, adminOnly: true, isNew: true },
   { name: 'Control Panel', href: '/admin', icon: Settings, adminOnly: true },

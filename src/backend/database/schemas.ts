@@ -571,10 +571,20 @@ export interface PriceBarSchema {
 // NOTIFICATION SCHEMAS
 // ============================================================
 
+export type NotificationType =
+  | 'TRADE_EXECUTED'
+  | 'ALERT_TRIGGERED'
+  | 'BOT_UPDATE'
+  | 'SYSTEM_UPDATE'
+  | 'TRADE_COMPLETE'
+  | 'RISK_WARNING'
+  | 'INSIGHT_GENERATED'
+  | 'EVOLUTION_PROPOSAL';
+
 export interface NotificationSchema {
   _id: string;
   userId: string;
-  type: 'trade' | 'risk' | 'system' | 'insight' | 'evolution';
+  type: NotificationType | 'trade' | 'risk' | 'system' | 'insight' | 'evolution';
   title: string;
   message: string;
   priority: 'low' | 'medium' | 'high' | 'critical';
@@ -589,6 +599,12 @@ export interface NotificationSchema {
   sentAt?: Date;
   readAt?: Date;
 
+  // Push notification data
+  data?: Record<string, any>;
+  icon?: string;
+  badge?: string;
+  url?: string;
+
   // Related
   relatedEntity?: {
     type: string;
@@ -599,6 +615,22 @@ export interface NotificationSchema {
   actionRequired: boolean;
   actionTaken?: string;
   actionTakenAt?: Date;
+}
+
+// Push Notification Subscription Schema
+export interface PushSubscriptionSchema {
+  _id: string;
+  userId: string;
+  endpoint: string;
+  keys: {
+    p256dh: string;
+    auth: string;
+  };
+  userAgent?: string;
+  deviceName?: string;
+  createdAt: Date;
+  lastUsedAt: Date;
+  isActive: boolean;
 }
 
 // ============================================================
@@ -844,6 +876,11 @@ export const indexes = {
     { userId: 1, readAt: 1 },
     { priority: 1 },
   ],
+  pushSubscriptions: [
+    { userId: 1, isActive: 1 },
+    { endpoint: 1, unique: true },
+    { createdAt: -1 },
+  ],
   auditLogs: [
     { timestamp: -1 },
     { userId: 1, timestamp: -1 },
@@ -870,5 +907,128 @@ export const indexes = {
     { 'deliveringBroker.brokerId': 1 },
     { submittedAt: -1 },
     { completedAt: -1 },
+  ],
+};
+
+// ============================================================
+// SUPPORT SYSTEM SCHEMAS
+// ============================================================
+
+export interface SupportTicketSchema {
+  _id: string;
+  userId: string;
+  ticketNumber: string;
+  subject: string;
+  category: 'technical' | 'trading' | 'broker' | 'billing' | 'bot' | 'general';
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  status: 'open' | 'in_progress' | 'waiting_response' | 'resolved' | 'closed';
+
+  // Initial message
+  initialMessage: string;
+
+  // Messages thread
+  messages: Array<{
+    id: string;
+    senderId: string;
+    senderType: 'user' | 'support' | 'ai';
+    message: string;
+    timestamp: Date;
+    attachments?: Array<{
+      fileName: string;
+      fileUrl: string;
+      fileSize: number;
+    }>;
+  }>;
+
+  // Assignment
+  assignedTo?: string;
+  assignedAt?: Date;
+
+  // Timestamps
+  createdAt: Date;
+  updatedAt: Date;
+  resolvedAt?: Date;
+  closedAt?: Date;
+
+  // Resolution
+  resolutionNotes?: string;
+  satisfactionRating?: number;
+  satisfactionFeedback?: string;
+
+  // Metadata
+  tags: string[];
+  relatedTickets: string[];
+  escalated: boolean;
+  escalatedAt?: Date;
+  escalatedReason?: string;
+}
+
+export interface ChatHistorySchema {
+  _id: string;
+  userId: string;
+  sessionId: string;
+
+  // Messages
+  messages: Array<{
+    id: string;
+    role: 'user' | 'assistant';
+    content: string;
+    timestamp: Date;
+    intent?: string;
+    confidence?: number;
+  }>;
+
+  // Session info
+  startedAt: Date;
+  lastMessageAt: Date;
+  endedAt?: Date;
+
+  // Escalation
+  escalatedToTicket: boolean;
+  ticketId?: string;
+  escalatedAt?: Date;
+
+  // Analytics
+  messagesCount: number;
+  avgResponseTime?: number;
+  satisfactionRating?: number;
+  issueResolved: boolean;
+}
+
+export interface SupportFAQSchema {
+  _id: string;
+  question: string;
+  answer: string;
+  category: 'trading' | 'bots' | 'broker' | 'billing' | 'account' | 'technical';
+  keywords: string[];
+  helpfulness: number;
+  views: number;
+  helpful_votes: number;
+  unhelpful_votes: number;
+  createdAt: Date;
+  updatedAt: Date;
+  createdBy: string;
+  published: boolean;
+  order: number;
+}
+
+// Add support indexes
+export const supportIndexes = {
+  supportTickets: [
+    { userId: 1, createdAt: -1 },
+    { ticketNumber: 1, unique: true },
+    { status: 1, priority: -1, createdAt: -1 },
+    { assignedTo: 1, status: 1 },
+    { category: 1 },
+  ],
+  chatHistory: [
+    { userId: 1, lastMessageAt: -1 },
+    { sessionId: 1, unique: true },
+    { escalatedToTicket: 1 },
+  ],
+  supportFAQ: [
+    { category: 1, order: 1 },
+    { published: 1, order: 1 },
+    { keywords: 1 },
   ],
 };

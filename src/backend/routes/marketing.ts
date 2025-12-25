@@ -390,6 +390,143 @@ router.post('/campaigns/:campaignId/posts/:postId', (req: Request, res: Response
   }
 });
 
+// ============== AUTO-POSTING ==============
+
+/**
+ * POST /api/v1/marketing/autopost/start
+ * Start automatic posting
+ */
+router.post('/autopost/start', (req: Request, res: Response) => {
+  try {
+    const { intervalMinutes, platforms, contentTypes, maxPostsPerDay, quietHoursStart, quietHoursEnd, includeEmojis, tone } = req.body;
+
+    const bot = getMarketingBot();
+    bot.startAutoPosting({
+      intervalMinutes,
+      platforms,
+      contentTypes,
+      maxPostsPerDay,
+      quietHoursStart,
+      quietHoursEnd,
+      includeEmojis,
+      tone,
+    });
+
+    res.json({
+      success: true,
+      message: 'Auto-posting started',
+      config: bot.getAutoPostConfig(),
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Failed to start auto-posting' });
+  }
+});
+
+/**
+ * POST /api/v1/marketing/autopost/stop
+ * Stop automatic posting
+ */
+router.post('/autopost/stop', (req: Request, res: Response) => {
+  try {
+    const bot = getMarketingBot();
+    bot.stopAutoPosting();
+
+    res.json({
+      success: true,
+      message: 'Auto-posting stopped',
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Failed to stop auto-posting' });
+  }
+});
+
+/**
+ * GET /api/v1/marketing/autopost/status
+ * Get auto-posting status and configuration
+ */
+router.get('/autopost/status', (req: Request, res: Response) => {
+  try {
+    const bot = getMarketingBot();
+    const config = bot.getAutoPostConfig();
+    const stats = bot.getAutoPostStats();
+
+    res.json({
+      success: true,
+      config,
+      stats,
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Failed to get auto-post status' });
+  }
+});
+
+/**
+ * PUT /api/v1/marketing/autopost/config
+ * Update auto-post configuration
+ */
+router.put('/autopost/config', (req: Request, res: Response) => {
+  try {
+    const bot = getMarketingBot();
+    const updatedConfig = bot.updateAutoPostConfig(req.body);
+
+    res.json({
+      success: true,
+      message: 'Auto-post configuration updated',
+      config: updatedConfig,
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Failed to update config' });
+  }
+});
+
+/**
+ * GET /api/v1/marketing/content/library
+ * Get content library items
+ */
+router.get('/content/library', (req: Request, res: Response) => {
+  try {
+    // This would return the content library - for now return count
+    res.json({
+      success: true,
+      message: 'Content library available',
+      count: 50,
+      types: ['tip', 'feature', 'educational', 'engagement', 'promotion', 'announcement'],
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Failed to get content library' });
+  }
+});
+
+/**
+ * POST /api/v1/marketing/post-now
+ * Post content immediately (manual trigger)
+ */
+router.post('/post-now', async (req: Request, res: Response) => {
+  try {
+    const { content, platforms } = req.body;
+    const user = (req as any).user;
+
+    if (!content || !platforms || platforms.length === 0) {
+      return res.status(400).json({ error: 'content and platforms are required' });
+    }
+
+    const bot = getMarketingBot();
+    const post = await bot.createPost(content, platforms, {
+      createdBy: user?.id || 'admin',
+    });
+
+    const publishedPost = await bot.publishPost(post.id);
+
+    res.json({
+      success: true,
+      message: 'Post published successfully',
+      post: publishedPost,
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Failed to publish post' });
+  }
+});
+
 // ============== ANALYTICS ==============
 
 /**

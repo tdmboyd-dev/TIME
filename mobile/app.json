@@ -1,41 +1,87 @@
 {
   "expo": {
-    "name": "TIME Trading",
-    "slug": "time-trading",
+    "name": "TIME BEYOND US",
+    "slug": "time-beyond-us",
     "version": "1.0.0",
+    "scheme": "timebeyondus",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#0f172a"
+      "backgroundColor": "#020617"
     },
     "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.timebeyondus.trading",
       "infoPlist": {
-        "NSFaceIDUsageDescription": "Use Face ID to securely log in to TIME Trading"
+        "NSFaceIDUsageDescription": "Use Face ID to securely log in to TIME BEYOND US",
+        "NSCameraUsageDescription": "Allow camera access for QR code scanning",
+        "NSUserTrackingUsageDescription": "This identifier will be used to deliver personalized trading insights"
+      },
+      "buildNumber": "1",
+      "config": {
+        "usesNonExemptEncryption": false
       }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#0f172a"
+        "backgroundColor": "#020617"
       },
       "package": "com.timebeyondus.trading",
-      "permissions": ["USE_BIOMETRIC", "USE_FINGERPRINT"]
+      "versionCode": 1,
+      "permissions": [
+        "USE_BIOMETRIC",
+        "USE_FINGERPRINT",
+        "VIBRATE",
+        "RECEIVE_BOOT_COMPLETED",
+        "CAMERA"
+      ],
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
     },
     "plugins": [
       "expo-secure-store",
-      "expo-notifications"
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#00ff88",
+          "sounds": ["./assets/notification.wav"]
+        }
+      ],
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Allow TIME BEYOND US to use Face ID for secure authentication"
+        }
+      ]
     ],
     "extra": {
-      "apiUrl": "https://time-backend-hosting.fly.dev/api/v1"
+      "apiUrl": "https://time-backend-hosting.fly.dev/api/v1",
+      "wsUrl": "wss://time-backend-hosting.fly.dev",
+      "eas": {
+        "projectId": "time-beyond-us"
+      }
+    },
+    "notification": {
+      "icon": "./assets/notification-icon.png",
+      "color": "#00ff88",
+      "androidMode": "default",
+      "androidCollapsedTitle": "TIME Trading Alert"
+    },
+    "updates": {
+      "fallbackToCacheTimeout": 0,
+      "url": "https://u.expo.dev/time-beyond-us"
+    },
+    "runtimeVersion": {
+      "policy": "sdkVersion"
     }
   }
 }

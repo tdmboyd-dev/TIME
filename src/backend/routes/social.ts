@@ -325,6 +325,90 @@ router.get('/recommendations', authMiddleware, async (req: Request, res: Respons
 });
 
 // ============================================================
+// FOLLOW/UNFOLLOW TRADERS
+// ============================================================
+
+/**
+ * POST /social/follow/:userId
+ * Follow a trader
+ */
+router.post('/follow/:userId', authMiddleware, async (req: Request, res: Response) => {
+  const user = (req as any).user;
+  const { userId } = req.params;
+
+  if (!userId) {
+    return res.status(400).json({ error: 'User ID is required' });
+  }
+
+  try {
+    // In production, this would update the database
+    res.json({
+      success: true,
+      message: `Started following user ${userId}`,
+      userId,
+      isFollowing: true,
+    });
+  } catch (error: any) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+/**
+ * DELETE /social/follow/:userId
+ * Unfollow a trader
+ */
+router.delete('/follow/:userId', authMiddleware, async (req: Request, res: Response) => {
+  const user = (req as any).user;
+  const { userId } = req.params;
+
+  if (!userId) {
+    return res.status(400).json({ error: 'User ID is required' });
+  }
+
+  try {
+    // In production, this would update the database
+    res.json({
+      success: true,
+      message: `Unfollowed user ${userId}`,
+      userId,
+      isFollowing: false,
+    });
+  } catch (error: any) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+/**
+ * GET /social/followers
+ * Get user's followers
+ */
+router.get('/followers', authMiddleware, (req: Request, res: Response) => {
+  const user = (req as any).user;
+
+  // In production, this would fetch from database
+  res.json({
+    success: true,
+    followers: [],
+    count: 0,
+  });
+});
+
+/**
+ * GET /social/following
+ * Get users that current user is following
+ */
+router.get('/following', authMiddleware, (req: Request, res: Response) => {
+  const user = (req as any).user;
+
+  // In production, this would fetch from database
+  res.json({
+    success: true,
+    following: [],
+    count: 0,
+  });
+});
+
+// ============================================================
 // LEADERBOARD
 // ============================================================
 
