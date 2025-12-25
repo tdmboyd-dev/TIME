@@ -8,11 +8,11 @@
  * - Subscription status tracking
  *
  * SUBSCRIPTION TIERS:
- * - FREE: $0/month - Basic features
- * - STARTER: $24.99/month - Advanced trading bots
- * - PRO: $79/month - Full bot suite + advanced analytics
- * - UNLIMITED: $149/month - Unlimited everything + priority support
- * - ENTERPRISE: $499/month - White-label + dedicated account manager
+ * - FREE: $0/month - 3 bots, paper trading only
+ * - BASIC: $19/month - 10 bots, $5K capital
+ * - PRO: $39/month - 50 bots, $50K capital
+ * - PREMIUM: $59/month - 999 bots, $500K capital, Ultimate Money Machine
+ * - ENTERPRISE: $250/month - Unlimited everything + white-label
  */
 
 import Stripe from 'stripe';
@@ -77,37 +77,37 @@ export const SUBSCRIPTION_TIERS: Record<string, SubscriptionTier> = {
     priceId: '', // No Stripe price for free tier
     interval: 'month',
     features: [
-      'Basic trading features',
-      '5 active bots',
-      '10 backtests/month',
-      'Community support',
+      '3 active bots',
+      'Paper trading only',
       'Basic market data',
+      'Community support',
+      'Standard backtesting',
     ],
     limits: {
-      bots: 5,
-      strategies: 10,
+      bots: 3,
+      strategies: 5,
       backtests: 10,
       apiCalls: 1000,
       support: 'community',
     },
   },
-  STARTER: {
-    id: 'starter',
-    name: 'Starter',
-    price: 24.99,
-    priceId: process.env.STRIPE_PRICE_STARTER || '',
+  BASIC: {
+    id: 'basic',
+    name: 'Basic',
+    price: 19,
+    priceId: process.env.STRIPE_PRICE_BASIC || '',
     interval: 'month',
     features: [
-      'Everything in Free',
-      '25 active bots',
-      '50 backtests/month',
+      '10 active bots',
+      '$5,000 max capital',
+      'Real trading enabled',
       'Email support',
-      'Advanced market data',
-      'Real-time alerts',
+      'Advanced backtesting',
+      'Real-time market data',
     ],
     limits: {
-      bots: 25,
-      strategies: 50,
+      bots: 10,
+      strategies: 20,
       backtests: 50,
       apiCalls: 10000,
       support: 'email',
@@ -116,44 +116,44 @@ export const SUBSCRIPTION_TIERS: Record<string, SubscriptionTier> = {
   PRO: {
     id: 'pro',
     name: 'Pro',
-    price: 79,
+    price: 39,
     priceId: process.env.STRIPE_PRICE_PRO || '',
     interval: 'month',
     features: [
-      'Everything in Starter',
-      '100 active bots',
-      'Unlimited backtests',
+      '50 active bots',
+      '$50,000 max capital',
+      'Priority execution',
       'Priority support',
-      'Premium market data',
       'Advanced analytics',
+      'API access',
       'Custom strategies',
     ],
     limits: {
-      bots: 100,
-      strategies: 200,
+      bots: 50,
+      strategies: 100,
       backtests: -1, // Unlimited
       apiCalls: 100000,
       support: 'priority',
     },
   },
-  UNLIMITED: {
-    id: 'unlimited',
-    name: 'Unlimited',
-    price: 149,
-    priceId: process.env.STRIPE_PRICE_UNLIMITED || '',
+  PREMIUM: {
+    id: 'premium',
+    name: 'Premium',
+    price: 59,
+    priceId: process.env.STRIPE_PRICE_PREMIUM || '',
     interval: 'month',
     features: [
-      'Everything in Pro',
-      'Unlimited bots',
-      'Unlimited strategies',
-      'Unlimited backtests',
+      '999 active bots',
+      '$500,000 max capital',
+      'Ultimate Money Machine',
       '24/7 priority support',
-      'Real-time institutional data',
-      'API access',
+      'Institutional data feeds',
       'Advanced AI features',
+      'Risk management tools',
+      'Multi-strategy portfolios',
     ],
     limits: {
-      bots: -1, // Unlimited
+      bots: 999,
       strategies: -1,
       backtests: -1,
       apiCalls: -1,
@@ -163,15 +163,16 @@ export const SUBSCRIPTION_TIERS: Record<string, SubscriptionTier> = {
   ENTERPRISE: {
     id: 'enterprise',
     name: 'Enterprise',
-    price: 499,
+    price: 250,
     priceId: process.env.STRIPE_PRICE_ENTERPRISE || '',
     interval: 'month',
     features: [
-      'Everything in Unlimited',
+      'Unlimited bots',
+      'Unlimited capital',
       'White-label solution',
       'Dedicated account manager',
       'Custom integrations',
-      'On-premise deployment option',
+      'On-premise deployment',
       'SLA guarantee',
       'Custom bot development',
       'Training & onboarding',
@@ -356,6 +357,10 @@ export class StripeService extends EventEmitter {
       logger.info(`Webhook received: ${event.type}`, { eventId: event.id });
 
       switch (event.type) {
+        case 'checkout.session.completed':
+          await this.handleCheckoutCompleted(event.data.object as Stripe.Checkout.Session);
+          break;
+
         case 'customer.subscription.created':
           await this.handleSubscriptionCreated(event.data.object as Stripe.Subscription);
           break;
@@ -385,6 +390,28 @@ export class StripeService extends EventEmitter {
       logger.error('Webhook handling failed', { error: error.message });
       throw error;
     }
+  }
+
+  /**
+   * Handle checkout session completed event
+   */
+  private async handleCheckoutCompleted(session: Stripe.Checkout.Session): Promise<void> {
+    const userId = session.metadata?.userId;
+    const tier = session.metadata?.tier;
+
+    if (!userId || !tier) {
+      logger.error('Missing metadata in checkout session', { sessionId: session.id });
+      return;
+    }
+
+    logger.info(`Checkout completed for user ${userId}`, {
+      tier,
+      sessionId: session.id,
+      subscriptionId: session.subscription,
+    });
+
+    // The subscription.created event will handle the actual subscription creation
+    this.emit('checkout:completed', { userId, tier, session });
   }
 
   /**
@@ -502,6 +529,13 @@ export class StripeService extends EventEmitter {
     );
 
     return subscription || null;
+  }
+
+  /**
+   * Get user subscription (alias for getSubscriptionStatus for API compatibility)
+   */
+  public async getUserSubscription(userId: string): Promise<CustomerSubscription | null> {
+    return this.getSubscriptionStatus(userId);
   }
 
   /**

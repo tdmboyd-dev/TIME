@@ -466,6 +466,88 @@ export async function sendSystemUpdateNotification(
   );
 }
 
+export async function sendPriceAlertNotification(
+  userId: string,
+  alertData: {
+    symbol: string;
+    price: number;
+    condition: string;
+    message: string;
+  }
+): Promise<void> {
+  await sendPushNotification(
+    userId,
+    `Price Alert: ${alertData.symbol}`,
+    alertData.message,
+    {
+      type: 'PRICE_ALERT',
+      priority: 'high',
+      url: `/trade?symbol=${alertData.symbol}`,
+      ...alertData,
+    }
+  );
+}
+
+export async function sendBotSignalNotification(
+  userId: string,
+  signalData: {
+    botName: string;
+    signal: string;
+    symbol: string;
+    message: string;
+  }
+): Promise<void> {
+  await sendPushNotification(
+    userId,
+    `${signalData.botName}`,
+    signalData.message,
+    {
+      type: 'BOT_SIGNAL',
+      priority: 'high',
+      url: `/autopilot`,
+      ...signalData,
+    }
+  );
+}
+
+export async function sendProfitNotification(
+  userId: string,
+  profitData: {
+    amount: number;
+    period: string;
+    message: string;
+  }
+): Promise<void> {
+  await sendPushNotification(
+    userId,
+    'Profit Update',
+    profitData.message,
+    {
+      type: 'PROFIT',
+      priority: 'medium',
+      url: '/portfolio',
+      ...profitData,
+    }
+  );
+}
+
+export async function sendSystemNotification(
+  userId: string,
+  message: string,
+  priority: 'low' | 'medium' | 'high' | 'critical' = 'medium'
+): Promise<void> {
+  await sendPushNotification(
+    userId,
+    'System Notification',
+    message,
+    {
+      type: 'SYSTEM',
+      priority,
+      url: '/',
+    }
+  );
+}
+
 export default {
   sendPushNotification,
   sendBulkNotification,
@@ -482,4 +564,8 @@ export default {
   sendAlertTriggeredNotification,
   sendBotUpdateNotification,
   sendSystemUpdateNotification,
+  sendPriceAlertNotification,
+  sendBotSignalNotification,
+  sendProfitNotification,
+  sendSystemNotification,
 };

@@ -1,11 +1,14 @@
 /**
- * Marketing Bot API Routes
+ * Marketing Hub API Routes
  *
- * Admin-only endpoints for managing automated marketing:
+ * Admin-only endpoints for complete marketing management:
  * - Platform configuration
  * - Content creation and scheduling
  * - Campaign management
- * - Analytics
+ * - Referral system
+ * - Promo codes
+ * - Analytics and ROI tracking
+ * - A/B testing
  */
 
 import { Router, Request, Response } from 'express';
@@ -16,6 +19,226 @@ const router = Router();
 
 // All marketing routes require admin/owner access
 router.use(adminMiddleware);
+
+// ============================================================
+// IN-MEMORY STORAGE (Replace with MongoDB in production)
+// ============================================================
+
+interface ReferralCode {
+  id: string;
+  code: string;
+  userId: string;
+  userName: string;
+  createdAt: Date;
+  usageCount: number;
+  usageLimit?: number;
+  isActive: boolean;
+  referrals: Array<{
+    referredUserId: string;
+    referredEmail: string;
+    referredName: string;
+    signedUpAt: Date;
+    convertedToPaid: boolean;
+    convertedAt?: Date;
+    subscriptionTier?: string;
+    rewardPaid: boolean;
+    rewardAmount?: number;
+    rewardPaidAt?: Date;
+  }>;
+  totalRewards: number;
+  pendingRewards: number;
+  paidRewards: number;
+  conversionRate: number;
+  totalRevenue: number;
+}
+
+interface PromoCode {
+  id: string;
+  code: string;
+  description: string;
+  type: 'percentage' | 'fixed_amount' | 'free_trial' | 'free_months';
+  discountPercent?: number;
+  discountAmount?: number;
+  freeTrialDays?: number;
+  freeMonths?: number;
+  minPurchaseAmount?: number;
+  applicablePlans: string[];
+  firstTimeOnly: boolean;
+  isActive: boolean;
+  startDate: Date;
+  expiryDate?: Date;
+  usageLimit?: number;
+  usageCount: number;
+  perUserLimit?: number;
+  redemptions: Array<{
+    userId: string;
+    userEmail: string;
+    redeemedAt: Date;
+    discountApplied: number;
+    subscriptionId?: string;
+    originalAmount: number;
+    finalAmount: number;
+  }>;
+  totalRevenue: number;
+  totalDiscount: number;
+  averageOrderValue: number;
+  conversionRate: number;
+  createdBy: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+interface Campaign {
+  id: string;
+  name: string;
+  description: string;
+  type: 'email' | 'social' | 'referral' | 'promo' | 'content' | 'ads' | 'multi-channel';
+  status: 'draft' | 'active' | 'paused' | 'completed' | 'archived';
+  startDate: Date;
+  endDate?: Date;
+  budget?: number;
+  spent: number;
+  goals: {
+    impressions?: number;
+    clicks?: number;
+    conversions?: number;
+    revenue?: number;
+    signups?: number;
+  };
+  metrics: {
+    impressions: number;
+    clicks: number;
+    conversions: number;
+    revenue: number;
+    signups: number;
+    engagement: number;
+    reach: number;
+  };
+  channels: Array<{
+    channel: string;
+    impressions: number;
+    clicks: number;
+    conversions: number;
+    spent: number;
+  }>;
+  posts: string[];
+  promoCodes: string[];
+  abTests?: Array<{
+    testId: string;
+    name: string;
+    startedAt: Date;
+    completedAt?: Date;
+    variants: Array<{
+      id: string;
+      name: string;
+      impressions: number;
+      clicks: number;
+      conversions: number;
+      revenue: number;
+    }>;
+    winner?: string;
+    winnerConfidence?: number;
+  }>;
+  roi: number;
+  cpc: number;
+  cpa: number;
+  ctr: number;
+  conversionRate: number;
+  tags: string[];
+  createdBy: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+interface ReferralRewardTier {
+  id: string;
+  name: string;
+  description: string;
+  minReferrals: number;
+  minConversions?: number;
+  rewardType: 'cash' | 'credit' | 'free_months' | 'discount';
+  rewardAmount?: number;
+  rewardMonths?: number;
+  rewardPercent?: number;
+  isActive: boolean;
+  order: number;
+}
+
+// In-memory storage
+const referralCodes: Map<string, ReferralCode> = new Map();
+const promoCodes: Map<string, PromoCode> = new Map();
+const campaigns: Map<string, Campaign> = new Map();
+const rewardTiers: Map<string, ReferralRewardTier> = new Map();
+
+// Initialize some sample data
+const initializeSampleData = () => {
+  // Sample reward tiers
+  const tier1: ReferralRewardTier = {
+    id: 'tier_1',
+    name: 'Bronze',
+    description: '1-5 referrals',
+    minReferrals: 1,
+    minConversions: 1,
+    rewardType: 'credit',
+    rewardAmount: 10,
+    isActive: true,
+    order: 1,
+  };
+  const tier2: ReferralRewardTier = {
+    id: 'tier_2',
+    name: 'Silver',
+    description: '5-10 referrals',
+    minReferrals: 5,
+    minConversions: 3,
+    rewardType: 'credit',
+    rewardAmount: 50,
+    isActive: true,
+    order: 2,
+  };
+  const tier3: ReferralRewardTier = {
+    id: 'tier_3',
+    name: 'Gold',
+    description: '10+ referrals',
+    minReferrals: 10,
+    minConversions: 5,
+    rewardType: 'cash',
+    rewardAmount: 100,
+    isActive: true,
+    order: 3,
+  };
+  rewardTiers.set(tier1.id, tier1);
+  rewardTiers.set(tier2.id, tier2);
+  rewardTiers.set(tier3.id, tier3);
+
+  // Sample promo codes
+  const promo1: PromoCode = {
+    id: 'promo_1',
+    code: 'TIMEFREE',
+    description: 'First month free',
+    type: 'free_months',
+    freeMonths: 1,
+    applicablePlans: ['pro', 'premium', 'ultimate'],
+    firstTimeOnly: true,
+    isActive: true,
+    startDate: new Date('2025-01-01'),
+    expiryDate: new Date('2025-12-31'),
+    usageLimit: 1000,
+    usageCount: 0,
+    perUserLimit: 1,
+    redemptions: [],
+    totalRevenue: 0,
+    totalDiscount: 0,
+    averageOrderValue: 0,
+    conversionRate: 0,
+    createdBy: 'admin',
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
+  promoCodes.set(promo1.code, promo1);
+};
+
+// Initialize on module load
+initializeSampleData();
 
 // ============== PLATFORM CONFIGURATION ==============
 

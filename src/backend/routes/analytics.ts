@@ -535,6 +535,10 @@ router.get('/revenue', authMiddleware, adminMiddleware, async (req: Request, res
       revenueByTier,
       chartData: {
         revenue: revenueByDate,
+        tierDistribution: tiers.map(tier => ({
+          name: tier.name,
+          value: subscriptionsByTier[tier.id as keyof typeof subscriptionsByTier] || 0,
+        })),
       },
       note: 'Revenue data is estimated. Integrate with payment provider for accurate tracking.',
     });
@@ -576,6 +580,128 @@ router.get('/overview', authMiddleware, adminMiddleware, async (req: Request, re
     });
   } catch (error: any) {
     console.error('Analytics overview error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * GET /api/analytics/top-traders
+ * Get top performing traders by P&L
+ */
+router.get('/top-traders', authMiddleware, adminMiddleware, async (req: Request, res: Response) => {
+  try {
+    const { period = 'month', limit = 10 } = req.query;
+    const dateRange = getDateRange(period as string);
+
+    // Get all trades
+    const allTrades = await tradeRepository.findMany({});
+
+    // Filter trades by date range
+    const tradesInRange = allTrades.filter((t: any) => {
+      const createdAt = new Date(t.createdAt || t.timestamp || t.entryTime);
+      return createdAt >= dateRange.start && createdAt <= dateRange.end;
+    });
+
+    // Group trades by user and calculate P&L
+    const userPnL: { [userId: string]: { pnl: number; trades: number; wins: number; losses: number } } = {};
+    tradesInRange.forEach((trade: any) => {
+      const userId = trade.userId || 'unknown';
+      if (!userPnL[userId]) {
+        userPnL[userId] = { pnl: 0, trades: 0, wins: 0, losses: 0 };
+      }
+      userPnL[userId].pnl += trade.pnl || 0;
+      userPnL[userId].trades += 1;
+      if ((trade.pnl || 0) > 0) userPnL[userId].wins += 1;
+      if ((trade.pnl || 0) < 0) userPnL[userId].losses += 1;
+    });
+
+    // Get all users for user details
+    const allUsers = await userRepository.findMany({});
+    const usersById = new Map(allUsers.map((u: any) => [u._id, u]));
+
+    // Sort by P&L and get top traders
+    const topTraders = Object.entries(userPnL)
+      .sort(([, a], [, b]) => b.pnl - a.pnl)
+      .slice(0, Number(limit))
+      .map(([userId, stats]) => {
+        const user = usersById.get(userId);
+        return {
+          userId,
+          userName: user?.name || 'Unknown User',
+          email: user?.email || 'unknown@example.com',
+          totalPnL: Math.round(stats.pnl * 100) / 100,
+          totalTrades: stats.trades,
+          winningTrades: stats.wins,
+          losingTrades: stats.losses,
+          winRate: stats.trades > 0 ? Math.round((stats.wins / stats.trades) * 1000) / 10 : 0,
+          avgTradeSize: stats.trades > 0 ? Math.round((stats.pnl / stats.trades) * 100) / 100 : 0,
+        };
+      });
+
+    res.json({
+      success: true,
+      period,
+      dateRange,
+      traders: topTraders,
+    });
+  } catch (error: any) {
+    console.error('Analytics top traders error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * GET /api/analytics/platform-summary
+ * Get platform-wide summary stats
+ */
+router.get('/platform-summary', authMiddleware, adminMiddleware, async (req: Request, res: Response) => {
+  try {
+    // Get all data
+    const [allUsers, allBots, allTrades] = await Promise.all([
+      userRepository.findMany({}),
+      botRepository.findMany({}),
+      tradeRepository.findMany({}),
+    ]);
+
+    // Calculate total platform P&L
+    const totalPlatformPnL = allTrades.reduce((sum: number, t: any) => sum + (t.pnl || 0), 0);
+
+    // Count active users (last 24 hours)
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const activeToday = allUsers.filter((u: any) => {
+      const lastActivity = new Date(u.lastActivity || u.lastLogin || 0);
+      return lastActivity >= oneDayAgo;
+    }).length;
+
+    // Count running bots
+    const runningBots = allBots.filter((b: any) => b.status === 'active').length;
+
+    // Calculate today's trades
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todaysTrades = allTrades.filter((t: any) => {
+      const createdAt = new Date(t.createdAt || t.timestamp || t.entryTime);
+      return createdAt >= today;
+    }).length;
+
+    // Platform uptime (mock - in production, track actual uptime)
+    const platformUptime = 99.9;
+
+    res.json({
+      success: true,
+      summary: {
+        totalUsers: allUsers.length,
+        totalBots: allBots.length,
+        totalTrades: allTrades.length,
+        totalPlatformPnL: Math.round(totalPlatformPnL * 100) / 100,
+        activeToday,
+        runningBots,
+        todaysTrades,
+        platformUptime,
+      },
+    });
+  } catch (error: any) {
+    console.error('Analytics platform summary error:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 });

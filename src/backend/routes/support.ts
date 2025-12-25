@@ -493,4 +493,237 @@ router.get('/quick-actions', async (req: Request, res: Response) => {
   }
 });
 
+// ============================================================
+// ADMIN TICKET MANAGEMENT
+// ============================================================
+
+/**
+ * GET /api/support/admin/tickets
+ * Get all support tickets (admin only)
+ */
+router.get('/admin/tickets', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).user?.id;
+    const userRole = (req as any).user?.role;
+
+    if (!userId || userRole !== 'admin') {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const { status, category, priority, limit = 100 } = req.query;
+
+    const db = await getDatabase();
+    const tickets = db.collection('support_tickets');
+
+    const filter: any = {};
+    if (status) filter.status = status;
+    if (category) filter.category = category;
+    if (priority) filter.priority = priority;
+
+    const allTickets = await tickets
+      .find(filter)
+      .sort({ createdAt: -1 })
+      .limit(Number(limit))
+      .toArray();
+
+    // Get statistics
+    const stats = {
+      total: allTickets.length,
+      open: allTickets.filter(t => t.status === 'open').length,
+      in_progress: allTickets.filter(t => t.status === 'in_progress').length,
+      waiting_response: allTickets.filter(t => t.status === 'waiting_response').length,
+      resolved: allTickets.filter(t => t.status === 'resolved').length,
+      closed: allTickets.filter(t => t.status === 'closed').length,
+    };
+
+    res.json({
+      success: true,
+      tickets: allTickets,
+      stats,
+      count: allTickets.length,
+    });
+  } catch (error) {
+    logger.error('Error getting admin tickets', {
+      error: error instanceof Error ? error.message : String(error),
+    });
+    res.status(500).json({ error: 'Failed to get tickets' });
+  }
+});
+
+/**
+ * PUT /api/support/admin/ticket/:ticketNumber/status
+ * Update ticket status (admin only)
+ */
+router.put('/admin/ticket/:ticketNumber/status', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).user?.id;
+    const userRole = (req as any).user?.role;
+
+    if (!userId || userRole !== 'admin') {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const { ticketNumber } = req.params;
+    const { status } = req.body;
+
+    const validStatuses = ['open', 'in_progress', 'waiting_response', 'resolved', 'closed'];
+    if (!status || !validStatuses.includes(status)) {
+      return res.status(400).json({
+        error: 'Invalid status. Must be one of: ' + validStatuses.join(', '),
+      });
+    }
+
+    const db = await getDatabase();
+    const tickets = db.collection('support_tickets');
+
+    const result = await tickets.updateOne(
+      { ticketNumber },
+      {
+        $set: {
+          status,
+          updatedAt: new Date(),
+        },
+      }
+    );
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ error: 'Ticket not found' });
+    }
+
+    logger.info('Ticket status updated by admin', {
+      ticketNumber,
+      newStatus: status,
+      adminId: userId,
+    });
+
+    res.json({
+      success: true,
+      message: 'Ticket status updated',
+    });
+  } catch (error) {
+    logger.error('Error updating ticket status', {
+      error: error instanceof Error ? error.message : String(error),
+    });
+    res.status(500).json({ error: 'Failed to update ticket status' });
+  }
+});
+
+/**
+ * POST /api/support/admin/ticket/:ticketNumber/reply
+ * Reply to ticket as admin
+ */
+router.post('/admin/ticket/:ticketNumber/reply', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).user?.id;
+    const userRole = (req as any).user?.role;
+
+    if (!userId || userRole !== 'admin') {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const { ticketNumber } = req.params;
+    const { message } = req.body;
+
+    if (!message || typeof message !== 'string') {
+      return res.status(400).json({ error: 'Message is required' });
+    }
+
+    const db = await getDatabase();
+    const tickets = db.collection('support_tickets');
+
+    const messageId = `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+    const result = await tickets.updateOne(
+      { ticketNumber },
+      {
+        $push: {
+          messages: {
+            id: messageId,
+            senderId: userId,
+            senderType: 'admin',
+            message,
+            timestamp: new Date(),
+          },
+        },
+        $set: {
+          updatedAt: new Date(),
+          status: 'waiting_response',
+        },
+      }
+    );
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ error: 'Ticket not found' });
+    }
+
+    logger.info('Admin replied to ticket', {
+      ticketNumber,
+      adminId: userId,
+    });
+
+    res.json({
+      success: true,
+      message: 'Reply added to ticket',
+    });
+  } catch (error) {
+    logger.error('Error adding admin reply to ticket', {
+      error: error instanceof Error ? error.message : String(error),
+    });
+    res.status(500).json({ error: 'Failed to add reply' });
+  }
+});
+
+/**
+ * PUT /api/support/admin/ticket/:ticketNumber/assign
+ * Assign ticket to admin user
+ */
+router.put('/admin/ticket/:ticketNumber/assign', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).user?.id;
+    const userRole = (req as any).user?.role;
+
+    if (!userId || userRole !== 'admin') {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const { ticketNumber } = req.params;
+    const { assigneeId } = req.body;
+
+    const db = await getDatabase();
+    const tickets = db.collection('support_tickets');
+
+    const result = await tickets.updateOne(
+      { ticketNumber },
+      {
+        $set: {
+          assignedTo: assigneeId,
+          assignedAt: new Date(),
+          updatedAt: new Date(),
+          status: 'in_progress',
+        },
+      }
+    );
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ error: 'Ticket not found' });
+    }
+
+    logger.info('Ticket assigned', {
+      ticketNumber,
+      assignedTo: assigneeId,
+      assignedBy: userId,
+    });
+
+    res.json({
+      success: true,
+      message: 'Ticket assigned',
+    });
+  } catch (error) {
+    logger.error('Error assigning ticket', {
+      error: error instanceof Error ? error.message : String(error),
+    });
+    res.status(500).json({ error: 'Failed to assign ticket' });
+  }
+});
+
 export default router;

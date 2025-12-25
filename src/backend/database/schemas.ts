@@ -573,6 +573,10 @@ export interface PriceBarSchema {
 
 export type NotificationType =
   | 'TRADE_EXECUTED'
+  | 'PRICE_ALERT'
+  | 'BOT_SIGNAL'
+  | 'SYSTEM'
+  | 'PROFIT'
   | 'ALERT_TRIGGERED'
   | 'BOT_UPDATE'
   | 'SYSTEM_UPDATE'
@@ -1030,5 +1034,220 @@ export const supportIndexes = {
     { category: 1, order: 1 },
     { published: 1, order: 1 },
     { keywords: 1 },
+  ],
+};
+
+// ============================================================
+// SOCIAL TRADING SCHEMAS
+// ============================================================
+
+export interface CommunityMessageSchema {
+  _id: string;
+  userId: string;
+  username: string;
+  avatar: string;
+  verified: boolean;
+  isPro: boolean;
+  channel: string;
+  message: string;
+  timestamp: Date;
+
+  // Reactions
+  reactions: Array<{
+    emoji: string;
+    count: number;
+    users: string[];
+  }>;
+
+  // Mentions
+  mentions: string[];
+
+  // Moderation
+  isPinned: boolean;
+  pinnedBy?: string;
+  pinnedAt?: Date;
+  isDeleted: boolean;
+  deletedBy?: string;
+  deletedAt?: Date;
+  deletedReason?: string;
+
+  // Attachments
+  attachments?: Array<{
+    type: 'trade' | 'bot' | 'image';
+    data: Record<string, any>;
+  }>;
+
+  // Thread
+  replyTo?: string;
+  threadCount: number;
+}
+
+export interface TraderLeaderboardSchema {
+  _id: string;
+  userId: string;
+  username: string;
+  avatar: string;
+  verified: boolean;
+  isPro: boolean;
+
+  // Performance metrics
+  rank: number;
+  profitPercent: number;
+  winRate: number;
+  totalTrades: number;
+
+  // Social metrics
+  followers: number;
+  copiers: number;
+
+  // Time-based profits
+  dailyProfit: number;
+  weeklyProfit: number;
+  monthlyProfit: number;
+  allTimeProfit: number;
+
+  // Risk metrics
+  riskScore: number;
+  sharpeRatio: number;
+  maxDrawdown: number;
+
+  // Strategy info
+  assetClass: string;
+  strategy: string;
+
+  // Timestamps
+  lastUpdated: Date;
+  periodStart: Date;
+  periodEnd: Date;
+
+  // Cache info
+  period: 'daily' | 'weekly' | 'monthly' | 'all-time';
+  cacheExpiry: Date;
+}
+
+export interface BotLeaderboardSchema {
+  _id: string;
+  botId: string;
+  botName: string;
+  botAvatar?: string;
+  ownerId: string;
+  ownerUsername: string;
+
+  // Performance metrics
+  rank: number;
+  profitPercent: number;
+  winRate: number;
+  totalTrades: number;
+  sharpeRatio: number;
+  profitFactor: number;
+  maxDrawdown: number;
+
+  // Social metrics
+  followers: number;
+  copiers: number;
+  rentals: number;
+
+  // Time-based profits
+  dailyProfit: number;
+  weeklyProfit: number;
+  monthlyProfit: number;
+  allTimeProfit: number;
+
+  // Strategy info
+  assetClass: string;
+  strategy: string;
+
+  // Timestamps
+  lastUpdated: Date;
+  periodStart: Date;
+  periodEnd: Date;
+
+  // Cache info
+  period: 'daily' | 'weekly' | 'monthly' | 'all-time';
+  cacheExpiry: Date;
+}
+
+export interface ChatChannelSchema {
+  _id: string;
+  channelId: string;
+  name: string;
+  description: string;
+  icon: string;
+  color: string;
+
+  // Settings
+  isActive: boolean;
+  isPrivate: boolean;
+  requiresVerification: boolean;
+  requiresPro: boolean;
+
+  // Stats
+  memberCount: number;
+  messageCount: number;
+  activeUsers: number;
+
+  // Moderation
+  moderators: string[];
+  bannedUsers: Array<{
+    userId: string;
+    bannedBy: string;
+    bannedAt: Date;
+    reason: string;
+    expiresAt?: Date;
+  }>;
+
+  // Timestamps
+  createdAt: Date;
+  lastMessageAt: Date;
+}
+
+export interface UserFollowSchema {
+  _id: string;
+  followerId: string;
+  followingId: string;
+  followedAt: Date;
+
+  // Copy trading relationship
+  isCopying: boolean;
+  copyConfig?: {
+    mode: 'proportional' | 'fixed';
+    maxRiskPerTrade: number;
+    maxDailyRisk: number;
+    maxOpenTrades: number;
+  };
+}
+
+// Social indexes
+export const socialIndexes = {
+  communityMessages: [
+    { channel: 1, timestamp: -1 },
+    { userId: 1, timestamp: -1 },
+    { isPinned: 1, channel: 1 },
+    { isDeleted: 1 },
+    { timestamp: -1 },
+  ],
+  traderLeaderboard: [
+    { period: 1, rank: 1 },
+    { userId: 1, period: 1 },
+    { profitPercent: -1, period: 1 },
+    { winRate: -1, period: 1 },
+    { cacheExpiry: 1 },
+  ],
+  botLeaderboard: [
+    { period: 1, rank: 1 },
+    { botId: 1, period: 1 },
+    { profitPercent: -1, period: 1 },
+    { winRate: -1, period: 1 },
+    { cacheExpiry: 1 },
+  ],
+  chatChannels: [
+    { channelId: 1, unique: true },
+    { isActive: 1 },
+    { lastMessageAt: -1 },
+  ],
+  userFollows: [
+    { followerId: 1, followingId: 1, unique: true },
+    { followerId: 1, followedAt: -1 },
+    { followingId: 1, followedAt: -1 },
   ],
 };

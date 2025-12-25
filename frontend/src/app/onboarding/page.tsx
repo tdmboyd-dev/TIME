@@ -25,12 +25,14 @@ import { TimeLogo, TimeIcon } from '@/components/branding/TimeLogo';
 /**
  * TIME BEYOND US - User Onboarding Flow
  *
- * A comprehensive 5-step wizard to personalize the trading experience:
- * 1. Welcome + Name
- * 2. Trading Experience Level
- * 3. Risk Tolerance
- * 4. Trading Goals
- * 5. Connect Broker (Optional)
+ * A comprehensive 7-step wizard to personalize the trading experience:
+ * 1. Welcome + Platform Intro
+ * 2. Risk Profile Questionnaire (5 questions)
+ * 3. Trading Experience Level
+ * 4. Investment Goals (growth, income, preservation)
+ * 5. Broker Connection Prompt
+ * 6. Bot Recommendation Based on Profile
+ * 7. First Bot Activation
  *
  * Features:
  * - localStorage progress saving
@@ -38,12 +40,24 @@ import { TimeLogo, TimeIcon } from '@/components/branding/TimeLogo';
  * - Smooth CSS transitions
  * - Full TypeScript typing
  * - Production-ready validation
+ * - API integration for saving preferences
  */
 
 // Types
 type ExperienceLevel = 'beginner' | 'intermediate' | 'expert';
 type RiskTolerance = 'conservative' | 'moderate' | 'aggressive';
 type TradingGoal = 'day-trading' | 'long-term' | 'retirement' | 'passive-income' | 'tax-optimization';
+type InvestmentGoal = 'growth' | 'income' | 'preservation';
+
+interface RiskQuestion {
+  id: string;
+  question: string;
+  options: Array<{
+    value: number;
+    label: string;
+    description: string;
+  }>;
+}
 
 interface OnboardingData {
   step: number;
@@ -51,7 +65,11 @@ interface OnboardingData {
   experienceLevel: ExperienceLevel | null;
   riskTolerance: RiskTolerance | null;
   goals: TradingGoal[];
+  investmentGoal: InvestmentGoal | null;
+  riskAnswers: Record<string, number>;
   brokerConnected: boolean;
+  recommendedBots: string[];
+  activatedBot: string | null;
 }
 
 const STORAGE_KEY = 'time_onboarding_progress';
@@ -65,10 +83,15 @@ export default function OnboardingPage() {
 
   // Form state
   const [name, setName] = useState('');
+  const [riskAnswers, setRiskAnswers] = useState<Record<string, number>>({});
   const [experienceLevel, setExperienceLevel] = useState<ExperienceLevel | null>(null);
+  const [investmentGoal, setInvestmentGoal] = useState<InvestmentGoal | null>(null);
   const [riskTolerance, setRiskTolerance] = useState<RiskTolerance | null>(null);
   const [goals, setGoals] = useState<TradingGoal[]>([]);
   const [selectedBroker, setSelectedBroker] = useState<string | null>(null);
+  const [recommendedBots, setRecommendedBots] = useState<string[]>([]);
+  const [activatedBot, setActivatedBot] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Load saved progress on mount
   useEffect(() => {
@@ -79,9 +102,13 @@ export default function OnboardingPage() {
           const data: OnboardingData = JSON.parse(saved);
           setCurrentStep(data.step);
           setName(data.name);
+          setRiskAnswers(data.riskAnswers || {});
           setExperienceLevel(data.experienceLevel);
+          setInvestmentGoal(data.investmentGoal || null);
           setRiskTolerance(data.riskTolerance);
           setGoals(data.goals);
+          setRecommendedBots(data.recommendedBots || []);
+          setActivatedBot(data.activatedBot || null);
         } catch (e) {
           console.error('Failed to load onboarding progress:', e);
         }
@@ -95,17 +122,26 @@ export default function OnboardingPage() {
       const data: OnboardingData = {
         step: currentStep,
         name,
+        riskAnswers,
         experienceLevel,
+        investmentGoal,
         riskTolerance,
         goals,
         brokerConnected: selectedBroker !== null,
+        recommendedBots,
+        activatedBot,
       };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     }
-  }, [currentStep, name, experienceLevel, riskTolerance, goals, selectedBroker]);
+  }, [currentStep, name, riskAnswers, experienceLevel, investmentGoal, riskTolerance, goals, selectedBroker, recommendedBots, activatedBot]);
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (!canProceed()) return;
+
+    // If moving from step 5 to 6, calculate bot recommendations
+    if (currentStep === 5) {
+      calculateBotRecommendations();
+    }
 
     setIsAnimating(true);
     setDirection('forward');
@@ -124,7 +160,37 @@ export default function OnboardingPage() {
     }, 300);
   };
 
-  const handleComplete = () => {
+  const handleComplete = async () => {
+    setIsSaving(true);
+
+    try {
+      // Save to backend API
+      const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+      const response = await fetch(`${API_BASE}/users/onboarding`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name,
+          riskAnswers,
+          experienceLevel,
+          investmentGoal,
+          riskTolerance,
+          goals,
+          broker: selectedBroker,
+          recommendedBots,
+          activatedBot,
+        }),
+      });
+
+      if (!response.ok) {
+        console.error('Failed to save onboarding data');
+      }
+    } catch (error) {
+      console.error('Error saving onboarding:', error);
+    }
+
     // Save completion status
     if (typeof window !== 'undefined') {
       // Set cookie
@@ -139,11 +205,15 @@ export default function OnboardingPage() {
       localStorage.setItem('time_user_preferences', JSON.stringify({
         name,
         experienceLevel,
+        investmentGoal,
         riskTolerance,
         goals,
+        activatedBot,
         onboardedAt: new Date().toISOString(),
       }));
     }
+
+    setIsSaving(false);
 
     // Redirect to dashboard
     router.push('/');
@@ -158,16 +228,83 @@ export default function OnboardingPage() {
       case 1:
         return name.trim().length >= 2;
       case 2:
-        return experienceLevel !== null;
+        return Object.keys(riskAnswers).length === 5; // All 5 questions answered
       case 3:
-        return riskTolerance !== null;
+        return experienceLevel !== null;
       case 4:
-        return goals.length > 0;
+        return investmentGoal !== null;
       case 5:
         return true; // Broker connection is optional
+      case 6:
+        return recommendedBots.length > 0;
+      case 7:
+        return true; // Bot activation is optional
       default:
         return false;
     }
+  };
+
+  // Calculate risk tolerance from questionnaire answers
+  const calculateRiskTolerance = (): RiskTolerance => {
+    const avgScore = Object.values(riskAnswers).reduce((a, b) => a + b, 0) / Object.keys(riskAnswers).length;
+    if (avgScore <= 2) return 'conservative';
+    if (avgScore <= 3.5) return 'moderate';
+    return 'aggressive';
+  };
+
+  // Bot recommendation engine
+  const calculateBotRecommendations = () => {
+    const calculatedRiskTolerance = calculateRiskTolerance();
+    setRiskTolerance(calculatedRiskTolerance);
+
+    const recommendations: string[] = [];
+
+    // Beginner recommendations
+    if (experienceLevel === 'beginner') {
+      if (calculatedRiskTolerance === 'conservative') {
+        recommendations.push('Index Tracker Bot', 'Dollar Cost Averaging Bot', 'Blue Chip Accumulator');
+      } else if (calculatedRiskTolerance === 'moderate') {
+        recommendations.push('Balanced Growth Bot', 'Smart Rebalancer', 'Trend Following Bot');
+      } else {
+        recommendations.push('Growth Momentum Bot', 'Swing Trader Bot', 'Volatility Rider');
+      }
+    }
+
+    // Intermediate recommendations
+    else if (experienceLevel === 'intermediate') {
+      if (investmentGoal === 'growth') {
+        recommendations.push('Growth Momentum Bot', 'Breakout Hunter', 'Sector Rotation Bot');
+      } else if (investmentGoal === 'income') {
+        recommendations.push('Dividend Harvester', 'Options Income Bot', 'Covered Call Writer');
+      } else {
+        recommendations.push('Capital Preservation Bot', 'Low Volatility Bot', 'Defensive Allocator');
+      }
+    }
+
+    // Expert recommendations
+    else {
+      if (calculatedRiskTolerance === 'aggressive') {
+        recommendations.push('AI Trade God Bot', 'Algorithmic Scalper', 'Multi-Strategy Arbitrage');
+      } else if (calculatedRiskTolerance === 'moderate') {
+        recommendations.push('Statistical Arbitrage Bot', 'Mean Reversion Pro', 'Options Wheel Strategy');
+      } else {
+        recommendations.push('Market Neutral Bot', 'Pairs Trading Bot', 'Volatility Arbitrage');
+      }
+    }
+
+    // Add goal-specific bots
+    if (goals.includes('retirement')) {
+      recommendations.push('Retirement Growth Bot');
+    }
+    if (goals.includes('passive-income')) {
+      recommendations.push('Passive Income Generator');
+    }
+    if (goals.includes('tax-optimization')) {
+      recommendations.push('Tax Loss Harvester');
+    }
+
+    // Limit to top 3 recommendations
+    setRecommendedBots(recommendations.slice(0, 3));
   };
 
   const toggleGoal = (goal: TradingGoal) => {

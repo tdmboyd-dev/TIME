@@ -107,12 +107,15 @@ export default function AnalyticsPage() {
   const [tradingMetrics, setTradingMetrics] = useState<any>(null);
   const [botMetrics, setBotMetrics] = useState<any>(null);
   const [revenueMetrics, setRevenueMetrics] = useState<any>(null);
+  const [topTraders, setTopTraders] = useState<any[]>([]);
+  const [platformSummary, setPlatformSummary] = useState<any>(null);
 
   // Chart data
   const [userChartData, setUserChartData] = useState<any[]>([]);
   const [tradingChartData, setTradingChartData] = useState<any[]>([]);
   const [pnlChartData, setPnlChartData] = useState<any[]>([]);
   const [revenueChartData, setRevenueChartData] = useState<any[]>([]);
+  const [tierDistributionData, setTierDistributionData] = useState<any[]>([]);
 
   const fetchAnalytics = useCallback(async () => {
     try {

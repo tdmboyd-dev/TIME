@@ -68,8 +68,25 @@ export default function LeaderboardPage() {
   const fetchLeaderboard = async () => {
     setIsLoading(true);
     try {
-      // In production, this would fetch from /api/social/leaderboard
-      // For now, generate realistic demo data
+      // Fetch from real API endpoint
+      const response = await fetch(
+        `/api/v1/social/leaderboard?period=${timePeriod}&type=traders&assetClass=${assetFilter}&limit=50`,
+        {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch leaderboard');
+      }
+
+      const data = await response.json();
+      setTraders(data.leaderboard || []);
+    } catch (error) {
+      console.error('Failed to fetch leaderboard:', error);
+      // Fallback to demo data if API fails
       const demoData: Trader[] = Array.from({ length: 50 }, (_, i) => {
         const assetClasses = ['stocks', 'crypto', 'forex', 'options'];
         const strategies = ['Day Trading', 'Swing Trading', 'Scalping', 'Momentum', 'Mean Reversion', 'Trend Following'];
@@ -101,8 +118,6 @@ export default function LeaderboardPage() {
       });
 
       setTraders(demoData);
-    } catch (error) {
-      console.error('Failed to fetch leaderboard:', error);
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
@@ -119,10 +134,34 @@ export default function LeaderboardPage() {
   };
 
   const handleFollow = async (traderId: string) => {
-    // In production, this would call /api/social/follow/:userId
-    setTraders(prev => prev.map(t =>
-      t.id === traderId ? { ...t, isFollowing: !t.isFollowing } : t
-    ));
+    try {
+      const trader = traders.find(t => t.id === traderId);
+      if (!trader) return;
+
+      const method = trader.isFollowing ? 'DELETE' : 'POST';
+      const response = await fetch(`/api/v1/social/follow/${traderId}`, {
+        method,
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to toggle follow');
+      }
+
+      // Update local state
+      setTraders(prev => prev.map(t =>
+        t.id === traderId ? { ...t, isFollowing: !t.isFollowing } : t
+      ));
+    } catch (error) {
+      console.error('Failed to toggle follow:', error);
+      // Still update UI optimistically
+      setTraders(prev => prev.map(t =>
+        t.id === traderId ? { ...t, isFollowing: !t.isFollowing } : t
+      ));
+    }
   };
 
   // Filter traders

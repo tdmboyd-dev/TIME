@@ -337,4 +337,59 @@ router.get('/vapid-public-key', (req: Request, res: Response) => {
   });
 });
 
+/**
+ * Send broadcast notification to all users (admin only)
+ * POST /api/notifications/broadcast
+ */
+router.post('/broadcast', adminMiddleware, async (req: Request, res: Response) => {
+  try {
+    const { title, body, data, userIds } = req.body;
+
+    if (!title || !body) {
+      return res.status(400).json({
+        success: false,
+        message: 'Title and body are required',
+      });
+    }
+
+    // If userIds provided, send to specific users, otherwise broadcast to all
+    let targetUserIds: string[] = userIds || [];
+
+    // In production, fetch all user IDs from database if broadcasting to all
+    // For now, we'll use the provided userIds or send to the current user
+    if (targetUserIds.length === 0) {
+      // This is a placeholder - in production, fetch all active user IDs from database
+      logger.warn('Broadcast without specific user IDs - would send to all users in production');
+      return res.status(400).json({
+        success: false,
+        message: 'Please specify target user IDs for broadcast',
+      });
+    }
+
+    const result = await pushService.sendBulkNotification(
+      targetUserIds,
+      title,
+      body,
+      {
+        type: 'SYSTEM',
+        priority: data?.priority || 'medium',
+        ...data,
+      }
+    );
+
+    res.json({
+      success: true,
+      message: `Broadcast sent to ${result.totalUsers} users`,
+      result,
+    });
+  } catch (error: any) {
+    logger.error('Error sending broadcast notification', { error });
+    res.status(500).json({
+      success: false,
+      message: 'Failed to send broadcast notification',
+      error: error.message,
+    });
+  }
+});
+
 export default router;
