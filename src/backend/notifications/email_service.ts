@@ -187,7 +187,7 @@ export class EmailService {
       if (options.template && EMAIL_TEMPLATES[options.template]) {
         const template = EMAIL_TEMPLATES[options.template];
         subject = template.subject.replace(/\{(\w+)\}/g, (_, key) => options.data?.[key] || '');
-        html = template.getHtml(options.data || {});
+        html = template.getHtml(options.data as any || {});
       }
 
       const emailData = {
@@ -218,7 +218,7 @@ export class EmailService {
         body: JSON.stringify(emailData)
       });
 
-      const result = await response.json();
+      const result = await response.json() as { id?: string; message?: string };
 
       if (!response.ok) {
         throw new Error(result.message || 'Failed to send email');
