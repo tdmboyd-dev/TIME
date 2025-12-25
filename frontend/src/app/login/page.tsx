@@ -338,20 +338,25 @@ export default function LoginPage() {
       </div>
 
       {/* Right Panel - Login Form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center bg-slate-950 p-8">
-        <div className="w-full max-w-md">
-          {/* Mobile Logo - Secret 5-click access */}
-          <div className="lg:hidden flex items-center gap-3 mb-8">
+      <div className="w-full lg:w-1/2 flex items-center justify-center bg-slate-950 p-4 sm:p-8 relative overflow-hidden">
+        {/* Mobile Background Effects */}
+        <div className="lg:hidden absolute inset-0">
+          <div className="absolute top-0 left-1/4 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 right-1/4 w-48 h-48 bg-cyan-500/10 rounded-full blur-3xl" />
+        </div>
+
+        <div className="w-full max-w-md relative z-10">
+          {/* Mobile Branding - Secret 5-click access */}
+          <div className="lg:hidden text-center mb-8">
             <div
               onClick={handleSecretAccess}
-              className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-400 to-purple-600 flex items-center justify-center cursor-pointer select-none"
+              className="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-cyan-400 to-purple-600 flex items-center justify-center cursor-pointer select-none shadow-2xl shadow-purple-500/20 mb-4"
             >
-              <span className="text-2xl font-black text-white">T</span>
+              <span className="text-4xl font-black text-white">T</span>
             </div>
-            <div>
-              <h1 className="text-2xl font-black text-white">TIME</h1>
-              <p className="text-xs text-white/60">META-INTELLIGENCE</p>
-            </div>
+            <h1 className="text-3xl font-black text-white">TIME</h1>
+            <p className="text-sm text-white/60 tracking-widest">META-INTELLIGENCE</p>
+            <p className="text-white/40 text-xs mt-2">The self-evolving trading organism</p>
           </div>
 
           {/* Secret Admin Portal - Revealed after 5 clicks */}
