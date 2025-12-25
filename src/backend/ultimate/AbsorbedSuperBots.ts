@@ -211,9 +211,78 @@ export class AbsorbedSuperBots extends EventEmitter {
         isActive: true,
       },
 
+      // 6. OMEGA PRIME - The Market Oracle (NEW SUPER BOT)
+      {
+        name: 'Omega Prime',
+        codename: 'MARKET_ORACLE',
+        tier: 'LEGENDARY',
+        category: 'DATA_FUSION',
+        description: 'The most intelligent trading AI ever built. Combines ALL 151+ strategies using quantum-inspired optimization, multi-dimensional sentiment analysis, ensemble ML prediction, and cross-asset correlation detection. Self-learning knowledge base that improves with every trade.',
+        absorbedFrom: ['All 151 Absorbed Strategies', 'Quantum Computing Research', 'GPT-4', 'FinBERT', 'Bloomberg Terminal', 'Reuters Eikon', 'Santiment', 'LunarCrush', 'Glassnode'],
+        abilities: [
+          { name: 'Quantum Strategy Fusion', source: 'Quantum Research', description: 'Combine ALL 151+ strategies using quantum-inspired optimization', implementation: 'Quantum annealing-inspired strategy weighting, superposition of strategies, entanglement-based correlation', priority: 1 },
+          { name: 'Multi-Dimensional Sentiment', source: 'Multiple', description: 'News, social, on-chain, dark pool sentiment fusion', implementation: 'FinBERT + GPT-4 news, Twitter/Reddit pulse, whale wallet activity, dark pool flow analysis', priority: 1 },
+          { name: 'Ensemble ML Prediction', source: 'Two Sigma', description: '7 ML models voting together', implementation: 'LSTM + Transformer + XGBoost + Random Forest + CatBoost + LightGBM + Neural Network ensemble', priority: 1 },
+          { name: 'Cross-Asset Correlation', source: 'Renaissance', description: 'Find hidden correlations', implementation: 'Dynamic correlation matrix across stocks, crypto, forex, commodities with regime detection', priority: 1 },
+          { name: 'Self-Learning Knowledge Base', source: 'Internal', description: 'Every trade teaches the system', implementation: 'Continuous learning with experience replay, no data wasted, pattern memory', priority: 2 },
+          { name: 'Pre-Emptive Risk Shield', source: 'Internal', description: 'Predict drawdowns before they happen', implementation: 'Volatility forecasting, regime change detection, early warning system', priority: 2 },
+        ],
+        markets: ['stocks', 'crypto', 'forex', 'options', 'futures', 'commodities'],
+        expectedROI: 200, // Target 200% annually
+        riskLevel: 'high',
+        capitalRequired: 10000,
+        isActive: true,
+      },
+
+      // 7. DARK POOL PREDATOR - The Institutional Edge (NEW SUPER BOT)
+      {
+        name: 'Dark Pool Predator',
+        codename: 'INSTITUTIONAL_EDGE',
+        tier: 'LEGENDARY',
+        category: 'ALPHA_HUNTER',
+        description: 'Give retail traders the institutional playbook. Tracks dark pool prints, block trades, whale wallets, max pain, and institutional accumulation/distribution. Front-run detection lets you position 4-12 hours before the crowd.',
+        absorbedFrom: ['Dark Pool Scanners', 'Unusual Whales', 'Glassnode', 'Nansen', 'Options Flow', 'Order Flow Analysis', 'Level 2 Data'],
+        abilities: [
+          { name: 'Dark Pool Activity Tracking', source: 'Dark Pool Scanners', description: 'Real-time dark pool prints from 50+ ATS venues', implementation: 'Block trade detection, iceberg order detection, hidden liquidity tracking', priority: 1 },
+          { name: 'Institutional Accumulation Detection', source: 'Multiple', description: 'Detect smart money accumulation/distribution', implementation: 'Volume profile analysis, price-volume divergence, smart money flow indicators', priority: 1 },
+          { name: 'Order Flow Analysis', source: 'Level 2', description: 'Level 2 parsing, bid-ask imbalance', implementation: 'Large lot detection, order flow imbalance, tape reading AI', priority: 1 },
+          { name: 'Max Pain Calculation', source: 'Options Flow', description: 'Options market maker positioning', implementation: 'Pin risk detection, expiration day strategies, gamma exposure tracking', priority: 1 },
+          { name: 'Whale Wallet Tracking', source: 'Glassnode/Nansen', description: 'Monitor top 10,000+ whale wallets', implementation: 'Exchange inflow/outflow, accumulation alerts, wallet clustering', priority: 2 },
+          { name: 'Front-Run Detection', source: 'Internal', description: 'Detect institutional moves 4-12 hours early (legal)', implementation: 'Position before the crowd, exit before distribution, unusual activity alerts', priority: 2 },
+        ],
+        markets: ['stocks', 'crypto', 'options'],
+        expectedROI: 120, // Target 120% annually
+        riskLevel: 'high',
+        capitalRequired: 25000,
+        isActive: true,
+      },
+
+      // 8. INFINITY LOOP - The Money Printer (NEW SUPER BOT)
+      {
+        name: 'Infinity Loop',
+        codename: 'MONEY_PRINTER',
+        tier: 'LEGENDARY',
+        category: 'ARBITRAGEUR',
+        description: '24/7 micro-profit extraction across all markets. Multi-market arbitrage, bid-ask spread capture (50-200 trades/day), funding rate arbitrage, volatility regime detection, options theta decay harvesting, and self-compounding returns.',
+        absorbedFrom: ['Jump Trading', 'Alameda Research', 'Wintermute', 'TastyTrade', 'DeFi Protocols', 'Market Makers'],
+        abilities: [
+          { name: 'Multi-Market Arbitrage', source: 'Jump Trading', description: 'Cross-exchange crypto, spot-futures basis, cross-broker stock arbitrage', implementation: 'Real-time price monitoring across 20+ exchanges, instant execution', priority: 1 },
+          { name: 'Bid-Ask Spread Capture', source: 'Wintermute', description: 'Market making on liquid pairs, 5-50 bps per trade', implementation: 'Quote optimization, inventory management, 50-200 trades per day', priority: 1 },
+          { name: 'Funding Rate Arbitrage', source: 'Alameda', description: 'Perpetual futures funding capture', implementation: 'Long spot + short perp = risk-free, 8-hour funding collection', priority: 1 },
+          { name: 'Volatility Regime Detection', source: 'Internal', description: 'VIX-based regime switching', implementation: 'Low vol = theta harvesting, high vol = gamma scalping', priority: 1 },
+          { name: 'Options Theta Decay Harvesting', source: 'TastyTrade', description: '45 DTE iron condors, 15-20 delta strangles', implementation: '50% profit take rule, roll management, defined risk', priority: 2 },
+          { name: 'Self-Compounding Returns', source: 'Internal', description: 'Auto-reinvest, position scaling, risk-adjusted growth', implementation: 'Daily profit reinvestment, Kelly criterion sizing, exponential growth', priority: 2 },
+        ],
+        markets: ['crypto', 'stocks', 'options', 'futures', 'forex', 'defi'],
+        expectedROI: 150, // Target 150% annually (from micro-profits compounding)
+        riskLevel: 'medium',
+        capitalRequired: 5000,
+        isActive: true,
+      },
+
       // ============== EPIC BOTS (10) ==============
 
-      // 6. HYDRA FORCE
+      // 9. HYDRA FORCE
       {
         name: 'Hydra Force',
         codename: 'MULTI-HEAD',
@@ -670,7 +739,7 @@ export class AbsorbedSuperBots extends EventEmitter {
     });
 
     console.log(`[AbsorbedSuperBots] Created ${this.bots.size} SUPER BOTS from research`);
-    console.log(`[AbsorbedSuperBots] LEGENDARY: 5, EPIC: 10, RARE: 10`);
+    console.log(`[AbsorbedSuperBots] LEGENDARY: 8 (including 3 NEW SUPER BOTS), EPIC: 10, RARE: 10`);
   }
 
   // ============== BOT OPERATIONS ==============

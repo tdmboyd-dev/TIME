@@ -41,6 +41,7 @@
 import { EventEmitter } from 'events';
 import { createComponentLogger } from '../utils/logger';
 import { autoSkimEngine, AutoSkimStats, SkimMode } from '../autopilot/dropbot';
+import { getSuperBotOrchestrator, SuperBotOrchestrator } from '../ultimate/SuperBotEngines';
 
 const logger = createComponentLogger('TIMEBEUNUS');
 
@@ -326,6 +327,9 @@ export class TIMEBEUNUSEngine extends EventEmitter {
   private fusedStrategies: Map<string, FusedStrategy> = new Map();
   private alphaSignals: Map<string, AlphaSignal> = new Map();
 
+  // 🚀 SUPER BOT ORCHESTRATOR - 3 Industry-Destroying Bots
+  private superBotOrchestrator: SuperBotOrchestrator;
+
   // Performance
   private performance: TIMEBEUNUSPerformance;
 
@@ -355,6 +359,13 @@ export class TIMEBEUNUSEngine extends EventEmitter {
     super();
     this.setMaxListeners(100);
     this.performance = this.initializePerformance();
+    this.superBotOrchestrator = getSuperBotOrchestrator(5000); // Initial capital $5k
+
+    // Wire up super bot signals to TIMEBEUNUS
+    this.superBotOrchestrator.on('signal', ({ bot, signal }) => {
+      logger.info(`[SUPER BOT] ${bot} generated signal: ${signal.action} ${signal.symbol} @ ${signal.confidence}% confidence`);
+      this.emit('super_bot_signal', { bot, signal });
+    });
   }
 
   public static getInstance(): TIMEBEUNUSEngine {
@@ -435,7 +446,11 @@ export class TIMEBEUNUSEngine extends EventEmitter {
     // 7. 🆕 Start AUTO-SKIM engine
     this.startAutoSkim();
 
-    // 8. Activate
+    // 8. 🚀 Start SUPER BOT Orchestrator (OMEGA PRIME, DARK POOL PREDATOR, INFINITY LOOP)
+    this.superBotOrchestrator.start();
+    logger.info('SUPER BOT Orchestrator started - 3 industry-destroying bots active');
+
+    // 9. Activate
     this.isActive = true;
     this.dominanceMode = 'balanced';
 
@@ -443,6 +458,7 @@ export class TIMEBEUNUSEngine extends EventEmitter {
     console.log('🔥 TIMEBEUNUS IS ONLINE 🔥');
     console.log(`📊 Tracking ${this.competitors.size} competitors to DESTROY`);
     console.log(`🧠 ${this.fusedStrategies.size} fused strategies loaded`);
+    console.log(`🚀 3 SUPER BOTS: OMEGA PRIME | DARK POOL PREDATOR | INFINITY LOOP`);
     console.log(`🎯 Target: Beat competition by ${this.config.targetOutperformance}%`);
     console.log('');
 
