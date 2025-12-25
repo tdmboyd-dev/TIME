@@ -1,8 +1,34 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, createContext, useContext } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+
+// Mobile sidebar context
+interface SidebarContextType {
+  isOpen: boolean;
+  setIsOpen: (open: boolean) => void;
+  toggle: () => void;
+}
+
+const SidebarContext = createContext<SidebarContextType>({
+  isOpen: false,
+  setIsOpen: () => {},
+  toggle: () => {},
+});
+
+export const useSidebar = () => useContext(SidebarContext);
+
+export function SidebarProvider({ children }: { children: React.ReactNode }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const toggle = () => setIsOpen(prev => !prev);
+
+  return (
+    <SidebarContext.Provider value={{ isOpen, setIsOpen, toggle }}>
+      {children}
+    </SidebarContext.Provider>
+  );
+}
 
 // Check if US stock market is open
 function getMarketStatus(): { isOpen: boolean; status: string; detail: string } {
@@ -102,6 +128,8 @@ import {
   FlaskConical,
   Gift,
   Gem,
+  X,
+  Menu,
 } from 'lucide-react';
 import clsx from 'clsx';
 import { TradingModeIndicator } from '@/components/trading/TradingModeToggle';
@@ -156,8 +184,24 @@ const navigation = [
   { name: 'Gift Access', href: '/gift-access', icon: Gift, adminOnly: true },
 ];
 
+// Mobile menu button component
+export function MobileMenuButton() {
+  const { toggle } = useSidebar();
+
+  return (
+    <button
+      onClick={toggle}
+      className="lg:hidden p-2 rounded-lg bg-slate-800/50 text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+      aria-label="Toggle menu"
+    >
+      <Menu className="w-6 h-6" />
+    </button>
+  );
+}
+
 export function Sidebar() {
   const pathname = usePathname();
+  const { isOpen, setIsOpen } = useSidebar();
   const [marketStatus, setMarketStatus] = useState(getMarketStatus());
   const [visitedPages, setVisitedPages] = useState<Set<string>>(new Set());
   const [isAdmin, setIsAdmin] = useState(false);
@@ -193,6 +237,11 @@ export function Sidebar() {
     }
   }, [pathname]);
 
+  // Close sidebar when route changes on mobile
+  useEffect(() => {
+    setIsOpen(false);
+  }, [pathname, setIsOpen]);
+
   // Update market status every minute
   useEffect(() => {
     const interval = setInterval(() => {
@@ -207,20 +256,41 @@ export function Sidebar() {
   }, [visitedPages]);
 
   return (
-    <div className="w-64 bg-slate-900/80 backdrop-blur-sm border-r border-slate-700/50 flex flex-col">
-      {/* Logo */}
-      <div className="h-16 flex items-center px-4 border-b border-slate-700/50">
-        <div className="flex items-center gap-2">
-          <TimeIcon size={36} animated />
-          <div>
-            <TimeLogo size="sm" animated />
-            <p className="text-[10px] text-slate-500 -mt-1">Meta-Intelligence</p>
-          </div>
-        </div>
-      </div>
+    <>
+      {/* Mobile overlay */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
+          onClick={() => setIsOpen(false)}
+        />
+      )}
 
-      {/* Main Navigation */}
-      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+      {/* Sidebar */}
+      <div className={clsx(
+        'fixed lg:relative inset-y-0 left-0 z-50 w-64 bg-slate-900/95 lg:bg-slate-900/80 backdrop-blur-sm border-r border-slate-700/50 flex flex-col transition-transform duration-300 ease-in-out lg:translate-x-0',
+        isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+      )}>
+        {/* Logo */}
+        <div className="h-16 flex items-center justify-between px-4 border-b border-slate-700/50">
+          <div className="flex items-center gap-2">
+            <TimeIcon size={36} animated />
+            <div>
+              <TimeLogo size="sm" animated />
+              <p className="text-[10px] text-slate-500 -mt-1">Meta-Intelligence</p>
+            </div>
+          </div>
+          {/* Mobile close button */}
+          <button
+            onClick={() => setIsOpen(false)}
+            className="lg:hidden p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+            aria-label="Close menu"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Main Navigation */}
+        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
         {navigation
           .filter((item) => !(item as any).adminOnly || isAdmin) // Hide admin items from non-admins
           .map((item) => {
@@ -264,34 +334,35 @@ export function Sidebar() {
             </Link>
           );
         })}
-      </nav>
+        </nav>
 
-      {/* Trading Mode Indicator */}
-      <div className="px-4 pt-4 border-t border-slate-700/50">
-        <Link href="/settings" className="block">
-          <div className="flex items-center justify-center mb-2">
-            <TradingModeIndicator />
-          </div>
-          <p className="text-[10px] text-slate-500 text-center hover:text-slate-400 transition-colors">
-            Click to change mode
-          </p>
-        </Link>
-      </div>
+        {/* Trading Mode Indicator */}
+        <div className="px-4 pt-4 border-t border-slate-700/50">
+          <Link href="/settings" className="block">
+            <div className="flex items-center justify-center mb-2">
+              <TradingModeIndicator />
+            </div>
+            <p className="text-[10px] text-slate-500 text-center hover:text-slate-400 transition-colors">
+              Click to change mode
+            </p>
+          </Link>
+        </div>
 
-      {/* Market Status */}
-      <div className="p-4 border-t border-slate-700/50">
-        <div className="card p-3">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs text-slate-400">Market Status</span>
-            <span className={`w-2 h-2 rounded-full ${marketStatus.isOpen ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></span>
+        {/* Market Status */}
+        <div className="p-4 border-t border-slate-700/50">
+          <div className="card p-3">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs text-slate-400">Market Status</span>
+              <span className={`w-2 h-2 rounded-full ${marketStatus.isOpen ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Activity className={`w-4 h-4 ${marketStatus.isOpen ? 'text-green-400' : 'text-red-400'}`} />
+              <span className="text-sm font-semibold text-white">{marketStatus.status}</span>
+            </div>
+            <p className="text-xs text-slate-500 mt-1">{marketStatus.detail}</p>
           </div>
-          <div className="flex items-center gap-2">
-            <Activity className={`w-4 h-4 ${marketStatus.isOpen ? 'text-green-400' : 'text-red-400'}`} />
-            <span className="text-sm font-semibold text-white">{marketStatus.status}</span>
-          </div>
-          <p className="text-xs text-slate-500 mt-1">{marketStatus.detail}</p>
         </div>
       </div>
-    </div>
+    </>
   );
 }
