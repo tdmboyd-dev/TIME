@@ -1,8 +1,48 @@
 # DROP THIS TO COPILOT - QUICK REFERENCE
 
 **Last Updated:** 2025-12-25
-**Version:** v65.0.0 - AI CHAT SUPPORT SYSTEM COMPLETE
+**Version:** v66.0.0 - MARKETING HUB COMPLETE
 **Purpose:** Quick summary for Copilot/Claude when starting new sessions
+
+---
+
+## 🎯 v66.0.0 - MARKETING HUB COMPLETE (2025-12-25)
+
+**Complete marketing automation platform (ADMIN-ONLY)**
+
+**5 Major Systems:**
+1. **Referral System**: Unique codes, signup tracking, conversion monitoring, 3-tier rewards (Bronze/Silver/Gold), leaderboard (top 10)
+2. **Promo Codes**: 4 types (percentage/fixed/free trial/free months), validation, redemption tracking, usage limits, expiry dates
+3. **Social Media Automation**: Auto-post to 5 platforms (Twitter/X, LinkedIn, Discord, Telegram, Reddit), 60+ content library, quiet hours, tone selection
+4. **Campaign Management**: Multi-channel campaigns, ROI tracking, A/B testing, budget management, performance metrics
+5. **Analytics Dashboard**: Complete overview, revenue attribution, conversion tracking, platform breakdown
+
+**Files (4200+ lines total):**
+- `src/backend/database/marketing_schemas.ts` - Schemas (373 lines)
+- `src/backend/routes/marketing.ts` - 20+ endpoints (1442 lines)
+- `frontend/src/app/marketing/page.tsx` - 4-tab UI (1388 lines)
+- `src/backend/marketing/MarketingBot.ts` - Social automation (1010 lines)
+
+**API Endpoints (20+):**
+- **Referrals**: GET/POST `/api/v1/marketing/referrals`, `/referrals/generate`, `/:code/track`, `/:code/convert`, `/tiers`
+- **Promos**: GET/POST/PUT/DELETE `/api/v1/marketing/promos`, `/:code/validate`, `/:code/redeem`
+- **Social**: POST `/autopost/start`, `/autopost/stop`, GET `/autopost/status`, PUT `/autopost/config`, POST `/post-now`
+- **Campaigns**: GET/POST/PUT `/campaigns`, `/:id/metrics`, `/:id/roi`
+- **Analytics**: GET `/analytics`, `/analytics/overview`
+
+**Sample Data:**
+- Reward tiers: Bronze ($10 credit), Silver ($50 credit), Gold ($100 cash)
+- Promo code: TIMEFREE (1 month free, 1000 limit, expires 2025-12-31)
+
+**Security:** All routes protected with `adminMiddleware`, platform config requires `ownerMiddleware`
+
+**Frontend Tabs:**
+1. Social Media: Auto-posting config, platform selection, content types, manual post, recent posts
+2. Referrals: Stats, generate form, leaderboard, all codes list
+3. Promo Codes: Stats, create form, all codes list with activate/deactivate
+4. Campaigns: Coming soon placeholder
+
+**Ready for Production:** MongoDB schemas ready, validation complete, error handling, responsive UI
 
 ---
 
