@@ -96,15 +96,13 @@ export default function LoginPage() {
 
       // Login successful
       if (data.success) {
-        // Set auth cookies on frontend domain (cross-origin cookie fix)
-        // The backend also sets cookies, but they're bound to backend domain
-        const expires = new Date(data.expiresAt);
-        const cookieOptions = `path=/; expires=${expires.toUTCString()}; SameSite=Lax; Secure`;
-        document.cookie = `time_auth_token=${data.token}; ${cookieOptions}`;
-        document.cookie = `time_is_admin=${data.user?.role === 'admin' || data.user?.role === 'owner'}; ${cookieOptions}`;
-
-        // Store user info for display purposes
-        localStorage.setItem('time_user', JSON.stringify(data.user));
+        // SECURITY: Backend sets httpOnly cookies - do NOT store token in localStorage or client-side cookies
+        // Only store non-sensitive display info in sessionStorage (cleared when browser closes)
+        sessionStorage.setItem('time_user_display', JSON.stringify({
+          name: data.user?.name,
+          email: data.user?.email,
+          role: data.user?.role,
+        }));
 
         if (rememberMe) {
           localStorage.setItem('time_remember_email', email);
@@ -112,9 +110,20 @@ export default function LoginPage() {
           localStorage.removeItem('time_remember_email');
         }
 
-        // Redirect to dashboard or requested page
-        const redirectUrl = new URLSearchParams(window.location.search).get('redirect');
-        router.push(redirectUrl || '/');
+        // SECURITY: Validate redirect URL to prevent open redirect attacks
+        const redirectParam = new URLSearchParams(window.location.search).get('redirect');
+        let redirectUrl = '/';
+
+        if (redirectParam) {
+          // Only allow internal paths (start with / but not //)
+          if (redirectParam.startsWith('/') && !redirectParam.startsWith('//') &&
+              !redirectParam.toLowerCase().startsWith('/javascript:') &&
+              !redirectParam.toLowerCase().startsWith('/data:')) {
+            redirectUrl = redirectParam;
+          }
+        }
+
+        router.push(redirectUrl);
       }
     } catch (err: any) {
       setError(err.message || 'Invalid credentials. Please try again.');
@@ -151,16 +160,20 @@ export default function LoginPage() {
       }
 
       if (data.success) {
-        // Set auth cookies on frontend domain (cross-origin cookie fix)
-        const expires = new Date(data.expiresAt);
-        const cookieOptions = `path=/; expires=${expires.toUTCString()}; SameSite=Lax; Secure`;
-        document.cookie = `time_auth_token=${data.token}; ${cookieOptions}`;
-        document.cookie = `time_is_admin=${data.user?.role === 'admin' || data.user?.role === 'owner'}; ${cookieOptions}`;
+        // SECURITY: Backend sets httpOnly cookies - only store display info
+        sessionStorage.setItem('time_user_display', JSON.stringify({
+          name: data.user?.name,
+          email: data.user?.email,
+          role: data.user?.role,
+        }));
 
-        localStorage.setItem('time_user', JSON.stringify(data.user));
-
-        const redirectUrl = new URLSearchParams(window.location.search).get('redirect');
-        router.push(redirectUrl || '/');
+        // SECURITY: Validate redirect URL
+        const redirectParam = new URLSearchParams(window.location.search).get('redirect');
+        let redirectUrl = '/';
+        if (redirectParam && redirectParam.startsWith('/') && !redirectParam.startsWith('//')) {
+          redirectUrl = redirectParam;
+        }
+        router.push(redirectUrl);
       }
     } catch (err: any) {
       setError(err.message || 'Invalid verification code.');

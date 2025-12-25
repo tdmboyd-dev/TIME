@@ -24,6 +24,13 @@ import { webAuthnService, WebAuthnCredential } from '../security/webauthn_servic
 import { oAuthService, OAuthProvider } from '../security/oauth_service';
 import { smsAuthService } from '../services/sms_auth_service';
 import { logger } from '../utils/logger';
+import {
+  rateLimiters,
+  checkPasswordBreach,
+  validateRedirectUrl,
+  sanitizeRedirect,
+  securityHeaders,
+} from '../middleware/security';
 
 const router = Router();
 
@@ -345,8 +352,9 @@ export function mfaRequiredMiddleware(req: Request, res: Response, next: NextFun
 /**
  * POST /auth/register
  * Register a new user with mandatory consent
+ * SECURITY: Rate limited + password breach checking
  */
-router.post('/register', async (req: Request, res: Response) => {
+router.post('/register', rateLimiters.register, sanitizeRedirect, async (req: Request, res: Response) => {
   const ip = getClientIp(req);
 
   try {
@@ -366,10 +374,39 @@ router.post('/register', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Invalid email format' });
     }
 
-    // Validate password strength
-    if (password.length < 8) {
+    // Validate password strength (enhanced)
+    if (password.length < 12) {
       return res.status(400).json({
-        error: 'Password must be at least 8 characters long',
+        error: 'Password must be at least 12 characters long',
+      });
+    }
+
+    // Check for password complexity
+    const hasUppercase = /[A-Z]/.test(password);
+    const hasLowercase = /[a-z]/.test(password);
+    const hasNumber = /[0-9]/.test(password);
+    const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+
+    if (!hasUppercase || !hasLowercase || !hasNumber || !hasSpecial) {
+      return res.status(400).json({
+        error: 'Password must contain uppercase, lowercase, number, and special character',
+        requirements: {
+          uppercase: hasUppercase,
+          lowercase: hasLowercase,
+          number: hasNumber,
+          special: hasSpecial,
+        },
+      });
+    }
+
+    // SECURITY: Check if password has been exposed in data breaches
+    const breachCheck = await checkPasswordBreach(password);
+    if (breachCheck.breached) {
+      logger.warn('[Auth] Registration blocked - breached password', { email, breachCount: breachCheck.count });
+      return res.status(400).json({
+        error: 'This password has appeared in data breaches. Please choose a different password.',
+        breachCount: breachCheck.count,
+        recommendation: 'Use a unique password with at least 12 characters.',
       });
     }
 

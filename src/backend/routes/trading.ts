@@ -599,6 +599,7 @@ router.post('/quick/stop-all', authMiddleware, async (req: Request, res: Respons
 
 import { autoPilotCapital } from '../autopilot/dropbot';
 import { tradingStateRepository } from '../database/repositories';
+import { withdrawalLock, rateLimiters } from '../middleware/security';
 
 /**
  * SECURITY: Verify pilot ownership before allowing operations
@@ -794,9 +795,9 @@ router.post('/autopilot/:pilotId/resume', authMiddleware, async (req: Request, r
 /**
  * POST /trading/autopilot/:pilotId/withdraw-all
  * Withdraw all funds - closes all positions
- * SECURITY: Requires authentication + ownership verification
+ * SECURITY: Requires authentication + ownership verification + distributed lock + rate limiting
  */
-router.post('/autopilot/:pilotId/withdraw-all', authMiddleware, async (req: Request, res: Response) => {
+router.post('/autopilot/:pilotId/withdraw-all', authMiddleware, rateLimiters.withdrawal, withdrawalLock, async (req: Request, res: Response) => {
   const { pilotId } = req.params;
   const userId = (req as any).user?.id || 'anonymous';
 
@@ -811,9 +812,9 @@ router.post('/autopilot/:pilotId/withdraw-all', authMiddleware, async (req: Requ
 /**
  * POST /trading/autopilot/:pilotId/withdraw
  * Partial withdrawal - specify amount
- * SECURITY: Requires authentication + ownership verification
+ * SECURITY: Requires authentication + ownership verification + distributed lock + rate limiting
  */
-router.post('/autopilot/:pilotId/withdraw', authMiddleware, async (req: Request, res: Response) => {
+router.post('/autopilot/:pilotId/withdraw', authMiddleware, rateLimiters.withdrawal, withdrawalLock, async (req: Request, res: Response) => {
   const { pilotId } = req.params;
   const { amount } = req.body;
   const userId = (req as any).user?.id || 'anonymous';
@@ -825,6 +826,14 @@ router.post('/autopilot/:pilotId/withdraw', authMiddleware, async (req: Request,
     return res.status(400).json({
       success: false,
       message: 'Invalid amount. Please specify a positive amount to withdraw.',
+    });
+  }
+
+  // SECURITY: Validate amount is reasonable
+  if (amount > 1000000) {
+    return res.status(400).json({
+      success: false,
+      message: 'Withdrawal amount exceeds maximum limit. Contact support for large withdrawals.',
     });
   }
 
