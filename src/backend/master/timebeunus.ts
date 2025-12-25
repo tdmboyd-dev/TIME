@@ -42,6 +42,7 @@ import { EventEmitter } from 'events';
 import { createComponentLogger } from '../utils/logger';
 import { autoSkimEngine, AutoSkimStats, SkimMode } from '../autopilot/dropbot';
 import { getSuperBotOrchestrator, SuperBotOrchestrator } from '../ultimate/SuperBotEngines';
+import { getEaterSystem, EaterSystemOrchestrator, EaterSignal } from '../ultimate/EaterBotSystem';
 
 const logger = createComponentLogger('TIMEBEUNUS');
 
@@ -330,6 +331,9 @@ export class TIMEBEUNUSEngine extends EventEmitter {
   // 🚀 SUPER BOT ORCHESTRATOR - 3 Industry-Destroying Bots
   private superBotOrchestrator: SuperBotOrchestrator;
 
+  // 🔥 EATER SYSTEM - 18 PORTFOLIO GROWTH BOTS
+  private eaterSystemOrchestrator: EaterSystemOrchestrator;
+
   // Performance
   private performance: TIMEBEUNUSPerformance;
 
@@ -361,11 +365,36 @@ export class TIMEBEUNUSEngine extends EventEmitter {
     this.performance = this.initializePerformance();
     this.superBotOrchestrator = getSuperBotOrchestrator(5000); // Initial capital $5k
 
+    // 🔥 Initialize EATER SYSTEM - 18 Portfolio Growth Bots
+    this.eaterSystemOrchestrator = getEaterSystem();
+
     // Wire up super bot signals to TIMEBEUNUS
     this.superBotOrchestrator.on('signal', ({ bot, signal }) => {
       logger.info(`[SUPER BOT] ${bot} generated signal: ${signal.action} ${signal.symbol} @ ${signal.confidence}% confidence`);
       this.emit('super_bot_signal', { bot, signal });
     });
+
+    // 🔥 Wire up EATER SYSTEM signals to TIMEBEUNUS
+    this.eaterSystemOrchestrator.on('eater_signal', (signal: EaterSignal) => {
+      logger.info(`[EATER] ${signal.bot} generated signal: ${signal.action} ${signal.symbol} @ ${signal.confidence.toFixed(1)}% confidence`);
+      logger.info(`[EATER] Strategy: ${signal.strategy} | Expected: ${signal.expectedProfit}bps | Risk: ${signal.riskScore}`);
+      this.emit('eater_signal', signal);
+
+      // Auto-compound profits through the EATER system
+      if (signal.expectedProfit > 0) {
+        this.emit('portfolio_growth', {
+          source: signal.bot,
+          signal,
+          timestamp: new Date(),
+        });
+      }
+    });
+
+    logger.info('='.repeat(80));
+    logger.info('[TIMEBEUNUS] 🔥 EATER SYSTEM FUSED - 18 PORTFOLIO GROWTH BOTS ONLINE');
+    logger.info('[TIMEBEUNUS] Auto-Compound: ENABLED | Cross-Market Trading: ACTIVE');
+    logger.info('[TIMEBEUNUS] Target Growth: 500%+ annually (Aggressive: 3700%+)');
+    logger.info('='.repeat(80));
   }
 
   public static getInstance(): TIMEBEUNUSEngine {
@@ -450,7 +479,11 @@ export class TIMEBEUNUSEngine extends EventEmitter {
     this.superBotOrchestrator.start();
     logger.info('SUPER BOT Orchestrator started - 3 industry-destroying bots active');
 
-    // 9. Activate
+    // 9. 🔥 Start EATER SYSTEM - 18 PORTFOLIO GROWTH BOTS
+    this.eaterSystemOrchestrator.start();
+    logger.info('EATER SYSTEM started - 18 portfolio growth bots hunting for alpha');
+
+    // 10. Activate
     this.isActive = true;
     this.dominanceMode = 'balanced';
 
@@ -459,11 +492,40 @@ export class TIMEBEUNUSEngine extends EventEmitter {
     console.log(`📊 Tracking ${this.competitors.size} competitors to DESTROY`);
     console.log(`🧠 ${this.fusedStrategies.size} fused strategies loaded`);
     console.log(`🚀 3 SUPER BOTS: OMEGA PRIME | DARK POOL PREDATOR | INFINITY LOOP`);
+    console.log(`🔥 18 EATER BOTS: Portfolio Growth | Cross-Market Trading | Auto-Compound`);
+    console.log(`💰 EATER SYSTEM: Stocks + Crypto + Forex + DeFi - ALL MARKETS`);
     console.log(`🎯 Target: Beat competition by ${this.config.targetOutperformance}%`);
+    console.log(`📈 Growth Target: 500%+ annually (Aggressive: 3700%+)`);
     console.log('');
 
     logger.info('TIMEBEUNUS initialized and ready to dominate');
     this.emit('initialized');
+  }
+
+  // ==========================================================================
+  // EATER SYSTEM ACCESS - ALL 18 BOTS
+  // ==========================================================================
+
+  /**
+   * Get the full EATER System Orchestrator
+   */
+  public getEaterSystem(): EaterSystemOrchestrator {
+    return this.eaterSystemOrchestrator;
+  }
+
+  /**
+   * Enable Aggressive Growth Mode (1% daily = 3700% annual)
+   */
+  public enableAggressiveGrowth(): void {
+    this.eaterSystemOrchestrator.enableAggressiveMode();
+    logger.info('[TIMEBEUNUS] AGGRESSIVE GROWTH MODE ACTIVATED');
+  }
+
+  /**
+   * Get EATER System stats
+   */
+  public getEaterStats(): ReturnType<EaterSystemOrchestrator['getStats']> {
+    return this.eaterSystemOrchestrator.getStats();
   }
 
   // ==========================================================================
