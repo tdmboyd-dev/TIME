@@ -1,8 +1,28 @@
 # DROP THIS TO COPILOT - QUICK REFERENCE
 
 **Last Updated:** 2025-12-25
-**Version:** v58.0.0 - 24/7 AI SUPPORT SYSTEM COMPLETE
+**Version:** v59.0.0 - PUSH NOTIFICATIONS + 24/7 AI SUPPORT COMPLETE
 **Purpose:** Quick summary for Copilot/Claude when starting new sessions
+
+---
+
+## 🔔 v59.0.0 - PUSH NOTIFICATIONS SYSTEM (2025-12-25)
+
+**Complete Web Push API integration for real-time browser notifications**
+
+**New Files:**
+- `src/backend/notifications/push_service.ts` - Push service (400+ lines)
+- `src/backend/routes/notifications.ts` - Notification API (300+ lines)
+- `frontend/src/components/notifications/NotificationProvider.tsx` - React Context (450+ lines)
+- `frontend/src/app/notifications/page.tsx` - Notification center UI (400+ lines)
+- `PUSH_NOTIFICATIONS_README.md` - Complete docs (500+ lines)
+- `PUSH_NOTIFICATIONS_SETUP.md` - Quick setup (150+ lines)
+
+**Updated:** schemas.ts, routes/index.ts, TopNav.tsx, AuthenticatedLayout.tsx, sw.js, package.json, .env.example
+
+**Features:** Web Push API, VAPID auth, single & bulk sending, 8 notification types, 4 priority levels, toast notifications, notification center, filter by type/status, mark read/unread, unread badge, service worker, click to navigate
+
+**Setup:** Generate VAPID keys → Add to .env → npm install → Enable in browser
 
 ---
 

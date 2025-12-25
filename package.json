@@ -15,7 +15,14 @@
     "test:watch": "jest --watch",
     "lint": "eslint src --ext .ts,.tsx",
     "format": "prettier --write \"src/**/*.{ts,tsx}\"",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "mobile:start": "cd mobile && npm start",
+    "mobile:ios": "cd mobile && npm run ios",
+    "mobile:android": "cd mobile && npm run android",
+    "mobile:install": "cd mobile && npm install",
+    "mobile:prebuild": "cd mobile && npm run prebuild",
+    "mobile:build:ios": "cd mobile && npm run build:ios",
+    "mobile:build:android": "cd mobile && npm run build:android"
   },
   "keywords": [
     "trading",

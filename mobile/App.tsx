@@ -1,142 +1,126 @@
 /**
- * TIME Trading Mobile App
+ * TIME BEYOND US - Mobile Trading App
  * React Native / Expo
  *
  * Features:
  * - Biometric authentication (Face ID / Fingerprint)
- * - Real-time portfolio tracking
- * - Bot control and monitoring
- * - Push notifications for trades
- * - Dark mode optimized
+ * - Real-time portfolio tracking with WebSocket
+ * - 151+ AI Trading Bots (133 absorbed + 18 fused)
+ * - Push notifications for trades, bots, and price alerts
+ * - Quick trade interface
+ * - Dark mode optimized design system
  */
 
 import React, { useEffect, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
+import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Ionicons } from '@expo/vector-icons';
-import * as SecureStore from 'expo-secure-store';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import RootNavigator from './src/navigation/RootNavigator';
+import authService from './src/services/auth';
+import pushService from './src/services/push';
 
-// Screens
-import HomeScreen from './screens/HomeScreen';
-import PortfolioScreen from './screens/PortfolioScreen';
-import BotsScreen from './screens/BotsScreen';
-import MarketsScreen from './screens/MarketsScreen';
-import SettingsScreen from './screens/SettingsScreen';
-import LoginScreen from './screens/LoginScreen';
-import TradeDetailScreen from './screens/TradeDetailScreen';
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 2,
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      gcTime: 1000 * 60 * 30, // 30 minutes (formerly cacheTime)
+    },
+  },
+});
 
-const Tab = createBottomTabNavigator();
-const Stack = createNativeStackNavigator();
-const queryClient = new QueryClient();
-
-// TIME Dark Theme
+// TIME BEYOND US Dark Theme
 const TIMETheme = {
   ...DefaultTheme,
+  dark: true,
   colors: {
     ...DefaultTheme.colors,
-    primary: '#6366f1',
-    background: '#0f172a',
+    primary: '#00ff88',
+    background: '#020617',
     card: '#1e293b',
     text: '#f8fafc',
     border: '#334155',
-    notification: '#22c55e',
+    notification: '#00ff88',
   },
 };
 
-function MainTabs() {
-  return (
-    <Tab.Navigator
-      screenOptions={({ route }) => ({
-        tabBarIcon: ({ focused, color, size }) => {
-          let iconName: keyof typeof Ionicons.glyphMap;
-
-          if (route.name === 'Home') {
-            iconName = focused ? 'home' : 'home-outline';
-          } else if (route.name === 'Portfolio') {
-            iconName = focused ? 'wallet' : 'wallet-outline';
-          } else if (route.name === 'Bots') {
-            iconName = focused ? 'hardware-chip' : 'hardware-chip-outline';
-          } else if (route.name === 'Markets') {
-            iconName = focused ? 'trending-up' : 'trending-up-outline';
-          } else if (route.name === 'Settings') {
-            iconName = focused ? 'settings' : 'settings-outline';
-          } else {
-            iconName = 'help-outline';
-          }
-
-          return <Ionicons name={iconName} size={size} color={color} />;
-        },
-        tabBarActiveTintColor: '#6366f1',
-        tabBarInactiveTintColor: '#64748b',
-        tabBarStyle: {
-          backgroundColor: '#1e293b',
-          borderTopColor: '#334155',
-          paddingBottom: 5,
-          height: 60,
-        },
-        headerStyle: {
-          backgroundColor: '#0f172a',
-        },
-        headerTintColor: '#f8fafc',
-      })}
-    >
-      <Tab.Screen name="Home" component={HomeScreen} />
-      <Tab.Screen name="Portfolio" component={PortfolioScreen} />
-      <Tab.Screen name="Bots" component={BotsScreen} />
-      <Tab.Screen name="Markets" component={MarketsScreen} />
-      <Tab.Screen name="Settings" component={SettingsScreen} />
-    </Tab.Navigator>
-  );
-}
-
 export default function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    checkAuth();
+    initializeApp();
   }, []);
 
-  async function checkAuth() {
+  async function initializeApp() {
     try {
-      const token = await SecureStore.getItemAsync('auth_token');
-      setIsLoggedIn(!!token);
-    } catch {
-      setIsLoggedIn(false);
+      // Check authentication status
+      const authenticated = await authService.isAuthenticated();
+      setIsAuthenticated(authenticated);
+
+      if (authenticated) {
+        // Validate session with backend
+        const validSession = await authService.validateSession();
+        setIsAuthenticated(validSession);
+
+        if (validSession) {
+          // Register for push notifications
+          const pushToken = await pushService.registerForPushNotifications();
+          if (pushToken) {
+            const user = await authService.getUser();
+            if (user?.id) {
+              await pushService.registerDeviceToken(pushToken, user.id);
+            }
+          }
+
+          // Setup notification listeners
+          pushService.addNotificationReceivedListener((notification) => {
+            console.log('Notification received:', notification);
+          });
+
+          pushService.addNotificationResponseReceivedListener((response) => {
+            console.log('Notification tapped:', response);
+            // Handle navigation based on notification data
+            const data = response.notification.request.content.data;
+            // Navigate to appropriate screen based on notification type
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error initializing app:', error);
+      setIsAuthenticated(false);
+    } finally {
+      setIsLoading(false);
     }
   }
 
-  if (isLoggedIn === null) {
-    // Loading state
-    return null;
+  if (isLoading || isAuthenticated === null) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#00ff88" />
+      </View>
+    );
   }
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <NavigationContainer theme={TIMETheme}>
-        <StatusBar style="light" />
-        <Stack.Navigator screenOptions={{ headerShown: false }}>
-          {!isLoggedIn ? (
-            <Stack.Screen name="Login" component={LoginScreen} />
-          ) : (
-            <>
-              <Stack.Screen name="Main" component={MainTabs} />
-              <Stack.Screen
-                name="TradeDetail"
-                component={TradeDetailScreen}
-                options={{
-                  headerShown: true,
-                  title: 'Trade Details',
-                  headerStyle: { backgroundColor: '#0f172a' },
-                  headerTintColor: '#f8fafc',
-                }}
-              />
-            </>
-          )}
-        </Stack.Navigator>
-      </NavigationContainer>
-    </QueryClientProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <QueryClientProvider client={queryClient}>
+        <NavigationContainer theme={TIMETheme}>
+          <StatusBar style="light" backgroundColor="#020617" />
+          <RootNavigator isAuthenticated={isAuthenticated} />
+        </NavigationContainer>
+      </QueryClientProvider>
+    </GestureHandlerRootView>
   );
 }
+
+const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    backgroundColor: '#020617',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+});
