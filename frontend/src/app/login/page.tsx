@@ -16,6 +16,7 @@ import { useRouter } from 'next/navigation';
  */
 
 import { API_BASE } from '@/lib/api';
+import { TimeLogo, TimeIcon } from '@/components/branding/TimeLogo';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -281,16 +282,13 @@ export default function LoginPage() {
 
         <div className="relative z-10 flex flex-col justify-center px-12 text-white">
           {/* Logo - Secret 5-click access */}
-          <div className="flex items-center gap-4 mb-8">
-            <div
-              onClick={handleSecretAccess}
-              className="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-400 to-purple-600 flex items-center justify-center shadow-2xl cursor-pointer select-none hover:scale-105 transition-transform"
-            >
-              <span className="text-3xl font-black">T</span>
+          <div className="flex items-center gap-4 mb-8" onClick={handleSecretAccess}>
+            <div className="cursor-pointer select-none hover:scale-105 transition-transform">
+              <TimeIcon size={64} animated />
             </div>
-            <div>
-              <h1 className="text-4xl font-black tracking-tight">TIME</h1>
-              <p className="text-sm text-white/60 tracking-widest">META-INTELLIGENCE</p>
+            <div className="cursor-pointer">
+              <TimeLogo size="lg" animated />
+              <p className="text-sm text-white/60 tracking-widest -mt-1">META-INTELLIGENCE</p>
             </div>
           </div>
 
@@ -347,14 +345,13 @@ export default function LoginPage() {
 
         <div className="w-full max-w-md relative z-10">
           {/* Mobile Branding - Secret 5-click access */}
-          <div className="lg:hidden text-center mb-8">
-            <div
-              onClick={handleSecretAccess}
-              className="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-cyan-400 to-purple-600 flex items-center justify-center cursor-pointer select-none shadow-2xl shadow-purple-500/20 mb-4"
-            >
-              <span className="text-4xl font-black text-white">T</span>
+          <div className="lg:hidden text-center mb-8" onClick={handleSecretAccess}>
+            <div className="flex justify-center mb-4 cursor-pointer select-none hover:scale-105 transition-transform">
+              <TimeIcon size={72} animated />
             </div>
-            <h1 className="text-3xl font-black text-white">TIME</h1>
+            <div className="flex justify-center mb-2">
+              <TimeLogo size="md" animated />
+            </div>
             <p className="text-sm text-white/60 tracking-widest">META-INTELLIGENCE</p>
             <p className="text-white/40 text-xs mt-2">The self-evolving trading organism</p>
           </div>
