@@ -1,8 +1,87 @@
 # DROP THIS TO COPILOT - QUICK REFERENCE
 
 **Last Updated:** 2025-12-25
-**Version:** v64.0.0 - USER ONBOARDING FLOW COMPLETE
+**Version:** v65.0.0 - AI CHAT SUPPORT SYSTEM COMPLETE
 **Purpose:** Quick summary for Copilot/Claude when starting new sessions
+
+---
+
+## 🎫 v65.0.0 - AI CHAT SUPPORT SYSTEM (2025-12-25)
+
+**Complete 24/7 AI-powered customer support with GPT-4, tickets, and email notifications**
+
+**Files Created:**
+- `src/backend/support/ai_chat_handler.ts` - AI chat with OpenAI GPT-4 (459 lines)
+- `src/backend/support/email_notification_service.ts` - Email notifications (456 lines)
+- `src/backend/support/seed_faqs.ts` - FAQ seeding (338 lines, 15+ FAQs)
+- `src/backend/routes/support.ts` - Support API (746 lines, 14 endpoints)
+- `frontend/src/components/support/AIChatWidget.tsx` - Floating chat widget (416 lines)
+- `frontend/src/app/support/page.tsx` - Support center page (692 lines)
+
+**Dependencies:** `openai` (GPT-4), `nodemailer` (email)
+
+**Backend Endpoints:**
+- POST `/api/v1/support/chat` - AI chat (GPT-4 powered)
+- GET `/api/v1/support/history` - Chat history
+- POST `/api/v1/support/ticket` - Create ticket (auto-email)
+- GET `/api/v1/support/tickets` - User tickets
+- POST `/api/v1/support/ticket/:id/message` - Add message
+- GET `/api/v1/support/faq` - Public FAQs
+- GET `/api/v1/support/admin/tickets` - Admin: All tickets
+- PUT `/api/v1/support/admin/ticket/:id/status` - Admin: Update status
+- POST `/api/v1/support/admin/ticket/:id/reply` - Admin: Reply
+
+**AI Features:**
+- GPT-4 chat with TIME platform knowledge (151+ bots, pricing, brokers)
+- Intent detection (trading_help, broker_connection, billing, technical, etc.)
+- Rate limiting (20 msg/hr per user)
+- Auto-escalation to human support
+- Conversation history persistence
+- Real-time typing indicators
+
+**Support Tickets:**
+- Categories: technical, trading, broker, billing, bot, general
+- Priority: low, medium, high, urgent
+- Status: open → in_progress → waiting_response → resolved → closed
+- Admin assignment and reply system
+- Email notifications on all actions
+
+**Email Notifications:**
+- New ticket confirmation (user)
+- Admin alert for new tickets
+- Reply notifications (user)
+- Status change notifications (user)
+- Beautiful HTML templates with TIME branding
+- SMTP configuration (Gmail, SendGrid, etc.)
+
+**FAQ System:**
+- 15+ pre-seeded FAQs across 7 categories
+- Getting Started, Broker, Bots, Billing, Technical, Account, Features
+- Expandable accordion UI
+- Vote on helpfulness (Yes/No)
+- Public access (no auth)
+
+**UI/UX:**
+- Floating chat button (bottom-right)
+- Dark theme (#7c3aed purple)
+- Minimize/maximize toggle
+- Mobile responsive
+- Quick action shortcuts
+- Escalation banner
+
+**Integration:** Chat widget in `AuthenticatedLayout.tsx` (all authenticated pages)
+
+**Configuration (.env):**
+```
+OPENAI_API_KEY=sk-proj-...
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your-email@gmail.com
+SMTP_PASS=app-password
+ADMIN_EMAIL=admin@timebeyondus.com
+```
+
+**Seed FAQs:** `npx ts-node src/backend/support/seed_faqs.ts`
 
 ---
 
