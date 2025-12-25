@@ -1147,7 +1147,7 @@ export class TIMEBEUNUSEngine extends EventEmitter {
       confidence: 90
     });
 
-    logger.info(`Initialized ${this.fusedStrategies.size} fused strategies (including 8 NEW AI Power Bots)`);
+    logger.info(`Initialized ${this.fusedStrategies.size} fused meta-strategies + 133 absorbed bots = 151+ total bot army (including 8 NEW AI Power Bots)`);
   }
 
   // ==========================================================================
