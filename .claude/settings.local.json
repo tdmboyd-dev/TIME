@@ -157,7 +157,10 @@
       "Bash(git checkout:*)",
       "Bash(fly secrets set:*)",
       "Bash(python3:*)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "WebFetch(domain:clearalgo.ai)",
+      "WebFetch(domain:www.luxalgo.com)",
+      "WebFetch(domain:smrtalgo.com)"
     ]
   }
 }

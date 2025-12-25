@@ -300,6 +300,21 @@ function createApp(): express.Application {
   // Cookie parsing - REQUIRED for httpOnly cookie authentication
   app.use(cookieParser());
 
+  // CSRF Protection and Rate Limiting
+  const { csrfMiddleware, rateLimitMiddleware, getCSRFToken } = require('./security/csrf_middleware');
+
+  // Apply rate limiting first
+  app.use('/api/v1/auth', rateLimitMiddleware('auth'));
+  app.use('/api/v1/admin', rateLimitMiddleware('admin'));
+  app.use('/api/v1/trading', rateLimitMiddleware('trade'));
+  app.use('/api/v1', rateLimitMiddleware('general'));
+
+  // CSRF protection for state-changing requests
+  app.use(csrfMiddleware);
+
+  // CSRF token endpoint
+  app.get('/api/v1/csrf-token', getCSRFToken);
+
   // Mount API Routes
   app.use('/api/v1', router);
 

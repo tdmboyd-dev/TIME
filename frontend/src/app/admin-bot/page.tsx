@@ -17,7 +17,16 @@ import {
   Volume2,
 } from 'lucide-react';
 import clsx from 'clsx';
+import DOMPurify from 'dompurify';
 import { API_BASE, getTokenFromCookie } from '@/lib/api';
+
+// Sanitize user input to prevent XSS
+function sanitizeContent(content: string): string {
+  return DOMPurify.sanitize(content, {
+    ALLOWED_TAGS: [], // No HTML allowed
+    ALLOWED_ATTR: [],
+  });
+}
 
 interface Message {
   id: string;
@@ -74,7 +83,7 @@ export default function AdminBotPage() {
                           userMessage.match(/(?:message|announcement|notification)[:\s]+(.+)/i);
 
       if (messageMatch) {
-        const broadcastMessage = messageMatch[1];
+        const broadcastMessage = sanitizeContent(messageMatch[1]);
         return {
           response: `I'll broadcast this message to all users:\n\n"${broadcastMessage}"\n\nSending now...`,
           action: {
@@ -159,7 +168,7 @@ export default function AdminBotPage() {
       const alertMatch = userMessage.match(/(?:alert|urgent|emergency)[^"]*["']([^"']+)["']/i);
 
       if (alertMatch) {
-        const alertMessage = alertMatch[1];
+        const alertMessage = sanitizeContent(alertMatch[1]);
         return {
           response: `⚠️ Sending URGENT ALERT to all users:\n\n"${alertMessage}"\n\nThis will trigger push notifications and in-app alerts...`,
           action: {

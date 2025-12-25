@@ -6,6 +6,7 @@ import { TopNav } from './TopNav';
 import { AuthProvider, useAuth } from '@/providers/AuthProvider';
 import { Web3Provider } from '@/providers/Web3Provider';
 import { TimeIcon } from '@/components/branding/TimeLogo';
+import { ErrorBoundary, PageErrorBoundary } from '@/components/ErrorBoundary';
 
 // Routes that don't need the dashboard layout
 const publicRoutes = ['/login', '/register', '/admin-login', '/forgot-password', '/reset-password'];
@@ -23,25 +24,29 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 
   // Loading state is handled by AuthProvider
 
-  // Authenticated routes get dashboard layout
+  // Authenticated routes get dashboard layout with Error Boundaries
   if (isAuthenticated) {
     return (
-      <SidebarProvider>
-        <div className="flex h-screen overflow-hidden">
-          <Sidebar />
-          <div className="flex-1 flex flex-col overflow-hidden min-w-0">
-            {/* Mobile header with menu button */}
-            <div className="lg:hidden flex items-center gap-3 px-4 py-3 bg-slate-900/80 border-b border-slate-700/50">
-              <MobileMenuButton />
-              <TimeIcon size={28} animated />
+      <PageErrorBoundary>
+        <SidebarProvider>
+          <div className="flex h-screen overflow-hidden">
+            <Sidebar />
+            <div className="flex-1 flex flex-col overflow-hidden min-w-0">
+              {/* Mobile header with menu button */}
+              <div className="lg:hidden flex items-center gap-3 px-4 py-3 bg-slate-900/80 border-b border-slate-700/50">
+                <MobileMenuButton />
+                <TimeIcon size={28} animated />
+              </div>
+              <TopNav />
+              <main className="flex-1 overflow-y-auto p-4 lg:p-6">
+                <ErrorBoundary>
+                  {children}
+                </ErrorBoundary>
+              </main>
             </div>
-            <TopNav />
-            <main className="flex-1 overflow-y-auto p-4 lg:p-6">
-              {children}
-            </main>
           </div>
-        </div>
-      </SidebarProvider>
+        </SidebarProvider>
+      </PageErrorBoundary>
     );
   }
 

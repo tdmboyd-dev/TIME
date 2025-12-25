@@ -43,6 +43,10 @@ const COOKIE_OPTIONS = {
   sameSite: 'lax' as const, // CSRF protection
   maxAge: SESSION_DURATION_MS,
   path: '/',
+  // Domain configuration for production
+  domain: process.env.NODE_ENV === 'production'
+    ? process.env.COOKIE_DOMAIN || '.timebeyondus.com' // Share across subdomains
+    : undefined, // Let localhost use default
 };
 
 const ADMIN_COOKIE_OPTIONS = {
@@ -1312,7 +1316,7 @@ router.post('/webauthn/login/complete', async (req: Request, res: Response) => {
     await userRepository.update(user._id, { lastLogin: new Date(), lastActivity: new Date() });
 
     // Set cookie
-    res.cookie('time_auth', sessionToken, COOKIE_OPTIONS);
+    res.cookie('time_auth_token', sessionToken, COOKIE_OPTIONS);
 
     await auditLogRepository.log('auth', 'webauthn_login', {
       email: user.email,
@@ -1592,7 +1596,7 @@ router.get('/oauth/:provider/callback', async (req: Request, res: Response) => {
     await redis.set(`session:${sessionToken}`, JSON.stringify(session), 'EX', SESSION_DURATION_DAYS * 24 * 60 * 60);
 
     // Set cookie
-    res.cookie('time_auth', sessionToken, COOKIE_OPTIONS);
+    res.cookie('time_auth_token', sessionToken, COOKIE_OPTIONS);
 
     await auditLogRepository.log('auth', isNewUser ? 'oauth_register' : 'oauth_login', {
       email: user.email,
