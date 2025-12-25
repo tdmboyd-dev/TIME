@@ -125,6 +125,14 @@ export interface UserSchema {
     linkedAt: Date;
     lastUsedAt: Date;
   }>;
+
+  // SMS 2FA fields
+  phoneVerified?: boolean;
+  sms2faEnabled?: boolean;
+
+  // MFA fields (top level for easy access)
+  mfaEnabled?: boolean;
+  mfaSecret?: string;
 }
 
 // ============================================================

@@ -88,6 +88,9 @@ import questionnaireRoutes from './questionnaire';
 // ADMIN MARKETING BOT - Auto-post to social media
 import marketingRoutes from './marketing';
 
+// PUBLIC API - External trader integration
+import publicApiRoutes from './public_api';
+
 const router = Router();
 
 // Mount routes
@@ -182,6 +185,9 @@ router.use('/questionnaire', questionnaireRoutes);
 
 // ADMIN MARKETING BOT - Auto-post to Twitter, LinkedIn, Reddit, Discord, Telegram
 router.use('/marketing', marketingRoutes);
+
+// PUBLIC API - External trader integration (no auth required for docs, API key for trading)
+router.use('/public', publicApiRoutes);
 
 export default router;
 

@@ -22,6 +22,7 @@ import { databaseManager } from '../database/connection';
 import { mfaService } from '../security/mfa_service';
 import { webAuthnService, WebAuthnCredential } from '../security/webauthn_service';
 import { oAuthService, OAuthProvider } from '../security/oauth_service';
+import { smsAuthService } from '../services/sms_auth_service';
 import { logger } from '../utils/logger';
 
 const router = Router();
@@ -56,6 +57,9 @@ const ADMIN_COOKIE_OPTIONS = {
 
 // Rate limiting store (use Redis in production cluster)
 const loginAttempts: Map<string, { count: number; lastAttempt: Date; lockedUntil?: Date }> = new Map();
+
+// Session store (use Redis in production cluster)
+const sessions: Map<string, SessionData> = new Map();
 
 // ============================================================
 // TYPES
@@ -1684,6 +1688,237 @@ router.delete('/oauth/:provider', authMiddleware, async (req: Request, res: Resp
   } catch (error: any) {
     logger.error('Unlink OAuth provider error:', error);
     res.status(500).json({ error: 'Failed to unlink provider' });
+  }
+});
+
+// ============================================================
+// SMS AUTHENTICATION (TWILIO)
+// ============================================================
+
+/**
+ * POST /auth/sms/send
+ * Send OTP verification code to phone number
+ */
+router.post('/sms/send', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const user = (req as any).user;
+    const { phone } = req.body;
+
+    if (!phone) {
+      return res.status(400).json({ error: 'Phone number is required' });
+    }
+
+    const result = await smsAuthService.sendOTP(user.id, phone);
+
+    await auditLogRepository.log('auth', 'sms_otp_sent', {
+      userId: user.id,
+      phone: smsAuthService.normalizePhone(phone).replace(/(\+\d{1,2})(\d{3})(\d{3})(\d{4})/, '$1-***-***-$4'),
+    }, { success: result.success, userId: user.id });
+
+    if (result.success) {
+      res.json({
+        success: true,
+        message: result.message,
+        expiresIn: result.expiresIn,
+      });
+    } else {
+      res.status(400).json({
+        success: false,
+        error: result.message,
+      });
+    }
+  } catch (error: any) {
+    logger.error('SMS send error:', error);
+    res.status(500).json({ error: 'Failed to send verification code' });
+  }
+});
+
+/**
+ * POST /auth/sms/verify
+ * Verify OTP code and enable SMS 2FA
+ */
+router.post('/sms/verify', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const user = (req as any).user;
+    const { code } = req.body;
+
+    if (!code) {
+      return res.status(400).json({ error: 'Verification code is required' });
+    }
+
+    const result = await smsAuthService.verifyOTP(user.id, code);
+
+    await auditLogRepository.log('auth', 'sms_otp_verified', {
+      userId: user.id,
+    }, { success: result.success, userId: user.id });
+
+    if (result.success) {
+      // Get the phone number from the pending OTP and save to user
+      const status = smsAuthService.getOTPStatus(user.id);
+      if (status.phone) {
+        await userRepository.update(user.id, {
+          phone: status.phone,
+          phoneVerified: true,
+          sms2faEnabled: true,
+        });
+      }
+
+      res.json({
+        success: true,
+        message: 'Phone verified and SMS 2FA enabled',
+      });
+    } else {
+      res.status(400).json({
+        success: false,
+        error: result.message,
+      });
+    }
+  } catch (error: any) {
+    logger.error('SMS verify error:', error);
+    res.status(500).json({ error: 'Verification failed' });
+  }
+});
+
+/**
+ * GET /auth/sms/status
+ * Get SMS verification status
+ */
+router.get('/sms/status', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const user = (req as any).user;
+    const otpStatus = smsAuthService.getOTPStatus(user.id);
+    const serviceStatus = smsAuthService.getStatus();
+
+    // Get user's SMS 2FA status
+    const userData = await userRepository.findById(user.id);
+
+    res.json({
+      serviceEnabled: serviceStatus.enabled,
+      provider: serviceStatus.provider,
+      sms2faEnabled: userData?.sms2faEnabled || false,
+      phoneVerified: userData?.phoneVerified || false,
+      phone: userData?.phone?.replace(/(\+\d{1,2})(\d{3})(\d{3})(\d{4})/, '$1-***-***-$4'),
+      pendingVerification: otpStatus.pending,
+      expiresIn: otpStatus.expiresIn,
+    });
+  } catch (error: any) {
+    logger.error('SMS status error:', error);
+    res.status(500).json({ error: 'Failed to get SMS status' });
+  }
+});
+
+/**
+ * POST /auth/sms/disable
+ * Disable SMS 2FA
+ */
+router.post('/sms/disable', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const user = (req as any).user;
+    const { password } = req.body;
+
+    // Verify password before disabling 2FA
+    const userData = await userRepository.findById(user.id);
+    if (!userData) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    if (userData.passwordHash && password) {
+      const validPassword = await bcrypt.compare(password, userData.passwordHash);
+      if (!validPassword) {
+        return res.status(401).json({ error: 'Invalid password' });
+      }
+    }
+
+    // Ensure user has another 2FA method or require password
+    const hasTOTP = userData.mfaSecret && userData.mfaEnabled;
+    const hasWebAuthn = (userData.webauthnCredentials || []).length > 0;
+
+    if (!hasTOTP && !hasWebAuthn && !userData.passwordHash) {
+      return res.status(400).json({
+        error: 'Cannot disable SMS 2FA. Enable another authentication method first.',
+      });
+    }
+
+    await userRepository.update(user.id, {
+      sms2faEnabled: false,
+    });
+
+    await auditLogRepository.log('auth', 'sms_2fa_disabled', {
+      userId: user.id,
+    }, { success: true, userId: user.id });
+
+    res.json({
+      success: true,
+      message: 'SMS 2FA disabled',
+    });
+  } catch (error: any) {
+    logger.error('SMS disable error:', error);
+    res.status(500).json({ error: 'Failed to disable SMS 2FA' });
+  }
+});
+
+/**
+ * POST /auth/sms/login-verify
+ * Verify SMS OTP during login (for users with SMS 2FA enabled)
+ */
+router.post('/sms/login-verify', async (req: Request, res: Response) => {
+  try {
+    const { userId, code } = req.body;
+
+    if (!userId || !code) {
+      return res.status(400).json({ error: 'User ID and code are required' });
+    }
+
+    const result = await smsAuthService.verifyOTP(userId, code);
+
+    if (result.success) {
+      // Generate session token
+      const token = generateToken();
+      const user = await userRepository.findById(userId);
+
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      // Store session
+      const session: SessionData = {
+        userId: user._id,
+        email: user.email,
+        role: user.role || 'user',
+        mfaVerified: true,
+        expiresAt: new Date(Date.now() + SESSION_DURATION_MS),
+        createdAt: new Date(),
+        ipAddress: req.ip,
+        userAgent: req.headers['user-agent'],
+      };
+
+      sessions.set(token, session);
+
+      // Set cookie
+      res.cookie('time_token', token, COOKIE_OPTIONS);
+
+      await auditLogRepository.log('auth', 'sms_login_verified', {
+        userId: user._id,
+      }, { success: true, userId: user._id });
+
+      res.json({
+        success: true,
+        user: {
+          id: user._id,
+          email: user.email,
+          name: user.name,
+          role: user.role || 'user',
+        },
+      });
+    } else {
+      res.status(401).json({
+        success: false,
+        error: result.message,
+      });
+    }
+  } catch (error: any) {
+    logger.error('SMS login verify error:', error);
+    res.status(500).json({ error: 'Verification failed' });
   }
 });
 

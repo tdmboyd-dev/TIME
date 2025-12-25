@@ -219,7 +219,7 @@ export class OmegaPrimeEngine extends EventEmitter {
   private runMLEnsemble(current: MarketData, history: MarketData[]): { direction: number; confidence: number } {
     // Simulate ML ensemble voting
     // In production, each model would make real predictions
-    const votes = this.mlModels.map(model => {
+    const votes: number[] = this.mlModels.map(model => {
       // Simplified model logic based on recent price action
       const recentTrend = history.length > 5
         ? (current.price - history[history.length - 5].close) / history[history.length - 5].close
@@ -227,7 +227,7 @@ export class OmegaPrimeEngine extends EventEmitter {
       return recentTrend > 0.01 ? 1 : recentTrend < -0.01 ? -1 : 0;
     });
 
-    const avgVote = votes.reduce((sum, v) => sum + v, 0) / votes.length;
+    const avgVote = votes.reduce((sum: number, v: number) => sum + v, 0) / votes.length;
     const agreement = votes.filter(v => v === Math.sign(avgVote)).length / votes.length;
 
     return {
@@ -520,21 +520,26 @@ export class InfinityLoopEngine extends EventEmitter {
   async scanArbitrage(symbol: string, exchanges: { name: string; bid: number; ask: number }[]): Promise<ArbitrageOpportunity | null> {
     if (exchanges.length < 2) return null;
 
-    let bestBuy: { exchange: string; price: number } | null = null;
-    let bestSell: { exchange: string; price: number } | null = null;
+    // Find best buy (lowest ask) and best sell (highest bid)
+    let bestBuyExchange = exchanges[0].name;
+    let bestBuyPrice = exchanges[0].ask;
+    let bestSellExchange = exchanges[0].name;
+    let bestSellPrice = exchanges[0].bid;
 
-    exchanges.forEach(ex => {
-      if (!bestBuy || ex.ask < bestBuy.price) {
-        bestBuy = { exchange: ex.name, price: ex.ask };
+    for (const ex of exchanges) {
+      if (ex.ask < bestBuyPrice) {
+        bestBuyExchange = ex.name;
+        bestBuyPrice = ex.ask;
       }
-      if (!bestSell || ex.bid > bestSell.price) {
-        bestSell = { exchange: ex.name, price: ex.bid };
+      if (ex.bid > bestSellPrice) {
+        bestSellExchange = ex.name;
+        bestSellPrice = ex.bid;
       }
-    });
+    }
 
-    if (!bestBuy || !bestSell || bestBuy.exchange === bestSell.exchange) return null;
+    if (bestBuyExchange === bestSellExchange) return null;
 
-    const spreadBps = ((bestSell.price - bestBuy.price) / bestBuy.price) * 10000;
+    const spreadBps = ((bestSellPrice - bestBuyPrice) / bestBuyPrice) * 10000;
 
     // Only profitable if spread > 10 bps (accounting for fees)
     if (spreadBps < 10) return null;
@@ -544,10 +549,10 @@ export class InfinityLoopEngine extends EventEmitter {
 
     return {
       symbol,
-      buyExchange: bestBuy.exchange,
-      sellExchange: bestSell.exchange,
-      buyPrice: bestBuy.price,
-      sellPrice: bestSell.price,
+      buyExchange: bestBuyExchange,
+      sellExchange: bestSellExchange,
+      buyPrice: bestBuyPrice,
+      sellPrice: bestSellPrice,
       spreadBps,
       estimatedProfit,
       expiresAt: new Date(Date.now() + 5000) // 5 second window

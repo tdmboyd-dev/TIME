@@ -6,11 +6,22 @@ import { AuthenticatedLayout } from '@/components/layout/AuthenticatedLayout';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'TIME — Meta-Intelligence Trading Governor',
-  description: 'A self-evolving, recursive learning trading organism',
+  title: 'TIME BEYOND US — Meta-Intelligence Trading Governor',
+  description: 'The Ultimate AI-Powered Trading Platform with 182+ bots - We Beat Time, So You Don\'t Have To',
+  manifest: '/manifest.json',
+  themeColor: '#7c3aed',
+  viewport: 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'TIME',
+  },
   icons: {
     icon: [
       { url: '/icon.svg', type: 'image/svg+xml' },
+    ],
+    apple: [
+      { url: '/apple-touch-icon.svg', sizes: '180x180', type: 'image/svg+xml' },
     ],
   },
 };

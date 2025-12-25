@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { Sidebar, SidebarProvider, MobileMenuButton } from './Sidebar';
 import { TopNav } from './TopNav';
@@ -7,6 +8,24 @@ import { AuthProvider, useAuth } from '@/providers/AuthProvider';
 import { Web3Provider } from '@/providers/Web3Provider';
 import { TimeIcon } from '@/components/branding/TimeLogo';
 import { ErrorBoundary, PageErrorBoundary } from '@/components/ErrorBoundary';
+
+// PWA Service Worker Registration
+function PWARegistration() {
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+      navigator.serviceWorker
+        .register('/sw.js')
+        .then((registration) => {
+          console.log('[PWA] Service Worker registered:', registration.scope);
+        })
+        .catch((error) => {
+          console.error('[PWA] Service Worker registration failed:', error);
+        });
+    }
+  }, []);
+
+  return null;
+}
 
 // Routes that don't need the dashboard layout
 const publicRoutes = ['/login', '/register', '/admin-login', '/forgot-password', '/reset-password'];
@@ -58,6 +77,7 @@ export function AuthenticatedLayout({ children }: { children: React.ReactNode })
   return (
     <Web3Provider>
       <AuthProvider>
+        <PWARegistration />
         <LayoutContent>{children}</LayoutContent>
       </AuthProvider>
     </Web3Provider>
