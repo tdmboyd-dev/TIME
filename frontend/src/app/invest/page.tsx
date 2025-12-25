@@ -24,8 +24,10 @@ import {
   Loader2,
   X,
   RefreshCw,
-  Activity
+  Activity,
+  Brain
 } from 'lucide-react';
+import AIInvestmentBots from '@/components/invest/AIInvestmentBots';
 
 const API_BASE = 'https://time-backend-hosting.fly.dev/api/v1';
 
@@ -355,6 +357,9 @@ export default function InvestPage() {
           <p className="text-xs text-slate-500 mt-1">Start investing today</p>
         </div>
       </div>
+
+      {/* AI Investment Bots - Never Before Seen Features */}
+      <AIInvestmentBots />
 
       {/* Category Tabs */}
       <div className="flex gap-2 overflow-x-auto pb-2">

@@ -22,9 +22,11 @@ import {
   Crown,
   Zap,
   Wifi,
-  WifiOff
+  WifiOff,
+  Brain
 } from 'lucide-react';
 import clsx from 'clsx';
+import SocialIntelligenceBots from '@/components/social/SocialIntelligenceBots';
 
 import { API_BASE } from '@/lib/api';
 
@@ -258,6 +260,9 @@ export default function SocialTradingPage() {
           <p className="text-2xl font-bold text-white">12</p>
         </div>
       </div>
+
+      {/* Social Intelligence Bots - AI-Powered Features */}
+      <SocialIntelligenceBots />
 
       {/* Leaderboard */}
       <div className="card p-6">

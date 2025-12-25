@@ -20,6 +20,7 @@ import { RecentInsights } from '@/components/dashboard/RecentInsights';
 import { SystemHealth } from '@/components/dashboard/SystemHealth';
 import { ActiveBots } from '@/components/dashboard/ActiveBots';
 import { LiveChart } from '@/components/charts/LiveChart';
+import { GetStartedGuide } from '@/components/onboarding/GetStartedGuide';
 
 export default function Dashboard() {
   const { metrics, regime, regimeConfidence, evolutionMode, bots, insights, health, isConnected } = useTimeStore();
@@ -79,6 +80,9 @@ export default function Dashboard() {
           </span>
         </div>
       </div>
+
+      {/* Get Started Guide */}
+      <GetStartedGuide />
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

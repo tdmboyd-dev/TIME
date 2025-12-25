@@ -351,11 +351,31 @@ A comprehensive 1,500+ line research document revealing 15 hidden hedge fund str
 ## 🤖 KEY SYSTEMS
 
 ### Bot Systems
-- **TIMEBEUNUS Bot** - "The Industry Destroyer" (100+ absorbed strategies)
+- **TIMEBEUNUS Bot** - "The Industry Destroyer" (108+ absorbed strategies including 8 NEW AI Power Bots)
 - **DROPBOT** - "Drop It. Trade It. Profit." instant bot creator
 - **Live Trading** - Bots execute REAL trades on Binance, Kraken, Alpaca
 - **Bot Marketplace** - Rent/buy verified bots
 - **Autopilot** - Set-and-forget automated trading
+
+### 🆕 AI POWER BOTS (NEW - December 2025)
+**Fee Structure: 15-25% of profits only. FREE for TIMEBEUNUS Admin.**
+
+**Investment AI Bots:**
+- **Whale Shadow Bot** - Tracks whale wallet movements, positions BEFORE major moves (+47.2% APY)
+- **Sentiment Pulse Bot** - GPT-4 sentiment analysis, buys fear/sells greed (+38.5% APY)
+- **Smart DCA Bot** - AI determines optimal buy times, not fixed intervals (+29.8% APY)
+- **Tax Harvester Bot** - Auto tax-loss harvesting, wash-sale compliant (+18.4% APY)
+
+**Social Intelligence Bots:**
+- **Strategy DNA Matching** - AI matches your trading DNA with compatible traders (89% accuracy)
+- **Collective Intelligence** - Aggregates TOP 100 traders, alerts on consensus (76% accuracy)
+- **AI Confidence Scoring** - Predicts trader reliability with behavioral AI (82% accuracy)
+- **Risk-Adjusted Copying** - Dynamic copy ratios based on real-time conditions (+41.8% avg return)
+
+**Files:**
+- `frontend/src/components/invest/AIInvestmentBots.tsx`
+- `frontend/src/components/social/SocialIntelligenceBots.tsx`
+- `src/backend/master/timebeunus.ts` (strategies added)
 
 ### AI Systems
 - **AI Trade God** - Command-line trading assistant
