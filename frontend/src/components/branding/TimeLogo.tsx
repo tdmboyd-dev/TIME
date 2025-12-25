@@ -149,7 +149,7 @@ export function TimeLogo({
             strokeWidth="2"
             style={{ transition: 'stroke 0.7s ease-in-out' }}
           />
-          {/* Candle body - Green UP (top), Red DOWN (bottom) */}
+          {/* Candle body - Green at TOP (moved UP), Red at BOTTOM (moved DOWN) */}
           <rect
             x={letterWidth * 0.3}
             y={isBullish ? height * 0.3 : height * 0.5}
@@ -190,14 +190,14 @@ export function TimeLogo({
             rx="2"
             fill="url(#timePrimaryGrad)"
           />
-          {/* Top level - green (bullish = UP) */}
+          {/* Top level (resistance) - red */}
           <rect
             x="0"
             y={height * 0.1}
             width={letterWidth * 0.6}
             height={height * 0.1}
             rx="2"
-            fill="#22c55e"
+            fill="#ef4444"
             opacity="0.85"
             filter="url(#neonGlow)"
           />
@@ -210,14 +210,14 @@ export function TimeLogo({
             rx="2"
             fill="#8b5cf6"
           />
-          {/* Bottom level - red (bearish = DOWN) */}
+          {/* Bottom level (support) - green */}
           <rect
             x="0"
             y={height * 0.8}
             width={letterWidth * 0.6}
             height={height * 0.1}
             rx="2"
-            fill="#ef4444"
+            fill="#22c55e"
             opacity="0.85"
             filter="url(#neonGlow)"
           />
@@ -300,7 +300,7 @@ export function TimeIcon({
         filter="url(#iconGlow)"
       />
 
-      {/* Candle (I reference) - Green UP (top), Red DOWN (bottom) */}
+      {/* Candle (I reference) - Green at TOP (moved UP), Red at BOTTOM (moved DOWN) */}
       <g style={{ transition: 'all 0.7s ease-in-out' }}>
         <line
           x1="24" y1="8"
@@ -320,9 +320,9 @@ export function TimeIcon({
         />
       </g>
 
-      {/* Horizon lines (E reference) - green UP, red DOWN */}
-      <line x1="3" y1="8" x2="18" y2="8" stroke="#22c55e" strokeWidth="1" opacity="0.5" />
-      <line x1="3" y1="24" x2="18" y2="24" stroke="#ef4444" strokeWidth="1" opacity="0.5" />
+      {/* Horizon lines (E reference) - red resistance top, green support bottom */}
+      <line x1="3" y1="8" x2="18" y2="8" stroke="#ef4444" strokeWidth="1" opacity="0.5" />
+      <line x1="3" y1="24" x2="18" y2="24" stroke="#22c55e" strokeWidth="1" opacity="0.5" />
     </svg>
   );
 }
