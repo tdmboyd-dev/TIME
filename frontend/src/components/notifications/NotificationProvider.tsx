@@ -13,6 +13,8 @@
 
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { Bell, X, CheckCircle, AlertTriangle, Info, TrendingUp } from 'lucide-react';
+import { useNotificationUpdates } from '@/hooks/useWebSocket';
+import type { NotificationUpdate } from '@/hooks/useWebSocket';
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 'https://time-backend-hosting.fly.dev';
 
@@ -301,7 +303,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     setToasts(prev => prev.filter(t => t.id !== id));
   };
 
-  // Listen for push messages
+  // Listen for push messages from service worker
   useEffect(() => {
     if (!isPushSupported()) return;
 
@@ -323,6 +325,23 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       navigator.serviceWorker?.removeEventListener('message', handlePushMessage);
     };
   }, [refreshNotifications, showToast]);
+
+  // Socket.IO real-time notification updates
+  const handleRealtimeNotification = useCallback((update: NotificationUpdate) => {
+    console.log('[Notifications] Received real-time notification:', update);
+
+    // Add to notifications list
+    setNotifications(prev => [update, ...prev]);
+
+    // Increment unread count
+    setUnreadCount(prev => prev + 1);
+
+    // Show in-app toast
+    showToast(update.title, update.message, 'info', update.url || update.data?.url);
+  }, [showToast]);
+
+  // Subscribe to real-time notifications via Socket.IO
+  useNotificationUpdates(handleRealtimeNotification);
 
   // Initialize on mount
   useEffect(() => {

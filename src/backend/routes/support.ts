@@ -13,6 +13,12 @@ import { getDatabase } from '../database/connection';
 import { handleChatMessage, getUserChatHistory, clearChatSession } from '../support/ai_chat_handler';
 import { createComponentLogger } from '../utils/logger';
 import { authMiddleware } from './auth';
+import {
+  sendNewTicketNotification,
+  sendAdminReplyNotification,
+  sendTicketStatusNotification,
+  sendAdminNewTicketAlert,
+} from '../support/email_notification_service';
 
 const router = Router();
 const logger = createComponentLogger('SupportRoutes');
@@ -198,6 +204,27 @@ router.post('/ticket', authMiddleware, async (req: Request, res: Response) => {
       category,
       priority: ticketPriority,
     });
+
+    // Send email notifications (async, don't wait)
+    const user = (req as any).user;
+    if (user?.email && user?.username) {
+      sendNewTicketNotification(
+        user.email,
+        user.username,
+        ticketNumber,
+        subject,
+        category
+      ).catch(err => logger.error('Failed to send ticket notification', { error: err }));
+
+      sendAdminNewTicketAlert(
+        ticketNumber,
+        subject,
+        category,
+        ticketPriority,
+        user.username,
+        user.email
+      ).catch(err => logger.error('Failed to send admin notification', { error: err }));
+    }
 
     res.json({
       success: true,
@@ -596,6 +623,24 @@ router.put('/admin/ticket/:ticketNumber/status', authMiddleware, async (req: Req
       adminId: userId,
     });
 
+    // Send email notification to ticket owner (async)
+    const ticket = await tickets.findOne({ ticketNumber });
+    if (ticket && ticket.userId) {
+      const db = await getDatabase();
+      const users = db.collection('users');
+      const ticketOwner = await users.findOne({ _id: ticket.userId });
+
+      if (ticketOwner?.email && ticketOwner?.username) {
+        sendTicketStatusNotification(
+          ticketOwner.email,
+          ticketOwner.username,
+          ticketNumber,
+          ticket.subject,
+          status
+        ).catch(err => logger.error('Failed to send status notification', { error: err }));
+      }
+    }
+
     res.json({
       success: true,
       message: 'Ticket status updated',
@@ -660,6 +705,24 @@ router.post('/admin/ticket/:ticketNumber/reply', authMiddleware, async (req: Req
       ticketNumber,
       adminId: userId,
     });
+
+    // Send email notification to ticket owner (async)
+    const ticket = await tickets.findOne({ ticketNumber });
+    if (ticket && ticket.userId) {
+      const db = await getDatabase();
+      const users = db.collection('users');
+      const ticketOwner = await users.findOne({ _id: ticket.userId });
+
+      if (ticketOwner?.email && ticketOwner?.username) {
+        sendAdminReplyNotification(
+          ticketOwner.email,
+          ticketOwner.username,
+          ticketNumber,
+          ticket.subject,
+          message
+        ).catch(err => logger.error('Failed to send reply notification', { error: err }));
+      }
+    }
 
     res.json({
       success: true,

@@ -103,6 +103,9 @@ import campaignsRoutes from './campaigns';
 // SUPPORT SYSTEM - 24/7 AI chat support
 import supportRoutes from './support';
 
+// STRIPE PAYMENTS - Subscription management
+import stripeRoutes from './stripe';
+
 const router = Router();
 
 // Mount routes
@@ -212,6 +215,9 @@ router.use('/campaigns', campaignsRoutes);
 
 // SUPPORT SYSTEM - 24/7 AI chat support, tickets, FAQs
 router.use('/support', supportRoutes);
+
+// STRIPE PAYMENTS - Subscription management, billing, checkout
+router.use('/stripe', stripeRoutes);
 
 export default router;
 

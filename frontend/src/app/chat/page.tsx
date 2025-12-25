@@ -105,50 +105,92 @@ export default function CommunityChat() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Generate demo messages
+  // Fetch messages from API
   useEffect(() => {
-    const generateMessages = () => {
-      const demoMessages: Message[] = Array.from({ length: 20 }, (_, i) => {
-        const usernames = ['TraderPro', 'CryptoKing', 'WallStWolf', 'BotMaster', 'ForexGuru', 'StockWhiz', 'ChartWizard'];
-        const messages = [
-          'Just made a huge profit on $AAPL calls!',
-          'Anyone watching BTC right now? Looking bullish',
-          'My bot just executed 50 trades in 5 minutes',
-          'Best trading day of the year so far!',
-          'Looking for good entry point on EUR/USD',
-          'The market is crazy today',
-          'Check out this pattern on $TSLA',
-          'Who else is using the DROPBOT?',
-        ];
+    const fetchMessages = async () => {
+      try {
+        const response = await fetch(
+          `/api/v1/social/chat/${currentChannel.id}/messages?limit=50`,
+          {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            },
+          }
+        );
 
-        return {
-          id: `msg-${i}`,
-          userId: `user-${i % 7}`,
-          username: usernames[i % 7],
-          avatar: String.fromCharCode(65 + (i % 26)),
-          verified: i % 5 === 0,
-          isPro: i % 7 === 0,
-          message: messages[i % messages.length],
-          timestamp: new Date(Date.now() - (20 - i) * 60000),
-          reactions: i % 3 === 0 ? [
-            { emoji: '👍', count: Math.floor(Math.random() * 10) + 1, userReacted: false },
-            { emoji: '🚀', count: Math.floor(Math.random() * 5) + 1, userReacted: false },
-          ] : [],
-          mentions: i % 4 === 0 ? ['@TraderPro'] : [],
-          isPinned: i === 0,
-          channel: currentChannel.id,
-        };
-      });
+        if (!response.ok) {
+          throw new Error('Failed to fetch messages');
+        }
 
-      setMessages(demoMessages);
+        const data = await response.json();
+        const formattedMessages = data.messages.map((msg: any) => ({
+          ...msg,
+          timestamp: new Date(msg.timestamp),
+          reactions: msg.reactions.map((r: any) => ({
+            emoji: r.emoji,
+            count: r.count,
+            userReacted: r.users.includes(localStorage.getItem('userId') || ''),
+          })),
+        }));
+        setMessages(formattedMessages);
+      } catch (error) {
+        console.error('Failed to fetch messages:', error);
+        // Fallback to demo data
+        const demoMessages: Message[] = Array.from({ length: 20 }, (_, i) => {
+          const usernames = ['TraderPro', 'CryptoKing', 'WallStWolf', 'BotMaster', 'ForexGuru', 'StockWhiz', 'ChartWizard'];
+          const messages = [
+            'Just made a huge profit on $AAPL calls!',
+            'Anyone watching BTC right now? Looking bullish',
+            'My bot just executed 50 trades in 5 minutes',
+            'Best trading day of the year so far!',
+            'Looking for good entry point on EUR/USD',
+            'The market is crazy today',
+            'Check out this pattern on $TSLA',
+            'Who else is using the DROPBOT?',
+          ];
+
+          return {
+            id: `msg-${i}`,
+            userId: `user-${i % 7}`,
+            username: usernames[i % 7],
+            avatar: String.fromCharCode(65 + (i % 26)),
+            verified: i % 5 === 0,
+            isPro: i % 7 === 0,
+            message: messages[i % messages.length],
+            timestamp: new Date(Date.now() - (20 - i) * 60000),
+            reactions: i % 3 === 0 ? [
+              { emoji: '👍', count: Math.floor(Math.random() * 10) + 1, userReacted: false },
+              { emoji: '🚀', count: Math.floor(Math.random() * 5) + 1, userReacted: false },
+            ] : [],
+            mentions: i % 4 === 0 ? ['@TraderPro'] : [],
+            isPinned: i === 0,
+            channel: currentChannel.id,
+          };
+        });
+
+        setMessages(demoMessages);
+      }
     };
 
-    generateMessages();
+    fetchMessages();
 
     // Simulate WebSocket connection
     setIsConnected(true);
 
-    // Simulate new messages
+    // TODO: Setup Socket.IO connection
+    // const socket = io('/');
+    // socket.on('connect', () => setIsConnected(true));
+    // socket.on('disconnect', () => setIsConnected(false));
+    // socket.emit('join_channel', currentChannel.id);
+    // socket.on('new_message', (message) => {
+    //   setMessages(prev => [...prev, message]);
+    // });
+    // return () => {
+    //   socket.emit('leave_channel', currentChannel.id);
+    //   socket.disconnect();
+    // };
+
+    // Simulate new messages (replace with Socket.IO in production)
     const interval = setInterval(() => {
       const newMessage: Message = {
         id: `msg-${Date.now()}`,
@@ -181,52 +223,98 @@ export default function CommunityChat() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (!inputMessage.trim()) return;
 
-    const newMessage: Message = {
-      id: `msg-${Date.now()}`,
-      userId: 'current-user',
-      username: 'You',
-      avatar: 'Y',
-      verified: true,
-      isPro: true,
-      message: inputMessage,
-      timestamp: new Date(),
-      reactions: [],
-      mentions: inputMessage.match(/@\w+/g) || [],
-      isPinned: false,
-      channel: currentChannel.id,
-    };
+    try {
+      const response = await fetch(`/api/v1/social/chat/${currentChannel.id}/send`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: inputMessage,
+          replyTo: replyTo?.id,
+        }),
+      });
 
-    setMessages(prev => [...prev, newMessage]);
-    setInputMessage('');
-    setReplyTo(null);
-    setShowEmojiPicker(false);
+      if (!response.ok) {
+        throw new Error('Failed to send message');
+      }
+
+      const data = await response.json();
+      const newMessage = {
+        ...data.message,
+        timestamp: new Date(data.message.timestamp),
+        reactions: [],
+      };
+
+      setMessages(prev => [...prev, newMessage]);
+      setInputMessage('');
+      setReplyTo(null);
+      setShowEmojiPicker(false);
+    } catch (error) {
+      console.error('Failed to send message:', error);
+      // Fallback to local message
+      const newMessage: Message = {
+        id: `msg-${Date.now()}`,
+        userId: 'current-user',
+        username: 'You',
+        avatar: 'Y',
+        verified: true,
+        isPro: true,
+        message: inputMessage,
+        timestamp: new Date(),
+        reactions: [],
+        mentions: inputMessage.match(/@\w+/g) || [],
+        isPinned: false,
+        channel: currentChannel.id,
+      };
+
+      setMessages(prev => [...prev, newMessage]);
+      setInputMessage('');
+      setReplyTo(null);
+      setShowEmojiPicker(false);
+    }
   };
 
-  const handleReaction = (messageId: string, emoji: string) => {
-    setMessages(prev => prev.map(msg => {
-      if (msg.id === messageId) {
-        const existingReaction = msg.reactions.find(r => r.emoji === emoji);
-        if (existingReaction) {
-          return {
-            ...msg,
-            reactions: msg.reactions.map(r =>
-              r.emoji === emoji
-                ? { ...r, count: r.userReacted ? r.count - 1 : r.count + 1, userReacted: !r.userReacted }
-                : r
-            ).filter(r => r.count > 0),
-          };
-        } else {
-          return {
-            ...msg,
-            reactions: [...msg.reactions, { emoji, count: 1, userReacted: true }],
-          };
+  const handleReaction = async (messageId: string, emoji: string) => {
+    try {
+      await fetch(`/api/v1/social/chat/${currentChannel.id}/react`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ messageId, emoji }),
+      });
+
+      // Update local state optimistically
+      setMessages(prev => prev.map(msg => {
+        if (msg.id === messageId) {
+          const existingReaction = msg.reactions.find(r => r.emoji === emoji);
+          if (existingReaction) {
+            return {
+              ...msg,
+              reactions: msg.reactions.map(r =>
+                r.emoji === emoji
+                  ? { ...r, count: r.userReacted ? r.count - 1 : r.count + 1, userReacted: !r.userReacted }
+                  : r
+              ).filter(r => r.count > 0),
+            };
+          } else {
+            return {
+              ...msg,
+              reactions: [...msg.reactions, { emoji, count: 1, userReacted: true }],
+            };
+          }
         }
-      }
-      return msg;
-    }));
+        return msg;
+      }));
+    } catch (error) {
+      console.error('Failed to add reaction:', error);
+    }
   };
 
   const formatTime = (date: Date) => {

@@ -133,11 +133,13 @@ export default function AnalyticsPage() {
       }
 
       // Fetch all analytics in parallel
-      const [usersRes, tradingRes, botsRes, revenueRes] = await Promise.all([
+      const [usersRes, tradingRes, botsRes, revenueRes, topTradersRes, summaryRes] = await Promise.all([
         fetch(`${API_BASE}/api/v1/analytics/users?${params}`, { headers }),
         fetch(`${API_BASE}/api/v1/analytics/trading?${params}`, { headers }),
         fetch(`${API_BASE}/api/v1/analytics/bots?${params}`, { headers }),
         fetch(`${API_BASE}/api/v1/analytics/revenue?${params}`, { headers }),
+        fetch(`${API_BASE}/api/v1/analytics/top-traders?${params}&limit=10`, { headers }),
+        fetch(`${API_BASE}/api/v1/analytics/platform-summary`, { headers }),
       ]);
 
       if (usersRes.ok) {
@@ -162,6 +164,17 @@ export default function AnalyticsPage() {
         const data = await revenueRes.json();
         setRevenueMetrics(data.metrics);
         setRevenueChartData(data.chartData?.revenue || []);
+        setTierDistributionData(data.chartData?.tierDistribution || []);
+      }
+
+      if (topTradersRes.ok) {
+        const data = await topTradersRes.json();
+        setTopTraders(data.traders || []);
+      }
+
+      if (summaryRes.ok) {
+        const data = await summaryRes.json();
+        setPlatformSummary(data.summary);
       }
     } catch (error) {
       console.error('Failed to fetch analytics:', error);
@@ -393,7 +406,7 @@ export default function AnalyticsPage() {
             </div>
 
             {/* Trading Charts */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
               {/* Trades Over Time */}
               <div className="bg-slate-900 border border-white/10 rounded-xl p-6">
                 <h3 className="text-lg font-semibold text-white mb-4">Trades Over Time</h3>
@@ -428,6 +441,25 @@ export default function AnalyticsPage() {
                 </ResponsiveContainer>
               </div>
             </div>
+
+            {/* Asset Class Breakdown */}
+            {tradingMetrics?.tradesByAsset && Object.keys(tradingMetrics.tradesByAsset).length > 0 && (
+              <div className="bg-slate-900 border border-white/10 rounded-xl p-6">
+                <h3 className="text-lg font-semibold text-white mb-4">Trades by Asset Class</h3>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={Object.entries(tradingMetrics.tradesByAsset).map(([name, value]) => ({ name, value }))}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                    <XAxis dataKey="name" stroke="#94a3b8" />
+                    <YAxis stroke="#94a3b8" />
+                    <Tooltip
+                      contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px' }}
+                      labelStyle={{ color: '#94a3b8' }}
+                    />
+                    <Bar dataKey="value" fill="#9d4edd" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            )}
           </div>
 
           {/* Bot Metrics */}
@@ -525,29 +557,169 @@ export default function AnalyticsPage() {
               />
             </div>
 
-            {/* Revenue Over Time */}
-            <div className="bg-slate-900 border border-white/10 rounded-xl p-6">
-              <h3 className="text-lg font-semibold text-white mb-4">Revenue Over Time</h3>
-              <ResponsiveContainer width="100%" height={300}>
-                <AreaChart data={revenueChartData}>
-                  <defs>
-                    <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#00ff88" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="#00ff88" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                  <XAxis dataKey="date" stroke="#94a3b8" />
-                  <YAxis stroke="#94a3b8" />
-                  <Tooltip
-                    contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px' }}
-                    labelStyle={{ color: '#94a3b8' }}
-                  />
-                  <Area type="monotone" dataKey="revenue" stroke="#00ff88" fillOpacity={1} fill="url(#colorRevenue)" />
-                </AreaChart>
-              </ResponsiveContainer>
+            {/* Revenue Charts */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Revenue Over Time */}
+              <div className="bg-slate-900 border border-white/10 rounded-xl p-6">
+                <h3 className="text-lg font-semibold text-white mb-4">Revenue Over Time</h3>
+                <ResponsiveContainer width="100%" height={300}>
+                  <AreaChart data={revenueChartData}>
+                    <defs>
+                      <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#00ff88" stopOpacity={0.3} />
+                        <stop offset="95%" stopColor="#00ff88" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                    <XAxis dataKey="date" stroke="#94a3b8" />
+                    <YAxis stroke="#94a3b8" />
+                    <Tooltip
+                      contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px' }}
+                      labelStyle={{ color: '#94a3b8' }}
+                    />
+                    <Area type="monotone" dataKey="revenue" stroke="#00ff88" fillOpacity={1} fill="url(#colorRevenue)" />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+
+              {/* Subscription Tier Distribution */}
+              <div className="bg-slate-900 border border-white/10 rounded-xl p-6">
+                <h3 className="text-lg font-semibold text-white mb-4">Subscription Tiers</h3>
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
+                      data={tierDistributionData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                      outerRadius={100}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {tierDistributionData.map((_, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px' }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
             </div>
           </div>
+
+          {/* Top Traders Table */}
+          {topTraders.length > 0 && (
+            <div>
+              <h2 className="text-xl font-bold text-white mb-4">Top Performing Traders</h2>
+              <div className="bg-slate-900 border border-white/10 rounded-xl overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-slate-800/50 border-b border-white/10">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-white/60 uppercase tracking-wider">Rank</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-white/60 uppercase tracking-wider">Trader</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-white/60 uppercase tracking-wider">Total P&L</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-white/60 uppercase tracking-wider">Total Trades</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-white/60 uppercase tracking-wider">Win Rate</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-white/60 uppercase tracking-wider">Avg Trade</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/5">
+                      {topTraders.map((trader, index) => (
+                        <tr key={trader.userId} className="hover:bg-white/5 transition-colors">
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center">
+                              <span className={`text-lg font-bold ${
+                                index === 0 ? 'text-yellow-400' :
+                                index === 1 ? 'text-gray-300' :
+                                index === 2 ? 'text-amber-600' :
+                                'text-white/60'
+                              }`}>
+                                #{index + 1}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm font-medium text-white">{trader.userName}</div>
+                            <div className="text-xs text-white/40">{trader.email}</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className={`text-sm font-semibold ${trader.totalPnL >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                              ${trader.totalPnL.toLocaleString()}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-white/80">
+                            {trader.totalTrades}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className={`text-sm font-medium ${
+                              trader.winRate >= 60 ? 'text-emerald-400' :
+                              trader.winRate >= 50 ? 'text-yellow-400' :
+                              'text-red-400'
+                            }`}>
+                              {trader.winRate}%
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className={`text-sm ${trader.avgTradeSize >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                              ${trader.avgTradeSize.toLocaleString()}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Platform Summary */}
+          {platformSummary && (
+            <div>
+              <h2 className="text-xl font-bold text-white mb-4">Platform Summary</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="bg-slate-900 border border-white/10 rounded-xl p-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-white/60 text-sm font-medium">Active Today</h3>
+                    <Activity className="w-5 h-5 text-emerald-400" />
+                  </div>
+                  <p className="text-2xl font-bold text-white">{platformSummary.activeToday}</p>
+                  <p className="text-xs text-white/40 mt-1">Users active in last 24h</p>
+                </div>
+
+                <div className="bg-slate-900 border border-white/10 rounded-xl p-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-white/60 text-sm font-medium">Running Bots</h3>
+                    <Bot className="w-5 h-5 text-blue-400" />
+                  </div>
+                  <p className="text-2xl font-bold text-white">{platformSummary.runningBots}</p>
+                  <p className="text-xs text-white/40 mt-1">Currently executing trades</p>
+                </div>
+
+                <div className="bg-slate-900 border border-white/10 rounded-xl p-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-white/60 text-sm font-medium">Today's Trades</h3>
+                    <TrendingUp className="w-5 h-5 text-purple-400" />
+                  </div>
+                  <p className="text-2xl font-bold text-white">{platformSummary.todaysTrades}</p>
+                  <p className="text-xs text-white/40 mt-1">Trades executed today</p>
+                </div>
+
+                <div className="bg-slate-900 border border-white/10 rounded-xl p-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-white/60 text-sm font-medium">Platform Uptime</h3>
+                    <Activity className="w-5 h-5 text-cyan-400" />
+                  </div>
+                  <p className="text-2xl font-bold text-white">{platformSummary.platformUptime}%</p>
+                  <p className="text-xs text-white/40 mt-1">Last 30 days</p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

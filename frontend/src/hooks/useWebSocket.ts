@@ -25,7 +25,8 @@ export type RealtimeChannel =
   | 'evolution'
   | 'prices'
   | 'alerts'
-  | 'portfolio';
+  | 'portfolio'
+  | 'notifications';
 
 export interface ConnectionState {
   isConnected: boolean;
@@ -126,6 +127,17 @@ export interface SystemHealthUpdate {
   timestamp: Date;
 }
 
+export interface NotificationUpdate {
+  _id: string;
+  type: string;
+  title: string;
+  message: string;
+  priority: 'low' | 'medium' | 'high' | 'critical';
+  createdAt: Date;
+  data?: Record<string, any>;
+  url?: string;
+}
+
 export interface WebSocketHandlers {
   onTrade?: (update: TradeUpdate) => void;
   onRegimeChange?: (update: RegimeUpdate) => void;
@@ -137,6 +149,7 @@ export interface WebSocketHandlers {
   onPrice?: (update: PriceUpdate) => void;
   onPrices?: (updates: PriceUpdate[]) => void;
   onSystemHealth?: (update: SystemHealthUpdate) => void;
+  onNotification?: (update: NotificationUpdate) => void;
   onHeartbeat?: (data: { serverTime: Date; connectedClients: number; uptime: number }) => void;
   onConnect?: () => void;
   onDisconnect?: (reason: string) => void;
@@ -335,6 +348,10 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
         serverTime: new Date(payload.data.serverTime),
       }));
     });
+
+    socket.on('notifications:new', (payload: { data: NotificationUpdate }) => {
+      handlersRef.current.onNotification?.(payload.data);
+    });
   }, [url, reconnect, reconnectAttempts, reconnectDelay, auth, channels]);
 
   // Disconnect from WebSocket server
@@ -475,6 +492,16 @@ export function useSystemHealth(onSystemHealth: (update: SystemHealthUpdate) => 
   return useWebSocket({
     channels: ['system'],
     handlers: { onSystemHealth },
+  });
+}
+
+/**
+ * Hook for subscribing to notifications only
+ */
+export function useNotificationUpdates(onNotification: (update: NotificationUpdate) => void) {
+  return useWebSocket({
+    channels: ['notifications'],
+    handlers: { onNotification },
   });
 }
 

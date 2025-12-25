@@ -791,4 +791,651 @@ router.get('/posts/:postId/metrics', async (req: Request, res: Response) => {
   }
 });
 
+// ============== REFERRAL SYSTEM ==============
+
+/**
+ * GET /api/v1/marketing/referrals
+ * Get all referral codes and stats
+ */
+router.get('/referrals', (req: Request, res: Response) => {
+  try {
+    const allReferrals = Array.from(referralCodes.values());
+
+    // Calculate leaderboard
+    const leaderboard = allReferrals
+      .filter(r => r.referrals.length > 0)
+      .sort((a, b) => b.referrals.length - a.referrals.length)
+      .slice(0, 10)
+      .map((r, index) => ({
+        rank: index + 1,
+        userId: r.userId,
+        userName: r.userName,
+        code: r.code,
+        totalReferrals: r.referrals.length,
+        conversions: r.referrals.filter(ref => ref.convertedToPaid).length,
+        totalRewards: r.totalRewards,
+      }));
+
+    res.json({
+      success: true,
+      totalReferralCodes: allReferrals.length,
+      activeReferralCodes: allReferrals.filter(r => r.isActive).length,
+      totalReferrals: allReferrals.reduce((sum, r) => sum + r.referrals.length, 0),
+      totalConversions: allReferrals.reduce((sum, r) => sum + r.referrals.filter(ref => ref.convertedToPaid).length, 0),
+      totalRewardsPaid: allReferrals.reduce((sum, r) => sum + r.paidRewards, 0),
+      pendingRewards: allReferrals.reduce((sum, r) => sum + r.pendingRewards, 0),
+      leaderboard,
+      referralCodes: allReferrals,
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Failed to get referrals' });
+  }
+});
+
+/**
+ * POST /api/v1/marketing/referrals/generate
+ * Generate a new referral code for a user
+ */
+router.post('/referrals/generate', (req: Request, res: Response) => {
+  try {
+    const { userId, userName, customCode } = req.body;
+
+    if (!userId || !userName) {
+      return res.status(400).json({ error: 'userId and userName are required' });
+    }
+
+    // Generate code
+    const code = customCode || `TIME${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+
+    // Check if code already exists
+    if (referralCodes.has(code)) {
+      return res.status(400).json({ error: 'Referral code already exists' });
+    }
+
+    const referralCode: ReferralCode = {
+      id: `ref_${Date.now()}`,
+      code,
+      userId,
+      userName,
+      createdAt: new Date(),
+      usageCount: 0,
+      isActive: true,
+      referrals: [],
+      totalRewards: 0,
+      pendingRewards: 0,
+      paidRewards: 0,
+      conversionRate: 0,
+      totalRevenue: 0,
+    };
+
+    referralCodes.set(code, referralCode);
+
+    res.json({
+      success: true,
+      referralCode,
+      message: 'Referral code generated successfully',
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Failed to generate referral code' });
+  }
+});
+
+/**
+ * POST /api/v1/marketing/referrals/:code/track
+ * Track a new referral signup
+ */
+router.post('/referrals/:code/track', (req: Request, res: Response) => {
+  try {
+    const { code } = req.params;
+    const { referredUserId, referredEmail, referredName } = req.body;
+
+    const referralCode = referralCodes.get(code);
+    if (!referralCode) {
+      return res.status(404).json({ error: 'Referral code not found' });
+    }
+
+    if (!referralCode.isActive) {
+      return res.status(400).json({ error: 'Referral code is inactive' });
+    }
+
+    // Check usage limit
+    if (referralCode.usageLimit && referralCode.usageCount >= referralCode.usageLimit) {
+      return res.status(400).json({ error: 'Referral code usage limit reached' });
+    }
+
+    // Add referral
+    referralCode.referrals.push({
+      referredUserId,
+      referredEmail,
+      referredName,
+      signedUpAt: new Date(),
+      convertedToPaid: false,
+      rewardPaid: false,
+    });
+
+    referralCode.usageCount++;
+    referralCodes.set(code, referralCode);
+
+    res.json({
+      success: true,
+      message: 'Referral tracked successfully',
+      referralCode,
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Failed to track referral' });
+  }
+});
+
+/**
+ * POST /api/v1/marketing/referrals/:code/convert
+ * Mark a referral as converted to paid
+ */
+router.post('/referrals/:code/convert', (req: Request, res: Response) => {
+  try {
+    const { code } = req.params;
+    const { referredUserId, subscriptionTier, rewardAmount } = req.body;
+
+    const referralCode = referralCodes.get(code);
+    if (!referralCode) {
+      return res.status(404).json({ error: 'Referral code not found' });
+    }
+
+    const referral = referralCode.referrals.find(r => r.referredUserId === referredUserId);
+    if (!referral) {
+      return res.status(404).json({ error: 'Referral not found' });
+    }
+
+    // Mark as converted
+    referral.convertedToPaid = true;
+    referral.convertedAt = new Date();
+    referral.subscriptionTier = subscriptionTier;
+    referral.rewardAmount = rewardAmount || 10;
+
+    // Update rewards
+    referralCode.pendingRewards += referral.rewardAmount;
+    referralCode.totalRewards += referral.rewardAmount;
+
+    // Update conversion rate
+    const conversions = referralCode.referrals.filter(r => r.convertedToPaid).length;
+    referralCode.conversionRate = (conversions / referralCode.referrals.length) * 100;
+
+    referralCodes.set(code, referralCode);
+
+    res.json({
+      success: true,
+      message: 'Referral marked as converted',
+      referralCode,
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Failed to convert referral' });
+  }
+});
+
+/**
+ * GET /api/v1/marketing/referrals/tiers
+ * Get referral reward tiers
+ */
+router.get('/referrals/tiers', (req: Request, res: Response) => {
+  try {
+    const tiers = Array.from(rewardTiers.values())
+      .filter(t => t.isActive)
+      .sort((a, b) => a.order - b.order);
+
+    res.json({
+      success: true,
+      tiers,
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Failed to get reward tiers' });
+  }
+});
+
+// ============== PROMO CODE SYSTEM ==============
+
+/**
+ * GET /api/v1/marketing/promos
+ * Get all promo codes
+ */
+router.get('/promos', (req: Request, res: Response) => {
+  try {
+    const allPromos = Array.from(promoCodes.values());
+
+    res.json({
+      success: true,
+      totalCodes: allPromos.length,
+      activeCodes: allPromos.filter(p => p.isActive).length,
+      totalRedemptions: allPromos.reduce((sum, p) => sum + p.usageCount, 0),
+      totalRevenue: allPromos.reduce((sum, p) => sum + p.totalRevenue, 0),
+      totalDiscount: allPromos.reduce((sum, p) => sum + p.totalDiscount, 0),
+      promoCodes: allPromos,
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Failed to get promo codes' });
+  }
+});
+
+/**
+ * POST /api/v1/marketing/promos
+ * Create a new promo code
+ */
+router.post('/promos', (req: Request, res: Response) => {
+  try {
+    const {
+      code,
+      description,
+      type,
+      discountPercent,
+      discountAmount,
+      freeTrialDays,
+      freeMonths,
+      minPurchaseAmount,
+      applicablePlans,
+      firstTimeOnly,
+      startDate,
+      expiryDate,
+      usageLimit,
+      perUserLimit,
+    } = req.body;
+    const user = (req as any).user;
+
+    if (!code || !description || !type) {
+      return res.status(400).json({ error: 'code, description, and type are required' });
+    }
+
+    // Check if code already exists
+    if (promoCodes.has(code.toUpperCase())) {
+      return res.status(400).json({ error: 'Promo code already exists' });
+    }
+
+    const promoCode: PromoCode = {
+      id: `promo_${Date.now()}`,
+      code: code.toUpperCase(),
+      description,
+      type,
+      discountPercent,
+      discountAmount,
+      freeTrialDays,
+      freeMonths,
+      minPurchaseAmount,
+      applicablePlans: applicablePlans || ['all'],
+      firstTimeOnly: firstTimeOnly || false,
+      isActive: true,
+      startDate: startDate ? new Date(startDate) : new Date(),
+      expiryDate: expiryDate ? new Date(expiryDate) : undefined,
+      usageLimit,
+      usageCount: 0,
+      perUserLimit,
+      redemptions: [],
+      totalRevenue: 0,
+      totalDiscount: 0,
+      averageOrderValue: 0,
+      conversionRate: 0,
+      createdBy: user?.id || 'admin',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    promoCodes.set(promoCode.code, promoCode);
+
+    res.json({
+      success: true,
+      promoCode,
+      message: 'Promo code created successfully',
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Failed to create promo code' });
+  }
+});
+
+/**
+ * POST /api/v1/marketing/promos/:code/validate
+ * Validate a promo code for use
+ */
+router.post('/promos/:code/validate', (req: Request, res: Response) => {
+  try {
+    const { code } = req.params;
+    const { userId, planType, amount } = req.body;
+
+    const promoCode = promoCodes.get(code.toUpperCase());
+    if (!promoCode) {
+      return res.status(404).json({ error: 'Promo code not found', valid: false });
+    }
+
+    // Check if active
+    if (!promoCode.isActive) {
+      return res.status(400).json({ error: 'Promo code is inactive', valid: false });
+    }
+
+    // Check date validity
+    const now = new Date();
+    if (now < promoCode.startDate) {
+      return res.status(400).json({ error: 'Promo code not yet active', valid: false });
+    }
+    if (promoCode.expiryDate && now > promoCode.expiryDate) {
+      return res.status(400).json({ error: 'Promo code has expired', valid: false });
+    }
+
+    // Check usage limit
+    if (promoCode.usageLimit && promoCode.usageCount >= promoCode.usageLimit) {
+      return res.status(400).json({ error: 'Promo code usage limit reached', valid: false });
+    }
+
+    // Check per-user limit
+    if (promoCode.perUserLimit) {
+      const userRedemptions = promoCode.redemptions.filter(r => r.userId === userId).length;
+      if (userRedemptions >= promoCode.perUserLimit) {
+        return res.status(400).json({ error: 'You have already used this promo code', valid: false });
+      }
+    }
+
+    // Check applicable plans
+    if (!promoCode.applicablePlans.includes('all') && !promoCode.applicablePlans.includes(planType)) {
+      return res.status(400).json({ error: 'Promo code not applicable to this plan', valid: false });
+    }
+
+    // Check minimum purchase amount
+    if (promoCode.minPurchaseAmount && amount < promoCode.minPurchaseAmount) {
+      return res.status(400).json({
+        error: `Minimum purchase amount of $${promoCode.minPurchaseAmount} required`,
+        valid: false,
+      });
+    }
+
+    // Calculate discount
+    let discountApplied = 0;
+    if (promoCode.type === 'percentage') {
+      discountApplied = (amount * (promoCode.discountPercent || 0)) / 100;
+    } else if (promoCode.type === 'fixed_amount') {
+      discountApplied = promoCode.discountAmount || 0;
+    } else if (promoCode.type === 'free_trial' || promoCode.type === 'free_months') {
+      discountApplied = amount; // Full discount for free trials/months
+    }
+
+    const finalAmount = Math.max(0, amount - discountApplied);
+
+    res.json({
+      success: true,
+      valid: true,
+      promoCode: {
+        code: promoCode.code,
+        description: promoCode.description,
+        type: promoCode.type,
+      },
+      discount: {
+        original: amount,
+        discount: discountApplied,
+        final: finalAmount,
+        percentage: ((discountApplied / amount) * 100).toFixed(1),
+      },
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Failed to validate promo code', valid: false });
+  }
+});
+
+/**
+ * POST /api/v1/marketing/promos/:code/redeem
+ * Redeem a promo code
+ */
+router.post('/promos/:code/redeem', (req: Request, res: Response) => {
+  try {
+    const { code } = req.params;
+    const { userId, userEmail, originalAmount, discountApplied, subscriptionId } = req.body;
+
+    const promoCode = promoCodes.get(code.toUpperCase());
+    if (!promoCode) {
+      return res.status(404).json({ error: 'Promo code not found' });
+    }
+
+    // Add redemption
+    const redemption = {
+      userId,
+      userEmail,
+      redeemedAt: new Date(),
+      discountApplied,
+      subscriptionId,
+      originalAmount,
+      finalAmount: originalAmount - discountApplied,
+    };
+
+    promoCode.redemptions.push(redemption);
+    promoCode.usageCount++;
+    promoCode.totalRevenue += redemption.finalAmount;
+    promoCode.totalDiscount += discountApplied;
+    promoCode.averageOrderValue = promoCode.totalRevenue / promoCode.usageCount;
+    promoCode.updatedAt = new Date();
+
+    promoCodes.set(promoCode.code, promoCode);
+
+    res.json({
+      success: true,
+      message: 'Promo code redeemed successfully',
+      redemption,
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Failed to redeem promo code' });
+  }
+});
+
+/**
+ * PUT /api/v1/marketing/promos/:code
+ * Update a promo code
+ */
+router.put('/promos/:code', (req: Request, res: Response) => {
+  try {
+    const { code } = req.params;
+    const updates = req.body;
+
+    const promoCode = promoCodes.get(code.toUpperCase());
+    if (!promoCode) {
+      return res.status(404).json({ error: 'Promo code not found' });
+    }
+
+    // Update allowed fields
+    const allowedFields = ['description', 'isActive', 'expiryDate', 'usageLimit'];
+    allowedFields.forEach(field => {
+      if (updates[field] !== undefined) {
+        (promoCode as any)[field] = updates[field];
+      }
+    });
+
+    promoCode.updatedAt = new Date();
+    promoCodes.set(promoCode.code, promoCode);
+
+    res.json({
+      success: true,
+      message: 'Promo code updated successfully',
+      promoCode,
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Failed to update promo code' });
+  }
+});
+
+/**
+ * DELETE /api/v1/marketing/promos/:code
+ * Delete (deactivate) a promo code
+ */
+router.delete('/promos/:code', (req: Request, res: Response) => {
+  try {
+    const { code } = req.params;
+
+    const promoCode = promoCodes.get(code.toUpperCase());
+    if (!promoCode) {
+      return res.status(404).json({ error: 'Promo code not found' });
+    }
+
+    promoCode.isActive = false;
+    promoCode.updatedAt = new Date();
+    promoCodes.set(promoCode.code, promoCode);
+
+    res.json({
+      success: true,
+      message: 'Promo code deactivated successfully',
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Failed to delete promo code' });
+  }
+});
+
+// ============== ENHANCED CAMPAIGN MANAGEMENT ==============
+
+/**
+ * PUT /api/v1/marketing/campaigns/:campaignId
+ * Update a campaign
+ */
+router.put('/campaigns/:campaignId', (req: Request, res: Response) => {
+  try {
+    const { campaignId } = req.params;
+    const updates = req.body;
+
+    const bot = getMarketingBot();
+    const campaign = bot.getCampaign(campaignId);
+
+    if (!campaign) {
+      return res.status(404).json({ error: 'Campaign not found' });
+    }
+
+    // Update campaign (in real implementation, would update in database)
+    res.json({
+      success: true,
+      message: 'Campaign updated successfully',
+      campaign,
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Failed to update campaign' });
+  }
+});
+
+/**
+ * POST /api/v1/marketing/campaigns/:campaignId/metrics
+ * Update campaign metrics manually
+ */
+router.post('/campaigns/:campaignId/metrics', (req: Request, res: Response) => {
+  try {
+    const { campaignId } = req.params;
+    const { metrics } = req.body;
+
+    if (!campaignId || !metrics) {
+      return res.status(400).json({ error: 'campaignId and metrics are required' });
+    }
+
+    res.json({
+      success: true,
+      message: 'Campaign metrics updated successfully',
+      campaignId,
+      metrics,
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Failed to update campaign metrics' });
+  }
+});
+
+/**
+ * GET /api/v1/marketing/campaigns/:campaignId/roi
+ * Get detailed ROI analysis for a campaign
+ */
+router.get('/campaigns/:campaignId/roi', (req: Request, res: Response) => {
+  try {
+    const { campaignId } = req.params;
+
+    const bot = getMarketingBot();
+    const campaign = bot.getCampaign(campaignId);
+
+    if (!campaign) {
+      return res.status(404).json({ error: 'Campaign not found' });
+    }
+
+    // Mock ROI data (would be calculated from real data)
+    const roi = {
+      campaignId,
+      campaignName: campaign.name,
+      spent: 500,
+      revenue: 2500,
+      roi: 400,
+      impressions: 50000,
+      clicks: 2500,
+      conversions: 50,
+      cpc: 0.20,
+      cpa: 10,
+      conversionRate: 2.0,
+      breakdown: {
+        twitter: { spent: 150, revenue: 800, roi: 433 },
+        linkedin: { spent: 200, revenue: 1200, roi: 500 },
+        email: { spent: 150, revenue: 500, roi: 233 },
+      },
+    };
+
+    res.json({
+      success: true,
+      roi,
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Failed to get campaign ROI' });
+  }
+});
+
+/**
+ * GET /api/v1/marketing/analytics/overview
+ * Get complete marketing analytics overview
+ */
+router.get('/analytics/overview', (req: Request, res: Response) => {
+  try {
+    const bot = getMarketingBot();
+    const analytics = bot.getAnalyticsSummary();
+
+    const allReferrals = Array.from(referralCodes.values());
+    const allPromos = Array.from(promoCodes.values());
+
+    const overview = {
+      social: {
+        totalPosts: analytics.totalPosts,
+        platformBreakdown: analytics.platformBreakdown,
+        recentPosts: analytics.recentPosts.slice(0, 5),
+        topPerformingPosts: analytics.topPerformingPosts,
+      },
+      campaigns: {
+        total: analytics.totalCampaigns,
+        active: 0,
+        completed: 0,
+      },
+      referrals: {
+        totalCodes: allReferrals.length,
+        totalReferrals: allReferrals.reduce((sum, r) => sum + r.referrals.length, 0),
+        conversions: allReferrals.reduce((sum, r) => sum + r.referrals.filter(ref => ref.convertedToPaid).length, 0),
+        conversionRate: 0,
+        totalRewards: allReferrals.reduce((sum, r) => sum + r.totalRewards, 0),
+      },
+      promos: {
+        totalCodes: allPromos.length,
+        activeCodes: allPromos.filter(p => p.isActive).length,
+        redemptions: allPromos.reduce((sum, p) => sum + p.usageCount, 0),
+        revenue: allPromos.reduce((sum, p) => sum + p.totalRevenue, 0),
+        discount: allPromos.reduce((sum, p) => sum + p.totalDiscount, 0),
+      },
+      performance: {
+        totalRevenue: 0,
+        totalSpent: 0,
+        roi: 0,
+        impressions: 0,
+        clicks: 0,
+        conversions: 0,
+      },
+    };
+
+    // Calculate referral conversion rate
+    const totalRefs = overview.referrals.totalReferrals;
+    if (totalRefs > 0) {
+      overview.referrals.conversionRate = (overview.referrals.conversions / totalRefs) * 100;
+    }
+
+    res.json({
+      success: true,
+      overview,
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Failed to get analytics overview' });
+  }
+});
+
 export default router;

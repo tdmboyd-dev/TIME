@@ -1,11 +1,11 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Bell, User, TrendingUp, TrendingDown, Minus, RefreshCw, LogOut, Settings, ChevronDown } from 'lucide-react';
+import { User, TrendingUp, TrendingDown, Minus, RefreshCw, LogOut, Settings, ChevronDown } from 'lucide-react';
 import { useTimeStore } from '@/store/timeStore';
 import { GlobalSearchBar } from '@/components/search/GlobalSearchBar';
 import { TradingModeIndicator } from '@/components/TradingModeIndicator';
-import { useNotifications } from '@/components/notifications/NotificationProvider';
+import { NotificationBell } from '@/components/notifications/NotificationBell';
 import { useRouter } from 'next/navigation';
 import Cookies from 'js-cookie';
 
@@ -14,7 +14,6 @@ const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 'https://time-backend-hos
 
 export function TopNav() {
   const { regime, evolutionMode, isConnected, setConnected } = useTimeStore();
-  const { unreadCount } = useNotifications();
   const [currentTime, setCurrentTime] = useState<string>('');
   const [mounted, setMounted] = useState(false);
   const [isReconnecting, setIsReconnecting] = useState(false);
@@ -151,19 +150,8 @@ export function TopNav() {
           {mounted ? currentTime : '--:--:--'}
         </div>
 
-        {/* Notifications */}
-        <button
-          onClick={() => router.push('/notifications')}
-          className="relative p-2 text-slate-400 hover:text-white transition-colors"
-          title="Notifications"
-        >
-          <Bell className="w-5 h-5" />
-          {unreadCount > 0 && (
-            <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center bg-red-500 text-white text-xs font-bold rounded-full px-1">
-              {unreadCount > 99 ? '99+' : unreadCount}
-            </span>
-          )}
-        </button>
+        {/* Notifications Bell with Dropdown */}
+        <NotificationBell />
 
         {/* User Dropdown */}
         <div className="relative pl-4 border-l border-slate-700/50" ref={userMenuRef}>

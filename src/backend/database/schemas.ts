@@ -912,7 +912,47 @@ export const indexes = {
     { submittedAt: -1 },
     { completedAt: -1 },
   ],
+  subscriptions: [
+    { userId: 1, status: 1 },
+    { customerId: 1 },
+    { subscriptionId: 1, unique: true },
+    { tier: 1, status: 1 },
+    { currentPeriodEnd: 1 },
+    { createdAt: -1 },
+  ],
 };
+
+// ============================================================
+// SUBSCRIPTION SCHEMAS
+// ============================================================
+
+export interface SubscriptionSchema {
+  _id: string;
+  userId: string;
+  customerId: string; // Stripe customer ID
+  subscriptionId: string; // Stripe subscription ID
+  tier: 'free' | 'basic' | 'pro' | 'premium' | 'enterprise';
+  status: 'active' | 'canceled' | 'past_due' | 'unpaid' | 'incomplete' | 'trialing';
+  currentPeriodStart: Date;
+  currentPeriodEnd: Date;
+  cancelAtPeriodEnd: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  canceledAt?: Date;
+
+  // Payment history
+  paymentHistory: Array<{
+    invoiceId: string;
+    amount: number;
+    status: 'paid' | 'failed' | 'pending';
+    paidAt?: Date;
+    failedAt?: Date;
+    failureReason?: string;
+  }>;
+
+  // Metadata
+  metadata?: Record<string, any>;
+}
 
 // ============================================================
 // SUPPORT SYSTEM SCHEMAS

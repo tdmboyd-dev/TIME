@@ -315,6 +315,93 @@ export default function OnboardingPage() {
     );
   };
 
+  const handleRiskAnswer = (questionId: string, value: number) => {
+    setRiskAnswers(prev => ({
+      ...prev,
+      [questionId]: value,
+    }));
+  };
+
+  // Risk Profile Questionnaire - 5 Questions
+  const riskQuestions: RiskQuestion[] = [
+    {
+      id: 'q1',
+      question: 'If your portfolio lost 20% of its value in a month, what would you do?',
+      options: [
+        { value: 1, label: 'Sell everything', description: 'I cannot handle losses' },
+        { value: 2, label: 'Sell some holdings', description: 'I would reduce my exposure' },
+        { value: 3, label: 'Hold steady', description: 'I would wait it out' },
+        { value: 4, label: 'Buy more', description: 'I would see it as an opportunity' },
+        { value: 5, label: 'Buy aggressively', description: 'I would double down' },
+      ],
+    },
+    {
+      id: 'q2',
+      question: 'What is your investment time horizon?',
+      options: [
+        { value: 1, label: 'Less than 1 year', description: 'Short-term goals' },
+        { value: 2, label: '1-3 years', description: 'Medium-term goals' },
+        { value: 3, label: '3-5 years', description: 'Moderate long-term' },
+        { value: 4, label: '5-10 years', description: 'Long-term growth' },
+        { value: 5, label: '10+ years', description: 'Maximum growth potential' },
+      ],
+    },
+    {
+      id: 'q3',
+      question: 'How important is generating regular income vs. capital appreciation?',
+      options: [
+        { value: 1, label: 'Income is critical', description: 'I need regular cash flow' },
+        { value: 2, label: 'Prefer income', description: 'I prefer steady returns' },
+        { value: 3, label: 'Balanced', description: 'Both are equally important' },
+        { value: 4, label: 'Prefer growth', description: 'I prioritize capital gains' },
+        { value: 5, label: 'Growth only', description: 'I want maximum appreciation' },
+      ],
+    },
+    {
+      id: 'q4',
+      question: 'What percentage of your portfolio would you allocate to high-risk, high-reward investments?',
+      options: [
+        { value: 1, label: '0%', description: 'No high-risk investments' },
+        { value: 2, label: '10-20%', description: 'Small allocation' },
+        { value: 3, label: '20-40%', description: 'Moderate allocation' },
+        { value: 4, label: '40-60%', description: 'Significant allocation' },
+        { value: 5, label: '60%+', description: 'Aggressive allocation' },
+      ],
+    },
+    {
+      id: 'q5',
+      question: 'How do you react to market volatility?',
+      options: [
+        { value: 1, label: 'Very anxious', description: 'I lose sleep over it' },
+        { value: 2, label: 'Somewhat anxious', description: 'It makes me uncomfortable' },
+        { value: 3, label: 'Neutral', description: 'I understand it is normal' },
+        { value: 4, label: 'Calm', description: 'I see opportunities' },
+        { value: 5, label: 'Excited', description: 'I thrive in volatility' },
+      ],
+    },
+  ];
+
+  const investmentGoals: Array<{ value: InvestmentGoal; title: string; description: string; icon: any }> = [
+    {
+      value: 'growth',
+      title: 'Growth',
+      description: 'Maximize capital appreciation over time',
+      icon: TrendingUp,
+    },
+    {
+      value: 'income',
+      title: 'Income',
+      description: 'Generate steady cash flow and dividends',
+      icon: DollarSign,
+    },
+    {
+      value: 'preservation',
+      title: 'Preservation',
+      description: 'Protect capital and minimize risk',
+      icon: Shield,
+    },
+  ];
+
   const experienceLevels = [
     {
       value: 'beginner' as ExperienceLevel,
@@ -435,7 +522,7 @@ export default function OnboardingPage() {
 
             {/* Progress Indicator */}
             <div className="flex items-center gap-2">
-              {[1, 2, 3, 4, 5].map((step) => (
+              {[1, 2, 3, 4, 5, 6, 7].map((step) => (
                 <div
                   key={step}
                   className={`h-2 rounded-full transition-all duration-500 ${
@@ -496,8 +583,76 @@ export default function OnboardingPage() {
               </div>
             )}
 
-            {/* Step 2: Experience Level */}
+            {/* Step 2: Risk Profile Questionnaire */}
             {currentStep === 2 && (
+              <div
+                className={`transition-all duration-300 ${
+                  isAnimating
+                    ? direction === 'forward'
+                      ? 'opacity-0 -translate-x-8'
+                      : 'opacity-0 translate-x-8'
+                    : 'opacity-100 translate-x-0'
+                }`}
+              >
+                <div className="text-center mb-8">
+                  <h2 className="text-3xl md:text-4xl font-bold text-white mb-3">
+                    Let's understand your risk profile
+                  </h2>
+                  <p className="text-white/60">
+                    Answer these 5 questions to help us personalize your experience
+                  </p>
+                </div>
+
+                <div className="max-w-3xl mx-auto space-y-6">
+                  {riskQuestions.map((q, index) => (
+                    <div key={q.id} className="p-6 bg-slate-800/30 border border-slate-700/50 rounded-2xl">
+                      <div className="flex items-start gap-4 mb-4">
+                        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-time-primary flex items-center justify-center text-white font-bold">
+                          {index + 1}
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="text-lg font-semibold text-white mb-4">{q.question}</h3>
+                          <div className="space-y-2">
+                            {q.options.map((option) => (
+                              <button
+                                key={option.value}
+                                onClick={() => handleRiskAnswer(q.id, option.value)}
+                                className={`w-full p-4 rounded-xl border-2 text-left transition-all duration-300 ${
+                                  riskAnswers[q.id] === option.value
+                                    ? 'border-time-primary bg-time-primary/10 scale-[1.02]'
+                                    : 'border-slate-700/50 bg-slate-800/20 hover:border-slate-600 hover:bg-slate-800/40'
+                                }`}
+                              >
+                                <div className="flex items-center justify-between">
+                                  <div className="flex-1">
+                                    <div className="font-medium text-white mb-1">{option.label}</div>
+                                    <div className="text-sm text-white/60">{option.description}</div>
+                                  </div>
+                                  {riskAnswers[q.id] === option.value && (
+                                    <Check className="w-5 h-5 text-time-primary flex-shrink-0 ml-3" />
+                                  )}
+                                </div>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {Object.keys(riskAnswers).length > 0 && (
+                  <div className="mt-6 p-4 bg-time-primary/10 border border-time-primary/30 rounded-xl text-center">
+                    <p className="text-sm text-white/80">
+                      {Object.keys(riskAnswers).length} of 5 questions answered
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Step 3: Trading Experience Level */}
+            {currentStep === 3 && (
               <div
                 className={`transition-all duration-300 ${
                   isAnimating
@@ -540,60 +695,7 @@ export default function OnboardingPage() {
               </div>
             )}
 
-            {/* Step 3: Risk Tolerance */}
-            {currentStep === 3 && (
-              <div
-                className={`transition-all duration-300 ${
-                  isAnimating
-                    ? direction === 'forward'
-                      ? 'opacity-0 -translate-x-8'
-                      : 'opacity-0 translate-x-8'
-                    : 'opacity-100 translate-x-0'
-                }`}
-              >
-                <div className="text-center mb-8">
-                  <h2 className="text-3xl md:text-4xl font-bold text-white mb-3">
-                    What's your risk tolerance?
-                  </h2>
-                  <p className="text-white/60">
-                    TIME will adjust strategies to match your comfort level
-                  </p>
-                </div>
-
-                <div className="grid md:grid-cols-3 gap-4">
-                  {riskTolerances.map((risk) => {
-                    const Icon = risk.icon;
-                    return (
-                      <button
-                        key={risk.value}
-                        onClick={() => setRiskTolerance(risk.value)}
-                        className={`p-6 rounded-2xl border-2 transition-all duration-300 ${
-                          riskTolerance === risk.value
-                            ? 'border-time-primary bg-time-primary/10 scale-105'
-                            : 'border-slate-700/50 bg-slate-800/30 hover:border-slate-600 hover:bg-slate-800/50'
-                        }`}
-                      >
-                        <div className={`inline-flex p-3 rounded-xl bg-gradient-to-br ${risk.color} mb-4`}>
-                          <Icon className="w-6 h-6 text-white" />
-                        </div>
-                        <h3 className="text-xl font-bold text-white mb-2">{risk.title}</h3>
-                        <p className="text-sm text-white/60 mb-4">{risk.description}</p>
-                        <ul className="space-y-2">
-                          {risk.features.map((feature, idx) => (
-                            <li key={idx} className="flex items-center gap-2 text-xs text-white/80">
-                              <Check className="w-3 h-3 text-time-primary" />
-                              {feature}
-                            </li>
-                          ))}
-                        </ul>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* Step 4: Goals */}
+            {/* Step 4: Investment Goals (growth, income, preservation) */}
             {currentStep === 4 && (
               <div
                 className={`transition-all duration-300 ${
@@ -606,47 +708,43 @@ export default function OnboardingPage() {
               >
                 <div className="text-center mb-8">
                   <h2 className="text-3xl md:text-4xl font-bold text-white mb-3">
-                    What are your trading goals?
+                    What is your primary investment goal?
                   </h2>
                   <p className="text-white/60">
-                    Select all that apply - TIME will optimize for your objectives
+                    Choose the strategy that best aligns with your objectives
                   </p>
                 </div>
 
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {tradingGoals.map((goal) => {
+                <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+                  {investmentGoals.map((goal) => {
                     const Icon = goal.icon;
-                    const isSelected = goals.includes(goal.value);
                     return (
                       <button
                         key={goal.value}
-                        onClick={() => toggleGoal(goal.value)}
-                        className={`p-6 rounded-2xl border-2 transition-all duration-300 relative ${
-                          isSelected
-                            ? 'border-time-primary bg-time-primary/10'
+                        onClick={() => setInvestmentGoal(goal.value)}
+                        className={`p-8 rounded-2xl border-2 transition-all duration-300 ${
+                          investmentGoal === goal.value
+                            ? 'border-time-primary bg-time-primary/10 scale-105'
                             : 'border-slate-700/50 bg-slate-800/30 hover:border-slate-600 hover:bg-slate-800/50'
                         }`}
                       >
-                        {isSelected && (
-                          <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-time-primary flex items-center justify-center">
-                            <Check className="w-4 h-4 text-white" />
+                        <div className="mb-4">
+                          <div className="inline-flex p-4 rounded-xl bg-gradient-to-br from-time-primary to-time-secondary">
+                            <Icon className="w-8 h-8 text-white" />
+                          </div>
+                        </div>
+                        <h3 className="text-2xl font-bold text-white mb-3">{goal.title}</h3>
+                        <p className="text-sm text-white/60">{goal.description}</p>
+                        {investmentGoal === goal.value && (
+                          <div className="mt-4 flex items-center justify-center gap-2 text-time-primary">
+                            <Check className="w-5 h-5" />
+                            <span className="text-sm font-medium">Selected</span>
                           </div>
                         )}
-                        <Icon className="w-10 h-10 text-time-primary mb-3" />
-                        <h3 className="text-lg font-bold text-white mb-1">{goal.title}</h3>
-                        <p className="text-sm text-white/60">{goal.description}</p>
                       </button>
                     );
                   })}
                 </div>
-
-                {goals.length > 0 && (
-                  <div className="mt-6 p-4 bg-time-primary/10 border border-time-primary/30 rounded-xl">
-                    <p className="text-sm text-white/80 text-center">
-                      {goals.length} goal{goals.length !== 1 ? 's' : ''} selected - TIME will create a custom strategy blend
-                    </p>
-                  </div>
-                )}
               </div>
             )}
 
@@ -723,10 +821,216 @@ export default function OnboardingPage() {
 
                 <div className="mt-6 text-center">
                   <button
-                    onClick={handleSkipBroker}
+                    onClick={() => {
+                      setIsAnimating(true);
+                      setDirection('forward');
+                      setTimeout(() => {
+                        setCurrentStep(6);
+                        setIsAnimating(false);
+                      }, 300);
+                    }}
                     className="text-white/60 hover:text-white transition-colors text-sm"
                   >
                     I'll connect a broker later
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Step 6: Bot Recommendations */}
+            {currentStep === 6 && (
+              <div
+                className={`transition-all duration-300 ${
+                  isAnimating
+                    ? direction === 'forward'
+                      ? 'opacity-0 -translate-x-8'
+                      : 'opacity-0 translate-x-8'
+                    : 'opacity-100 translate-x-0'
+                }`}
+              >
+                <div className="text-center mb-8">
+                  <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-time-primary to-time-secondary mb-6">
+                    <Sparkles className="w-10 h-10 text-white" />
+                  </div>
+                  <h2 className="text-3xl md:text-4xl font-bold text-white mb-3">
+                    Your Personalized Bot Recommendations
+                  </h2>
+                  <p className="text-white/60">
+                    Based on your profile, we recommend these trading bots
+                  </p>
+                </div>
+
+                {riskTolerance && (
+                  <div className="mb-6 p-4 bg-slate-800/50 border border-slate-700/50 rounded-xl max-w-2xl mx-auto">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-white/60">Your Risk Profile</p>
+                        <p className="text-lg font-bold text-white capitalize">{riskTolerance}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-white/60">Experience Level</p>
+                        <p className="text-lg font-bold text-white capitalize">{experienceLevel}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-white/60">Investment Goal</p>
+                        <p className="text-lg font-bold text-white capitalize">{investmentGoal}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+                  {recommendedBots.map((botName, index) => (
+                    <div
+                      key={botName}
+                      className="p-6 bg-slate-800/30 border border-slate-700/50 rounded-2xl hover:border-time-primary/50 transition-all"
+                    >
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-time-primary to-time-secondary flex items-center justify-center">
+                          <Bot className="w-6 h-6 text-white" />
+                        </div>
+                        <div className="px-3 py-1 bg-time-primary/20 text-time-primary text-xs font-medium rounded-full">
+                          #{index + 1} Match
+                        </div>
+                      </div>
+                      <h3 className="text-lg font-bold text-white mb-2">{botName}</h3>
+                      <p className="text-sm text-white/60 mb-4">
+                        Optimized for {riskTolerance} risk and {investmentGoal} strategy
+                      </p>
+                      <div className="flex items-center gap-2 text-xs text-white/40">
+                        <Check className="w-4 h-4 text-time-primary" />
+                        <span>Matches your profile</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-8 p-6 bg-time-primary/10 border border-time-primary/30 rounded-xl max-w-2xl mx-auto">
+                  <div className="flex items-start gap-4">
+                    <Sparkles className="w-6 h-6 text-time-primary flex-shrink-0 mt-1" />
+                    <div>
+                      <h4 className="text-white font-semibold mb-2">Next: Activate Your First Bot</h4>
+                      <p className="text-sm text-white/80">
+                        You can activate one of these bots now, or explore all available bots in the marketplace later.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Step 7: First Bot Activation */}
+            {currentStep === 7 && (
+              <div
+                className={`transition-all duration-300 ${
+                  isAnimating
+                    ? direction === 'forward'
+                      ? 'opacity-0 -translate-x-8'
+                      : 'opacity-0 translate-x-8'
+                    : 'opacity-100 translate-x-0'
+                }`}
+              >
+                <div className="text-center mb-8">
+                  <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-time-primary to-time-secondary mb-6 animate-pulse">
+                    <Play className="w-10 h-10 text-white" />
+                  </div>
+                  <h2 className="text-3xl md:text-4xl font-bold text-white mb-3">
+                    Activate Your First Bot
+                  </h2>
+                  <p className="text-white/60">
+                    Choose a bot to start your automated trading journey
+                  </p>
+                </div>
+
+                <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto mb-8">
+                  {recommendedBots.map((botName) => (
+                    <button
+                      key={botName}
+                      onClick={() => setActivatedBot(botName)}
+                      className={`p-6 rounded-2xl border-2 transition-all duration-300 text-left ${
+                        activatedBot === botName
+                          ? 'border-time-primary bg-time-primary/10 scale-105'
+                          : 'border-slate-700/50 bg-slate-800/30 hover:border-slate-600 hover:bg-slate-800/50'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-time-primary to-time-secondary flex items-center justify-center">
+                          <Bot className="w-6 h-6 text-white" />
+                        </div>
+                        {activatedBot === botName && (
+                          <div className="w-8 h-8 rounded-full bg-time-primary flex items-center justify-center">
+                            <Check className="w-5 h-5 text-white" />
+                          </div>
+                        )}
+                      </div>
+                      <h3 className="text-lg font-bold text-white mb-2">{botName}</h3>
+                      <p className="text-sm text-white/60 mb-4">
+                        {activatedBot === botName
+                          ? 'Ready to activate'
+                          : 'Click to select'}
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <Play className="w-4 h-4 text-time-primary" />
+                        <span className="text-xs text-white/60">
+                          {activatedBot === botName ? 'Selected' : 'Select to activate'}
+                        </span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+
+                {activatedBot && (
+                  <div className="max-w-2xl mx-auto">
+                    <div className="p-6 bg-slate-800/50 border border-slate-700/50 rounded-2xl mb-6">
+                      <div className="flex items-start gap-4">
+                        <div className="p-3 rounded-xl bg-time-primary/20">
+                          <Target className="w-6 h-6 text-time-primary" />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="text-white font-semibold mb-2">{activatedBot}</h4>
+                          <p className="text-sm text-white/60 mb-4">
+                            This bot will start in paper trading mode. You can switch to live trading once you're comfortable.
+                          </p>
+                          <div className="grid grid-cols-2 gap-4 text-sm">
+                            <div className="p-3 bg-slate-800/50 rounded-lg">
+                              <p className="text-white/40 text-xs mb-1">Mode</p>
+                              <p className="text-white font-medium">Paper Trading</p>
+                            </div>
+                            <div className="p-3 bg-slate-800/50 rounded-lg">
+                              <p className="text-white/40 text-xs mb-1">Risk Level</p>
+                              <p className="text-white font-medium capitalize">{riskTolerance}</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={handleComplete}
+                      disabled={isSaving}
+                      className="w-full px-8 py-4 bg-gradient-to-r from-time-primary to-time-secondary text-white font-medium rounded-xl hover:opacity-90 transition-all flex items-center justify-center gap-2"
+                    >
+                      {isSaving ? (
+                        <>
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                          Activating Bot...
+                        </>
+                      ) : (
+                        <>
+                          Activate & Start Trading
+                          <ArrowRight className="w-5 h-5" />
+                        </>
+                      )}
+                    </button>
+                  </div>
+                )}
+
+                <div className="mt-6 text-center">
+                  <button
+                    onClick={handleComplete}
+                    className="text-white/60 hover:text-white transition-colors text-sm"
+                  >
+                    Skip for now - I'll activate a bot later
                   </button>
                 </div>
               </div>
@@ -759,13 +1063,28 @@ export default function OnboardingPage() {
                   Continue
                   <ChevronRight className="w-5 h-5" />
                 </button>
-              ) : !selectedBroker ? (
+              ) : currentStep === 5 ? (
                 <button
-                  onClick={handleSkipBroker}
+                  onClick={handleNext}
                   className="flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-time-primary to-time-secondary text-white font-medium rounded-xl hover:opacity-90 transition-all"
                 >
-                  Skip to Dashboard
-                  <ArrowRight className="w-5 h-5" />
+                  {selectedBroker ? 'Continue' : 'Skip & Continue'}
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+              ) : currentStep === 6 ? (
+                <button
+                  onClick={() => {
+                    setIsAnimating(true);
+                    setDirection('forward');
+                    setTimeout(() => {
+                      setCurrentStep(7);
+                      setIsAnimating(false);
+                    }, 300);
+                  }}
+                  className="flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-time-primary to-time-secondary text-white font-medium rounded-xl hover:opacity-90 transition-all"
+                >
+                  Continue to Activation
+                  <ChevronRight className="w-5 h-5" />
                 </button>
               ) : null}
             </div>
