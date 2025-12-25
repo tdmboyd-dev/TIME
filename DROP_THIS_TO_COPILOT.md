@@ -1,12 +1,58 @@
 # DROP THIS TO COPILOT - QUICK REFERENCE
 
 **Last Updated:** 2025-12-25
-**Version:** v64.0.0 - STRIPE PAYMENTS COMPLETE
+**Version:** v64.0.0 - USER ONBOARDING FLOW COMPLETE
 **Purpose:** Quick summary for Copilot/Claude when starting new sessions
 
 ---
 
-## 💳 v64.0.0 - STRIPE PAYMENT INTEGRATION (2025-12-25)
+## 🎓 v64.0.0 - USER ONBOARDING FLOW (2025-12-25)
+
+**Complete 7-step personalized onboarding wizard with bot recommendations**
+
+**Files Updated:**
+- `frontend/src/app/onboarding/page.tsx` - 7-step wizard (1100+ lines)
+  - Step 1: Welcome + Name collection
+  - Step 2: Risk Profile Questionnaire (5 questions)
+  - Step 3: Trading Experience Level (Beginner/Intermediate/Expert)
+  - Step 4: Investment Goals (Growth/Income/Preservation)
+  - Step 5: Broker Connection (optional)
+  - Step 6: Bot Recommendations (AI-powered based on profile)
+  - Step 7: First Bot Activation (paper trading mode)
+- `src/backend/routes/users.ts` - Added POST `/api/v1/users/onboarding` endpoint
+- `TIMEBEUNUS.md` - Updated to v64.0.0 with onboarding docs
+
+**Risk Assessment:**
+- 5 scientific questions to calculate risk tolerance
+- Score averaging: ≤2.0 = Conservative, 2.1-3.5 = Moderate, >3.5 = Aggressive
+- Questions cover: portfolio loss response, time horizon, income vs growth, risk allocation, volatility reaction
+
+**Bot Recommendation Engine:**
+- Beginner + Conservative → Index Tracker, DCA Bot, Blue Chip Accumulator
+- Beginner + Moderate → Balanced Growth, Smart Rebalancer, Trend Following
+- Beginner + Aggressive → Growth Momentum, Swing Trader, Volatility Rider
+- Intermediate + Growth → Growth Momentum, Breakout Hunter, Sector Rotation
+- Intermediate + Income → Dividend Harvester, Options Income, Covered Call
+- Intermediate + Preservation → Capital Preservation, Low Volatility, Defensive
+- Expert + Aggressive → AI Trade God, Algorithmic Scalper, Multi-Strategy
+- Expert + Moderate → Statistical Arbitrage, Mean Reversion, Options Wheel
+- Expert + Conservative → Market Neutral, Pairs Trading, Volatility Arbitrage
+
+**Features:**
+- Smooth CSS animations between steps
+- localStorage progress saving
+- Cookie-based completion tracking
+- Mobile responsive design
+- API integration for data persistence
+- Profile summary on recommendations page
+- Skip options for broker and bot activation
+
+**API Endpoint:**
+- POST `/api/v1/users/onboarding` - Save onboarding data (name, risk answers, experience, goals, broker, bots)
+
+---
+
+## 💳 v63.0.0 - STRIPE PAYMENT INTEGRATION (2025-12-25)
 
 **Complete production-ready Stripe subscription system with 5 tiers**
 
