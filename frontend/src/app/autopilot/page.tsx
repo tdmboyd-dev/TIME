@@ -10,6 +10,8 @@ import {
 } from 'lucide-react';
 import clsx from 'clsx';
 import { API_BASE, getAuthHeaders } from '@/lib/api';
+import { PageIntroModal } from '@/components/onboarding/PageIntroModal';
+import { autopilotIntro } from '@/components/onboarding/pageIntroContent';
 
 type RiskDNA = 'ultra_safe' | 'careful' | 'balanced' | 'growth' | 'aggressive' | 'yolo';
 
@@ -458,6 +460,7 @@ export default function AutoPilotPage() {
 
   return (
     <div className="space-y-6">
+      <PageIntroModal content={autopilotIntro} />
       {notification && (
         <div className={clsx('fixed top-4 right-4 z-50 flex items-center gap-2 px-4 py-3 rounded-lg shadow-lg', notification.type === 'success' && 'bg-green-500/20 border border-green-500/50 text-green-400', notification.type === 'info' && 'bg-blue-500/20 border border-blue-500/50 text-blue-400', notification.type === 'error' && 'bg-red-500/20 border border-red-500/50 text-red-400')}>
           {notification.type === 'success' && <CheckCircle className="w-5 h-5" />}

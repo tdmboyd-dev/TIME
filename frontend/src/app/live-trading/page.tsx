@@ -24,6 +24,8 @@ import {
   XCircle,
   LogIn
 } from 'lucide-react';
+import { PageIntroModal } from '@/components/onboarding/PageIntroModal';
+import { liveTradingIntro } from '@/components/onboarding/pageIntroContent';
 
 import { API_BASE, getAuthHeaders, isLoggedIn } from '@/lib/api';
 
@@ -331,6 +333,7 @@ export default function LiveTradingPage() {
 
   return (
     <div className="space-y-6">
+      <PageIntroModal content={liveTradingIntro} />
       {/* Notification */}
       {notification && (
         <div className={`fixed top-4 right-4 z-50 flex items-center gap-2 px-4 py-3 rounded-lg shadow-lg ${

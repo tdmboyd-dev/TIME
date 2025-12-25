@@ -20,6 +20,8 @@ import {
   Activity,
 } from 'lucide-react';
 import { API_BASE, getAuthHeaders } from '@/lib/api';
+import { PageIntroModal } from '@/components/onboarding/PageIntroModal';
+import { backtestIntro } from '@/components/onboarding/pageIntroContent';
 
 interface BacktestResult {
   symbol: string;
@@ -114,6 +116,7 @@ export default function BacktestPage() {
 
   return (
     <div className="min-h-screen bg-gray-950 text-white p-6">
+      <PageIntroModal content={backtestIntro} />
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">

@@ -28,6 +28,8 @@ import {
   Wifi,
   WifiOff
 } from 'lucide-react';
+import { PageIntroModal } from '@/components/onboarding/PageIntroModal';
+import { botsIntro } from '@/components/onboarding/pageIntroContent';
 import clsx from 'clsx';
 
 import { API_BASE, getAuthHeaders } from '@/lib/api';
@@ -366,6 +368,7 @@ export default function BotsPage() {
 
   return (
     <div className="space-y-6">
+      <PageIntroModal content={botsIntro} />
       {/* Notification */}
       {notification && (
         <div className={`fixed top-4 right-4 z-50 flex items-center gap-2 px-4 py-3 rounded-lg shadow-lg ${

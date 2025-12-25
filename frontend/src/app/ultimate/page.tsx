@@ -8,6 +8,8 @@ import {
   ChevronDown, ChevronUp, Activity, DollarSign, Clock,
   ArrowUpRight, ArrowDownRight, RefreshCw, Eye, MessageSquare
 } from 'lucide-react';
+import { PageIntroModal } from '@/components/onboarding/PageIntroModal';
+import { ultimateIntro } from '@/components/onboarding/pageIntroContent';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://time-backend-hosting.fly.dev';
 
@@ -241,6 +243,7 @@ export default function UltimatePage() {
 
   return (
     <div className="min-h-screen bg-slate-950 p-6">
+      <PageIntroModal content={ultimateIntro} />
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center justify-between mb-4">

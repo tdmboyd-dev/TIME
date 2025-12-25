@@ -26,6 +26,8 @@ import {
   WifiOff
 } from 'lucide-react';
 import clsx from 'clsx';
+import { PageIntroModal } from '@/components/onboarding/PageIntroModal';
+import { strategiesIntro } from '@/components/onboarding/pageIntroContent';
 
 import { API_BASE, getTokenFromCookie } from '@/lib/api';
 
@@ -359,6 +361,7 @@ export default function StrategiesPage() {
 
   return (
     <div className="space-y-6">
+      <PageIntroModal content={strategiesIntro} />
       {/* Notification */}
       {notification && (
         <div className={`fixed top-4 right-4 z-50 flex items-center gap-2 px-4 py-3 rounded-lg shadow-lg ${

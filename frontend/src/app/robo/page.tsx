@@ -25,6 +25,8 @@ import {
   X,
 } from 'lucide-react';
 import clsx from 'clsx';
+import { PageIntroModal } from '@/components/onboarding/PageIntroModal';
+import { roboIntro } from '@/components/onboarding/pageIntroContent';
 
 import { API_BASE, getAuthHeaders } from '@/lib/api';
 
@@ -147,6 +149,7 @@ export default function RoboAdvisorPage() {
 
   return (
     <div className="space-y-6">
+      <PageIntroModal content={roboIntro} />
       {/* Notification */}
       {notification && (
         <div className={clsx(

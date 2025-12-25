@@ -24,6 +24,8 @@ import {
   Loader2,
 } from 'lucide-react';
 import { API_BASE } from '@/lib/api';
+import { PageIntroModal } from '@/components/onboarding/PageIntroModal';
+import { aiTradeGodIntro } from '@/components/onboarding/pageIntroContent';
 
 interface BotConfig {
   id: string;
@@ -323,6 +325,7 @@ export default function AITradeGodPage() {
 
   return (
     <div className="p-6 space-y-6 max-w-7xl mx-auto">
+      <PageIntroModal content={aiTradeGodIntro} />
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
