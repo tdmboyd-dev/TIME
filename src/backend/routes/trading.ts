@@ -601,6 +601,30 @@ import { autoPilotCapital } from '../autopilot/dropbot';
 import { tradingStateRepository } from '../database/repositories';
 
 /**
+ * SECURITY: Verify pilot ownership before allowing operations
+ * Prevents IDOR attacks where users access other users' pilots
+ */
+function verifyPilotOwnership(pilotId: string, userId: string, res: Response): boolean {
+  const pilot = autoPilotCapital.getPilot(pilotId);
+
+  if (!pilot) {
+    res.status(404).json({ success: false, error: 'Pilot not found' });
+    return false;
+  }
+
+  // Check if the pilot belongs to this user
+  if (pilot.userId !== userId && userId !== 'admin') {
+    res.status(403).json({
+      success: false,
+      error: 'Access denied - you do not own this pilot'
+    });
+    return false;
+  }
+
+  return true;
+}
+
+/**
  * POST /trading/autopilot/create
  * Create a new AutoPilot pilot
  * SECURITY: Requires authentication + PRO tier (autopilot feature)
@@ -770,10 +794,15 @@ router.post('/autopilot/:pilotId/resume', authMiddleware, async (req: Request, r
 /**
  * POST /trading/autopilot/:pilotId/withdraw-all
  * Withdraw all funds - closes all positions
- * SECURITY: Requires authentication
+ * SECURITY: Requires authentication + ownership verification
  */
 router.post('/autopilot/:pilotId/withdraw-all', authMiddleware, async (req: Request, res: Response) => {
   const { pilotId } = req.params;
+  const userId = (req as any).user?.id || 'anonymous';
+
+  // SECURITY: Verify ownership before withdrawal
+  if (!verifyPilotOwnership(pilotId, userId, res)) return;
+
   const result = await autoPilotCapital.withdrawAll(pilotId);
 
   res.json(result);
@@ -782,11 +811,15 @@ router.post('/autopilot/:pilotId/withdraw-all', authMiddleware, async (req: Requ
 /**
  * POST /trading/autopilot/:pilotId/withdraw
  * Partial withdrawal - specify amount
- * SECURITY: Requires authentication
+ * SECURITY: Requires authentication + ownership verification
  */
 router.post('/autopilot/:pilotId/withdraw', authMiddleware, async (req: Request, res: Response) => {
   const { pilotId } = req.params;
   const { amount } = req.body;
+  const userId = (req as any).user?.id || 'anonymous';
+
+  // SECURITY: Verify ownership before withdrawal
+  if (!verifyPilotOwnership(pilotId, userId, res)) return;
 
   if (!amount || amount <= 0) {
     return res.status(400).json({
@@ -803,11 +836,15 @@ router.post('/autopilot/:pilotId/withdraw', authMiddleware, async (req: Request,
 /**
  * POST /trading/autopilot/:pilotId/exit
  * Start exit ramp - gradual exit from all positions
- * SECURITY: Requires authentication
+ * SECURITY: Requires authentication + ownership verification
  */
 router.post('/autopilot/:pilotId/exit', authMiddleware, async (req: Request, res: Response) => {
   const { pilotId } = req.params;
   const { strategy = 'optimal' } = req.body;
+  const userId = (req as any).user?.id || 'anonymous';
+
+  // SECURITY: Verify ownership before exit
+  if (!verifyPilotOwnership(pilotId, userId, res)) return;
 
   try {
     const exitRamp = await autoPilotCapital.initiateExitRamp(pilotId, strategy);
@@ -852,12 +889,16 @@ router.get('/autopilot/:pilotId', authMiddleware, (req: Request, res: Response) 
 /**
  * POST /trading/autopilot/:pilotId/live-trading
  * Enable/disable REAL trading for a pilot
- * SECURITY: Requires authentication
+ * SECURITY: Requires authentication + ownership verification
  * WARNING: When enabled, trades will execute on REAL brokers!
  */
 router.post('/autopilot/:pilotId/live-trading', authMiddleware, (req: Request, res: Response) => {
   const { pilotId } = req.params;
   const { enabled } = req.body;
+  const userId = (req as any).user?.id || 'anonymous';
+
+  // SECURITY: Verify ownership before enabling live trading
+  if (!verifyPilotOwnership(pilotId, userId, res)) return;
 
   const pilot = autoPilotCapital.getPilot(pilotId);
   if (!pilot) {

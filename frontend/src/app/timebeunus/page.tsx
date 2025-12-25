@@ -433,9 +433,12 @@ export default function TIMEBEUNUSPage() {
 
   const getAdminHeaders = () => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    // SECURITY FIX: Admin key must come from environment variable, never hardcoded
+    // Set NEXT_PUBLIC_ADMIN_API_KEY in your .env.local file
+    const adminKey = process.env.NEXT_PUBLIC_ADMIN_API_KEY || '';
     return {
       'Content-Type': 'application/json',
-      'x-admin-key': 'TIME_ADMIN_2025',
+      ...(adminKey ? { 'x-admin-key': adminKey } : {}),
       ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
     };
   };

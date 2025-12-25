@@ -223,8 +223,19 @@ async function deleteSession(token: string): Promise<void> {
 
 export async function authMiddleware(req: Request, res: Response, next: NextFunction): Promise<void> {
   // ADMIN KEY BYPASS: Allow admin key for owner access (TIMEBEUNUS page)
-  const adminKey = req.headers['x-admin-key'];
-  if (adminKey === 'TIME_ADMIN_2025' || adminKey === process.env.ADMIN_API_KEY) {
+  // SECURITY FIX: Only use environment variable, never hardcoded keys
+  const adminKey = req.headers['x-admin-key'] as string | undefined;
+  const validAdminKey = process.env.ADMIN_API_KEY;
+
+  // CRITICAL: Admin key must exist in env, be at least 32 chars, and match exactly
+  if (adminKey && validAdminKey && validAdminKey.length >= 32 && adminKey === validAdminKey) {
+    // Log admin key usage for audit trail
+    logger.info('[SECURITY] Admin key bypass used', {
+      ip: req.ip,
+      endpoint: req.path,
+      timestamp: new Date().toISOString()
+    });
+
     // Grant admin access without session
     (req as any).user = {
       id: 'admin',
