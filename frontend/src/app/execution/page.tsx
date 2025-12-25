@@ -136,7 +136,11 @@ export default function ExecutionPage() {
       });
       if (venuesResponse.ok) {
         const venuesData = await venuesResponse.json();
-        if (venuesData && Array.isArray(venuesData)) {
+        // Handle both formats: { success: true, data: { venues: [...] } } or just array
+        if (venuesData?.success && venuesData?.data?.venues) {
+          setVenues(venuesData.data.venues);
+          setIsConnected(true);
+        } else if (venuesData && Array.isArray(venuesData)) {
           setVenues(venuesData);
           setIsConnected(true);
         }

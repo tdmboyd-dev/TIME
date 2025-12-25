@@ -1262,6 +1262,119 @@ router.post('/roles', authMiddleware, ownerMiddleware, async (req: Request, res:
   });
 });
 
+// ============================================================
+// ADMIN BOT API - BROADCAST & PRICING
+// ============================================================
+
+/**
+ * POST /admin/broadcast
+ * Send a broadcast message to all users
+ */
+router.post('/broadcast', authMiddleware, adminMiddleware, async (req: Request, res: Response) => {
+  const { message, type = 'announcement', priority = 'normal' } = req.body;
+  const adminUser = (req as any).user;
+
+  if (!message) {
+    return res.status(400).json({ success: false, error: 'Message is required' });
+  }
+
+  try {
+    // Get all users to send notification
+    const users = await userRepository.findMany({});
+
+    // Create notification for each user
+    const notificationPromises = users.map((user: any) =>
+      notificationRepository.create({
+        userId: user._id,
+        type: type === 'urgent' ? 'alert' : 'announcement',
+        title: type === 'urgent' ? '⚠️ Urgent Alert' : '📢 Platform Announcement',
+        message,
+        priority,
+        read: false,
+        createdAt: new Date(),
+        metadata: {
+          broadcastId: `broadcast_${Date.now()}`,
+          sentBy: adminUser.id,
+        },
+      } as any)
+    );
+
+    await Promise.all(notificationPromises);
+
+    // Log the broadcast
+    await auditLogRepository.log('AdminBot', 'broadcast_sent', {
+      message,
+      type,
+      priority,
+      recipientCount: users.length,
+      sentBy: adminUser.id,
+    });
+
+    res.json({
+      success: true,
+      message: `Broadcast sent to ${users.length} users`,
+      broadcastId: `broadcast_${Date.now()}`,
+      recipientCount: users.length,
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * POST /admin/pricing
+ * Update product pricing
+ */
+router.post('/pricing', authMiddleware, adminMiddleware, async (req: Request, res: Response) => {
+  const { productId, price } = req.body;
+  const adminUser = (req as any).user;
+
+  if (!productId || !price) {
+    return res.status(400).json({ success: false, error: 'Product ID and price are required' });
+  }
+
+  try {
+    // In production, this would update the pricing in the database/Stripe
+    // For now, we store the price change in audit log
+
+    await auditLogRepository.log('AdminBot', 'price_updated', {
+      productId,
+      newPrice: price,
+      updatedBy: adminUser.id,
+      timestamp: new Date(),
+    });
+
+    res.json({
+      success: true,
+      message: `Price updated for ${productId} to ${price}`,
+      productId,
+      newPrice: price,
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * GET /admin/pricing
+ * Get all product pricing
+ */
+router.get('/pricing', authMiddleware, adminMiddleware, (req: Request, res: Response) => {
+  // Product pricing configuration
+  const pricing = [
+    { id: 'dropbot', name: 'DROPBOT AutoPilot', price: '$59/mo', description: 'AI-powered automated trading' },
+    { id: 'ultimate', name: 'Ultimate Money Machine', price: '$79/mo', description: 'Complete wealth automation' },
+    { id: 'pro_monthly', name: 'Pro Subscription (Monthly)', price: '$29/mo', description: 'Pro features monthly' },
+    { id: 'pro_yearly', name: 'Pro Subscription (Yearly)', price: '$290/yr', description: 'Pro features yearly' },
+    { id: 'enterprise', name: 'Enterprise Plan', price: '$499/mo', description: 'Enterprise features' },
+  ];
+
+  res.json({
+    success: true,
+    pricing,
+  });
+});
+
 /**
  * GET /admin/stats/users
  * Get user statistics

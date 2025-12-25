@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 
 /**
@@ -30,6 +30,27 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [notification, setNotification] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
+  const [showSecretPortal, setShowSecretPortal] = useState(false);
+  const clickCountRef = useRef(0);
+  const clickTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleSecretAccess = () => {
+    clickCountRef.current += 1;
+
+    if (clickTimerRef.current) {
+      clearTimeout(clickTimerRef.current);
+    }
+
+    if (clickCountRef.current >= 5) {
+      // 5 rapid clicks reveals the secret admin portal
+      setShowSecretPortal(true);
+      clickCountRef.current = 0;
+    } else {
+      clickTimerRef.current = setTimeout(() => {
+        clickCountRef.current = 0;
+      }, 1000);
+    }
+  };
 
   const showNotification = (type: 'success' | 'error' | 'info', message: string) => {
     setNotification({ type, message });
@@ -259,9 +280,12 @@ export default function LoginPage() {
         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:50px_50px]" />
 
         <div className="relative z-10 flex flex-col justify-center px-12 text-white">
-          {/* Logo */}
+          {/* Logo - Secret 5-click access */}
           <div className="flex items-center gap-4 mb-8">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-400 to-purple-600 flex items-center justify-center shadow-2xl">
+            <div
+              onClick={handleSecretAccess}
+              className="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-400 to-purple-600 flex items-center justify-center shadow-2xl cursor-pointer select-none hover:scale-105 transition-transform"
+            >
               <span className="text-3xl font-black">T</span>
             </div>
             <div>
@@ -316,9 +340,12 @@ export default function LoginPage() {
       {/* Right Panel - Login Form */}
       <div className="w-full lg:w-1/2 flex items-center justify-center bg-slate-950 p-8">
         <div className="w-full max-w-md">
-          {/* Mobile Logo */}
+          {/* Mobile Logo - Secret 5-click access */}
           <div className="lg:hidden flex items-center gap-3 mb-8">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-400 to-purple-600 flex items-center justify-center">
+            <div
+              onClick={handleSecretAccess}
+              className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-400 to-purple-600 flex items-center justify-center cursor-pointer select-none"
+            >
               <span className="text-2xl font-black text-white">T</span>
             </div>
             <div>
@@ -326,6 +353,44 @@ export default function LoginPage() {
               <p className="text-xs text-white/60">META-INTELLIGENCE</p>
             </div>
           </div>
+
+          {/* Secret Admin Portal - Revealed after 5 clicks */}
+          {showSecretPortal && (
+            <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+              <div className="bg-slate-900 border border-red-500/30 rounded-2xl p-8 max-w-md w-full">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center animate-pulse">
+                    <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-white">Owner Access Portal</h3>
+                    <p className="text-red-400 text-sm">Authorized Personnel Only</p>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <a
+                    href="/admin-login"
+                    className="block w-full py-3 px-4 bg-gradient-to-r from-red-500 to-orange-500 text-white font-medium rounded-xl text-center hover:from-red-400 hover:to-orange-400 transition-all"
+                  >
+                    Enter Master Control
+                  </a>
+                  <button
+                    onClick={() => setShowSecretPortal(false)}
+                    className="block w-full py-3 px-4 bg-white/5 border border-white/10 text-white/60 font-medium rounded-xl text-center hover:bg-white/10 transition-all"
+                  >
+                    Cancel
+                  </button>
+                </div>
+
+                <p className="text-white/30 text-xs text-center mt-6">
+                  This access is logged and monitored
+                </p>
+              </div>
+            </div>
+          )}
 
           {/* Step: Credentials */}
           {step === 'credentials' && (
@@ -508,12 +573,6 @@ export default function LoginPage() {
                 </p>
               </div>
 
-              {/* Admin Login Link */}
-              <div className="mt-4 text-center">
-                <a href="/admin-login" className="text-sm text-white/30 hover:text-white/50">
-                  Admin Access
-                </a>
-              </div>
             </>
           )}
 

@@ -1,9 +1,7 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
-import { Sidebar } from '@/components/layout/Sidebar';
-import { TopNav } from '@/components/layout/TopNav';
-import { Web3Provider } from '@/providers/Web3Provider';
+import { AuthenticatedLayout } from '@/components/layout/AuthenticatedLayout';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -25,17 +23,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <Web3Provider>
-          <div className="flex h-screen overflow-hidden">
-            <Sidebar />
-            <div className="flex-1 flex flex-col overflow-hidden">
-              <TopNav />
-              <main className="flex-1 overflow-y-auto p-6">
-                {children}
-              </main>
-            </div>
-          </div>
-        </Web3Provider>
+        <AuthenticatedLayout>
+          {children}
+        </AuthenticatedLayout>
       </body>
     </html>
   );

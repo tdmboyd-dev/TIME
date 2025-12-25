@@ -109,10 +109,11 @@ import { TradingModeIndicator } from '@/components/trading/TradingModeToggle';
 const navigation = [
   // Core
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
-  { name: 'Ultimate Money Machine', href: '/ultimate', icon: Gem, isNew: true, isPremium: true },
+  // PREMIUM FEATURES - Top of sidebar
+  { name: 'DROPBOT AutoPilot', href: '/autopilot', icon: Rocket, isPremium: true, price: '$59/mo' },
+  { name: 'Ultimate Money Machine', href: '/ultimate', icon: Gem, isNew: true, isPremium: true, price: '$79/mo' },
   { name: 'LIVE Bot Trading', href: '/live-trading', icon: Play, isNew: true },
   { name: 'Big Moves Alerts', href: '/alerts', icon: Bell, isNew: true },
-  { name: 'AI Trade God', href: '/ai-trade-god', icon: Zap, isNew: true },
   { name: 'Bot Dropzone', href: '/dropzone', icon: Download, isNew: true },
   // Trading
   { name: 'Markets', href: '/markets', icon: TrendingUp },
@@ -143,21 +144,37 @@ const navigation = [
   { name: 'Account Transfers', href: '/transfers', icon: Building2, isNew: true },
   { name: 'Tax Optimization', href: '/tax', icon: Leaf, isNew: true },
   { name: 'Investment Goals', href: '/goals', icon: Target, isNew: true },
-  // Settings & Admin
+  // Settings (visible to all)
   { name: 'Settings', href: '/settings', icon: Settings },
-  { name: 'Control Panel', href: '/admin', icon: Settings },
-  { name: 'System Health', href: '/admin/health', icon: HeartPulse },
-  { name: 'Admin Portal', href: '/admin-portal', icon: Crown, isNew: true },
-  // Admin-Only Features
+  // ADMIN-ONLY FEATURES - Hidden from regular users
+  { name: 'Announcement Bot', href: '/admin-bot', icon: Bot, adminOnly: true, isNew: true },
+  { name: 'AI Trade God', href: '/ai-trade-god', icon: Zap, adminOnly: true, isNew: true },
+  { name: 'Control Panel', href: '/admin', icon: Settings, adminOnly: true },
+  { name: 'System Health', href: '/admin/health', icon: HeartPulse, adminOnly: true },
+  { name: 'Admin Portal', href: '/admin-portal', icon: Crown, adminOnly: true },
   { name: 'TIMEBEUNUS', href: '/timebeunus', icon: Brain, adminOnly: true },
-  { name: 'DROPBOT AutoPilot', href: '/autopilot', icon: Rocket, isPremium: true },
-  { name: 'Gift Access', href: '/gift-access', icon: Gift, adminOnly: true, isNew: true },
+  { name: 'Gift Access', href: '/gift-access', icon: Gift, adminOnly: true },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
   const [marketStatus, setMarketStatus] = useState(getMarketStatus());
   const [visitedPages, setVisitedPages] = useState<Set<string>>(new Set());
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  // Check if user is admin on mount
+  useEffect(() => {
+    const checkAdmin = () => {
+      if (typeof document !== 'undefined') {
+        const isAdminCookie = document.cookie.includes('time_is_admin=true');
+        setIsAdmin(isAdminCookie);
+      }
+    };
+    checkAdmin();
+    // Re-check when document changes
+    const interval = setInterval(checkAdmin, 2000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Load visited pages on mount
   useEffect(() => {
@@ -204,7 +221,9 @@ export function Sidebar() {
 
       {/* Main Navigation */}
       <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-        {navigation.map((item) => {
+        {navigation
+          .filter((item) => !(item as any).adminOnly || isAdmin) // Hide admin items from non-admins
+          .map((item) => {
           const isActive = pathname === item.href ||
             (item.href !== '/' && pathname.startsWith(item.href));
           const showNewBadge = shouldShowNew(item);
@@ -228,7 +247,7 @@ export function Sidebar() {
               {(item as any).isPremium && (
                 <span className="ml-auto flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-400 font-bold">
                   <Gem className="w-3 h-3" />
-                  $59
+                  {(item as any).price || '$59'}
                 </span>
               )}
               {(item as any).adminOnly && (
