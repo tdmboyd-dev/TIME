@@ -1,8 +1,124 @@
 # DROP THIS TO COPILOT - QUICK REFERENCE
 
 **Last Updated:** 2025-12-25
-**Version:** v62.0.0 - ANALYTICS DASHBOARD COMPLETE
+**Version:** v64.0.0 - STRIPE PAYMENTS COMPLETE
 **Purpose:** Quick summary for Copilot/Claude when starting new sessions
+
+---
+
+## 💳 v64.0.0 - STRIPE PAYMENT INTEGRATION (2025-12-25)
+
+**Complete production-ready Stripe subscription system with 5 tiers**
+
+**Files Created:**
+- `STRIPE_INTEGRATION.md` - Complete setup and usage documentation (280 lines)
+
+**Files Updated:**
+- `src/backend/payments/stripe_service.ts` - StripeService class (587 lines)
+  - Updated tiers: FREE ($0), BASIC ($19), PRO ($39), PREMIUM ($59), ENTERPRISE ($250)
+  - Added `getUserSubscription()` method
+  - Added `checkout.session.completed` webhook handler
+  - Complete feature access control
+- `src/backend/routes/stripe.ts` - Stripe REST API (308 lines)
+  - 7 endpoints for subscription management
+- `src/backend/database/schemas.ts` - Added SubscriptionSchema
+- `src/backend/routes/index.ts` - Registered Stripe routes
+- `.env.stripe.example` - Updated with new tier prices
+- `package.json` - Added stripe@^17.5.0
+- `TIMEBEUNUS.md` - Updated to v62.0.0 with Stripe docs
+
+**Subscription Tiers:**
+- FREE: 3 bots, paper trading only
+- BASIC: 10 bots, $5K capital, real trading
+- PRO: 50 bots, $50K capital, API access
+- PREMIUM: 999 bots, $500K capital, Ultimate Money Machine
+- ENTERPRISE: Unlimited everything, white-label
+
+**API Endpoints:**
+- POST `/api/v1/stripe/create-checkout` - Start subscription
+- POST `/api/v1/stripe/create-portal` - Manage subscription
+- POST `/api/v1/stripe/webhook` - Handle events
+- GET `/api/v1/stripe/subscription` - Get current plan
+- GET `/api/v1/stripe/tiers` - List all tiers
+- POST `/api/v1/stripe/cancel` - Cancel subscription
+- POST `/api/v1/stripe/reactivate` - Reactivate subscription
+
+**Webhook Events:**
+- checkout.session.completed
+- customer.subscription.created
+- customer.subscription.updated
+- customer.subscription.deleted
+- invoice.payment_succeeded
+- invoice.payment_failed
+
+**Frontend:**
+- Complete tier cards with features
+- Current plan indicator
+- Upgrade/downgrade buttons
+- Manage subscription portal
+- Billing period display
+
+---
+
+## 🌐 v63.0.0 - SOCIAL TRADING FEATURES (2025-12-25)
+
+**Complete social trading implementation: Leaderboard + Community Chat + Socket.IO**
+
+**Files Created:**
+- `src/backend/services/socket_service.ts` - Socket.IO service for real-time chat (311 lines)
+
+**MongoDB Schemas Added:**
+- `CommunityMessageSchema` - Chat messages with reactions, mentions, moderation
+- `TraderLeaderboardSchema` - Cached trader rankings by time period
+- `BotLeaderboardSchema` - Cached bot performance rankings
+- `ChatChannelSchema` - Channel configuration and stats
+- `UserFollowSchema` - Social following/copying relationships
+
+**Files Updated:**
+- `src/backend/routes/social.ts` - 9 new endpoints (leaderboard + chat) - 810 lines
+- `src/backend/database/schemas.ts` - Added 5 social schemas with indexes
+- `frontend/src/app/leaderboard/page.tsx` - Connected to real API - 454 lines
+- `frontend/src/app/chat/page.tsx` - Connected to real API with Socket.IO - 495 lines
+
+**New Endpoints:**
+- GET `/api/v1/social/leaderboard` - Trader/bot leaderboard with caching
+- GET `/api/v1/social/chat/channels` - List all chat channels
+- GET `/api/v1/social/chat/:channel/messages` - Get channel messages
+- POST `/api/v1/social/chat/:channel/send` - Send message
+- POST `/api/v1/social/chat/:channel/react` - Add emoji reaction
+- DELETE `/api/v1/social/chat/:channel/messages/:id` - Delete message (admin)
+- POST `/api/v1/social/chat/:channel/pin/:id` - Pin message (admin)
+- POST `/api/v1/social/follow/:userId` - Follow trader
+- DELETE `/api/v1/social/follow/:userId` - Unfollow trader
+
+**Leaderboard Features:**
+- Top traders by P&L (daily, weekly, monthly, all-time)
+- Filters: asset class, time period, min trades
+- Performance metrics: profit %, win rate, trades, risk score, Sharpe ratio
+- Social metrics: followers, copiers
+- Follow/Copy buttons for each trader
+- 5-minute cache with auto-refresh
+
+**Community Chat Features:**
+- Real-time messaging with Socket.IO
+- 5 channels: #general, #crypto, #stocks, #forex, #bots
+- Emoji reactions (👍 ❤️ 🚀 💯 🔥 👀 😂 🎯)
+- @mentions and threading
+- Typing indicators
+- Online user count per channel
+- Admin moderation (delete, pin, ban)
+
+**Socket.IO Events:**
+- Client: authenticate, join_channel, leave_channel, send_message, typing_start, add_reaction
+- Server: new_message, user_joined, user_left, user_typing, reaction_added, message_deleted
+
+**Production Ready:**
+- JWT authentication for all endpoints
+- Rate limiting on message sends
+- Message sanitization (XSS protection)
+- Soft delete with audit trails
+- MongoDB indexes for performance
+- WebSocket connection pooling
 
 ---
 

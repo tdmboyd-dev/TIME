@@ -18,7 +18,10 @@ import {
   DollarSign,
   PiggyBank,
   FileText,
-  Calendar
+  Calendar,
+  Loader2,
+  Bot,
+  Play
 } from 'lucide-react';
 import { TimeLogo, TimeIcon } from '@/components/branding/TimeLogo';
 
@@ -1094,7 +1097,7 @@ export default function OnboardingPage() {
         {/* Footer */}
         <footer className="p-6 text-center">
           <p className="text-sm text-white/40">
-            Step {currentStep} of 5
+            Step {currentStep} of 7
           </p>
         </footer>
       </div>

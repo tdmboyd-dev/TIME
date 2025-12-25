@@ -175,6 +175,75 @@ router.put('/settings', authMiddleware, async (req: Request, res: Response) => {
 });
 
 /**
+ * POST /users/onboarding
+ * Save user onboarding data
+ */
+router.post('/onboarding', async (req: Request, res: Response) => {
+  try {
+    const {
+      name,
+      riskAnswers,
+      experienceLevel,
+      investmentGoal,
+      riskTolerance,
+      goals,
+      broker,
+      recommendedBots,
+      activatedBot,
+    } = req.body;
+
+    // In production, save this to database
+    // For now, log it for debugging
+    console.log('Onboarding data received:', {
+      name,
+      experienceLevel,
+      investmentGoal,
+      riskTolerance,
+      numRiskAnswers: Object.keys(riskAnswers || {}).length,
+      numGoals: goals?.length || 0,
+      broker,
+      numRecommendedBots: recommendedBots?.length || 0,
+      activatedBot,
+    });
+
+    // TODO: In production, save to MongoDB user document:
+    // await userRepository.update(userId, {
+    //   onboardingData: {
+    //     name,
+    //     riskAnswers,
+    //     experienceLevel,
+    //     investmentGoal,
+    //     riskTolerance,
+    //     goals,
+    //     broker,
+    //     recommendedBots,
+    //     activatedBot,
+    //     completedAt: new Date(),
+    //   }
+    // });
+
+    res.json({
+      success: true,
+      message: 'Onboarding data saved successfully',
+      data: {
+        name,
+        experienceLevel,
+        riskTolerance,
+        investmentGoal,
+        activatedBot,
+      },
+    });
+  } catch (error: any) {
+    console.error('Error saving onboarding data:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to save onboarding data',
+      message: error.message,
+    });
+  }
+});
+
+/**
  * GET /users/consent
  * Get consent status
  */

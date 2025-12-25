@@ -1,8 +1,8 @@
 # TIMEBEUNUS — THE MASTER AI GUIDE
 ## For Copilot, Claude, and All AI Assistants
 
-**Version:** 62.0.0 - STRIPE PAYMENT INTEGRATION COMPLETE
-**Last Updated:** 2025-12-25 (Stripe Subscriptions + Admin Analytics + All Brokers + Web Push + AI Support)
+**Version:** 64.0.0 - USER ONBOARDING FLOW COMPLETE
+**Last Updated:** 2025-12-25 (7-Step Onboarding Wizard + Bot Recommendations + Marketing Hub + Stripe Payments)
 
 > 📄 **SEE ALSO:** [SYSTEM_COMPARISON.md](./SYSTEM_COMPARISON.md) for the FULL 500+ line detailed comparison!
 > 📄 **NEW:** [BROKER_INTEGRATIONS.md](./BROKER_INTEGRATIONS.md) for comprehensive broker setup and usage!
@@ -10,10 +10,167 @@
 > 📄 **NEW:** [SETUP_DIRECTIONS.md](./SETUP_DIRECTIONS.md) for step-by-step setup with links!
 > 📄 **NEW:** [PUSH_NOTIFICATIONS_README.md](./PUSH_NOTIFICATIONS_README.md) for complete push notification documentation!
 > 📄 **NEW:** [PUSH_NOTIFICATIONS_SETUP.md](./PUSH_NOTIFICATIONS_SETUP.md) for 5-minute setup guide!
+> 📄 **NEW:** [STRIPE_INTEGRATION.md](./STRIPE_INTEGRATION.md) for complete Stripe payment integration guide!
 
 ---
 
-# 📊 ANALYTICS DASHBOARD COMPLETE (v61.0.0 - NEW!)
+# 💳 STRIPE PAYMENT INTEGRATION COMPLETE (v62.0.0 - NEW!)
+
+## Session 2025-12-25 — Production-Ready Stripe Subscription System
+
+### 📋 FEATURE OVERVIEW
+
+Complete Stripe payment integration for TIME trading platform with subscription management, billing, and feature access control.
+
+**Files Updated/Created:**
+- `src/backend/payments/stripe_service.ts` - Complete StripeService class (587 lines)
+- `src/backend/routes/stripe.ts` - Full REST API for subscriptions (308 lines)
+- `src/backend/database/schemas.ts` - SubscriptionSchema added
+- `frontend/src/app/payments/page.tsx` - Payment UI with tier cards (1192 lines)
+- `.env.stripe.example` - Environment variable template
+- `package.json` - Added stripe@^17.5.0 dependency
+- `STRIPE_INTEGRATION.md` - Complete integration documentation
+
+**Backend Routes Added:**
+- POST `/api/v1/stripe/create-checkout` - Create subscription checkout
+- POST `/api/v1/stripe/create-portal` - Manage subscription portal
+- POST `/api/v1/stripe/webhook` - Handle webhook events
+- GET `/api/v1/stripe/subscription` - Get current subscription
+- GET `/api/v1/stripe/tiers` - List all tiers
+- POST `/api/v1/stripe/cancel` - Cancel subscription
+- POST `/api/v1/stripe/reactivate` - Reactivate subscription
+
+### 🎯 SUBSCRIPTION TIERS
+
+Five subscription tiers with feature-based access control:
+
+#### FREE ($0/month)
+- 3 active bots
+- Paper trading only
+- Basic market data
+- Community support
+- Standard backtesting
+
+#### BASIC ($19/month)
+- 10 active bots
+- $5,000 max capital
+- Real trading enabled
+- Email support
+- Advanced backtesting
+- Real-time market data
+
+#### PRO ($39/month)
+- 50 active bots
+- $50,000 max capital
+- Priority execution
+- Priority support
+- Advanced analytics
+- API access
+- Custom strategies
+
+#### PREMIUM ($59/month)
+- 999 active bots
+- $500,000 max capital
+- **Ultimate Money Machine** feature
+- 24/7 priority support
+- Institutional data feeds
+- Advanced AI features
+- Risk management tools
+- Multi-strategy portfolios
+
+#### ENTERPRISE ($250/month)
+- Unlimited bots
+- Unlimited capital
+- White-label solution
+- Dedicated account manager
+- Custom integrations
+- On-premise deployment
+- SLA guarantee
+- Custom bot development
+- Training & onboarding
+
+### 🚀 KEY FEATURES
+
+#### StripeService Methods
+✅ `createCheckoutSession(userId, tierId, successUrl, cancelUrl)` - Create checkout
+✅ `createPortalSession(userId, returnUrl)` - Manage subscription
+✅ `handleWebhook(rawBody, signature)` - Process webhook events
+✅ `getUserSubscription(userId)` - Get user's subscription
+✅ `cancelSubscription(userId)` - Cancel at period end
+✅ `hasAccess(userId, feature)` - Feature access control
+
+#### Webhook Handlers
+✅ `checkout.session.completed` - New subscription
+✅ `customer.subscription.created` - Subscription activated
+✅ `customer.subscription.updated` - Plan changed
+✅ `customer.subscription.deleted` - Subscription ended
+✅ `invoice.payment_succeeded` - Payment success
+✅ `invoice.payment_failed` - Payment failure
+
+#### Frontend Features
+✅ Subscription tier cards with features
+✅ Current plan indicator with badge
+✅ Upgrade/downgrade buttons
+✅ Manage subscription portal link
+✅ Billing period display
+✅ Cancellation warning display
+✅ Real-time tier data from API
+✅ Loading states and error handling
+
+#### Security Features
+✅ Webhook signature verification
+✅ JWT authentication required
+✅ Environment variable protection
+✅ Raw body parsing for webhooks
+✅ HTTPS-only production webhooks
+
+### 📊 DATABASE SCHEMA
+
+Added `SubscriptionSchema` to schemas.ts:
+- userId, customerId, subscriptionId tracking
+- Tier and status management
+- Billing period dates
+- Cancellation tracking
+- Payment history array
+- Metadata support
+
+### 🎨 FRONTEND UI
+
+Complete payments page with:
+- 5 subscription tier cards
+- Color-coded tier badges
+- "POPULAR" badge on PRO tier
+- "CURRENT PLAN" indicator
+- Feature lists with checkmarks
+- Pricing display ($X/month)
+- Subscribe/Change Plan buttons
+- Manage Subscription button
+- Billing period information
+- Cancellation warnings
+- Loading states with spinners
+- Success/error notifications
+
+### 📝 SETUP REQUIREMENTS
+
+1. Create Stripe account
+2. Get API keys (test and live)
+3. Create 4 products with prices
+4. Set up webhook endpoint
+5. Configure environment variables
+6. Install stripe package
+7. Deploy and test
+
+See [STRIPE_INTEGRATION.md](./STRIPE_INTEGRATION.md) for complete setup instructions.
+
+### 🧪 TESTING
+
+- Test mode with `4242 4242 4242 4242`
+- Stripe CLI for local webhooks
+- Complete test coverage for all flows
+
+---
+
+# 📊 ANALYTICS DASHBOARD COMPLETE (v61.0.0)
 
 ## Session 2025-12-25 — Comprehensive Admin Analytics Dashboard
 
