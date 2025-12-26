@@ -12,7 +12,8 @@ on:
 env:
   NODE_VERSION: '20'
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+  # Use lowercase repository name for Docker compatibility
+  IMAGE_NAME: tdmboyd-dev/time
 
 jobs:
   # ===================================

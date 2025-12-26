@@ -36,7 +36,9 @@
       "WebFetch(domain:clearalgo.ai)",
       "WebFetch(domain:www.luxalgo.com)",
       "WebFetch(domain:smrtalgo.com)",
-      "WebFetch(domain:go.atnunlimited.com)"
+      "WebFetch(domain:go.atnunlimited.com)",
+      "Bash(eas --version:*)",
+      "Bash(eas whoami:*)"
     ]
   }
 }
