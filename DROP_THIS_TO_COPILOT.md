@@ -1,8 +1,59 @@
 # DROP THIS TO COPILOT - QUICK REFERENCE
 
 **Last Updated:** 2025-12-25
-**Version:** v68.0.0 - STRIPE PAYMENTS INTEGRATION COMPLETE
+**Version:** v69.0.0 - ANALYTICS DASHBOARD COMPLETE
 **Purpose:** Quick summary for Copilot/Claude when starting new sessions
+
+---
+
+## 🎯 v69.0.0 - ANALYTICS DASHBOARD COMPLETE (2025-12-25)
+
+**Complete production-ready analytics dashboard with admin and user views**
+
+**Files Created:**
+- `frontend/src/app/admin/analytics/page.tsx` - Admin Analytics Dashboard (750+ lines)
+- `frontend/src/app/my-analytics/page.tsx` - User Analytics Dashboard (650+ lines)
+
+**Files Updated:**
+- `src/backend/routes/analytics.ts` - Added 4 new API endpoints (406+ new lines)
+- `frontend/src/components/layout/Sidebar.tsx` - Added analytics navigation links
+
+**New API Endpoints:**
+- `GET /api/v1/analytics/admin/overview` - Comprehensive admin overview with charts
+- `GET /api/v1/analytics/admin/users` - Detailed user analytics (roles, status, activity)
+- `GET /api/v1/analytics/admin/revenue` - Revenue metrics (MRR, ARR, LTV, churn)
+- `GET /api/v1/analytics/user/:userId` - Personal user analytics (P&L, bots, trades)
+
+**Admin Dashboard Features:**
+- Total Users with growth chart (Area chart)
+- Active Subscriptions by Tier (Pie chart)
+- Revenue metrics (MRR, ARR, conversion rate, LTV)
+- Top Traders by P&L (table with rankings)
+- Bot Performance metrics and top performers
+- Trading Volume over time (Bar chart)
+- P&L trend chart (Line chart)
+- User Activity levels (daily/weekly/monthly/inactive)
+- User distribution by Role and Status (charts)
+- Recent signups list
+- Export to CSV functionality
+- Period selector (Today, 7D, 30D, 90D, 1Y)
+
+**User Dashboard Features:**
+- Personal P&L chart (cumulative and daily)
+- Win rate by bot (horizontal bar chart)
+- Best/worst performing bots (with medals)
+- Trade history timeline (recent trades table)
+- Portfolio allocation (Pie chart)
+- Trading stats summary (gross profit/loss, profit factor)
+- Export to CSV functionality
+- Period selector
+
+**Charts Library:** recharts (LineChart, AreaChart, BarChart, PieChart, ComposedChart)
+
+**Sidebar Updates:**
+- Added "My Analytics" link (visible to all users)
+- Added "Admin Analytics" link (admin-only)
+- Renamed "Analytics" to "Platform Analytics" (admin-only)
 
 ---
 

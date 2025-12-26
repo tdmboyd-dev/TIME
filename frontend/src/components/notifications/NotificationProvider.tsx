@@ -375,20 +375,138 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   }, [notifications]);
 
   // Show toast notification
-  const showToast = useCallback((title: string, message: string, type: 'info' | 'success' | 'warning' | 'error' = 'info', url?: string) => {
+  const showToast = useCallback((title: string, message: string, type: ToastType = 'info', url?: string) => {
     const id = `toast_${Date.now()}_${Math.random()}`;
     const toast: ToastNotification = { id, title, message, type, url };
     setToasts(prev => [...prev, toast]);
 
-    // Auto-dismiss after 5 seconds
+    // Play notification sound for critical/high priority
+    if (type === 'warning' || type === 'security') {
+      playNotificationSound('high');
+    }
+
+    // Auto-dismiss after 5-10 seconds based on priority
+    const timeout = type === 'security' || type === 'warning' ? 10000 : 5000;
     setTimeout(() => {
       setToasts(prev => prev.filter(t => t.id !== id));
-    }, 5000);
+    }, timeout);
   }, []);
 
   // Remove toast
   const removeToast = (id: string) => {
     setToasts(prev => prev.filter(t => t.id !== id));
+  };
+
+  // Play notification sound
+  const playNotificationSound = useCallback((priority: 'low' | 'medium' | 'high' | 'critical' = 'medium') => {
+    // Optional: implement sound playback
+    // if (audioRef.current && preferences.deliveryMethods.push) {
+    //   audioRef.current.src = `/sounds/${priority}.mp3`;
+    //   audioRef.current.play().catch(() => {});
+    // }
+  }, []);
+
+  // Fetch user preferences
+  const fetchPreferences = useCallback(async () => {
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/v1/notifications/preferences`, {
+        credentials: 'include',
+      });
+      const data = await response.json();
+      if (data.success && data.preferences) {
+        setPreferences(data.preferences);
+      }
+    } catch (error) {
+      console.error('Error fetching notification preferences:', error);
+    }
+  }, []);
+
+  // Update user preferences
+  const updatePreferences = useCallback(async (updates: Partial<NotificationPreferences>) => {
+    try {
+      setIsLoading(true);
+      const response = await fetch(`${BACKEND_URL}/api/v1/notifications/preferences`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(updates),
+      });
+
+      const data = await response.json();
+
+      if (data.success && data.preferences) {
+        setPreferences(data.preferences);
+        showToast('Preferences Updated', 'Your notification preferences have been saved.', 'success');
+      }
+    } catch (error) {
+      console.error('Error updating notification preferences:', error);
+      showToast('Error', 'Failed to update preferences. Please try again.', 'error');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [showToast]);
+
+  // Reset preferences to defaults
+  const resetPreferences = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch(`${BACKEND_URL}/api/v1/notifications/preferences/reset`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+
+      const data = await response.json();
+
+      if (data.success && data.preferences) {
+        setPreferences(data.preferences);
+        showToast('Preferences Reset', 'Your notification preferences have been reset to defaults.', 'success');
+      }
+    } catch (error) {
+      console.error('Error resetting notification preferences:', error);
+      showToast('Error', 'Failed to reset preferences. Please try again.', 'error');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [showToast]);
+
+  // Fetch notification statistics
+  const refreshStats = useCallback(async () => {
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/v1/notifications/stats`, {
+        credentials: 'include',
+      });
+      const data = await response.json();
+      if (data.success && data.stats) {
+        setStats(data.stats);
+      }
+    } catch (error) {
+      console.error('Error fetching notification stats:', error);
+    }
+  }, []);
+
+  // Get category from notification type
+  const getCategoryFromType = (type: string): NotificationCategory => {
+    const lowerType = type.toLowerCase();
+    if (lowerType.includes('trade') || lowerType.includes('executed')) return 'trade';
+    if (lowerType.includes('bot') || lowerType.includes('signal')) return 'bot';
+    if (lowerType.includes('price') || lowerType.includes('alert')) return 'price';
+    if (lowerType.includes('big_moves') || lowerType.includes('market_move')) return 'big_moves';
+    if (lowerType.includes('security') || lowerType.includes('login')) return 'security';
+    if (lowerType.includes('marketing') || lowerType.includes('promo')) return 'marketing';
+    return 'system';
+  };
+
+  // Convert category to toast type
+  const categoryToToastType = (category: NotificationCategory): ToastType => {
+    switch (category) {
+      case 'trade': return 'trade';
+      case 'bot': return 'bot';
+      case 'security': return 'security';
+      case 'big_moves': return 'warning';
+      default: return 'info';
+    }
   };
 
   // Listen for push messages from service worker
@@ -444,25 +562,49 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         });
       }
 
-      // Fetch initial notifications
+      // Fetch initial notifications, preferences, and stats
       refreshNotifications();
+      fetchPreferences();
+      refreshStats();
     }
-  }, [refreshNotifications]);
+  }, [refreshNotifications, fetchPreferences, refreshStats]);
 
-  const getToastIcon = (type: string) => {
+  // Handle navigation messages from service worker
+  useEffect(() => {
+    if (!isPushSupported()) return;
+
+    const handleNavigation = (event: MessageEvent) => {
+      if (event.data?.type === 'NAVIGATE') {
+        router.push(event.data.url);
+      }
+    };
+
+    navigator.serviceWorker?.addEventListener('message', handleNavigation);
+    return () => {
+      navigator.serviceWorker?.removeEventListener('message', handleNavigation);
+    };
+  }, [router]);
+
+  const getToastIcon = (type: ToastType) => {
     switch (type) {
       case 'success': return <CheckCircle className="w-5 h-5 text-green-400" />;
       case 'warning': return <AlertTriangle className="w-5 h-5 text-yellow-400" />;
       case 'error': return <AlertTriangle className="w-5 h-5 text-red-400" />;
+      case 'trade': return <TrendingUp className="w-5 h-5 text-emerald-400" />;
+      case 'bot': return <Bot className="w-5 h-5 text-purple-400" />;
+      case 'security': return <Shield className="w-5 h-5 text-red-400" />;
       default: return <Info className="w-5 h-5 text-blue-400" />;
     }
   };
 
-  const getToastColor = (type: string) => {
+  const getToastColor = (type: ToastType) => {
     switch (type) {
       case 'success': return 'border-green-500/50 bg-green-500/10';
       case 'warning': return 'border-yellow-500/50 bg-yellow-500/10';
       case 'error': return 'border-red-500/50 bg-red-500/10';
+      case 'trade': return 'border-emerald-500/50 bg-emerald-500/10';
+      case 'bot': return 'border-purple-500/50 bg-purple-500/10';
+      case 'security': return 'border-red-500/50 bg-red-500/10';
       default: return 'border-blue-500/50 bg-blue-500/10';
     }
   };
@@ -474,6 +616,9 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         unreadCount,
         isSubscribed,
         permission,
+        preferences,
+        stats,
+        isLoading,
         requestPermission,
         subscribeToPush,
         unsubscribeFromPush,
@@ -481,6 +626,10 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         markAllAsRead,
         deleteNotification,
         refreshNotifications,
+        updatePreferences,
+        resetPreferences,
+        refreshStats,
+        showToast,
       }}
     >
       {children}

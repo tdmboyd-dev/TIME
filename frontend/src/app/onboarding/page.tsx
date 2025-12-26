@@ -1121,7 +1121,7 @@ export default function OnboardingPage() {
               </div>
             )}
 
-            {/* Step 7: First Bot Activation */}
+            {/* Step 7: Complete + Start Trading */}
             {currentStep === 7 && (
               <div
                 className={`transition-all duration-300 ${
@@ -1133,165 +1133,195 @@ export default function OnboardingPage() {
                 }`}
               >
                 <div className="text-center mb-8">
-                  <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-time-primary to-time-secondary mb-6 animate-pulse">
-                    <Play className="w-10 h-10 text-white" />
+                  <div className="inline-flex items-center justify-center w-24 h-24 rounded-3xl bg-gradient-to-br from-time-primary to-time-secondary mb-6 animate-pulse">
+                    <Rocket className="w-12 h-12 text-white" />
                   </div>
-                  <h2 className="text-3xl md:text-4xl font-bold text-white mb-3">
-                    Activate Your First Bot
+                  <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
+                    You're All Set, {name}!
                   </h2>
-                  <p className="text-white/60">
-                    Choose a bot to start your automated trading journey
+                  <p className="text-lg text-white/60 max-w-xl mx-auto">
+                    Your personalized trading experience is ready. Let's start your journey with TIME BEYOND US.
                   </p>
                 </div>
 
-                <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto mb-8">
-                  {recommendedBots.map((botName) => (
-                    <button
-                      key={botName}
-                      onClick={() => setActivatedBot(botName)}
-                      className={`p-6 rounded-2xl border-2 transition-all duration-300 text-left ${
-                        activatedBot === botName
-                          ? 'border-time-primary bg-time-primary/10 scale-105'
-                          : 'border-slate-700/50 bg-slate-800/30 hover:border-slate-600 hover:bg-slate-800/50'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-time-primary to-time-secondary flex items-center justify-center">
-                          <Bot className="w-6 h-6 text-white" />
-                        </div>
-                        {activatedBot === botName && (
-                          <div className="w-8 h-8 rounded-full bg-time-primary flex items-center justify-center">
-                            <Check className="w-5 h-5 text-white" />
-                          </div>
-                        )}
+                {/* Summary Card */}
+                <div className="max-w-3xl mx-auto mb-8">
+                  <div className="p-6 bg-slate-800/50 border border-slate-700/50 rounded-2xl">
+                    <h3 className="text-lg font-semibold text-white mb-4 text-center">Your Trading Profile</h3>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div className="p-4 bg-slate-800/50 rounded-xl text-center">
+                        <User className="w-6 h-6 text-time-primary mx-auto mb-2" />
+                        <p className="text-xs text-white/60">Experience</p>
+                        <p className="text-sm font-bold text-white capitalize">{experienceLevel}</p>
                       </div>
-                      <h3 className="text-lg font-bold text-white mb-2">{botName}</h3>
-                      <p className="text-sm text-white/60 mb-4">
-                        {activatedBot === botName
-                          ? 'Ready to activate'
-                          : 'Click to select'}
-                      </p>
-                      <div className="flex items-center gap-2">
-                        <Play className="w-4 h-4 text-time-primary" />
-                        <span className="text-xs text-white/60">
-                          {activatedBot === botName ? 'Selected' : 'Select to activate'}
-                        </span>
+                      <div className="p-4 bg-slate-800/50 rounded-xl text-center">
+                        <Shield className="w-6 h-6 text-time-primary mx-auto mb-2" />
+                        <p className="text-xs text-white/60">Risk Profile</p>
+                        <p className="text-sm font-bold text-white">{getRiskLabel(riskTolerance)}</p>
                       </div>
-                    </button>
-                  ))}
-                </div>
-
-                {activatedBot && (
-                  <div className="max-w-2xl mx-auto">
-                    <div className="p-6 bg-slate-800/50 border border-slate-700/50 rounded-2xl mb-6">
-                      <div className="flex items-start gap-4">
-                        <div className="p-3 rounded-xl bg-time-primary/20">
-                          <Target className="w-6 h-6 text-time-primary" />
-                        </div>
-                        <div className="flex-1">
-                          <h4 className="text-white font-semibold mb-2">{activatedBot}</h4>
-                          <p className="text-sm text-white/60 mb-4">
-                            This bot will start in paper trading mode. You can switch to live trading once you're comfortable.
-                          </p>
-                          <div className="grid grid-cols-2 gap-4 text-sm">
-                            <div className="p-3 bg-slate-800/50 rounded-lg">
-                              <p className="text-white/40 text-xs mb-1">Mode</p>
-                              <p className="text-white font-medium">Paper Trading</p>
-                            </div>
-                            <div className="p-3 bg-slate-800/50 rounded-lg">
-                              <p className="text-white/40 text-xs mb-1">Risk Level</p>
-                              <p className="text-white font-medium capitalize">{riskTolerance}</p>
-                            </div>
-                          </div>
-                        </div>
+                      <div className="p-4 bg-slate-800/50 rounded-xl text-center">
+                        <Target className="w-6 h-6 text-time-primary mx-auto mb-2" />
+                        <p className="text-xs text-white/60">Goal</p>
+                        <p className="text-sm font-bold text-white capitalize">{investmentGoal}</p>
+                      </div>
+                      <div className="p-4 bg-slate-800/50 rounded-xl text-center">
+                        <Wallet className="w-6 h-6 text-time-primary mx-auto mb-2" />
+                        <p className="text-xs text-white/60">Capital</p>
+                        <p className="text-sm font-bold text-white">{capitalRanges.find(c => c.value === capitalRange)?.label}</p>
                       </div>
                     </div>
-
-                    <button
-                      onClick={handleComplete}
-                      disabled={isSaving}
-                      className="w-full px-8 py-4 bg-gradient-to-r from-time-primary to-time-secondary text-white font-medium rounded-xl hover:opacity-90 transition-all flex items-center justify-center gap-2"
-                    >
-                      {isSaving ? (
-                        <>
-                          <Loader2 className="w-5 h-5 animate-spin" />
-                          Activating Bot...
-                        </>
-                      ) : (
-                        <>
-                          Activate & Start Trading
-                          <ArrowRight className="w-5 h-5" />
-                        </>
-                      )}
-                    </button>
                   </div>
-                )}
+                </div>
 
-                <div className="mt-6 text-center">
+                {/* Selected Plan */}
+                <div className="max-w-xl mx-auto mb-8">
+                  <div className="p-6 bg-gradient-to-br from-time-primary/20 to-time-secondary/20 border border-time-primary/30 rounded-2xl text-center">
+                    <h3 className="text-lg font-semibold text-white mb-2">Your Selected Plan</h3>
+                    <p className="text-3xl font-bold text-white mb-2">
+                      {selectedPlan} - ${PRICING_TIERS.find(t => t.name === selectedPlan)?.price}/mo
+                    </p>
+                    {selectedAddOns.length > 0 && (
+                      <p className="text-sm text-white/60">
+                        + {selectedAddOns.join(', ')} add-on{selectedAddOns.length > 1 ? 's' : ''}
+                      </p>
+                    )}
+                    <div className="mt-4 pt-4 border-t border-white/10">
+                      <p className="text-sm text-white/60">Total</p>
+                      <p className="text-2xl font-bold text-time-primary">
+                        ${(PRICING_TIERS.find(t => t.name === selectedPlan)?.price || 0) +
+                          selectedAddOns.reduce((sum, addon) => sum + (ADD_ONS.find(a => a.name === addon)?.price || 0), 0)}/mo
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Recommended Bots */}
+                <div className="max-w-3xl mx-auto mb-8">
+                  <h3 className="text-lg font-semibold text-white text-center mb-4">Your Recommended Bots</h3>
+                  <div className="flex flex-wrap justify-center gap-3">
+                    {recommendedBots.slice(0, 3).map((botName) => (
+                      <div
+                        key={botName}
+                        className="px-4 py-3 bg-slate-800/30 border border-slate-700/50 rounded-xl flex items-center gap-3"
+                      >
+                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-time-primary to-time-secondary flex items-center justify-center">
+                          <Bot className="w-4 h-4 text-white" />
+                        </div>
+                        <span className="text-white font-medium">{botName}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* CTA Buttons */}
+                <div className="max-w-md mx-auto space-y-4">
                   <button
                     onClick={handleComplete}
-                    className="text-white/60 hover:text-white transition-colors text-sm"
+                    disabled={isSaving}
+                    className="w-full px-8 py-5 bg-gradient-to-r from-time-primary to-time-secondary text-white text-lg font-bold rounded-xl hover:opacity-90 transition-all flex items-center justify-center gap-3 shadow-lg shadow-time-primary/25"
                   >
-                    Skip for now - I'll activate a bot later
+                    {isSaving ? (
+                      <>
+                        <Loader2 className="w-6 h-6 animate-spin" />
+                        Setting up your account...
+                      </>
+                    ) : (
+                      <>
+                        <Play className="w-6 h-6" />
+                        Start Trading Now
+                      </>
+                    )}
                   </button>
+
+                  <p className="text-center text-sm text-white/40">
+                    You can always adjust your preferences from the dashboard
+                  </p>
                 </div>
               </div>
             )}
 
             {/* Navigation */}
-            <div className="flex items-center justify-between mt-12">
-              {currentStep > 1 ? (
-                <button
-                  onClick={handleBack}
-                  className="flex items-center gap-2 px-6 py-3 bg-slate-800/50 hover:bg-slate-700/50 border border-slate-700/50 rounded-xl text-white transition-all"
-                >
-                  <ChevronLeft className="w-5 h-5" />
-                  Back
-                </button>
-              ) : (
-                <div />
-              )}
+            {currentStep < 7 && (
+              <div className="flex items-center justify-between mt-12">
+                {currentStep > 1 ? (
+                  <button
+                    onClick={handleBack}
+                    className="flex items-center gap-2 px-6 py-3 bg-slate-800/50 hover:bg-slate-700/50 border border-slate-700/50 rounded-xl text-white transition-all"
+                  >
+                    <ChevronLeft className="w-5 h-5" />
+                    Back
+                  </button>
+                ) : (
+                  <div />
+                )}
 
-              {currentStep < 5 ? (
-                <button
-                  onClick={handleNext}
-                  disabled={!canProceed()}
-                  className={`flex items-center gap-2 px-8 py-3 rounded-xl font-medium transition-all ${
-                    canProceed()
-                      ? 'bg-gradient-to-r from-time-primary to-time-secondary text-white hover:opacity-90'
-                      : 'bg-slate-700/50 text-slate-500 cursor-not-allowed'
-                  }`}
-                >
-                  Continue
-                  <ChevronRight className="w-5 h-5" />
-                </button>
-              ) : currentStep === 5 ? (
-                <button
-                  onClick={handleNext}
-                  className="flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-time-primary to-time-secondary text-white font-medium rounded-xl hover:opacity-90 transition-all"
-                >
-                  {selectedBroker ? 'Continue' : 'Skip & Continue'}
-                  <ChevronRight className="w-5 h-5" />
-                </button>
-              ) : currentStep === 6 ? (
-                <button
-                  onClick={() => {
-                    setIsAnimating(true);
-                    setDirection('forward');
-                    setTimeout(() => {
-                      setCurrentStep(7);
-                      setIsAnimating(false);
-                    }, 300);
-                  }}
-                  className="flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-time-primary to-time-secondary text-white font-medium rounded-xl hover:opacity-90 transition-all"
-                >
-                  Continue to Activation
-                  <ChevronRight className="w-5 h-5" />
-                </button>
-              ) : null}
-            </div>
+                {currentStep < 6 ? (
+                  <button
+                    onClick={handleNext}
+                    disabled={!canProceed()}
+                    className={`flex items-center gap-2 px-8 py-3 rounded-xl font-medium transition-all ${
+                      canProceed()
+                        ? 'bg-gradient-to-r from-time-primary to-time-secondary text-white hover:opacity-90'
+                        : 'bg-slate-700/50 text-slate-500 cursor-not-allowed'
+                    }`}
+                  >
+                    Continue
+                    <ChevronRight className="w-5 h-5" />
+                  </button>
+                ) : currentStep === 6 ? (
+                  <button
+                    onClick={() => {
+                      setIsAnimating(true);
+                      setDirection('forward');
+                      setTimeout(() => {
+                        setCurrentStep(7);
+                        setIsAnimating(false);
+                      }, 300);
+                    }}
+                    className="flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-time-primary to-time-secondary text-white font-medium rounded-xl hover:opacity-90 transition-all"
+                  >
+                    Review & Complete
+                    <ChevronRight className="w-5 h-5" />
+                  </button>
+                ) : null}
+              </div>
+            )}
           </div>
         </main>
+
+        {/* Skip Modal */}
+        {showSkipModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+            <div className="bg-slate-900 border border-slate-700 rounded-2xl p-8 max-w-md mx-4">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-bold text-white">Skip Onboarding?</h3>
+                <button
+                  onClick={() => setShowSkipModal(false)}
+                  className="p-2 hover:bg-slate-800 rounded-lg transition-colors"
+                >
+                  <X className="w-5 h-5 text-white/60" />
+                </button>
+              </div>
+              <p className="text-white/60 mb-6">
+                You can skip onboarding and go directly to the dashboard. You can always complete this setup later from your profile settings.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowSkipModal(false)}
+                  className="flex-1 px-4 py-3 border border-slate-700 text-white rounded-xl hover:bg-slate-800 transition-colors"
+                >
+                  Continue Setup
+                </button>
+                <button
+                  onClick={handleSkipOnboarding}
+                  className="flex-1 px-4 py-3 bg-time-primary text-white rounded-xl hover:opacity-90 transition-colors"
+                >
+                  Skip to Dashboard
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Footer */}
         <footer className="p-6 text-center">
