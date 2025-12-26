@@ -81,6 +81,6 @@ web-build/
 # Expo
 expo-env.d.ts
 
-# Secrets
-google-services.json
-GoogleService-Info.plist
+# Secrets (keeping these tracked for EAS builds)
+# google-services.json
+# GoogleService-Info.plist

@@ -42,7 +42,9 @@
       "Bash(eas build:*)",
       "Bash(eas init:*)",
       "Bash(eas credentials:*)",
-      "Bash(eas build:list:*)"
+      "Bash(eas build:list:*)",
+      "WebFetch(domain:expo.dev)",
+      "Bash(eas build:view:*)"
     ]
   }
 }

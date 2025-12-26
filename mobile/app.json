@@ -41,7 +41,7 @@
         "backgroundColor": "#020617"
       },
       "package": "com.timebeyondus.trading",
-      "versionCode": 2,
+      "versionCode": 4,
       "permissions": [
         "USE_BIOMETRIC",
         "USE_FINGERPRINT",
@@ -82,10 +82,7 @@
         "expo-notifications",
         {
           "icon": "./assets/notification-icon.png",
-          "color": "#00ff88",
-          "sounds": [
-            "./assets/notification.wav"
-          ]
+          "color": "#00ff88"
         }
       ],
       [

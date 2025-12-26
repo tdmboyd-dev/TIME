@@ -1,0 +1,40 @@
+# EAS Build Ignore File
+# Reduce build size by excluding unnecessary files
+
+# Node modules (installed fresh on build server)
+node_modules/
+
+# Git
+.git/
+.gitignore
+
+# Development files
+*.log
+*.md
+!README.md
+
+# Test files
+__tests__/
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+coverage/
+
+# IDE
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Build outputs
+dist/
+build/
+
+# Other project folders (not needed for mobile build)
+../src/
+../frontend/
+../dropzone/
+../.github/
