@@ -1,16 +1,22 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { AuthenticatedLayout } from '@/components/layout/AuthenticatedLayout';
 
 const inter = Inter({ subsets: ['latin'] });
 
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  themeColor: '#7c3aed',
+};
+
 export const metadata: Metadata = {
   title: 'TIME BEYOND US — Meta-Intelligence Trading Governor',
   description: 'The Ultimate AI-Powered Trading Platform with 182+ bots - We Beat Time, So You Don\'t Have To',
   manifest: '/manifest.json',
-  themeColor: '#7c3aed',
-  viewport: 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
