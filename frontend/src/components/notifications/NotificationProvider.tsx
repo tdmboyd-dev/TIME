@@ -225,7 +225,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       // Subscribe to push notifications
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: convertedVapidKey,
+        applicationServerKey: convertedVapidKey.buffer as ArrayBuffer,
       });
 
       // Send subscription to server

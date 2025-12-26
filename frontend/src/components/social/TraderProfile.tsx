@@ -561,7 +561,7 @@ export function TraderProfile({ userId, onClose }: TraderProfileProps) {
                   <div>
                     <p className="font-medium text-white">{trade.symbol}</p>
                     <p className="text-xs text-slate-500">
-                      ${trade.entryPrice.toLocaleString()} -> ${trade.exitPrice.toLocaleString()}
+                      ${trade.entryPrice.toLocaleString()} → ${trade.exitPrice.toLocaleString()}
                     </p>
                   </div>
                 </div>

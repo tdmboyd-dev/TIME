@@ -145,10 +145,10 @@ export default function LoginScreen({ navigation }: any) {
 
       {/* Footer */}
       <View style={styles.footer}>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')}>
           <Text style={styles.footerLink}>Forgot Password?</Text>
         </TouchableOpacity>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate('Register')}>
           <Text style={styles.footerLink}>Create Account</Text>
         </TouchableOpacity>
       </View>

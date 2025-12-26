@@ -159,13 +159,64 @@ class AuthService {
 
   // Password reset
   async requestPasswordReset(email: string): Promise<void> {
-    // Implement password reset API call
-    // await apiService.requestPasswordReset(email);
+    try {
+      await apiService.post('/auth/forgot-password', { email });
+    } catch (error) {
+      throw error;
+    }
   }
 
-  async resetPassword(token: string, newPassword: string): Promise<void> {
-    // Implement password reset API call
-    // await apiService.resetPassword(token, newPassword);
+  async verifyResetCode(email: string, code: string): Promise<boolean> {
+    try {
+      const response = await apiService.post('/auth/verify-reset-code', { email, code });
+      return response.valid === true;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  async resetPassword(email: string, code: string, newPassword: string): Promise<void> {
+    try {
+      await apiService.post('/auth/reset-password', { email, code, newPassword });
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // MFA Methods
+  async getMFAStatus(): Promise<{ enabled: boolean; method?: string }> {
+    try {
+      const response = await apiService.get('/auth/mfa/status');
+      return response;
+    } catch (error) {
+      return { enabled: false };
+    }
+  }
+
+  async setupMFA(method: 'authenticator' | 'sms' | 'email'): Promise<{ secret: string; qrCodeUrl: string }> {
+    try {
+      const response = await apiService.post('/auth/mfa/setup', { method });
+      return response;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async verifyMFA(code: string): Promise<{ success: boolean; backupCodes?: Array<{ code: string; used: boolean }> }> {
+    try {
+      const response = await apiService.post('/auth/mfa/verify', { code });
+      return response;
+    } catch (error) {
+      return { success: false };
+    }
+  }
+
+  async disableMFA(): Promise<void> {
+    try {
+      await apiService.post('/auth/mfa/disable');
+    } catch (error) {
+      throw error;
+    }
   }
 }
 

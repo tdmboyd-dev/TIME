@@ -223,6 +223,52 @@ class PushNotificationService {
   async dismissNotification(notificationId: string): Promise<void> {
     await Notifications.dismissNotificationAsync(notificationId);
   }
+
+  // Update notification preferences on backend
+  async updateNotificationPreferences(preferences: Record<string, boolean>): Promise<void> {
+    try {
+      // This would call your backend API to update notification preferences
+      // await apiService.put('/notifications/preferences', preferences);
+      console.log('Updating notification preferences:', preferences);
+    } catch (error) {
+      console.error('Error updating notification preferences:', error);
+      throw error;
+    }
+  }
+
+  // Get notification preferences from backend
+  async getNotificationPreferences(): Promise<Record<string, boolean>> {
+    try {
+      // This would call your backend API to get notification preferences
+      // return await apiService.get('/notifications/preferences');
+      return {
+        trades_executed: true,
+        trades_failed: true,
+        trades_pending: true,
+        trades_summary: true,
+        bots_signals: true,
+        bots_trades: true,
+        bots_status: true,
+        bots_performance: true,
+        bots_errors: true,
+        price_targets: true,
+        price_movement: true,
+        price_volatility: true,
+        portfolio_balance: true,
+        portfolio_performance: true,
+        portfolio_risk: true,
+        security_login: true,
+        security_changes: true,
+        security_suspicious: true,
+        marketing_news: false,
+        marketing_tips: false,
+        marketing_promotions: false,
+      };
+    } catch (error) {
+      console.error('Error getting notification preferences:', error);
+      return {};
+    }
+  }
 }
 
 export default new PushNotificationService();

@@ -26,7 +26,7 @@ interface Bot {
   activePairs: string[];
 }
 
-export default function BotScreen() {
+export default function BotScreen({ navigation }: any) {
   const [bots, setBots] = useState<Bot[]>([
     {
       id: '1',
@@ -186,6 +186,7 @@ export default function BotScreen() {
                 key={bot.id}
                 bot={bot}
                 onToggle={() => toggleBotStatus(bot.id)}
+                onPress={() => navigation.navigate('BotDetail', { botId: bot.id })}
               />
             ))
           ) : (
@@ -200,7 +201,10 @@ export default function BotScreen() {
         </View>
 
         {/* Add New Bot Button */}
-        <TouchableOpacity style={styles.addButton}>
+        <TouchableOpacity
+          style={styles.addButton}
+          onPress={() => navigation.navigate('BotConfigure', { mode: 'create' })}
+        >
           <Ionicons name="add-circle" size={24} color="#00ff88" />
           <Text style={styles.addButtonText}>Create New Bot</Text>
         </TouchableOpacity>

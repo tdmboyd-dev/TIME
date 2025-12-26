@@ -962,23 +962,505 @@ router.post('/cache/clear', async (req: Request, res: Response) => {
 
 /**
  * GET /backtest/export/:id
- * Export backtest results to PDF/CSV (placeholder)
+ * Export backtest results to CSV/JSON/HTML
  */
 router.get('/export/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const { format } = req.query;
 
-    // TODO: Implement PDF/CSV export
-    log.info(`Exporting backtest ${id} as ${format}`);
+    const stored = backtestResultStore.get(id);
+
+    if (!stored) {
+      return res.status(404).json({
+        success: false,
+        error: `Backtest result not found: ${id}`,
+      });
+    }
+
+    const { ResultExporter } = await import('../backtesting/export_results');
+
+    const exportFormat = (format as string) || 'json';
+    const result = ResultExporter.export(stored.result, {
+      format: exportFormat as any,
+      includeTrades: true,
+      includeEquityCurve: true,
+      includeMonthlyReturns: true,
+      filename: `backtest_${stored.config.symbol}_${id}`,
+    });
+
+    log.info(`Exported backtest ${id} as ${exportFormat}`);
+
+    res.setHeader('Content-Type', result.mimeType);
+    res.setHeader('Content-Disposition', `attachment; filename="${result.filename}"`);
+    res.send(result.content);
+  } catch (error) {
+    log.error('Failed to export backtest results:', error as object);
+    res.status(500).json({ success: false, error: (error as Error).message });
+  }
+});
+
+/**
+ * POST /backtest/options
+ * Run options backtesting
+ */
+router.post('/options', async (req: Request, res: Response) => {
+  try {
+    const {
+      underlying,
+      strategy,
+      startDate,
+      endDate,
+      initialCapital,
+      riskFreeRate,
+      maxLossPercent,
+      candles,
+    } = req.body;
+
+    if (!underlying) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required field: underlying',
+      });
+    }
+
+    const { OptionsBacktestEngine, PREDEFINED_STRATEGIES } = await import('../backtesting/options_backtest');
+
+    const config = {
+      underlying,
+      startDate: startDate ? new Date(startDate) : new Date(Date.now() - 365 * 24 * 60 * 60 * 1000),
+      endDate: endDate ? new Date(endDate) : new Date(),
+      initialCapital: initialCapital || 10000,
+      riskFreeRate: riskFreeRate || 0.05,
+      dividendYield: 0,
+      maxPositions: 5,
+      maxLossPercent: maxLossPercent || 20,
+      commissionPerContract: 0.65,
+      slippageTicks: 1,
+    };
+
+    let candleData = candles;
+    if (!candleData || candleData.length === 0) {
+      candleData = generateTestCandles(underlying, 365, 100);
+    }
+
+    const engine = new OptionsBacktestEngine(config);
+    const strategyToUse = strategy || 'covered_call';
+    const result = engine.runBacktest(candleData, strategyToUse);
+
+    log.info(`Options backtest completed for ${underlying}: ${result.totalTrades} trades, ${result.totalReturnPercent.toFixed(2)}% return`);
 
     res.json({
       success: true,
-      message: 'Export functionality coming soon',
-      data: null,
+      data: {
+        summary: {
+          underlying: result.symbol,
+          strategy: strategyToUse,
+          period: result.period,
+          totalReturn: result.totalReturnPercent,
+          sharpeRatio: result.sharpeRatio,
+          maxDrawdown: result.maxDrawdownPercent,
+        },
+        optionsMetrics: {
+          avgDelta: result.avgDelta,
+          avgGamma: result.avgGamma,
+          avgTheta: result.avgTheta,
+          avgVega: result.avgVega,
+          thetaDecayTotal: result.thetaDecayTotal,
+          assignmentCount: result.assignmentCount,
+          expirationCount: result.expirationCount,
+          exerciseCount: result.exerciseCount,
+        },
+        trades: result.optionsTrades.slice(0, 50),
+        equityCurve: result.equityCurve,
+        availableStrategies: Object.keys(PREDEFINED_STRATEGIES),
+      },
     });
   } catch (error) {
-    log.error('Failed to export backtest results:', error as object);
+    log.error('Failed to run options backtest:', error as object);
+    res.status(500).json({ success: false, error: (error as Error).message });
+  }
+});
+
+/**
+ * POST /backtest/benchmark
+ * Run benchmark comparison
+ */
+router.post('/benchmark', async (req: Request, res: Response) => {
+  try {
+    const {
+      symbol,
+      benchmarks,
+      config,
+      candles,
+      benchmarkCandles,
+    } = req.body;
+
+    if (!symbol) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required field: symbol',
+      });
+    }
+
+    const { BenchmarkCalculator, benchmarkManager } = await import('../backtesting/benchmark_comparison');
+
+    let candleData = candles;
+    if (!candleData || candleData.length === 0) {
+      candleData = generateTestCandles(symbol, 365, 100);
+    }
+
+    const backConfig: BacktestConfig = {
+      symbol,
+      startDate: config?.startDate ? new Date(config.startDate) : new Date(Date.now() - 365 * 24 * 60 * 60 * 1000),
+      endDate: config?.endDate ? new Date(config.endDate) : new Date(),
+      initialCapital: config?.initialCapital || 10000,
+      positionSizePercent: config?.positionSizePercent || 10,
+      maxDrawdownPercent: config?.maxDrawdownPercent || 20,
+      commissionPercent: config?.commissionPercent || 0.1,
+      slippagePercent: config?.slippagePercent || 0.05,
+      leverage: config?.leverage || 1,
+    };
+
+    const engine = new BacktestingEngine(backConfig);
+    const strategyResult = engine.runBacktest(candleData);
+
+    const benchmarkNames = benchmarks || ['Buy & Hold', 'Risk-Free (2%)'];
+    const additionalCandles = benchmarkCandles ? new Map(Object.entries(benchmarkCandles)) : undefined;
+
+    const benchmarkResults = await benchmarkManager.calculateBenchmarks(
+      benchmarkNames,
+      candleData,
+      additionalCandles,
+      config?.initialCapital || 10000
+    );
+
+    const comparison = BenchmarkCalculator.compareWithBenchmarks(strategyResult, benchmarkResults);
+
+    log.info(`Benchmark comparison completed for ${symbol} against ${benchmarkNames.length} benchmarks`);
+
+    res.json({
+      success: true,
+      data: {
+        strategy: {
+          totalReturn: strategyResult.totalReturnPercent,
+          sharpeRatio: strategyResult.sharpeRatio,
+          maxDrawdown: strategyResult.maxDrawdownPercent,
+        },
+        benchmarks: benchmarkResults.map(b => ({
+          name: b.name,
+          totalReturn: b.totalReturnPercent,
+          sharpeRatio: b.sharpeRatio,
+          maxDrawdown: b.maxDrawdownPercent,
+        })),
+        comparison: comparison.comparison,
+        rollingComparison: comparison.rollingComparison.slice(0, 50),
+      },
+    });
+  } catch (error) {
+    log.error('Failed to run benchmark comparison:', error as object);
+    res.status(500).json({ success: false, error: (error as Error).message });
+  }
+});
+
+/**
+ * POST /backtest/out-of-sample
+ * Run out-of-sample analysis
+ */
+router.post('/out-of-sample', async (req: Request, res: Response) => {
+  try {
+    const {
+      symbol,
+      method,
+      config,
+      oosConfig,
+      candles,
+    } = req.body;
+
+    if (!symbol) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required field: symbol',
+      });
+    }
+
+    const { WalkForwardAnalyzer, RobustnessTester } = await import('../backtesting/out_of_sample');
+
+    let candleData = candles;
+    if (!candleData || candleData.length === 0) {
+      candleData = generateTestCandles(symbol, 730, 100);
+    }
+
+    const backConfig: BacktestConfig = {
+      symbol,
+      startDate: config?.startDate ? new Date(config.startDate) : new Date(Date.now() - 730 * 24 * 60 * 60 * 1000),
+      endDate: config?.endDate ? new Date(config.endDate) : new Date(),
+      initialCapital: config?.initialCapital || 10000,
+      positionSizePercent: config?.positionSizePercent || 10,
+      maxDrawdownPercent: config?.maxDrawdownPercent || 20,
+      commissionPercent: config?.commissionPercent || 0.1,
+      slippagePercent: config?.slippagePercent || 0.05,
+      leverage: config?.leverage || 1,
+    };
+
+    const analyzer = new WalkForwardAnalyzer({
+      method: method || 'walk_forward',
+      trainRatio: oosConfig?.trainRatio || 0.7,
+      testRatio: oosConfig?.testRatio || 0.3,
+      numFolds: oosConfig?.numFolds || 5,
+      embargoPeriod: oosConfig?.embargoPeriod || 0,
+      stepSize: oosConfig?.stepSize || 30,
+      minTrainDays: oosConfig?.minTrainDays || 180,
+    });
+
+    const oosResult = await analyzer.analyze(candleData, backConfig);
+    const robustnessTests = await RobustnessTester.runTests(candleData, backConfig, oosResult);
+
+    log.info(`OOS analysis completed for ${symbol}: ${oosResult.foldResults.length} folds`);
+
+    res.json({
+      success: true,
+      data: {
+        method: oosResult.method,
+        aggregatedMetrics: oosResult.aggregatedMetrics,
+        statisticalTests: oosResult.statisticalTests,
+        foldResults: oosResult.foldResults.map(f => ({
+          foldId: f.foldId,
+          trainReturn: f.trainResult.totalReturnPercent,
+          testReturn: f.testResult.totalReturnPercent,
+          efficiency: f.efficiency,
+          degradation: f.degradation,
+        })),
+        regimeAnalysis: oosResult.regimeAnalysis,
+        robustnessTests,
+      },
+    });
+  } catch (error) {
+    log.error('Failed to run out-of-sample analysis:', error as object);
+    res.status(500).json({ success: false, error: (error as Error).message });
+  }
+});
+
+/**
+ * POST /backtest/position-sizing
+ * Calculate position size using various methods
+ */
+router.post('/position-sizing', async (req: Request, res: Response) => {
+  try {
+    const {
+      method,
+      capital,
+      price,
+      stopLossPercent,
+      volatility,
+      targetVolatility,
+      riskPerTrade,
+      historicalTrades,
+    } = req.body;
+
+    if (!capital || !price) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required fields: capital, price',
+      });
+    }
+
+    const { PositionSizingCalculator } = await import('../backtesting/position_sizing');
+
+    const result = PositionSizingCalculator.calculate({
+      method: method || 'fixed_fractional',
+      capital,
+      price,
+      stopLossPercent: stopLossPercent || 2,
+      volatility: volatility || 0.02,
+      targetVolatility: targetVolatility || 0.15,
+      riskPerTrade: riskPerTrade || 1,
+      historicalTrades: historicalTrades || [],
+      maxPositionPercent: 25,
+      minPositionPercent: 0.5,
+    });
+
+    log.info(`Position size calculated: ${result.method} = $${result.positionSize.toFixed(2)}`);
+
+    res.json({
+      success: true,
+      data: result,
+    });
+  } catch (error) {
+    log.error('Failed to calculate position size:', error as object);
+    res.status(500).json({ success: false, error: (error as Error).message });
+  }
+});
+
+/**
+ * POST /backtest/risk-analysis
+ * Calculate risk metrics (VaR, Expected Drawdown)
+ */
+router.post('/risk-analysis', async (req: Request, res: Response) => {
+  try {
+    const {
+      capital,
+      confidenceLevel,
+      trades,
+      numSimulations,
+    } = req.body;
+
+    if (!trades || trades.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required field: trades',
+      });
+    }
+
+    const { RiskCalculator } = await import('../backtesting/position_sizing');
+
+    const var_result = RiskCalculator.calculateVaR(
+      trades,
+      capital || 10000,
+      confidenceLevel || 0.95
+    );
+
+    const dd_result = RiskCalculator.calculateExpectedMaxDrawdown(
+      trades,
+      numSimulations || 1000
+    );
+
+    log.info(`Risk analysis completed: VaR=$${var_result.parametricVaR.toFixed(2)}`);
+
+    res.json({
+      success: true,
+      data: {
+        valueAtRisk: var_result,
+        expectedMaxDrawdown: dd_result,
+      },
+    });
+  } catch (error) {
+    log.error('Failed to run risk analysis:', error as object);
+    res.status(500).json({ success: false, error: (error as Error).message });
+  }
+});
+
+/**
+ * POST /backtest/portfolio
+ * Run portfolio-level backtesting
+ */
+router.post('/portfolio', async (req: Request, res: Response) => {
+  try {
+    const {
+      assets,
+      rebalanceFrequency,
+      initialCapital,
+      assetCandles,
+    } = req.body;
+
+    if (!assets || assets.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required field: assets',
+      });
+    }
+
+    const { MultiAssetBacktestEngine } = await import('../backtesting/multi_asset_backtest');
+
+    const totalAllocation = assets.reduce((sum: number, a: any) => sum + (a.allocation || 0), 0);
+    if (Math.abs(totalAllocation - 100) > 0.01) {
+      return res.status(400).json({
+        success: false,
+        error: `Asset allocations must sum to 100% (got ${totalAllocation}%)`,
+      });
+    }
+
+    const assetData = new Map<string, any[]>();
+    for (const asset of assets) {
+      if (assetCandles && assetCandles[asset.symbol]) {
+        assetData.set(asset.symbol, assetCandles[asset.symbol]);
+      } else {
+        assetData.set(asset.symbol, generateTestCandles(asset.symbol, 365, 100));
+      }
+    }
+
+    const config = {
+      assets: assets.map((a: any) => ({
+        symbol: a.symbol,
+        allocation: a.allocation,
+        assetClass: a.assetClass || 'stock',
+        rebalanceThreshold: a.rebalanceThreshold,
+      })),
+      rebalanceFrequency: rebalanceFrequency || 'monthly',
+      portfolioConfig: {
+        symbol: 'PORTFOLIO',
+        startDate: new Date(Date.now() - 365 * 24 * 60 * 60 * 1000),
+        endDate: new Date(),
+        initialCapital: initialCapital || 10000,
+        positionSizePercent: 100,
+        maxDrawdownPercent: 20,
+        commissionPercent: 0.1,
+        slippagePercent: 0.05,
+        leverage: 1,
+      },
+    };
+
+    const engine = new MultiAssetBacktestEngine(config);
+    const result = await engine.runPortfolioBacktest(assetData);
+
+    log.info(`Portfolio backtest completed: ${assets.length} assets`);
+
+    res.json({
+      success: true,
+      data: {
+        portfolioMetrics: result.portfolioMetrics,
+        assetResults: result.assetResults.map(r => ({
+          symbol: r.symbol,
+          assetClass: r.assetClass,
+          allocation: r.allocation,
+          contribution: r.contribution,
+          totalReturn: r.totalReturnPercent,
+        })),
+        correlation: result.correlation,
+        rebalanceEvents: result.rebalanceEvents.slice(0, 20),
+        equityCurve: result.equityCurve,
+      },
+    });
+  } catch (error) {
+    log.error('Failed to run portfolio backtest:', error as object);
+    res.status(500).json({ success: false, error: (error as Error).message });
+  }
+});
+
+/**
+ * GET /backtest/features
+ * Get list of available backtesting features
+ */
+router.get('/features', async (req: Request, res: Response) => {
+  try {
+    const { BACKTESTING_VERSION, BACKTESTING_FEATURES } = await import('../backtesting');
+
+    res.json({
+      success: true,
+      data: {
+        version: BACKTESTING_VERSION,
+        features: BACKTESTING_FEATURES,
+        endpoints: [
+          'POST /run - Run basic backtest',
+          'POST /enhanced - Run enhanced backtest with additional metrics',
+          'POST /options - Run options backtesting',
+          'POST /portfolio - Run portfolio-level backtesting',
+          'POST /benchmark - Run benchmark comparison',
+          'POST /out-of-sample - Run out-of-sample analysis',
+          'POST /walk-forward - Run walk-forward optimization',
+          'POST /monte-carlo - Run Monte Carlo simulation',
+          'POST /optimize - Run parameter optimization',
+          'POST /position-sizing - Calculate position size',
+          'POST /risk-analysis - Calculate VaR and risk metrics',
+          'GET /export/:id - Export results to CSV/JSON/HTML',
+          'GET /results - List stored results',
+          'GET /results/:id - Get specific result',
+          'GET /visualization/:id - Get chart-ready data',
+        ],
+      },
+    });
+  } catch (error) {
+    log.error('Failed to get features:', error as object);
     res.status(500).json({ success: false, error: (error as Error).message });
   }
 });

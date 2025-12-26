@@ -419,7 +419,7 @@ export default function OnboardingPage() {
     }
 
     // Remove duplicates and limit to top 5 recommendations
-    const uniqueRecs = [...new Set(recommendations)];
+    const uniqueRecs = Array.from(new Set(recommendations));
     setRecommendedBots(uniqueRecs.slice(0, 5));
   };
 

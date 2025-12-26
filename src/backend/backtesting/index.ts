@@ -157,6 +157,118 @@ export {
 } from './data_cache';
 
 // ==========================================
+// OPTIONS BACKTESTING
+// ==========================================
+
+export {
+  // Options pricing
+  BlackScholesPricer,
+  BinomialPricer,
+
+  // Options backtesting
+  OptionsBacktestEngine,
+  OptionsBacktestConfig,
+  OptionsBacktestResult,
+  OptionContract,
+  OptionQuote,
+  OptionGreeks,
+  OptionPosition,
+  OptionTrade,
+  OptionsStrategy,
+
+  // IV Surface
+  IVSurface,
+
+  // Predefined strategies
+  PREDEFINED_STRATEGIES,
+} from './options_backtest';
+
+// ==========================================
+// BENCHMARK COMPARISON
+// ==========================================
+
+export {
+  // Benchmark calculator
+  BenchmarkCalculator,
+  BenchmarkManager,
+  benchmarkManager,
+
+  // Types
+  BenchmarkConfig,
+  BenchmarkResult,
+  ComparisonResult,
+  RollingComparisonResult,
+} from './benchmark_comparison';
+
+// ==========================================
+// TRADE LOGGING
+// ==========================================
+
+export {
+  // Trade logger
+  TradeLogger,
+  TradeAnalyzer,
+  tradeLogger,
+
+  // Types
+  ExecutionLog,
+  MarketConditions,
+  DetailedTrade,
+  ScalingEvent,
+  TradeLogSummary,
+  TradeLogExport,
+} from './trade_logger';
+
+// ==========================================
+// POSITION SIZING
+// ==========================================
+
+export {
+  // Position sizing
+  PositionSizingCalculator,
+  PositionSizeOptimizer,
+  RiskCalculator,
+
+  // Types
+  PositionSizeResult,
+  PositionSizingConfig,
+  PositionSizingMethod,
+} from './position_sizing';
+
+// ==========================================
+// OUT-OF-SAMPLE TESTING
+// ==========================================
+
+export {
+  // Walk-forward analyzer
+  WalkForwardAnalyzer,
+  RobustnessTester,
+
+  // Types
+  OutOfSampleConfig,
+  OutOfSampleResult,
+  WalkForwardResult as OOSWalkForwardResult,
+  RegimeAnalysisResult,
+  RobustnessTestResult,
+} from './out_of_sample';
+
+// ==========================================
+// EXPORT FUNCTIONALITY
+// ==========================================
+
+export {
+  // Exporters
+  ResultExporter,
+  ComparisonExporter,
+  OOSExporter,
+
+  // Types
+  ExportFormat,
+  ExportOptions,
+  ExportResult,
+} from './export_results';
+
+// ==========================================
 // CONVENIENCE FUNCTIONS
 // ==========================================
 
@@ -304,20 +416,76 @@ export async function runOptimization(
 // VERSION INFO
 // ==========================================
 
-export const BACKTESTING_VERSION = '1.0.0';
+export const BACKTESTING_VERSION = '2.0.0';
 export const BACKTESTING_FEATURES = [
-  'Multi-asset backtesting (stocks, crypto, forex)',
+  // Asset Types
+  'Multi-asset backtesting (stocks, crypto, forex, options)',
+  'Options pricing (Black-Scholes, Binomial)',
+  'Options strategies (spreads, straddles, iron condors)',
+  'Greeks calculation (Delta, Gamma, Theta, Vega, Rho)',
+
+  // Analysis
   'Multi-timeframe analysis',
   'Walk-forward optimization',
+  'K-Fold cross-validation',
+  'Combinatorial purged cross-validation',
   'Monte Carlo simulation',
-  'Realistic slippage and commission modeling',
+  'Regime detection and analysis',
+
+  // Risk Metrics
+  'Sharpe, Sortino, Calmar ratios',
+  'Max Drawdown analysis',
+  'Value at Risk (VaR)',
+  'Expected Shortfall (CVaR)',
+
+  // Transaction Cost Modeling
+  'Realistic slippage modeling',
+  'Tiered commission structures',
+  'Market impact estimation',
+
+  // Position Sizing
+  'Fixed Fractional',
+  'Kelly Criterion (Full, Half, Quarter)',
+  'Optimal F (Ralph Vince)',
+  'Volatility targeting',
+  'ATR-based sizing',
+
+  // Portfolio
+  'Portfolio-level backtesting',
+  'Correlation analysis',
+  'Risk parity allocation',
+  'Rebalancing strategies',
+
+  // Benchmarks
+  'Benchmark comparison (Buy & Hold, Indices)',
+  'Alpha and Beta calculation',
+  'Information ratio',
+  'Up/Down capture ratios',
+
+  // Optimization
   'Grid search parameter optimization',
   'Genetic algorithm optimization',
-  'Portfolio optimization (Markowitz)',
-  'Correlation analysis',
-  'Risk allocation and rebalancing',
+  'Parameter sensitivity analysis',
+
+  // Validation
+  'Out-of-sample testing',
+  'Robustness testing',
+  'Overfit detection',
+
+  // Detailed Logging
+  'Comprehensive trade logs',
+  'Execution tracking',
+  'MAE/MFE analysis',
+
+  // Export
+  'CSV export',
+  'JSON export',
+  'HTML reports',
+  'Excel-compatible format',
+
+  // Performance
+  'LRU caching',
+  'Data quality validation',
   'Equity curve visualization',
   'Monthly returns heatmap',
-  'Trade distribution analysis',
-  'Data caching for performance',
 ];

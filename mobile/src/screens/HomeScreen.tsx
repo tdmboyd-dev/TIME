@@ -87,31 +87,45 @@ export default function HomeScreen({ navigation }: any) {
       <View style={styles.actionsGrid}>
         <TouchableOpacity
           style={styles.actionCard}
+          onPress={() => navigation.navigate('Trade')}
+        >
+          <Ionicons name="swap-horizontal" size={32} color="#00ff88" />
+          <Text style={styles.actionText}>Quick Trade</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.actionCard}
+          onPress={() => navigation.navigate('AdvancedTrade')}
+        >
+          <Ionicons name="options" size={32} color="#6366f1" />
+          <Text style={styles.actionText}>Advanced</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.actionCard}
           onPress={() => navigation.navigate('Bots')}
         >
-          <Ionicons name="play-circle" size={32} color="#22c55e" />
-          <Text style={styles.actionText}>Start Bot</Text>
+          <Ionicons name="hardware-chip" size={32} color="#22c55e" />
+          <Text style={styles.actionText}>AI Bots</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.actionCard}
-          onPress={() => navigation.navigate('Markets')}
+          onPress={() => navigation.navigate('PriceAlerts')}
         >
-          <Ionicons name="search" size={32} color="#6366f1" />
-          <Text style={styles.actionText}>Markets</Text>
+          <Ionicons name="notifications" size={32} color="#f59e0b" />
+          <Text style={styles.actionText}>Alerts</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.actionCard}
-          onPress={() => navigation.navigate('Portfolio')}
+          onPress={() => navigation.navigate('Leaderboard')}
         >
-          <Ionicons name="pie-chart" size={32} color="#f59e0b" />
-          <Text style={styles.actionText}>Portfolio</Text>
+          <Ionicons name="trophy" size={32} color="#a855f7" />
+          <Text style={styles.actionText}>Leaderboard</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.actionCard}
-          onPress={() => navigation.navigate('Settings')}
+          onPress={() => navigation.navigate('Profile')}
         >
-          <Ionicons name="settings" size={32} color="#64748b" />
-          <Text style={styles.actionText}>Settings</Text>
+          <Ionicons name="person" size={32} color="#64748b" />
+          <Text style={styles.actionText}>Profile</Text>
         </TouchableOpacity>
       </View>
 
@@ -206,22 +220,23 @@ const styles = StyleSheet.create({
   actionsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 12,
+    gap: 10,
     marginBottom: 24,
   },
   actionCard: {
-    width: '47%',
+    width: '31%',
     backgroundColor: '#1e293b',
     borderRadius: 12,
-    padding: 20,
+    padding: 16,
     alignItems: 'center',
     borderWidth: 1,
     borderColor: '#334155',
   },
   actionText: {
     color: '#f8fafc',
-    fontSize: 14,
+    fontSize: 12,
     marginTop: 8,
+    textAlign: 'center',
   },
   activityCard: {
     backgroundColor: '#1e293b',

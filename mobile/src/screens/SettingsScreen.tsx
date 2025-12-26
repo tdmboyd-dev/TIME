@@ -46,7 +46,7 @@ export default function SettingsScreen({ navigation }: any) {
     {
       title: 'Account',
       items: [
-        { icon: 'person-outline', label: 'Profile', type: 'link' },
+        { icon: 'person-outline', label: 'Profile', type: 'link', onPress: () => navigation.navigate('Profile') },
         { icon: 'card-outline', label: 'Subscription', type: 'link' },
         { icon: 'wallet-outline', label: 'Connected Brokers', type: 'link' },
       ],
@@ -76,7 +76,8 @@ export default function SettingsScreen({ navigation }: any) {
           onPress: () => setBiometrics(!biometrics),
         },
         { icon: 'key-outline', label: 'Change Password', type: 'link' },
-        { icon: 'shield-checkmark-outline', label: '2FA Settings', type: 'link' },
+        { icon: 'shield-checkmark-outline', label: '2FA Settings', type: 'link', onPress: () => navigation.navigate('MFA') },
+        { icon: 'lock-closed-outline', label: 'Security Settings', type: 'link', onPress: () => navigation.navigate('Security') },
       ],
     },
     {
@@ -89,7 +90,8 @@ export default function SettingsScreen({ navigation }: any) {
           value: notifications,
           onPress: () => setNotifications(!notifications),
         },
-        { icon: 'mail-outline', label: 'Email Alerts', type: 'link' },
+        { icon: 'options-outline', label: 'Notification Preferences', type: 'link', onPress: () => navigation.navigate('NotificationPreferences') },
+        { icon: 'pricetag-outline', label: 'Price Alerts', type: 'link', onPress: () => navigation.navigate('PriceAlerts') },
       ],
     },
     {
@@ -116,7 +118,7 @@ export default function SettingsScreen({ navigation }: any) {
                   styles.item,
                   itemIndex < section.items.length - 1 && styles.itemBorder,
                 ]}
-                onPress={item.type === 'toggle' ? item.onPress : undefined}
+                onPress={item.onPress}
               >
                 <View style={styles.itemLeft}>
                   <Ionicons name={item.icon} size={22} color="#6366f1" />

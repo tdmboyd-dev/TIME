@@ -7,6 +7,7 @@ import TradeScreen from '../screens/TradeScreen';
 import BotScreen from '../screens/BotScreen';
 import AlertsScreen from '../screens/AlertsScreen';
 import SettingsScreen from '../screens/SettingsScreen';
+import LeaderboardScreen from '../screens/LeaderboardScreen';
 
 export type TabParamList = {
   Home: undefined;
@@ -14,6 +15,7 @@ export type TabParamList = {
   Trade: undefined;
   Bots: undefined;
   Alerts: undefined;
+  Leaderboard: undefined;
   Settings: undefined;
 };
 
@@ -41,6 +43,9 @@ export default function TabNavigator() {
               break;
             case 'Alerts':
               iconName = focused ? 'notifications' : 'notifications-outline';
+              break;
+            case 'Leaderboard':
+              iconName = focused ? 'trophy' : 'trophy-outline';
               break;
             case 'Settings':
               iconName = focused ? 'settings' : 'settings-outline';
@@ -111,6 +116,14 @@ export default function TabNavigator() {
         component={AlertsScreen}
         options={{
           title: 'Alerts',
+          headerShown: false,
+        }}
+      />
+      <Tab.Screen
+        name="Leaderboard"
+        component={LeaderboardScreen}
+        options={{
+          title: 'Social',
           headerShown: false,
         }}
       />
