@@ -41,7 +41,7 @@
         "backgroundColor": "#020617"
       },
       "package": "com.timebeyondus.trading",
-      "versionCode": 5,
+      "versionCode": 6,
       "permissions": [
         "USE_BIOMETRIC",
         "USE_FINGERPRINT",
@@ -78,13 +78,6 @@
     "plugins": [
       "expo-secure-store",
       [
-        "expo-notifications",
-        {
-          "icon": "./assets/notification-icon.png",
-          "color": "#00ff88"
-        }
-      ],
-      [
         "expo-local-authentication",
         {
           "faceIDPermission": "Allow TIME BEYOND US to use Face ID for secure authentication"
@@ -110,12 +103,6 @@
       "eas": {
         "projectId": "26adeff7-1d4d-427c-9278-c9c37a4c429c"
       }
-    },
-    "notification": {
-      "icon": "./assets/notification-icon.png",
-      "color": "#00ff88",
-      "androidMode": "default",
-      "androidCollapsedTitle": "TIME Trading Alert"
     },
     "updates": {
       "fallbackToCacheTimeout": 0
