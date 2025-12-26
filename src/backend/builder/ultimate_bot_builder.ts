@@ -175,6 +175,127 @@ export interface RevenueProjection {
   marketplaceRevenue: number;
   totalYearlyRevenue: number;
 }
+
+// =============================================================================
+// DETAILED REVENUE BREAKDOWN - FULL TRANSPARENCY
+// =============================================================================
+
+export interface DetailedRevenueBreakdown {
+  // User Stats
+  totalUsers: number;
+  avgUserCapital: number;
+  avgMonthlyReturn: number;  // Percentage
+  avgMonthlyProfit: number;  // Dollar amount
+
+  // REVENUE STREAM 1: Trading Profit Share (30/70 Split)
+  profitShare: {
+    description: string;
+    calculation: string;
+    perUserMonthly: number;
+    totalMonthly: number;
+    totalYearly: number;
+    example: string;
+  };
+
+  // REVENUE STREAM 2: Bot Creation Fees
+  botCreationFees: {
+    description: string;
+    feePerBot: number;
+    avgBotsPerUser: number;
+    totalBotsMonthly: number;
+    totalMonthly: number;
+    totalYearly: number;
+    example: string;
+  };
+
+  // REVENUE STREAM 3: Premium Template Sales
+  premiumTemplates: {
+    description: string;
+    pricePerTemplate: number;
+    purchasesPerMonth: number;
+    totalMonthly: number;
+    totalYearly: number;
+    example: string;
+  };
+
+  // REVENUE STREAM 4: Marketplace Subscriptions (80/20 Split)
+  marketplaceSubs: {
+    description: string;
+    calculation: string;
+    passRate: number;              // % of bots that pass Absorb Engine
+    botsOnMarketplace: number;
+    avgSubscribersPerBot: number;
+    subscriptionPrice: number;
+    timeSharePercent: number;      // 80%
+    creatorSharePercent: number;   // 20%
+    grossMonthly: number;
+    timeMonthly: number;           // TIME's 80%
+    creatorMonthly: number;        // Creator's 20%
+    timeYearly: number;
+    example: string;
+  };
+
+  // REVENUE STREAM 5: TIMEBEUNUS Fusion Boost
+  fusionBoost: {
+    description: string;
+    boostPercent: number;
+    additionalProfitGenerated: number;
+    timeShareOfBoost: number;
+    monthlyFromBoost: number;
+    yearlyFromBoost: number;
+    example: string;
+  };
+
+  // TOTALS
+  totals: {
+    monthlyRevenue: number;
+    yearlyRevenue: number;
+    revenuePerUser: number;
+    breakdown: {
+      stream: string;
+      monthly: number;
+      yearly: number;
+      percentOfTotal: number;
+    }[];
+  };
+
+  // YEAR-OVER-YEAR PROJECTIONS
+  yearlyProjections: {
+    year: number;
+    users: number;
+    monthlyRevenue: number;
+    yearlyRevenue: number;
+    growthRate: number;
+    notes: string;
+  }[];
+}
+
+// =============================================================================
+// REVENUE BREAKDOWN CONSTANTS
+// =============================================================================
+
+export const REVENUE_CONSTANTS = {
+  // User behavior assumptions
+  AVG_USER_CAPITAL: 500,           // $500 average starting capital
+  AVG_MONTHLY_RETURN: 0.30,        // 30% monthly return (conservative for trading)
+  AVG_BOTS_PER_USER: 2,            // Users create 2 bots on average per month
+
+  // Bot creation fees
+  BOT_CREATION_FEE: 5,             // $5 per bot creation
+  PREMIUM_TEMPLATE_PRICE: 20,      // $20 per premium template
+  PREMIUM_PURCHASES_RATE: 0.20,    // 20% of users buy premium templates
+
+  // Marketplace assumptions
+  ABSORB_PASS_RATE: 0.40,          // 40% of bots pass (AI optimized)
+  AVG_SUBSCRIBERS_PER_BOT: 10,     // 10 subscribers per marketplace bot
+
+  // Growth projections
+  YEAR_1_USERS: 1000,
+  YEAR_2_GROWTH: 5.0,              // 5x growth
+  YEAR_3_GROWTH: 3.0,              // 3x growth
+  YEAR_4_GROWTH: 2.67,             // 2.67x growth
+  YEAR_5_GROWTH: 2.5,              // 2.5x growth
+};
 export type StrategyType =
   | 'dca'           // Dollar Cost Averaging
   | 'grid'          // Grid Trading
@@ -1878,10 +1999,10 @@ class UltimateBotBuilderEngine extends EventEmitter {
     const yearlyProfitShare = monthlyProfitShare * 12;
 
     // STREAM 2: Marketplace Revenue (80% to TIME!)
-    // Estimate 20% of bots pass Absorb Engine and go to marketplace
-    const marketplaceBots = Math.floor(users * 0.20);
-    const avgSubscribers = 50;
-    const marketplaceMonthly = marketplaceBots * avgSubscribers * BUSINESS_CONFIG.MARKETPLACE_MONTHLY_PRICE * BUSINESS_CONFIG.TIME_MARKETPLACE_SHARE; // TIME's 80%!
+    // Estimate 40% of bots pass Absorb Engine and go to marketplace (AI optimized)
+    const marketplaceBots = Math.floor(users * REVENUE_CONSTANTS.ABSORB_PASS_RATE);
+    const avgSubscribers = REVENUE_CONSTANTS.AVG_SUBSCRIBERS_PER_BOT;
+    const marketplaceMonthly = marketplaceBots * avgSubscribers * BUSINESS_CONFIG.MARKETPLACE_MONTHLY_PRICE * BUSINESS_CONFIG.TIME_MARKETPLACE_SHARE;
     const marketplaceYearly = marketplaceMonthly * 12;
 
     return {
@@ -1893,6 +2014,346 @@ class UltimateBotBuilderEngine extends EventEmitter {
       marketplaceRevenue: marketplaceYearly,
       totalYearlyRevenue: yearlyProfitShare + marketplaceYearly
     };
+  }
+
+  // =============================================================================
+  // DETAILED REVENUE BREAKDOWN - COMPREHENSIVE ANALYSIS
+  // =============================================================================
+
+  /**
+   * Generate comprehensive revenue breakdown with examples
+   * Shows ALL 5 revenue streams with step-by-step calculations
+   */
+  generateDetailedRevenueBreakdown(users: number): DetailedRevenueBreakdown {
+    const avgCapital = REVENUE_CONSTANTS.AVG_USER_CAPITAL;
+    const monthlyReturn = REVENUE_CONSTANTS.AVG_MONTHLY_RETURN;
+    const avgProfit = avgCapital * monthlyReturn;
+
+    // ==========================================================================
+    // STREAM 1: TRADING PROFIT SHARE (30% to TIME, 70% to User)
+    // ==========================================================================
+    const profitSharePerUser = avgProfit * BUSINESS_CONFIG.TIME_PROFIT_SHARE;
+    const totalProfitShareMonthly = users * profitSharePerUser;
+    const totalProfitShareYearly = totalProfitShareMonthly * 12;
+
+    const profitShare = {
+      description: 'TIME takes 30% of all trading profits generated by bots',
+      calculation: `${users} users × $${avgProfit.toFixed(2)} avg profit × ${BUSINESS_CONFIG.TIME_PROFIT_SHARE * 100}% TIME share`,
+      perUserMonthly: profitSharePerUser,
+      totalMonthly: totalProfitShareMonthly,
+      totalYearly: totalProfitShareYearly,
+      example: `User with $${avgCapital} capital makes $${avgProfit.toFixed(2)}/month profit (${monthlyReturn * 100}% return)
+      → User keeps: $${(avgProfit * BUSINESS_CONFIG.USER_PROFIT_SHARE).toFixed(2)} (70%)
+      → TIME gets: $${profitSharePerUser.toFixed(2)} (30%)
+      → ${users} users = $${totalProfitShareMonthly.toLocaleString()}/month for TIME`
+    };
+
+    // ==========================================================================
+    // STREAM 2: BOT CREATION FEES ($5 per bot)
+    // ==========================================================================
+    const botsPerUser = REVENUE_CONSTANTS.AVG_BOTS_PER_USER;
+    const totalBotsMonthly = users * botsPerUser;
+    const botFeeMonthly = totalBotsMonthly * REVENUE_CONSTANTS.BOT_CREATION_FEE;
+    const botFeeYearly = botFeeMonthly * 12;
+
+    const botCreationFees = {
+      description: '$5 flat fee charged each time a user creates a new bot',
+      feePerBot: REVENUE_CONSTANTS.BOT_CREATION_FEE,
+      avgBotsPerUser: botsPerUser,
+      totalBotsMonthly,
+      totalMonthly: botFeeMonthly,
+      totalYearly: botFeeYearly,
+      example: `${users} users × ${botsPerUser} bots/user × $${REVENUE_CONSTANTS.BOT_CREATION_FEE}/bot = $${botFeeMonthly.toLocaleString()}/month`
+    };
+
+    // ==========================================================================
+    // STREAM 3: PREMIUM TEMPLATE SALES ($20 per template)
+    // ==========================================================================
+    const premiumPurchases = Math.floor(users * REVENUE_CONSTANTS.PREMIUM_PURCHASES_RATE);
+    const premiumMonthly = premiumPurchases * REVENUE_CONSTANTS.PREMIUM_TEMPLATE_PRICE;
+    const premiumYearly = premiumMonthly * 12;
+
+    const premiumTemplates = {
+      description: 'Premium advanced templates (AI, Arbitrage, Options) sold at $20 each',
+      pricePerTemplate: REVENUE_CONSTANTS.PREMIUM_TEMPLATE_PRICE,
+      purchasesPerMonth: premiumPurchases,
+      totalMonthly: premiumMonthly,
+      totalYearly: premiumYearly,
+      example: `${REVENUE_CONSTANTS.PREMIUM_PURCHASES_RATE * 100}% of ${users} users buy premium = ${premiumPurchases} purchases × $${REVENUE_CONSTANTS.PREMIUM_TEMPLATE_PRICE} = $${premiumMonthly.toLocaleString()}/month`
+    };
+
+    // ==========================================================================
+    // STREAM 4: MARKETPLACE SUBSCRIPTIONS (80% to TIME, 20% to Creator)
+    // ==========================================================================
+    const passRate = REVENUE_CONSTANTS.ABSORB_PASS_RATE;
+    const botsOnMarketplace = Math.floor(totalBotsMonthly * passRate);
+    const subscribersPerBot = REVENUE_CONSTANTS.AVG_SUBSCRIBERS_PER_BOT;
+    const subPrice = BUSINESS_CONFIG.MARKETPLACE_MONTHLY_PRICE;
+    const grossMarketplace = botsOnMarketplace * subscribersPerBot * subPrice;
+    const timeMarketplace = grossMarketplace * BUSINESS_CONFIG.TIME_MARKETPLACE_SHARE;
+    const creatorMarketplace = grossMarketplace * BUSINESS_CONFIG.CREATOR_MARKETPLACE_SHARE;
+
+    const marketplaceSubs = {
+      description: 'Users subscribe to successful bots on marketplace. TIME takes 80% (we built the engine!)',
+      calculation: `${botsOnMarketplace} bots × ${subscribersPerBot} subs × $${subPrice}/mo × ${BUSINESS_CONFIG.TIME_MARKETPLACE_SHARE * 100}%`,
+      passRate,
+      botsOnMarketplace,
+      avgSubscribersPerBot: subscribersPerBot,
+      subscriptionPrice: subPrice,
+      timeSharePercent: BUSINESS_CONFIG.TIME_MARKETPLACE_SHARE * 100,
+      creatorSharePercent: BUSINESS_CONFIG.CREATOR_MARKETPLACE_SHARE * 100,
+      grossMonthly: grossMarketplace,
+      timeMonthly: timeMarketplace,
+      creatorMonthly: creatorMarketplace,
+      timeYearly: timeMarketplace * 12,
+      example: `${totalBotsMonthly} bots created → ${passRate * 100}% pass Absorb = ${botsOnMarketplace} marketplace bots
+      → Each bot gets ${subscribersPerBot} subscribers × $${subPrice}/mo = $${(subscribersPerBot * subPrice).toLocaleString()}/bot
+      → Gross: $${grossMarketplace.toLocaleString()}/month
+      → TIME (80%): $${timeMarketplace.toLocaleString()}/month
+      → Creators (20%): $${creatorMarketplace.toLocaleString()}/month`
+    };
+
+    // ==========================================================================
+    // STREAM 5: TIMEBEUNUS FUSION BOOST (15% extra performance)
+    // ==========================================================================
+    const boostPercent = (BUSINESS_CONFIG.TIMEBEUNUS_FUSION_BOOST - 1) * 100;
+    const fusedBots = botsOnMarketplace; // All passing bots are auto-fused
+    const additionalProfitPerBot = avgProfit * (BUSINESS_CONFIG.TIMEBEUNUS_FUSION_BOOST - 1);
+    const totalAdditionalProfit = fusedBots * additionalProfitPerBot * subscribersPerBot;
+    const timeShareOfBoost = totalAdditionalProfit * BUSINESS_CONFIG.TIME_PROFIT_SHARE;
+
+    const fusionBoost = {
+      description: `All passing bots are auto-fused with TIMEBEUNUS for ${boostPercent}% performance boost`,
+      boostPercent,
+      additionalProfitGenerated: totalAdditionalProfit,
+      timeShareOfBoost: BUSINESS_CONFIG.TIME_PROFIT_SHARE * 100,
+      monthlyFromBoost: timeShareOfBoost,
+      yearlyFromBoost: timeShareOfBoost * 12,
+      example: `${fusedBots} fused bots × ${subscribersPerBot} users each × $${additionalProfitPerBot.toFixed(2)} extra profit
+      → Total extra profit generated: $${totalAdditionalProfit.toLocaleString()}/month
+      → TIME's 30% of boost profits: $${timeShareOfBoost.toLocaleString()}/month`
+    };
+
+    // ==========================================================================
+    // TOTALS
+    // ==========================================================================
+    const totalMonthly = totalProfitShareMonthly + botFeeMonthly + premiumMonthly + timeMarketplace + timeShareOfBoost;
+    const totalYearly = totalMonthly * 12;
+
+    const breakdown = [
+      { stream: 'Trading Profit Share (30%)', monthly: totalProfitShareMonthly, yearly: totalProfitShareYearly, percentOfTotal: (totalProfitShareMonthly / totalMonthly) * 100 },
+      { stream: 'Bot Creation Fees ($5)', monthly: botFeeMonthly, yearly: botFeeYearly, percentOfTotal: (botFeeMonthly / totalMonthly) * 100 },
+      { stream: 'Premium Templates ($20)', monthly: premiumMonthly, yearly: premiumYearly, percentOfTotal: (premiumMonthly / totalMonthly) * 100 },
+      { stream: 'Marketplace Subs (80%)', monthly: timeMarketplace, yearly: timeMarketplace * 12, percentOfTotal: (timeMarketplace / totalMonthly) * 100 },
+      { stream: 'Fusion Boost Profits (30%)', monthly: timeShareOfBoost, yearly: timeShareOfBoost * 12, percentOfTotal: (timeShareOfBoost / totalMonthly) * 100 }
+    ];
+
+    // ==========================================================================
+    // 5-YEAR PROJECTIONS
+    // ==========================================================================
+    const yearlyProjections = [
+      { year: 1, users: REVENUE_CONSTANTS.YEAR_1_USERS, monthlyRevenue: 0, yearlyRevenue: 0, growthRate: 1, notes: 'Launch year - building user base' },
+      { year: 2, users: 0, monthlyRevenue: 0, yearlyRevenue: 0, growthRate: REVENUE_CONSTANTS.YEAR_2_GROWTH, notes: 'Viral growth - word of mouth' },
+      { year: 3, users: 0, monthlyRevenue: 0, yearlyRevenue: 0, growthRate: REVENUE_CONSTANTS.YEAR_3_GROWTH, notes: 'Market penetration' },
+      { year: 4, users: 0, monthlyRevenue: 0, yearlyRevenue: 0, growthRate: REVENUE_CONSTANTS.YEAR_4_GROWTH, notes: 'Industry dominance' },
+      { year: 5, users: 0, monthlyRevenue: 0, yearlyRevenue: 0, growthRate: REVENUE_CONSTANTS.YEAR_5_GROWTH, notes: 'Market leader' }
+    ];
+
+    // Calculate each year's projections
+    let currentUsers = REVENUE_CONSTANTS.YEAR_1_USERS;
+    for (let i = 0; i < yearlyProjections.length; i++) {
+      if (i > 0) {
+        currentUsers = Math.floor(currentUsers * yearlyProjections[i].growthRate);
+      }
+      yearlyProjections[i].users = currentUsers;
+      const yearBreakdown = this.generateDetailedRevenueForUsers(currentUsers);
+      yearlyProjections[i].monthlyRevenue = yearBreakdown.monthly;
+      yearlyProjections[i].yearlyRevenue = yearBreakdown.yearly;
+    }
+
+    return {
+      totalUsers: users,
+      avgUserCapital: avgCapital,
+      avgMonthlyReturn: monthlyReturn,
+      avgMonthlyProfit: avgProfit,
+      profitShare,
+      botCreationFees,
+      premiumTemplates,
+      marketplaceSubs,
+      fusionBoost,
+      totals: {
+        monthlyRevenue: totalMonthly,
+        yearlyRevenue: totalYearly,
+        revenuePerUser: totalMonthly / users,
+        breakdown
+      },
+      yearlyProjections
+    };
+  }
+
+  /**
+   * Helper to calculate revenue for a given user count
+   */
+  private generateDetailedRevenueForUsers(users: number): { monthly: number; yearly: number } {
+    const avgProfit = REVENUE_CONSTANTS.AVG_USER_CAPITAL * REVENUE_CONSTANTS.AVG_MONTHLY_RETURN;
+
+    // Stream 1: Profit Share
+    const profitShare = users * avgProfit * BUSINESS_CONFIG.TIME_PROFIT_SHARE;
+
+    // Stream 2: Bot Creation
+    const botFees = users * REVENUE_CONSTANTS.AVG_BOTS_PER_USER * REVENUE_CONSTANTS.BOT_CREATION_FEE;
+
+    // Stream 3: Premium Templates
+    const premium = users * REVENUE_CONSTANTS.PREMIUM_PURCHASES_RATE * REVENUE_CONSTANTS.PREMIUM_TEMPLATE_PRICE;
+
+    // Stream 4: Marketplace (80%)
+    const botsOnMarket = users * REVENUE_CONSTANTS.AVG_BOTS_PER_USER * REVENUE_CONSTANTS.ABSORB_PASS_RATE;
+    const marketplace = botsOnMarket * REVENUE_CONSTANTS.AVG_SUBSCRIBERS_PER_BOT *
+                        BUSINESS_CONFIG.MARKETPLACE_MONTHLY_PRICE * BUSINESS_CONFIG.TIME_MARKETPLACE_SHARE;
+
+    // Stream 5: Fusion Boost
+    const fusionProfit = botsOnMarket * REVENUE_CONSTANTS.AVG_SUBSCRIBERS_PER_BOT *
+                         avgProfit * (BUSINESS_CONFIG.TIMEBEUNUS_FUSION_BOOST - 1) *
+                         BUSINESS_CONFIG.TIME_PROFIT_SHARE;
+
+    const monthly = profitShare + botFees + premium + marketplace + fusionProfit;
+    return { monthly, yearly: monthly * 12 };
+  }
+
+  /**
+   * Print formatted revenue breakdown to console/logs
+   */
+  printRevenueBreakdown(users: number = 1000): string {
+    const breakdown = this.generateDetailedRevenueBreakdown(users);
+
+    let output = `
+╔══════════════════════════════════════════════════════════════════════════════╗
+║         ULTIMATE BOT BUILDER - DETAILED REVENUE BREAKDOWN                    ║
+║                        ${users.toLocaleString()} USERS ANALYSIS                                ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+📊 USER ASSUMPTIONS:
+   • Total Users: ${breakdown.totalUsers.toLocaleString()}
+   • Average Capital per User: $${breakdown.avgUserCapital.toLocaleString()}
+   • Average Monthly Return: ${(breakdown.avgMonthlyReturn * 100).toFixed(0)}%
+   • Average Monthly Profit: $${breakdown.avgMonthlyProfit.toFixed(2)}
+
+═══════════════════════════════════════════════════════════════════════════════
+💰 REVENUE STREAM 1: TRADING PROFIT SHARE (30/70 SPLIT)
+═══════════════════════════════════════════════════════════════════════════════
+   ${breakdown.profitShare.description}
+
+   CALCULATION:
+   ${breakdown.profitShare.calculation}
+
+   EXAMPLE:
+   ${breakdown.profitShare.example}
+
+   ✅ MONTHLY: $${breakdown.profitShare.totalMonthly.toLocaleString()}
+   ✅ YEARLY:  $${breakdown.profitShare.totalYearly.toLocaleString()}
+
+═══════════════════════════════════════════════════════════════════════════════
+💰 REVENUE STREAM 2: BOT CREATION FEES ($5/bot)
+═══════════════════════════════════════════════════════════════════════════════
+   ${breakdown.botCreationFees.description}
+
+   EXAMPLE:
+   ${breakdown.botCreationFees.example}
+
+   ✅ MONTHLY: $${breakdown.botCreationFees.totalMonthly.toLocaleString()}
+   ✅ YEARLY:  $${breakdown.botCreationFees.totalYearly.toLocaleString()}
+
+═══════════════════════════════════════════════════════════════════════════════
+💰 REVENUE STREAM 3: PREMIUM TEMPLATE SALES ($20/template)
+═══════════════════════════════════════════════════════════════════════════════
+   ${breakdown.premiumTemplates.description}
+
+   EXAMPLE:
+   ${breakdown.premiumTemplates.example}
+
+   ✅ MONTHLY: $${breakdown.premiumTemplates.totalMonthly.toLocaleString()}
+   ✅ YEARLY:  $${breakdown.premiumTemplates.totalYearly.toLocaleString()}
+
+═══════════════════════════════════════════════════════════════════════════════
+💰 REVENUE STREAM 4: MARKETPLACE SUBSCRIPTIONS (80/20 SPLIT)
+═══════════════════════════════════════════════════════════════════════════════
+   ${breakdown.marketplaceSubs.description}
+
+   CALCULATION:
+   ${breakdown.marketplaceSubs.calculation}
+
+   EXAMPLE:
+   ${breakdown.marketplaceSubs.example}
+
+   ✅ TIME MONTHLY (80%):    $${breakdown.marketplaceSubs.timeMonthly.toLocaleString()}
+   ✅ TIME YEARLY (80%):     $${breakdown.marketplaceSubs.timeYearly.toLocaleString()}
+   ℹ️ Creator Monthly (20%): $${breakdown.marketplaceSubs.creatorMonthly.toLocaleString()}
+
+═══════════════════════════════════════════════════════════════════════════════
+💰 REVENUE STREAM 5: TIMEBEUNUS FUSION BOOST (+15%)
+═══════════════════════════════════════════════════════════════════════════════
+   ${breakdown.fusionBoost.description}
+
+   EXAMPLE:
+   ${breakdown.fusionBoost.example}
+
+   ✅ MONTHLY: $${breakdown.fusionBoost.monthlyFromBoost.toLocaleString()}
+   ✅ YEARLY:  $${breakdown.fusionBoost.yearlyFromBoost.toLocaleString()}
+
+═══════════════════════════════════════════════════════════════════════════════
+📈 TOTAL REVENUE SUMMARY
+═══════════════════════════════════════════════════════════════════════════════
+
+   BREAKDOWN BY STREAM:
+   ┌────────────────────────────────┬────────────────┬────────────────┬─────────┐
+   │ Revenue Stream                 │ Monthly        │ Yearly         │ % Total │
+   ├────────────────────────────────┼────────────────┼────────────────┼─────────┤
+${breakdown.totals.breakdown.map(b =>
+   `   │ ${b.stream.padEnd(30)} │ $${b.monthly.toLocaleString().padStart(12)} │ $${b.yearly.toLocaleString().padStart(12)} │ ${b.percentOfTotal.toFixed(1).padStart(5)}% │`
+).join('\n')}
+   ├────────────────────────────────┼────────────────┼────────────────┼─────────┤
+   │ TOTAL                          │ $${breakdown.totals.monthlyRevenue.toLocaleString().padStart(12)} │ $${breakdown.totals.yearlyRevenue.toLocaleString().padStart(12)} │ 100.0% │
+   └────────────────────────────────┴────────────────┴────────────────┴─────────┘
+
+   💵 Revenue Per User: $${breakdown.totals.revenuePerUser.toFixed(2)}/month
+
+═══════════════════════════════════════════════════════════════════════════════
+📅 5-YEAR GROWTH PROJECTIONS
+═══════════════════════════════════════════════════════════════════════════════
+
+   ┌──────┬─────────────┬────────────────────┬─────────────────────┬───────────┐
+   │ Year │ Users       │ Monthly Revenue    │ Yearly Revenue      │ Growth    │
+   ├──────┼─────────────┼────────────────────┼─────────────────────┼───────────┤
+${breakdown.yearlyProjections.map(y =>
+   `   │ ${y.year}    │ ${y.users.toLocaleString().padStart(11)} │ $${y.monthlyRevenue.toLocaleString().padStart(16)} │ $${y.yearlyRevenue.toLocaleString().padStart(17)} │ ${(y.growthRate).toFixed(1).padStart(5)}x    │`
+).join('\n')}
+   └──────┴─────────────┴────────────────────┴─────────────────────┴───────────┘
+
+═══════════════════════════════════════════════════════════════════════════════
+🏆 COMPETITIVE ADVANTAGE vs ATN UNLIMITED
+═══════════════════════════════════════════════════════════════════════════════
+
+   ┌─────────────────────────┬─────────────────────┬─────────────────────┐
+   │ Feature                 │ ATN Unlimited       │ TIME Bot Builder    │
+   ├─────────────────────────┼─────────────────────┼─────────────────────┤
+   │ Minimum Capital         │ $25,000             │ $100                │
+   │ Profit Split (User)     │ 50%                 │ 70%                 │
+   │ Profit Split (Platform) │ 50%                 │ 30%                 │
+   │ Bot Creation            │ Human consultant    │ AI instant          │
+   │ Marketplace             │ None                │ 80/20 split         │
+   │ AI Optimization         │ Manual              │ Auto 4/5-star       │
+   │ TIMEBEUNUS Fusion       │ N/A                 │ +15% boost          │
+   └─────────────────────────┴─────────────────────┴─────────────────────┘
+
+   🎯 250x LOWER BARRIER TO ENTRY
+   🎯 USER KEEPS 20% MORE PROFIT
+   🎯 NO HUMAN BOTTLENECK
+   🎯 MARKETPLACE PASSIVE INCOME
+
+`;
+
+    logger.info('Revenue breakdown generated', { users, totalYearly: breakdown.totals.yearlyRevenue });
+    return output;
   }
 
   // =============================================================================
