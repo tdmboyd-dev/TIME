@@ -1,9 +1,7 @@
 {
   "version": 2,
   "framework": "nextjs",
-  "buildCommand": "npm run build",
-  "outputDirectory": ".next",
-  "installCommand": "npm install",
+  "rootDirectory": "frontend",
   "env": {
     "NEXT_PUBLIC_API_URL": "https://time-backend-hosting.fly.dev"
   },
