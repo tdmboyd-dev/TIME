@@ -2315,11 +2315,4 @@ export default {
 
   // Lifecycle
   shutdown,
-
-  // Types (exported for reference)
-  NotificationCategory,
-  NotificationPreferences,
-  NotificationTemplate,
-  ScheduledNotification,
-  BadgeCounts,
 };

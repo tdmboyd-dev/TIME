@@ -2165,4 +2165,1989 @@ router.get('/analytics/overview', (req: Request, res: Response) => {
   }
 });
 
+// ============================================================
+// LANDING PAGE BUILDER & TEMPLATES
+// ============================================================
+
+interface LandingPage {
+  id: string;
+  name: string;
+  slug: string;
+  status: 'draft' | 'published' | 'archived';
+  template: string;
+
+  // Page settings
+  settings: {
+    title: string;
+    description: string;
+    ogImage?: string;
+    favicon?: string;
+    customDomain?: string;
+    sslEnabled: boolean;
+    passwordProtected: boolean;
+    password?: string;
+  };
+
+  // Hero section
+  hero: {
+    headline: string;
+    subheadline: string;
+    ctaText: string;
+    ctaLink: string;
+    ctaSecondaryText?: string;
+    ctaSecondaryLink?: string;
+    backgroundImage?: string;
+    backgroundVideo?: string;
+    style: 'centered' | 'left-aligned' | 'split' | 'fullscreen';
+  };
+
+  // Features section
+  features: Array<{
+    id: string;
+    icon: string;
+    title: string;
+    description: string;
+    link?: string;
+  }>;
+
+  // Testimonials
+  testimonials: Array<{
+    id: string;
+    name: string;
+    role: string;
+    company?: string;
+    avatar?: string;
+    quote: string;
+    rating: number;
+  }>;
+
+  // Pricing section
+  pricing: {
+    enabled: boolean;
+    headline: string;
+    plans: Array<{
+      id: string;
+      name: string;
+      price: number;
+      interval: 'month' | 'year';
+      features: string[];
+      highlighted: boolean;
+      ctaText: string;
+      ctaLink: string;
+    }>;
+  };
+
+  // FAQ section
+  faq: Array<{
+    id: string;
+    question: string;
+    answer: string;
+  }>;
+
+  // Footer
+  footer: {
+    companyName: string;
+    links: Array<{ text: string; url: string }>;
+    socialLinks: Array<{ platform: string; url: string }>;
+    copyright: string;
+  };
+
+  // Lead capture form (integrated)
+  leadForm?: {
+    enabled: boolean;
+    formId: string;
+    position: 'hero' | 'popup' | 'footer' | 'inline';
+    delay?: number; // ms before popup shows
+  };
+
+  // Custom code
+  customCSS?: string;
+  customJS?: string;
+  headCode?: string;
+  bodyEndCode?: string;
+
+  // UTM tracking
+  utmParams?: {
+    source: string;
+    medium: string;
+    campaign: string;
+  };
+
+  // Analytics
+  analytics: {
+    views: number;
+    uniqueVisitors: number;
+    bounceRate: number;
+    avgTimeOnPage: number;
+    conversions: number;
+    conversionRate: number;
+  };
+
+  // Metadata
+  createdBy: string;
+  createdAt: Date;
+  updatedAt: Date;
+  publishedAt?: Date;
+}
+
+const landingPages: Map<string, LandingPage> = new Map();
+
+// Landing page templates
+const LANDING_PAGE_TEMPLATES = {
+  'product-launch': {
+    name: 'Product Launch',
+    description: 'Perfect for announcing new features or products',
+    thumbnail: '/templates/product-launch.png',
+    sections: ['hero', 'features', 'testimonials', 'pricing', 'cta', 'footer'],
+  },
+  'lead-generation': {
+    name: 'Lead Generation',
+    description: 'Optimized for capturing leads with prominent forms',
+    thumbnail: '/templates/lead-gen.png',
+    sections: ['hero', 'benefits', 'form', 'social-proof', 'footer'],
+  },
+  'coming-soon': {
+    name: 'Coming Soon',
+    description: 'Build anticipation with a countdown and email capture',
+    thumbnail: '/templates/coming-soon.png',
+    sections: ['countdown', 'email-capture', 'social'],
+  },
+  'webinar': {
+    name: 'Webinar Registration',
+    description: 'Drive registrations for your webinar or event',
+    thumbnail: '/templates/webinar.png',
+    sections: ['hero', 'speakers', 'agenda', 'registration', 'footer'],
+  },
+  'free-trial': {
+    name: 'Free Trial Signup',
+    description: 'Convert visitors into free trial users',
+    thumbnail: '/templates/free-trial.png',
+    sections: ['hero', 'features', 'comparison', 'signup', 'faq', 'footer'],
+  },
+  'case-study': {
+    name: 'Case Study',
+    description: 'Showcase customer success stories',
+    thumbnail: '/templates/case-study.png',
+    sections: ['hero', 'challenge', 'solution', 'results', 'cta', 'footer'],
+  },
+};
+
+// Initialize sample landing page
+const initializeSampleLandingPages = () => {
+  const sample: LandingPage = {
+    id: 'lp_1',
+    name: 'TIME Trading - Start Free',
+    slug: 'start-free',
+    status: 'published',
+    template: 'free-trial',
+    settings: {
+      title: 'TIME Trading - AI-Powered Trading Platform | Start Free',
+      description: 'Experience the future of trading with TIME. 154+ AI bots, real-time analytics, and automated strategies. Start your free trial today.',
+      sslEnabled: true,
+      passwordProtected: false,
+    },
+    hero: {
+      headline: 'Trade Smarter, Not Harder',
+      subheadline: 'Let our AI bots do the heavy lifting. Start with 3 free bots and upgrade anytime.',
+      ctaText: 'Start Free Trial',
+      ctaLink: '/signup',
+      ctaSecondaryText: 'Watch Demo',
+      ctaSecondaryLink: '/demo',
+      style: 'centered',
+    },
+    features: [
+      { id: 'f1', icon: 'Bot', title: '154+ AI Trading Bots', description: 'From momentum to mean reversion, find the perfect strategy for any market.' },
+      { id: 'f2', icon: 'Shield', title: 'Bank-Level Security', description: 'Your funds and data are protected with enterprise-grade encryption.' },
+      { id: 'f3', icon: 'Zap', title: 'Real-Time Execution', description: 'Millisecond execution speeds ensure you never miss an opportunity.' },
+      { id: 'f4', icon: 'LineChart', title: 'Advanced Analytics', description: 'Deep insights into your portfolio performance and risk metrics.' },
+    ],
+    testimonials: [
+      { id: 't1', name: 'John D.', role: 'Day Trader', quote: 'TIME has transformed my trading. The AI bots consistently outperform my manual strategies.', rating: 5 },
+      { id: 't2', name: 'Sarah M.', role: 'Investor', company: 'Hedge Fund', quote: 'The risk management features alone are worth the subscription. Incredible platform.', rating: 5 },
+    ],
+    pricing: {
+      enabled: true,
+      headline: 'Choose Your Plan',
+      plans: [
+        { id: 'p1', name: 'Free', price: 0, interval: 'month', features: ['3 AI Bots', 'Paper Trading', 'Basic Analytics'], highlighted: false, ctaText: 'Start Free', ctaLink: '/signup?plan=free' },
+        { id: 'p2', name: 'Pro', price: 49, interval: 'month', features: ['7 AI Bots', 'Live Trading', 'Advanced Analytics', 'Priority Support'], highlighted: true, ctaText: 'Go Pro', ctaLink: '/signup?plan=pro' },
+        { id: 'p3', name: 'Premium', price: 109, interval: 'month', features: ['11 Super Bots', 'All Features', 'API Access', '24/7 Support'], highlighted: false, ctaText: 'Get Premium', ctaLink: '/signup?plan=premium' },
+      ],
+    },
+    faq: [
+      { id: 'q1', question: 'Can I cancel anytime?', answer: 'Yes, you can cancel your subscription at any time with no penalties.' },
+      { id: 'q2', question: 'Do I need trading experience?', answer: 'No! Our AI bots handle the complex analysis. Just set your risk tolerance and goals.' },
+    ],
+    footer: {
+      companyName: 'TIME Trading',
+      links: [
+        { text: 'Privacy Policy', url: '/privacy' },
+        { text: 'Terms of Service', url: '/terms' },
+        { text: 'Support', url: '/support' },
+      ],
+      socialLinks: [
+        { platform: 'twitter', url: 'https://twitter.com/timetrading' },
+        { platform: 'linkedin', url: 'https://linkedin.com/company/timetrading' },
+      ],
+      copyright: '2025 TIME Trading. All rights reserved.',
+    },
+    analytics: {
+      views: 15234,
+      uniqueVisitors: 12456,
+      bounceRate: 32.5,
+      avgTimeOnPage: 185,
+      conversions: 1247,
+      conversionRate: 10.01,
+    },
+    createdBy: 'admin',
+    createdAt: new Date('2025-01-01'),
+    updatedAt: new Date(),
+    publishedAt: new Date('2025-01-01'),
+  };
+
+  landingPages.set(sample.id, sample);
+};
+
+initializeSampleLandingPages();
+
+/**
+ * GET /api/v1/marketing/landing-pages/templates
+ * Get available landing page templates
+ */
+router.get('/landing-pages/templates', (req: Request, res: Response) => {
+  res.json({
+    success: true,
+    templates: Object.entries(LANDING_PAGE_TEMPLATES).map(([id, template]) => ({
+      id,
+      ...template,
+    })),
+  });
+});
+
+/**
+ * GET /api/v1/marketing/landing-pages
+ * Get all landing pages
+ */
+router.get('/landing-pages', (req: Request, res: Response) => {
+  try {
+    const { status, limit = '50', offset = '0' } = req.query;
+
+    let pages = Array.from(landingPages.values());
+
+    if (status) {
+      pages = pages.filter(p => p.status === status);
+    }
+
+    pages.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
+
+    const total = pages.length;
+    const paginatedPages = pages.slice(
+      parseInt(offset as string),
+      parseInt(offset as string) + parseInt(limit as string)
+    );
+
+    res.json({
+      success: true,
+      summary: {
+        total,
+        published: Array.from(landingPages.values()).filter(p => p.status === 'published').length,
+        draft: Array.from(landingPages.values()).filter(p => p.status === 'draft').length,
+        totalViews: Array.from(landingPages.values()).reduce((sum, p) => sum + p.analytics.views, 0),
+        totalConversions: Array.from(landingPages.values()).reduce((sum, p) => sum + p.analytics.conversions, 0),
+      },
+      landingPages: paginatedPages,
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Failed to get landing pages' });
+  }
+});
+
+/**
+ * GET /api/v1/marketing/landing-pages/:id
+ * Get a specific landing page
+ */
+router.get('/landing-pages/:id', (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const page = landingPages.get(id);
+
+    if (!page) {
+      return res.status(404).json({ error: 'Landing page not found' });
+    }
+
+    res.json({ success: true, landingPage: page });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Failed to get landing page' });
+  }
+});
+
+/**
+ * POST /api/v1/marketing/landing-pages
+ * Create a new landing page
+ */
+router.post('/landing-pages', (req: Request, res: Response) => {
+  try {
+    const user = (req as any).user;
+    const { name, slug, template, settings, hero, features, testimonials, pricing, faq, footer, leadForm, utmParams } = req.body;
+
+    if (!name || !slug) {
+      return res.status(400).json({ error: 'name and slug are required' });
+    }
+
+    // Check for duplicate slug
+    const existingSlug = Array.from(landingPages.values()).find(p => p.slug === slug);
+    if (existingSlug) {
+      return res.status(400).json({ error: 'Slug already exists' });
+    }
+
+    const page: LandingPage = {
+      id: `lp_${Date.now()}`,
+      name,
+      slug,
+      status: 'draft',
+      template: template || 'product-launch',
+      settings: settings || {
+        title: name,
+        description: '',
+        sslEnabled: true,
+        passwordProtected: false,
+      },
+      hero: hero || {
+        headline: 'Your Headline Here',
+        subheadline: 'Your subheadline here',
+        ctaText: 'Get Started',
+        ctaLink: '/signup',
+        style: 'centered',
+      },
+      features: features || [],
+      testimonials: testimonials || [],
+      pricing: pricing || { enabled: false, headline: 'Pricing', plans: [] },
+      faq: faq || [],
+      footer: footer || {
+        companyName: 'TIME Trading',
+        links: [],
+        socialLinks: [],
+        copyright: '2025 TIME Trading. All rights reserved.',
+      },
+      leadForm,
+      utmParams,
+      analytics: {
+        views: 0,
+        uniqueVisitors: 0,
+        bounceRate: 0,
+        avgTimeOnPage: 0,
+        conversions: 0,
+        conversionRate: 0,
+      },
+      createdBy: user?.id || 'admin',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    landingPages.set(page.id, page);
+
+    res.json({
+      success: true,
+      landingPage: page,
+      message: 'Landing page created successfully',
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Failed to create landing page' });
+  }
+});
+
+/**
+ * PUT /api/v1/marketing/landing-pages/:id
+ * Update a landing page
+ */
+router.put('/landing-pages/:id', (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const updates = req.body;
+
+    const page = landingPages.get(id);
+    if (!page) {
+      return res.status(404).json({ error: 'Landing page not found' });
+    }
+
+    // Check for duplicate slug if slug is being updated
+    if (updates.slug && updates.slug !== page.slug) {
+      const existingSlug = Array.from(landingPages.values()).find(p => p.slug === updates.slug && p.id !== id);
+      if (existingSlug) {
+        return res.status(400).json({ error: 'Slug already exists' });
+      }
+    }
+
+    const allowedFields = ['name', 'slug', 'settings', 'hero', 'features', 'testimonials', 'pricing', 'faq', 'footer', 'leadForm', 'customCSS', 'customJS', 'headCode', 'bodyEndCode', 'utmParams'];
+
+    allowedFields.forEach(field => {
+      if (updates[field] !== undefined) {
+        (page as any)[field] = updates[field];
+      }
+    });
+
+    page.updatedAt = new Date();
+    landingPages.set(id, page);
+
+    res.json({
+      success: true,
+      landingPage: page,
+      message: 'Landing page updated successfully',
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Failed to update landing page' });
+  }
+});
+
+/**
+ * POST /api/v1/marketing/landing-pages/:id/publish
+ * Publish a landing page
+ */
+router.post('/landing-pages/:id/publish', (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const page = landingPages.get(id);
+
+    if (!page) {
+      return res.status(404).json({ error: 'Landing page not found' });
+    }
+
+    page.status = 'published';
+    page.publishedAt = new Date();
+    page.updatedAt = new Date();
+    landingPages.set(id, page);
+
+    res.json({
+      success: true,
+      landingPage: page,
+      message: 'Landing page published successfully',
+      url: `https://time-trading.app/l/${page.slug}`,
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Failed to publish landing page' });
+  }
+});
+
+/**
+ * POST /api/v1/marketing/landing-pages/:id/unpublish
+ * Unpublish a landing page
+ */
+router.post('/landing-pages/:id/unpublish', (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const page = landingPages.get(id);
+
+    if (!page) {
+      return res.status(404).json({ error: 'Landing page not found' });
+    }
+
+    page.status = 'draft';
+    page.updatedAt = new Date();
+    landingPages.set(id, page);
+
+    res.json({
+      success: true,
+      landingPage: page,
+      message: 'Landing page unpublished',
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Failed to unpublish landing page' });
+  }
+});
+
+/**
+ * DELETE /api/v1/marketing/landing-pages/:id
+ * Archive a landing page
+ */
+router.delete('/landing-pages/:id', (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const page = landingPages.get(id);
+
+    if (!page) {
+      return res.status(404).json({ error: 'Landing page not found' });
+    }
+
+    page.status = 'archived';
+    page.updatedAt = new Date();
+    landingPages.set(id, page);
+
+    res.json({
+      success: true,
+      message: 'Landing page archived successfully',
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Failed to archive landing page' });
+  }
+});
+
+/**
+ * POST /api/v1/marketing/landing-pages/:id/duplicate
+ * Duplicate a landing page
+ */
+router.post('/landing-pages/:id/duplicate', (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { name, slug } = req.body;
+    const user = (req as any).user;
+
+    const original = landingPages.get(id);
+    if (!original) {
+      return res.status(404).json({ error: 'Landing page not found' });
+    }
+
+    const newSlug = slug || `${original.slug}-copy`;
+
+    // Check for duplicate slug
+    const existingSlug = Array.from(landingPages.values()).find(p => p.slug === newSlug);
+    if (existingSlug) {
+      return res.status(400).json({ error: 'Slug already exists' });
+    }
+
+    const duplicate: LandingPage = {
+      ...JSON.parse(JSON.stringify(original)),
+      id: `lp_${Date.now()}`,
+      name: name || `${original.name} (Copy)`,
+      slug: newSlug,
+      status: 'draft',
+      analytics: {
+        views: 0,
+        uniqueVisitors: 0,
+        bounceRate: 0,
+        avgTimeOnPage: 0,
+        conversions: 0,
+        conversionRate: 0,
+      },
+      createdBy: user?.id || 'admin',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      publishedAt: undefined,
+    };
+
+    landingPages.set(duplicate.id, duplicate);
+
+    res.json({
+      success: true,
+      landingPage: duplicate,
+      message: 'Landing page duplicated successfully',
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Failed to duplicate landing page' });
+  }
+});
+
+/**
+ * GET /api/v1/marketing/landing-pages/:id/analytics
+ * Get analytics for a landing page
+ */
+router.get('/landing-pages/:id/analytics', (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { period = '7d' } = req.query;
+
+    const page = landingPages.get(id);
+    if (!page) {
+      return res.status(404).json({ error: 'Landing page not found' });
+    }
+
+    const days = period === '30d' ? 30 : period === '7d' ? 7 : 1;
+    const dailyData = Array.from({ length: days }, (_, i) => {
+      const date = new Date();
+      date.setDate(date.getDate() - (days - 1 - i));
+      return {
+        date: date.toISOString().split('T')[0],
+        views: Math.floor(page.analytics.views / days * (0.7 + Math.random() * 0.6)),
+        uniqueVisitors: Math.floor(page.analytics.uniqueVisitors / days * (0.7 + Math.random() * 0.6)),
+        conversions: Math.floor(page.analytics.conversions / days * (0.7 + Math.random() * 0.6)),
+        bounceRate: page.analytics.bounceRate * (0.9 + Math.random() * 0.2),
+      };
+    });
+
+    res.json({
+      success: true,
+      pageId: id,
+      period,
+      summary: page.analytics,
+      dailyData,
+      topSources: [
+        { source: 'Google', visits: Math.floor(page.analytics.views * 0.35), conversions: Math.floor(page.analytics.conversions * 0.4) },
+        { source: 'Direct', visits: Math.floor(page.analytics.views * 0.25), conversions: Math.floor(page.analytics.conversions * 0.25) },
+        { source: 'Twitter', visits: Math.floor(page.analytics.views * 0.15), conversions: Math.floor(page.analytics.conversions * 0.15) },
+        { source: 'LinkedIn', visits: Math.floor(page.analytics.views * 0.12), conversions: Math.floor(page.analytics.conversions * 0.12) },
+        { source: 'Email', visits: Math.floor(page.analytics.views * 0.13), conversions: Math.floor(page.analytics.conversions * 0.08) },
+      ],
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Failed to get landing page analytics' });
+  }
+});
+
+// ============================================================
+// UTM PARAMETER TRACKING
+// ============================================================
+
+interface UTMTrack {
+  id: string;
+  visitorId: string;
+  sessionId: string;
+
+  // UTM parameters
+  utm_source: string;
+  utm_medium: string;
+  utm_campaign: string;
+  utm_term?: string;
+  utm_content?: string;
+
+  // Additional tracking
+  landingPage: string;
+  referrer?: string;
+  ipAddress?: string;
+  userAgent?: string;
+  device: 'desktop' | 'mobile' | 'tablet';
+  browser: string;
+  os: string;
+  country?: string;
+  city?: string;
+
+  // Journey
+  pageViews: Array<{
+    url: string;
+    timestamp: Date;
+    duration: number;
+  }>;
+
+  // Conversion
+  converted: boolean;
+  convertedAt?: Date;
+  conversionType?: 'signup' | 'subscription' | 'lead' | 'purchase';
+  conversionValue?: number;
+
+  // Timestamps
+  firstSeen: Date;
+  lastSeen: Date;
+}
+
+const utmTracks: Map<string, UTMTrack> = new Map();
+
+/**
+ * POST /api/v1/marketing/utm/track
+ * Track a UTM visit (public endpoint)
+ */
+router.post('/utm/track', (req: Request, res: Response) => {
+  try {
+    const {
+      utm_source,
+      utm_medium,
+      utm_campaign,
+      utm_term,
+      utm_content,
+      landingPage,
+      referrer,
+      visitorId,
+      sessionId,
+    } = req.body;
+
+    if (!utm_source || !utm_campaign) {
+      return res.status(400).json({ error: 'utm_source and utm_campaign are required' });
+    }
+
+    const userAgent = req.get('user-agent') || '';
+    const device = /mobile/i.test(userAgent) ? 'mobile' : /tablet/i.test(userAgent) ? 'tablet' : 'desktop';
+    const browser = userAgent.includes('Chrome') ? 'Chrome' : userAgent.includes('Firefox') ? 'Firefox' : userAgent.includes('Safari') ? 'Safari' : 'Other';
+    const os = userAgent.includes('Windows') ? 'Windows' : userAgent.includes('Mac') ? 'macOS' : userAgent.includes('Linux') ? 'Linux' : userAgent.includes('Android') ? 'Android' : userAgent.includes('iOS') ? 'iOS' : 'Other';
+
+    const track: UTMTrack = {
+      id: `utm_${Date.now()}`,
+      visitorId: visitorId || `v_${Date.now()}`,
+      sessionId: sessionId || `s_${Date.now()}`,
+      utm_source,
+      utm_medium: utm_medium || 'referral',
+      utm_campaign,
+      utm_term,
+      utm_content,
+      landingPage: landingPage || '/',
+      referrer,
+      ipAddress: req.ip,
+      userAgent,
+      device,
+      browser,
+      os,
+      pageViews: [{
+        url: landingPage || '/',
+        timestamp: new Date(),
+        duration: 0,
+      }],
+      converted: false,
+      firstSeen: new Date(),
+      lastSeen: new Date(),
+    };
+
+    utmTracks.set(track.id, track);
+
+    res.json({
+      success: true,
+      trackId: track.id,
+      visitorId: track.visitorId,
+      sessionId: track.sessionId,
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Failed to track UTM' });
+  }
+});
+
+/**
+ * POST /api/v1/marketing/utm/:trackId/pageview
+ * Track a page view within a UTM session
+ */
+router.post('/utm/:trackId/pageview', (req: Request, res: Response) => {
+  try {
+    const { trackId } = req.params;
+    const { url, duration } = req.body;
+
+    const track = utmTracks.get(trackId);
+    if (!track) {
+      return res.status(404).json({ error: 'Track not found' });
+    }
+
+    // Update duration of previous page
+    if (track.pageViews.length > 0) {
+      track.pageViews[track.pageViews.length - 1].duration = duration || 0;
+    }
+
+    track.pageViews.push({
+      url,
+      timestamp: new Date(),
+      duration: 0,
+    });
+    track.lastSeen = new Date();
+
+    utmTracks.set(trackId, track);
+
+    res.json({ success: true });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Failed to track pageview' });
+  }
+});
+
+/**
+ * POST /api/v1/marketing/utm/:trackId/convert
+ * Mark a UTM track as converted
+ */
+router.post('/utm/:trackId/convert', (req: Request, res: Response) => {
+  try {
+    const { trackId } = req.params;
+    const { type, value } = req.body;
+
+    const track = utmTracks.get(trackId);
+    if (!track) {
+      return res.status(404).json({ error: 'Track not found' });
+    }
+
+    track.converted = true;
+    track.convertedAt = new Date();
+    track.conversionType = type || 'signup';
+    track.conversionValue = value;
+    track.lastSeen = new Date();
+
+    utmTracks.set(trackId, track);
+
+    res.json({
+      success: true,
+      message: 'Conversion recorded',
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Failed to record conversion' });
+  }
+});
+
+/**
+ * GET /api/v1/marketing/utm/analytics
+ * Get UTM analytics
+ */
+router.get('/utm/analytics', (req: Request, res: Response) => {
+  try {
+    const { period = '7d', source, medium, campaign } = req.query;
+
+    let tracks = Array.from(utmTracks.values());
+
+    // Filter by period
+    const days = period === '30d' ? 30 : period === '7d' ? 7 : 1;
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - days);
+    tracks = tracks.filter(t => t.firstSeen >= cutoff);
+
+    // Filter by UTM params
+    if (source) tracks = tracks.filter(t => t.utm_source === source);
+    if (medium) tracks = tracks.filter(t => t.utm_medium === medium);
+    if (campaign) tracks = tracks.filter(t => t.utm_campaign === campaign);
+
+    // Aggregate by source
+    const bySource: Record<string, { visits: number; conversions: number; revenue: number }> = {};
+    tracks.forEach(t => {
+      if (!bySource[t.utm_source]) {
+        bySource[t.utm_source] = { visits: 0, conversions: 0, revenue: 0 };
+      }
+      bySource[t.utm_source].visits++;
+      if (t.converted) {
+        bySource[t.utm_source].conversions++;
+        bySource[t.utm_source].revenue += t.conversionValue || 0;
+      }
+    });
+
+    // Aggregate by campaign
+    const byCampaign: Record<string, { visits: number; conversions: number; revenue: number }> = {};
+    tracks.forEach(t => {
+      if (!byCampaign[t.utm_campaign]) {
+        byCampaign[t.utm_campaign] = { visits: 0, conversions: 0, revenue: 0 };
+      }
+      byCampaign[t.utm_campaign].visits++;
+      if (t.converted) {
+        byCampaign[t.utm_campaign].conversions++;
+        byCampaign[t.utm_campaign].revenue += t.conversionValue || 0;
+      }
+    });
+
+    res.json({
+      success: true,
+      period,
+      summary: {
+        totalVisits: tracks.length,
+        uniqueVisitors: new Set(tracks.map(t => t.visitorId)).size,
+        conversions: tracks.filter(t => t.converted).length,
+        conversionRate: tracks.length > 0 ? (tracks.filter(t => t.converted).length / tracks.length * 100).toFixed(2) : 0,
+        totalRevenue: tracks.reduce((sum, t) => sum + (t.conversionValue || 0), 0),
+      },
+      bySource: Object.entries(bySource).map(([source, data]) => ({
+        source,
+        ...data,
+        conversionRate: data.visits > 0 ? (data.conversions / data.visits * 100).toFixed(2) : 0,
+      })).sort((a, b) => b.visits - a.visits),
+      byCampaign: Object.entries(byCampaign).map(([campaign, data]) => ({
+        campaign,
+        ...data,
+        conversionRate: data.visits > 0 ? (data.conversions / data.visits * 100).toFixed(2) : 0,
+      })).sort((a, b) => b.visits - a.visits),
+      byDevice: {
+        desktop: tracks.filter(t => t.device === 'desktop').length,
+        mobile: tracks.filter(t => t.device === 'mobile').length,
+        tablet: tracks.filter(t => t.device === 'tablet').length,
+      },
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Failed to get UTM analytics' });
+  }
+});
+
+/**
+ * POST /api/v1/marketing/utm/generate
+ * Generate UTM URLs
+ */
+router.post('/utm/generate', (req: Request, res: Response) => {
+  try {
+    const { baseUrl, source, medium, campaign, term, content } = req.body;
+
+    if (!baseUrl || !source || !campaign) {
+      return res.status(400).json({ error: 'baseUrl, source, and campaign are required' });
+    }
+
+    const url = new URL(baseUrl);
+    url.searchParams.set('utm_source', source);
+    url.searchParams.set('utm_medium', medium || 'referral');
+    url.searchParams.set('utm_campaign', campaign);
+    if (term) url.searchParams.set('utm_term', term);
+    if (content) url.searchParams.set('utm_content', content);
+
+    res.json({
+      success: true,
+      url: url.toString(),
+      shortUrl: `https://time-trading.app/u/${Buffer.from(url.toString()).toString('base64').substring(0, 8)}`,
+      params: {
+        utm_source: source,
+        utm_medium: medium || 'referral',
+        utm_campaign: campaign,
+        utm_term: term,
+        utm_content: content,
+      },
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Failed to generate UTM URL' });
+  }
+});
+
+// ============================================================
+// LEAD CAPTURE FORMS
+// ============================================================
+
+interface LeadForm {
+  id: string;
+  name: string;
+  status: 'active' | 'inactive' | 'archived';
+
+  // Form configuration
+  fields: Array<{
+    id: string;
+    name: string;
+    label: string;
+    type: 'text' | 'email' | 'phone' | 'select' | 'checkbox' | 'textarea' | 'hidden';
+    placeholder?: string;
+    required: boolean;
+    validation?: string;
+    options?: string[]; // For select fields
+    defaultValue?: string;
+  }>;
+
+  // Appearance
+  style: {
+    layout: 'vertical' | 'horizontal' | 'inline';
+    theme: 'light' | 'dark' | 'custom';
+    buttonText: string;
+    buttonColor: string;
+    backgroundColor: string;
+    borderRadius: number;
+    width: 'full' | 'compact';
+  };
+
+  // Behavior
+  settings: {
+    doubleOptIn: boolean;
+    honeypot: boolean; // Spam protection
+    captcha: boolean;
+    redirectUrl?: string;
+    successMessage: string;
+    autoResponder: boolean;
+    autoResponderTemplateId?: string;
+    notifyEmail?: string;
+    tags: string[]; // Auto-tag leads
+    webhookUrl?: string;
+  };
+
+  // Integration
+  integrations: {
+    mailchimp?: { listId: string; enabled: boolean };
+    hubspot?: { formId: string; enabled: boolean };
+    salesforce?: { objectId: string; enabled: boolean };
+    slack?: { channel: string; enabled: boolean };
+  };
+
+  // Analytics
+  analytics: {
+    views: number;
+    submissions: number;
+    conversionRate: number;
+    avgCompletionTime: number;
+  };
+
+  // Metadata
+  createdBy: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+interface Lead {
+  id: string;
+  formId: string;
+
+  // Lead data
+  data: Record<string, any>;
+  email: string;
+
+  // Source tracking
+  source: {
+    landingPageId?: string;
+    campaignId?: string;
+    utmTrackId?: string;
+    referrer?: string;
+    ipAddress?: string;
+    userAgent?: string;
+  };
+
+  // Status
+  status: 'new' | 'contacted' | 'qualified' | 'converted' | 'unsubscribed';
+  score: number; // Lead scoring
+  tags: string[];
+
+  // Engagement
+  emailsReceived: number;
+  emailsOpened: number;
+  emailsClicked: number;
+
+  // Metadata
+  createdAt: Date;
+  updatedAt: Date;
+  convertedAt?: Date;
+}
+
+const leadForms: Map<string, LeadForm> = new Map();
+const leads: Map<string, Lead> = new Map();
+
+// Initialize sample form
+const initializeSampleLeadForms = () => {
+  const sample: LeadForm = {
+    id: 'form_1',
+    name: 'Newsletter Signup',
+    status: 'active',
+    fields: [
+      { id: 'f1', name: 'email', label: 'Email Address', type: 'email', placeholder: 'Enter your email', required: true },
+      { id: 'f2', name: 'firstName', label: 'First Name', type: 'text', placeholder: 'Your first name', required: false },
+      { id: 'f3', name: 'tradingExperience', label: 'Trading Experience', type: 'select', required: false, options: ['Beginner', 'Intermediate', 'Advanced', 'Professional'] },
+    ],
+    style: {
+      layout: 'horizontal',
+      theme: 'dark',
+      buttonText: 'Subscribe',
+      buttonColor: '#7c3aed',
+      backgroundColor: '#1e293b',
+      borderRadius: 8,
+      width: 'full',
+    },
+    settings: {
+      doubleOptIn: false,
+      honeypot: true,
+      captcha: false,
+      successMessage: 'Thanks for subscribing! Check your email for a welcome message.',
+      autoResponder: true,
+      autoResponderTemplateId: 'welcome_email',
+      tags: ['newsletter'],
+    },
+    integrations: {},
+    analytics: {
+      views: 5423,
+      submissions: 876,
+      conversionRate: 16.15,
+      avgCompletionTime: 12,
+    },
+    createdBy: 'admin',
+    createdAt: new Date('2025-01-01'),
+    updatedAt: new Date(),
+  };
+
+  leadForms.set(sample.id, sample);
+};
+
+initializeSampleLeadForms();
+
+/**
+ * GET /api/v1/marketing/forms
+ * Get all lead capture forms
+ */
+router.get('/forms', (req: Request, res: Response) => {
+  try {
+    const { status } = req.query;
+
+    let forms = Array.from(leadForms.values());
+
+    if (status) {
+      forms = forms.filter(f => f.status === status);
+    }
+
+    res.json({
+      success: true,
+      summary: {
+        total: forms.length,
+        active: Array.from(leadForms.values()).filter(f => f.status === 'active').length,
+        totalSubmissions: Array.from(leadForms.values()).reduce((sum, f) => sum + f.analytics.submissions, 0),
+        avgConversionRate: (Array.from(leadForms.values()).reduce((sum, f) => sum + f.analytics.conversionRate, 0) / forms.length || 0).toFixed(2),
+      },
+      forms,
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Failed to get forms' });
+  }
+});
+
+/**
+ * GET /api/v1/marketing/forms/:id
+ * Get a specific form
+ */
+router.get('/forms/:id', (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const form = leadForms.get(id);
+
+    if (!form) {
+      return res.status(404).json({ error: 'Form not found' });
+    }
+
+    res.json({ success: true, form });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Failed to get form' });
+  }
+});
+
+/**
+ * POST /api/v1/marketing/forms
+ * Create a new lead capture form
+ */
+router.post('/forms', (req: Request, res: Response) => {
+  try {
+    const user = (req as any).user;
+    const { name, fields, style, settings, integrations } = req.body;
+
+    if (!name || !fields || fields.length === 0) {
+      return res.status(400).json({ error: 'name and at least one field are required' });
+    }
+
+    const form: LeadForm = {
+      id: `form_${Date.now()}`,
+      name,
+      status: 'active',
+      fields: fields.map((f: any, index: number) => ({
+        id: `f${index + 1}`,
+        ...f,
+        required: f.required || false,
+      })),
+      style: style || {
+        layout: 'vertical',
+        theme: 'dark',
+        buttonText: 'Submit',
+        buttonColor: '#7c3aed',
+        backgroundColor: '#1e293b',
+        borderRadius: 8,
+        width: 'full',
+      },
+      settings: settings || {
+        doubleOptIn: false,
+        honeypot: true,
+        captcha: false,
+        successMessage: 'Thank you for your submission!',
+        autoResponder: false,
+        tags: [],
+      },
+      integrations: integrations || {},
+      analytics: {
+        views: 0,
+        submissions: 0,
+        conversionRate: 0,
+        avgCompletionTime: 0,
+      },
+      createdBy: user?.id || 'admin',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    leadForms.set(form.id, form);
+
+    res.json({
+      success: true,
+      form,
+      message: 'Form created successfully',
+      embedCode: `<div data-time-form="${form.id}"></div><script src="https://time-trading.app/forms.js"></script>`,
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Failed to create form' });
+  }
+});
+
+/**
+ * PUT /api/v1/marketing/forms/:id
+ * Update a form
+ */
+router.put('/forms/:id', (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const updates = req.body;
+
+    const form = leadForms.get(id);
+    if (!form) {
+      return res.status(404).json({ error: 'Form not found' });
+    }
+
+    const allowedFields = ['name', 'status', 'fields', 'style', 'settings', 'integrations'];
+
+    allowedFields.forEach(field => {
+      if (updates[field] !== undefined) {
+        (form as any)[field] = updates[field];
+      }
+    });
+
+    form.updatedAt = new Date();
+    leadForms.set(id, form);
+
+    res.json({
+      success: true,
+      form,
+      message: 'Form updated successfully',
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Failed to update form' });
+  }
+});
+
+/**
+ * DELETE /api/v1/marketing/forms/:id
+ * Archive a form
+ */
+router.delete('/forms/:id', (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const form = leadForms.get(id);
+
+    if (!form) {
+      return res.status(404).json({ error: 'Form not found' });
+    }
+
+    form.status = 'archived';
+    form.updatedAt = new Date();
+    leadForms.set(id, form);
+
+    res.json({
+      success: true,
+      message: 'Form archived successfully',
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Failed to archive form' });
+  }
+});
+
+/**
+ * POST /api/v1/marketing/forms/:id/submit
+ * Submit a lead capture form (public endpoint)
+ */
+router.post('/forms/:id/submit', (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { data, source } = req.body;
+
+    const form = leadForms.get(id);
+    if (!form) {
+      return res.status(404).json({ error: 'Form not found' });
+    }
+
+    if (form.status !== 'active') {
+      return res.status(400).json({ error: 'Form is not active' });
+    }
+
+    // Validate required fields
+    for (const field of form.fields) {
+      if (field.required && !data[field.name]) {
+        return res.status(400).json({ error: `${field.label} is required` });
+      }
+    }
+
+    // Check honeypot (if enabled)
+    if (form.settings.honeypot && data._hp_) {
+      // Silently reject spam
+      return res.json({
+        success: true,
+        message: form.settings.successMessage,
+      });
+    }
+
+    // Find email field
+    const emailField = form.fields.find(f => f.type === 'email');
+    const email = emailField ? data[emailField.name] : data.email;
+
+    if (!email) {
+      return res.status(400).json({ error: 'Email is required' });
+    }
+
+    const lead: Lead = {
+      id: `lead_${Date.now()}`,
+      formId: id,
+      data,
+      email,
+      source: {
+        ...source,
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent'),
+      },
+      status: 'new',
+      score: 10,
+      tags: [...(form.settings.tags || [])],
+      emailsReceived: 0,
+      emailsOpened: 0,
+      emailsClicked: 0,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    leads.set(lead.id, lead);
+
+    // Update form analytics
+    form.analytics.submissions++;
+    form.analytics.conversionRate = form.analytics.views > 0
+      ? (form.analytics.submissions / form.analytics.views * 100)
+      : 0;
+    leadForms.set(id, form);
+
+    // TODO: Send auto-responder email
+    // TODO: Trigger webhook
+    // TODO: Sync with integrations
+
+    res.json({
+      success: true,
+      message: form.settings.successMessage,
+      leadId: lead.id,
+      redirectUrl: form.settings.redirectUrl,
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Failed to submit form' });
+  }
+});
+
+/**
+ * GET /api/v1/marketing/leads
+ * Get all leads
+ */
+router.get('/leads', (req: Request, res: Response) => {
+  try {
+    const { formId, status, tag, email, limit = '50', offset = '0' } = req.query;
+
+    let allLeads = Array.from(leads.values());
+
+    if (formId) allLeads = allLeads.filter(l => l.formId === formId);
+    if (status) allLeads = allLeads.filter(l => l.status === status);
+    if (tag) allLeads = allLeads.filter(l => l.tags.includes(tag as string));
+    if (email) allLeads = allLeads.filter(l => l.email.includes(email as string));
+
+    allLeads.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+
+    const total = allLeads.length;
+    const paginatedLeads = allLeads.slice(
+      parseInt(offset as string),
+      parseInt(offset as string) + parseInt(limit as string)
+    );
+
+    res.json({
+      success: true,
+      summary: {
+        total,
+        new: Array.from(leads.values()).filter(l => l.status === 'new').length,
+        qualified: Array.from(leads.values()).filter(l => l.status === 'qualified').length,
+        converted: Array.from(leads.values()).filter(l => l.status === 'converted').length,
+      },
+      leads: paginatedLeads,
+      pagination: {
+        total,
+        limit: parseInt(limit as string),
+        offset: parseInt(offset as string),
+        hasMore: parseInt(offset as string) + parseInt(limit as string) < total,
+      },
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Failed to get leads' });
+  }
+});
+
+/**
+ * GET /api/v1/marketing/leads/:id
+ * Get a specific lead
+ */
+router.get('/leads/:id', (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const lead = leads.get(id);
+
+    if (!lead) {
+      return res.status(404).json({ error: 'Lead not found' });
+    }
+
+    res.json({ success: true, lead });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Failed to get lead' });
+  }
+});
+
+/**
+ * PUT /api/v1/marketing/leads/:id
+ * Update a lead
+ */
+router.put('/leads/:id', (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { status, score, tags } = req.body;
+
+    const lead = leads.get(id);
+    if (!lead) {
+      return res.status(404).json({ error: 'Lead not found' });
+    }
+
+    if (status) lead.status = status;
+    if (score !== undefined) lead.score = score;
+    if (tags) lead.tags = tags;
+
+    if (status === 'converted') {
+      lead.convertedAt = new Date();
+    }
+
+    lead.updatedAt = new Date();
+    leads.set(id, lead);
+
+    res.json({
+      success: true,
+      lead,
+      message: 'Lead updated successfully',
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Failed to update lead' });
+  }
+});
+
+/**
+ * DELETE /api/v1/marketing/leads/:id
+ * Delete a lead
+ */
+router.delete('/leads/:id', (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    if (!leads.has(id)) {
+      return res.status(404).json({ error: 'Lead not found' });
+    }
+
+    leads.delete(id);
+
+    res.json({
+      success: true,
+      message: 'Lead deleted successfully',
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Failed to delete lead' });
+  }
+});
+
+/**
+ * POST /api/v1/marketing/leads/export
+ * Export leads as CSV
+ */
+router.post('/leads/export', (req: Request, res: Response) => {
+  try {
+    const { formId, status, startDate, endDate } = req.body;
+
+    let allLeads = Array.from(leads.values());
+
+    if (formId) allLeads = allLeads.filter(l => l.formId === formId);
+    if (status) allLeads = allLeads.filter(l => l.status === status);
+    if (startDate) allLeads = allLeads.filter(l => l.createdAt >= new Date(startDate));
+    if (endDate) allLeads = allLeads.filter(l => l.createdAt <= new Date(endDate));
+
+    // Generate CSV
+    const headers = ['id', 'email', 'status', 'score', 'tags', 'created_at'];
+    const rows = allLeads.map(l => [
+      l.id,
+      l.email,
+      l.status,
+      l.score,
+      l.tags.join('; '),
+      l.createdAt.toISOString(),
+    ]);
+
+    const csv = [
+      headers.join(','),
+      ...rows.map(row => row.join(',')),
+    ].join('\n');
+
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename=leads-${Date.now()}.csv`);
+    res.send(csv);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Failed to export leads' });
+  }
+});
+
+// ============================================================
+// CONVERSION FUNNEL ANALYTICS
+// ============================================================
+
+interface FunnelStage {
+  id: string;
+  name: string;
+  order: number;
+  type: 'page_view' | 'action' | 'event' | 'conversion';
+  criteria: {
+    url?: string;
+    event?: string;
+    action?: string;
+  };
+}
+
+interface Funnel {
+  id: string;
+  name: string;
+  description: string;
+  stages: FunnelStage[];
+
+  // Metrics
+  metrics: {
+    totalEntered: number;
+    totalCompleted: number;
+    overallConversionRate: number;
+    avgTimeToComplete: number;
+    stageMetrics: Array<{
+      stageId: string;
+      entered: number;
+      exited: number;
+      dropoffRate: number;
+      avgTime: number;
+    }>;
+  };
+
+  createdBy: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+interface FunnelSession {
+  id: string;
+  funnelId: string;
+  visitorId: string;
+  currentStage: number;
+  stageHistory: Array<{
+    stageId: string;
+    enteredAt: Date;
+    exitedAt?: Date;
+    completed: boolean;
+  }>;
+  completed: boolean;
+  completedAt?: Date;
+  startedAt: Date;
+  lastActivityAt: Date;
+}
+
+const funnels: Map<string, Funnel> = new Map();
+const funnelSessions: Map<string, FunnelSession> = new Map();
+
+// Initialize sample funnel
+const initializeSampleFunnels = () => {
+  const sample: Funnel = {
+    id: 'funnel_1',
+    name: 'Signup to Paid Conversion',
+    description: 'Track user journey from landing page to paid subscription',
+    stages: [
+      { id: 's1', name: 'Landing Page', order: 1, type: 'page_view', criteria: { url: '/start-free' } },
+      { id: 's2', name: 'Signup Form', order: 2, type: 'action', criteria: { action: 'view_signup_form' } },
+      { id: 's3', name: 'Account Created', order: 3, type: 'event', criteria: { event: 'signup_complete' } },
+      { id: 's4', name: 'First Bot Deployed', order: 4, type: 'event', criteria: { event: 'bot_deployed' } },
+      { id: 's5', name: 'Upgrade Started', order: 5, type: 'action', criteria: { action: 'view_pricing' } },
+      { id: 's6', name: 'Payment Complete', order: 6, type: 'conversion', criteria: { event: 'payment_success' } },
+    ],
+    metrics: {
+      totalEntered: 10000,
+      totalCompleted: 350,
+      overallConversionRate: 3.5,
+      avgTimeToComplete: 259200, // 3 days in seconds
+      stageMetrics: [
+        { stageId: 's1', entered: 10000, exited: 3000, dropoffRate: 30, avgTime: 45 },
+        { stageId: 's2', entered: 7000, exited: 2100, dropoffRate: 30, avgTime: 120 },
+        { stageId: 's3', entered: 4900, exited: 1470, dropoffRate: 30, avgTime: 300 },
+        { stageId: 's4', entered: 3430, exited: 1715, dropoffRate: 50, avgTime: 86400 },
+        { stageId: 's5', entered: 1715, exited: 858, dropoffRate: 50, avgTime: 172800 },
+        { stageId: 's6', entered: 857, exited: 507, dropoffRate: 59, avgTime: 600 },
+      ],
+    },
+    createdBy: 'admin',
+    createdAt: new Date('2025-01-01'),
+    updatedAt: new Date(),
+  };
+
+  funnels.set(sample.id, sample);
+};
+
+initializeSampleFunnels();
+
+/**
+ * GET /api/v1/marketing/funnels
+ * Get all conversion funnels
+ */
+router.get('/funnels', (req: Request, res: Response) => {
+  try {
+    const allFunnels = Array.from(funnels.values());
+
+    res.json({
+      success: true,
+      funnels: allFunnels.map(f => ({
+        id: f.id,
+        name: f.name,
+        description: f.description,
+        stageCount: f.stages.length,
+        overallConversionRate: f.metrics.overallConversionRate,
+        totalEntered: f.metrics.totalEntered,
+        totalCompleted: f.metrics.totalCompleted,
+        updatedAt: f.updatedAt,
+      })),
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Failed to get funnels' });
+  }
+});
+
+/**
+ * GET /api/v1/marketing/funnels/:id
+ * Get detailed funnel analytics
+ */
+router.get('/funnels/:id', (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { period = '7d' } = req.query;
+
+    const funnel = funnels.get(id);
+    if (!funnel) {
+      return res.status(404).json({ error: 'Funnel not found' });
+    }
+
+    // Calculate funnel visualization data
+    const visualData = funnel.stages.map((stage, index) => {
+      const metrics = funnel.metrics.stageMetrics.find(m => m.stageId === stage.id) || {
+        entered: 0,
+        exited: 0,
+        dropoffRate: 0,
+        avgTime: 0,
+      };
+
+      return {
+        stage: stage.name,
+        order: stage.order,
+        entered: metrics.entered,
+        completed: metrics.entered - metrics.exited,
+        dropoffRate: `${metrics.dropoffRate}%`,
+        dropoffCount: metrics.exited,
+        avgTime: metrics.avgTime,
+        avgTimeFormatted: metrics.avgTime < 60 ? `${metrics.avgTime}s` :
+                          metrics.avgTime < 3600 ? `${Math.round(metrics.avgTime / 60)}m` :
+                          metrics.avgTime < 86400 ? `${Math.round(metrics.avgTime / 3600)}h` :
+                          `${Math.round(metrics.avgTime / 86400)}d`,
+        conversionToNext: index < funnel.stages.length - 1
+          ? `${(100 - metrics.dropoffRate).toFixed(1)}%`
+          : 'N/A',
+        widthPercent: funnel.metrics.totalEntered > 0
+          ? (metrics.entered / funnel.metrics.totalEntered * 100).toFixed(1)
+          : 0,
+      };
+    });
+
+    // Identify biggest dropoff
+    const biggestDropoff = funnel.metrics.stageMetrics.reduce((max, current) =>
+      current.dropoffRate > max.dropoffRate ? current : max
+    , funnel.metrics.stageMetrics[0]);
+
+    const biggestDropoffStage = funnel.stages.find(s => s.id === biggestDropoff?.stageId);
+
+    res.json({
+      success: true,
+      funnel: {
+        id: funnel.id,
+        name: funnel.name,
+        description: funnel.description,
+        stages: funnel.stages,
+      },
+      summary: {
+        totalEntered: funnel.metrics.totalEntered,
+        totalCompleted: funnel.metrics.totalCompleted,
+        overallConversionRate: `${funnel.metrics.overallConversionRate}%`,
+        avgTimeToComplete: funnel.metrics.avgTimeToComplete,
+        avgTimeFormatted: funnel.metrics.avgTimeToComplete < 86400
+          ? `${Math.round(funnel.metrics.avgTimeToComplete / 3600)} hours`
+          : `${Math.round(funnel.metrics.avgTimeToComplete / 86400)} days`,
+      },
+      visualization: visualData,
+      insights: {
+        biggestDropoff: biggestDropoffStage ? {
+          stage: biggestDropoffStage.name,
+          rate: `${biggestDropoff.dropoffRate}%`,
+          count: biggestDropoff.exited,
+          recommendation: 'Consider A/B testing this stage or simplifying the user experience.',
+        } : null,
+        healthScore: funnel.metrics.overallConversionRate > 5 ? 'Good' :
+                     funnel.metrics.overallConversionRate > 2 ? 'Average' : 'Needs Improvement',
+        benchmarkComparison: {
+          industry: 'SaaS',
+          benchmark: '3.0%',
+          performance: funnel.metrics.overallConversionRate > 3 ? 'Above Average' : 'Below Average',
+        },
+      },
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Failed to get funnel' });
+  }
+});
+
+/**
+ * POST /api/v1/marketing/funnels
+ * Create a new funnel
+ */
+router.post('/funnels', (req: Request, res: Response) => {
+  try {
+    const user = (req as any).user;
+    const { name, description, stages } = req.body;
+
+    if (!name || !stages || stages.length < 2) {
+      return res.status(400).json({ error: 'name and at least 2 stages are required' });
+    }
+
+    const funnel: Funnel = {
+      id: `funnel_${Date.now()}`,
+      name,
+      description: description || '',
+      stages: stages.map((s: any, index: number) => ({
+        id: `s${index + 1}`,
+        order: index + 1,
+        ...s,
+      })),
+      metrics: {
+        totalEntered: 0,
+        totalCompleted: 0,
+        overallConversionRate: 0,
+        avgTimeToComplete: 0,
+        stageMetrics: stages.map((s: any, index: number) => ({
+          stageId: `s${index + 1}`,
+          entered: 0,
+          exited: 0,
+          dropoffRate: 0,
+          avgTime: 0,
+        })),
+      },
+      createdBy: user?.id || 'admin',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    funnels.set(funnel.id, funnel);
+
+    res.json({
+      success: true,
+      funnel,
+      message: 'Funnel created successfully',
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Failed to create funnel' });
+  }
+});
+
+/**
+ * PUT /api/v1/marketing/funnels/:id
+ * Update a funnel
+ */
+router.put('/funnels/:id', (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { name, description, stages } = req.body;
+
+    const funnel = funnels.get(id);
+    if (!funnel) {
+      return res.status(404).json({ error: 'Funnel not found' });
+    }
+
+    if (name) funnel.name = name;
+    if (description) funnel.description = description;
+    if (stages) {
+      funnel.stages = stages.map((s: any, index: number) => ({
+        id: `s${index + 1}`,
+        order: index + 1,
+        ...s,
+      }));
+    }
+
+    funnel.updatedAt = new Date();
+    funnels.set(id, funnel);
+
+    res.json({
+      success: true,
+      funnel,
+      message: 'Funnel updated successfully',
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Failed to update funnel' });
+  }
+});
+
+/**
+ * DELETE /api/v1/marketing/funnels/:id
+ * Delete a funnel
+ */
+router.delete('/funnels/:id', (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    if (!funnels.has(id)) {
+      return res.status(404).json({ error: 'Funnel not found' });
+    }
+
+    funnels.delete(id);
+
+    res.json({
+      success: true,
+      message: 'Funnel deleted successfully',
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Failed to delete funnel' });
+  }
+});
+
+/**
+ * POST /api/v1/marketing/funnels/:id/track
+ * Track funnel progression (public endpoint)
+ */
+router.post('/funnels/:id/track', (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { visitorId, event, action, url } = req.body;
+
+    const funnel = funnels.get(id);
+    if (!funnel) {
+      return res.status(404).json({ error: 'Funnel not found' });
+    }
+
+    if (!visitorId) {
+      return res.status(400).json({ error: 'visitorId is required' });
+    }
+
+    // Find matching stage
+    let matchedStage: FunnelStage | undefined;
+    for (const stage of funnel.stages) {
+      if (stage.criteria.event && stage.criteria.event === event) {
+        matchedStage = stage;
+        break;
+      }
+      if (stage.criteria.action && stage.criteria.action === action) {
+        matchedStage = stage;
+        break;
+      }
+      if (stage.criteria.url && url && url.includes(stage.criteria.url)) {
+        matchedStage = stage;
+        break;
+      }
+    }
+
+    if (!matchedStage) {
+      return res.json({ success: true, matched: false });
+    }
+
+    // Find or create session
+    let session = Array.from(funnelSessions.values())
+      .find(s => s.funnelId === id && s.visitorId === visitorId);
+
+    if (!session) {
+      session = {
+        id: `fsess_${Date.now()}`,
+        funnelId: id,
+        visitorId,
+        currentStage: 0,
+        stageHistory: [],
+        completed: false,
+        startedAt: new Date(),
+        lastActivityAt: new Date(),
+      };
+      funnelSessions.set(session.id, session);
+
+      // Update funnel metrics
+      funnel.metrics.totalEntered++;
+      const stageMetric = funnel.metrics.stageMetrics.find(m => m.stageId === funnel.stages[0].id);
+      if (stageMetric) stageMetric.entered++;
+    }
+
+    // Update session with new stage
+    if (matchedStage.order > session.currentStage) {
+      // Complete previous stages
+      for (let i = session.currentStage; i < matchedStage.order; i++) {
+        const stage = funnel.stages[i];
+        if (stage) {
+          const existingEntry = session.stageHistory.find(h => h.stageId === stage.id);
+          if (existingEntry && !existingEntry.completed) {
+            existingEntry.exitedAt = new Date();
+            existingEntry.completed = true;
+          } else if (!existingEntry) {
+            session.stageHistory.push({
+              stageId: stage.id,
+              enteredAt: new Date(),
+              exitedAt: new Date(),
+              completed: true,
+            });
+          }
+        }
+      }
+
+      // Enter new stage
+      session.stageHistory.push({
+        stageId: matchedStage.id,
+        enteredAt: new Date(),
+        completed: false,
+      });
+
+      session.currentStage = matchedStage.order;
+      session.lastActivityAt = new Date();
+
+      // Update stage metrics
+      const stageMetric = funnel.metrics.stageMetrics.find(m => m.stageId === matchedStage!.id);
+      if (stageMetric) stageMetric.entered++;
+
+      // Check if funnel completed
+      if (matchedStage.order === funnel.stages.length) {
+        session.completed = true;
+        session.completedAt = new Date();
+        funnel.metrics.totalCompleted++;
+        funnel.metrics.overallConversionRate =
+          (funnel.metrics.totalCompleted / funnel.metrics.totalEntered * 100);
+      }
+
+      funnelSessions.set(session.id, session);
+      funnels.set(id, funnel);
+    }
+
+    res.json({
+      success: true,
+      matched: true,
+      stage: matchedStage.name,
+      stageOrder: matchedStage.order,
+      isCompleted: session.completed,
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Failed to track funnel' });
+  }
+});
+
+/**
+ * GET /api/v1/marketing/funnels/:id/sessions
+ * Get funnel sessions for analysis
+ */
+router.get('/funnels/:id/sessions', (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { status, limit = '50', offset = '0' } = req.query;
+
+    const funnel = funnels.get(id);
+    if (!funnel) {
+      return res.status(404).json({ error: 'Funnel not found' });
+    }
+
+    let sessions = Array.from(funnelSessions.values()).filter(s => s.funnelId === id);
+
+    if (status === 'completed') {
+      sessions = sessions.filter(s => s.completed);
+    } else if (status === 'active') {
+      sessions = sessions.filter(s => !s.completed);
+    }
+
+    sessions.sort((a, b) => b.lastActivityAt.getTime() - a.lastActivityAt.getTime());
+
+    const total = sessions.length;
+    const paginatedSessions = sessions.slice(
+      parseInt(offset as string),
+      parseInt(offset as string) + parseInt(limit as string)
+    );
+
+    res.json({
+      success: true,
+      funnelId: id,
+      summary: {
+        total,
+        completed: sessions.filter(s => s.completed).length,
+        active: sessions.filter(s => !s.completed).length,
+      },
+      sessions: paginatedSessions.map(s => ({
+        id: s.id,
+        visitorId: s.visitorId,
+        currentStage: funnel.stages[s.currentStage - 1]?.name || 'Unknown',
+        stagesCompleted: s.stageHistory.filter(h => h.completed).length,
+        totalStages: funnel.stages.length,
+        completed: s.completed,
+        startedAt: s.startedAt,
+        completedAt: s.completedAt,
+        lastActivityAt: s.lastActivityAt,
+      })),
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Failed to get funnel sessions' });
+  }
+});
+
 export default router;

@@ -1,14 +1,17 @@
 /**
  * OANDA Broker Integration
  *
- * Integration with OANDA fxTrade API for:
+ * Full integration with OANDA fxTrade API for:
  * - Forex trading (70+ currency pairs)
  * - CFDs on indices, commodities, bonds
  * - Practice accounts (demo trading)
- * - Real-time streaming prices
+ * - Real-time streaming prices via HTTP streaming
+ * - Trailing stops and take profit/stop loss
+ * - Transaction streaming for real-time fills
  */
 
 import axios, { AxiosInstance, AxiosError } from 'axios';
+import https from 'https';
 import {
   BrokerInterface,
   BrokerConfig,
@@ -30,6 +33,7 @@ const logger = createComponentLogger('OANDABroker');
 interface OANDAConfig extends BrokerConfig {
   accountId: string;
   environment?: 'practice' | 'live';
+  enableStreaming?: boolean;
 }
 
 /**
@@ -55,7 +59,7 @@ export class OANDABroker extends BrokerInterface {
   public readonly name = 'OANDA';
   public readonly capabilities: BrokerCapabilities = {
     assetClasses: ['forex', 'commodities', 'cfds', 'bonds'],
-    orderTypes: ['market', 'limit', 'stop', 'stop_limit'],
+    orderTypes: ['market', 'limit', 'stop', 'stop_limit', 'trailing_stop'],
     supportsStreaming: true,
     supportsPaperTrading: true,
     supportsMargin: true,
@@ -68,12 +72,25 @@ export class OANDABroker extends BrokerInterface {
   private accountId: string;
   private environment: 'practice' | 'live';
   private apiClient: AxiosInstance;
+  private enableStreaming: boolean;
+
+  // Streaming connections
+  private priceStreamRequest: any = null;
+  private transactionStreamRequest: any = null;
+  private subscribedSymbols: Set<string> = new Set();
+  private priceStreamBuffer: string = '';
+  private transactionStreamBuffer: string = '';
+  private reconnectTimeout: NodeJS.Timeout | null = null;
+
+  // Price cache for quick access
+  private priceCache: Map<string, Quote> = new Map();
 
   constructor(config: OANDAConfig) {
     super(config);
 
     this.accountId = config.accountId;
     this.environment = config.environment || (config.isPaper ? 'practice' : 'live');
+    this.enableStreaming = config.enableStreaming !== false;
 
     // Set URLs based on environment
     if (this.environment === 'practice') {
@@ -109,6 +126,11 @@ export class OANDABroker extends BrokerInterface {
 
       this.isConnected = true;
       this.emit('connected');
+
+      // Start transaction stream for real-time order/trade updates
+      if (this.enableStreaming) {
+        this.startTransactionStream();
+      }
     } catch (error) {
       logger.error('Failed to connect to OANDA:', error as object);
       this.emit('error', error as Error);
@@ -121,7 +143,19 @@ export class OANDABroker extends BrokerInterface {
    */
   public async disconnect(): Promise<void> {
     logger.info('Disconnecting from OANDA...');
+
+    // Stop streaming connections
+    this.stopPriceStream();
+    this.stopTransactionStream();
+
+    if (this.reconnectTimeout) {
+      clearTimeout(this.reconnectTimeout);
+      this.reconnectTimeout = null;
+    }
+
     this.isConnected = false;
+    this.subscribedSymbols.clear();
+    this.priceCache.clear();
     this.emit('disconnected', 'Manual disconnect');
   }
 
@@ -253,20 +287,49 @@ export class OANDABroker extends BrokerInterface {
       orderData.order.price = request.price.toString();
     }
 
-    if (request.stopPrice && request.type === 'stop') {
+    if (request.stopPrice && (request.type === 'stop' || request.type === 'stop_limit')) {
       orderData.order.price = request.stopPrice.toString();
     }
 
+    // Trailing stop parameters
+    if (request.type === 'trailing_stop') {
+      orderData.order.type = 'TRAILING_STOP_LOSS';
+      if (request.trailingDelta) {
+        orderData.order.distance = request.trailingDelta.toString();
+      } else if (request.trailingPercent) {
+        // OANDA uses distance in price units, not percentage
+        // Would need current price to calculate
+        const quote = await this.getQuote(request.symbol);
+        const currentPrice = request.side === 'buy' ? quote.ask : quote.bid;
+        const distance = currentPrice * (request.trailingPercent / 100);
+        orderData.order.distance = distance.toFixed(5);
+      }
+    }
+
+    // Take profit on fill
     if (request.takeProfit) {
       orderData.order.takeProfitOnFill = {
         price: request.takeProfit.toString(),
       };
     }
 
+    // Stop loss on fill
     if (request.stopLoss) {
       orderData.order.stopLossOnFill = {
         price: request.stopLoss.toString(),
       };
+    }
+
+    // Trailing stop loss on fill
+    if (request.trailingDelta && request.type !== 'trailing_stop') {
+      orderData.order.trailingStopLossOnFill = {
+        distance: request.trailingDelta.toString(),
+      };
+    }
+
+    // Reduce only (for closing trades)
+    if (request.reduceOnly) {
+      orderData.order.positionFill = 'REDUCE_ONLY';
     }
 
     const response = await this.apiRequest(
@@ -457,11 +520,13 @@ export class OANDABroker extends BrokerInterface {
    * Subscribe to real-time quotes (streaming)
    */
   public async subscribeQuotes(symbols: string[]): Promise<void> {
-    // OANDA uses streaming API
     logger.info(`Starting price stream for: ${symbols.join(', ')}`);
 
-    // In production, would start a streaming connection:
-    // GET /v3/accounts/{accountID}/pricing/stream?instruments=EUR_USD,USD_JPY
+    // Add symbols to subscription set
+    symbols.forEach((s) => this.subscribedSymbols.add(s));
+
+    // Restart price stream with new symbols
+    this.restartPriceStream();
   }
 
   /**
@@ -469,14 +534,28 @@ export class OANDABroker extends BrokerInterface {
    */
   public async unsubscribeQuotes(symbols: string[]): Promise<void> {
     logger.info(`Stopping price stream for: ${symbols.join(', ')}`);
+
+    // Remove symbols from subscription set
+    symbols.forEach((s) => this.subscribedSymbols.delete(s));
+
+    if (this.subscribedSymbols.size === 0) {
+      this.stopPriceStream();
+    } else {
+      // Restart with remaining symbols
+      this.restartPriceStream();
+    }
   }
 
   /**
-   * Subscribe to real-time bars (not native in OANDA)
+   * Subscribe to real-time bars
    */
   public async subscribeBars(symbols: string[], timeframe: string): Promise<void> {
-    logger.info(`Bar subscription not native in OANDA, using polling`);
-    // Would implement polling or aggregate from tick stream
+    logger.info(`Bar subscription via price stream aggregation: ${symbols.join(', ')} @ ${timeframe}`);
+
+    // Subscribe to quotes and aggregate into bars
+    await this.subscribeQuotes(symbols);
+
+    // Bar aggregation would be handled by a separate timer
   }
 
   /**
@@ -484,6 +563,286 @@ export class OANDABroker extends BrokerInterface {
    */
   public async unsubscribeBars(symbols: string[]): Promise<void> {
     logger.info('Stopped bar polling');
+    // Bars are derived from quotes, so just log
+  }
+
+  // ============================================================
+  // STREAMING IMPLEMENTATION
+  // ============================================================
+
+  /**
+   * Start price streaming via HTTP streaming
+   */
+  private startPriceStream(): void {
+    if (this.subscribedSymbols.size === 0) {
+      logger.debug('No symbols to stream');
+      return;
+    }
+
+    const instruments = Array.from(this.subscribedSymbols).join(',');
+    const streamPath = `/v3/accounts/${this.accountId}/pricing/stream?instruments=${instruments}`;
+
+    logger.info(`Starting price stream: ${instruments}`);
+
+    const url = new URL(streamPath, this.streamUrl);
+
+    const options = {
+      hostname: url.hostname,
+      port: 443,
+      path: url.pathname + url.search,
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${this.config.apiKey}`,
+        'Content-Type': 'application/json',
+      },
+    };
+
+    this.priceStreamRequest = https.request(options, (res) => {
+      if (res.statusCode !== 200) {
+        logger.error(`Price stream error: ${res.statusCode}`);
+        this.scheduleReconnect('price');
+        return;
+      }
+
+      logger.info('Price stream connected');
+
+      res.on('data', (chunk: Buffer) => {
+        this.handlePriceStreamData(chunk.toString());
+      });
+
+      res.on('end', () => {
+        logger.warn('Price stream ended');
+        if (this.isConnected && this.subscribedSymbols.size > 0) {
+          this.scheduleReconnect('price');
+        }
+      });
+    });
+
+    this.priceStreamRequest.on('error', (error: Error) => {
+      logger.error('Price stream error:', error);
+      this.scheduleReconnect('price');
+    });
+
+    this.priceStreamRequest.end();
+  }
+
+  /**
+   * Stop price streaming
+   */
+  private stopPriceStream(): void {
+    if (this.priceStreamRequest) {
+      this.priceStreamRequest.destroy();
+      this.priceStreamRequest = null;
+      logger.info('Price stream stopped');
+    }
+  }
+
+  /**
+   * Restart price stream with current subscriptions
+   */
+  private restartPriceStream(): void {
+    this.stopPriceStream();
+    if (this.subscribedSymbols.size > 0) {
+      this.startPriceStream();
+    }
+  }
+
+  /**
+   * Handle incoming price stream data
+   */
+  private handlePriceStreamData(data: string): void {
+    this.priceStreamBuffer += data;
+
+    // OANDA sends newline-delimited JSON
+    const lines = this.priceStreamBuffer.split('\n');
+    this.priceStreamBuffer = lines.pop() || '';
+
+    for (const line of lines) {
+      if (!line.trim()) continue;
+
+      try {
+        const message = JSON.parse(line);
+
+        if (message.type === 'PRICE') {
+          const quote: Quote = {
+            symbol: message.instrument,
+            bid: parseFloat(message.bids?.[0]?.price || '0'),
+            ask: parseFloat(message.asks?.[0]?.price || '0'),
+            bidSize: parseInt(message.bids?.[0]?.liquidity || '0'),
+            askSize: parseInt(message.asks?.[0]?.liquidity || '0'),
+            timestamp: new Date(message.time),
+          };
+
+          // Update cache
+          this.priceCache.set(quote.symbol, quote);
+
+          // Emit quote
+          this.emitQuote(quote);
+        } else if (message.type === 'HEARTBEAT') {
+          // Heartbeat - connection is alive
+          logger.debug('Price stream heartbeat');
+        }
+      } catch (error) {
+        logger.warn('Failed to parse price stream message:', line);
+      }
+    }
+  }
+
+  /**
+   * Start transaction streaming for real-time order/trade updates
+   */
+  private startTransactionStream(): void {
+    const streamPath = `/v3/accounts/${this.accountId}/transactions/stream`;
+
+    logger.info('Starting transaction stream');
+
+    const url = new URL(streamPath, this.streamUrl);
+
+    const options = {
+      hostname: url.hostname,
+      port: 443,
+      path: url.pathname,
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${this.config.apiKey}`,
+        'Content-Type': 'application/json',
+      },
+    };
+
+    this.transactionStreamRequest = https.request(options, (res) => {
+      if (res.statusCode !== 200) {
+        logger.error(`Transaction stream error: ${res.statusCode}`);
+        this.scheduleReconnect('transaction');
+        return;
+      }
+
+      logger.info('Transaction stream connected');
+
+      res.on('data', (chunk: Buffer) => {
+        this.handleTransactionStreamData(chunk.toString());
+      });
+
+      res.on('end', () => {
+        logger.warn('Transaction stream ended');
+        if (this.isConnected) {
+          this.scheduleReconnect('transaction');
+        }
+      });
+    });
+
+    this.transactionStreamRequest.on('error', (error: Error) => {
+      logger.error('Transaction stream error:', error);
+      this.scheduleReconnect('transaction');
+    });
+
+    this.transactionStreamRequest.end();
+  }
+
+  /**
+   * Stop transaction streaming
+   */
+  private stopTransactionStream(): void {
+    if (this.transactionStreamRequest) {
+      this.transactionStreamRequest.destroy();
+      this.transactionStreamRequest = null;
+      logger.info('Transaction stream stopped');
+    }
+  }
+
+  /**
+   * Handle incoming transaction stream data
+   */
+  private handleTransactionStreamData(data: string): void {
+    this.transactionStreamBuffer += data;
+
+    const lines = this.transactionStreamBuffer.split('\n');
+    this.transactionStreamBuffer = lines.pop() || '';
+
+    for (const line of lines) {
+      if (!line.trim()) continue;
+
+      try {
+        const message = JSON.parse(line);
+
+        switch (message.type) {
+          case 'ORDER_FILL':
+            // Order was filled
+            logger.info(`Order filled: ${message.orderID} @ ${message.price}`);
+
+            const filledOrder = this.mapOandaOrder(message);
+            this.emitOrderUpdate(filledOrder);
+
+            // Emit trade
+            this.emitTrade({
+              id: message.id,
+              orderId: message.orderID,
+              symbol: message.instrument,
+              side: parseFloat(message.units) > 0 ? 'buy' : 'sell',
+              quantity: Math.abs(parseFloat(message.units)),
+              price: parseFloat(message.price),
+              commission: parseFloat(message.commission || '0'),
+              timestamp: new Date(message.time),
+            });
+            break;
+
+          case 'ORDER_CANCEL':
+            logger.info(`Order cancelled: ${message.orderID}`);
+            this.emitOrderUpdate({
+              id: message.orderID,
+              symbol: '',
+              side: 'buy',
+              type: 'market',
+              quantity: 0,
+              filledQuantity: 0,
+              timeInForce: 'gtc',
+              status: 'cancelled',
+              submittedAt: new Date(),
+              cancelledAt: new Date(message.time),
+            });
+            break;
+
+          case 'STOP_LOSS_ORDER':
+          case 'TAKE_PROFIT_ORDER':
+          case 'TRAILING_STOP_LOSS_ORDER':
+            logger.info(`${message.type} created: ${message.id}`);
+            break;
+
+          case 'HEARTBEAT':
+            logger.debug('Transaction stream heartbeat');
+            break;
+        }
+      } catch (error) {
+        logger.warn('Failed to parse transaction stream message:', line);
+      }
+    }
+  }
+
+  /**
+   * Schedule stream reconnection
+   */
+  private scheduleReconnect(streamType: 'price' | 'transaction'): void {
+    if (this.reconnectTimeout) return;
+
+    logger.info(`Scheduling ${streamType} stream reconnect in 5 seconds`);
+
+    this.reconnectTimeout = setTimeout(() => {
+      this.reconnectTimeout = null;
+
+      if (!this.isConnected) return;
+
+      if (streamType === 'price') {
+        this.startPriceStream();
+      } else {
+        this.startTransactionStream();
+      }
+    }, 5000);
+  }
+
+  /**
+   * Get cached quote (for quick access without API call)
+   */
+  public getCachedQuote(symbol: string): Quote | null {
+    return this.priceCache.get(symbol) || null;
   }
 
   /**

@@ -573,17 +573,28 @@ export interface PriceBarSchema {
 
 export type NotificationType =
   | 'TRADE_EXECUTED'
+  | 'TRADE_CLOSED'
   | 'PRICE_ALERT'
+  | 'PRICE_TARGET'
   | 'BOT_SIGNAL'
+  | 'BOT_STARTED'
+  | 'BOT_STOPPED'
+  | 'BOT_ERROR'
+  | 'BOT_UPDATE'
+  | 'BIG_MOVES'
+  | 'SECURITY'
+  | 'MARKETING'
   | 'SYSTEM'
+  | 'SYSTEM_UPDATE'
+  | 'SYSTEM_MAINTENANCE'
+  | 'DAILY_SUMMARY'
   | 'PROFIT'
   | 'ALERT_TRIGGERED'
-  | 'BOT_UPDATE'
-  | 'SYSTEM_UPDATE'
   | 'TRADE_COMPLETE'
   | 'RISK_WARNING'
   | 'INSIGHT_GENERATED'
-  | 'EVOLUTION_PROPOSAL';
+  | 'EVOLUTION_PROPOSAL'
+  | 'SCHEDULED';
 
 export interface NotificationSchema {
   _id: string;
@@ -621,7 +632,7 @@ export interface NotificationSchema {
   actionTakenAt?: Date;
 }
 
-// Push Notification Subscription Schema
+// Push Notification Subscription Schema (Web Push API)
 export interface PushSubscriptionSchema {
   _id: string;
   userId: string;
@@ -635,6 +646,63 @@ export interface PushSubscriptionSchema {
   createdAt: Date;
   lastUsedAt: Date;
   isActive: boolean;
+}
+
+// FCM Subscription Schema (Firebase Cloud Messaging - Mobile)
+export interface FCMSubscriptionSchema {
+  _id: string;
+  userId: string;
+  token: string;
+  platform: 'android' | 'ios' | 'web';
+  deviceId?: string;
+  deviceName?: string;
+  appVersion?: string;
+  createdAt: Date;
+  lastUsedAt: Date;
+  isActive: boolean;
+}
+
+// Scheduled Notification Schema
+export interface ScheduledNotificationSchema {
+  _id: string;
+  userId: string;
+  templateId?: string;
+  title: string;
+  body: string;
+  category: 'trade' | 'bot' | 'price' | 'big_moves' | 'security' | 'marketing' | 'system';
+  priority: 'low' | 'medium' | 'high' | 'critical';
+  data?: Record<string, any>;
+  scheduledFor: Date;
+  recurrence?: {
+    type: 'once' | 'daily' | 'weekly' | 'monthly';
+    interval?: number;
+    daysOfWeek?: number[];
+    dayOfMonth?: number;
+    endDate?: Date;
+  };
+  status: 'pending' | 'sent' | 'cancelled' | 'failed';
+  sentAt?: Date;
+  failureReason?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// Notification Template Schema
+export interface NotificationTemplateSchema {
+  _id: string;
+  name: string;
+  category: 'trade' | 'bot' | 'price' | 'big_moves' | 'security' | 'marketing' | 'system';
+  titleTemplate: string;
+  bodyTemplate: string;
+  icon?: string;
+  priority: 'low' | 'medium' | 'high' | 'critical';
+  defaultData?: Record<string, any>;
+  variables: string[];
+  createdAt: Date;
+  updatedAt: Date;
+  createdBy?: string;
+  isActive: boolean;
+  isSystem: boolean; // True for built-in templates
 }
 
 // ============================================================
@@ -883,6 +951,23 @@ export const indexes = {
   pushSubscriptions: [
     { userId: 1, isActive: 1 },
     { endpoint: 1, unique: true },
+    { createdAt: -1 },
+  ],
+  fcmSubscriptions: [
+    { userId: 1, isActive: 1 },
+    { token: 1, unique: true },
+    { platform: 1 },
+    { createdAt: -1 },
+  ],
+  scheduledNotifications: [
+    { userId: 1, status: 1, scheduledFor: 1 },
+    { status: 1, scheduledFor: 1 },
+    { createdAt: -1 },
+  ],
+  notificationTemplates: [
+    { name: 1 },
+    { category: 1, isActive: 1 },
+    { isSystem: 1 },
     { createdAt: -1 },
   ],
   auditLogs: [
