@@ -9,6 +9,8 @@
 
 import { TemplateData } from './campaign_templates';
 
+export type { TemplateData };
+
 const EMAIL_STYLES = {
   container: 'font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;',
   header: 'background: linear-gradient(135deg, #7c3aed 0%, #06b6d4 100%); padding: 40px; text-align: center;',

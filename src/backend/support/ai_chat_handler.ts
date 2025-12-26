@@ -131,8 +131,8 @@ COMMON ISSUES & SOLUTIONS:
    - Contact support for subscription issues
 
 6. "What's the difference between tiers?"
-   - FREE ($0/mo): 1 bot, paper trading - great for learning
-   - BASIC ($19/mo): 3 bots - perfect for beginners
+   - FREE ($0/mo): 3 bots, paper trading - great for learning (add more via Marketplace)
+   - BASIC ($19/mo): 5 bots - perfect for beginners (add more via Marketplace)
    - PRO ($49/mo): 7 bots - for active traders
    - PREMIUM ($109/mo): 11 Super Bots - serious traders
    - ENTERPRISE ($450/mo): Unlimited - for professionals
