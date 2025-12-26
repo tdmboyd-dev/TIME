@@ -26,7 +26,6 @@
     "date-fns": "^3.0.6",
     "expo": "~50.0.0",
     "expo-auth-session": "~5.4.0",
-    "expo-biometrics": "~2.0.0",
     "expo-constants": "~15.4.0",
     "expo-device": "~5.9.0",
     "expo-linking": "~6.2.0",
