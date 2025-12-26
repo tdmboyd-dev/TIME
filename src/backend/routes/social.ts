@@ -854,4 +854,325 @@ router.post('/stop', authMiddleware, adminMiddleware, async (req: Request, res: 
   });
 });
 
+// ============================================================
+// USER PROFILE ROUTES
+// ============================================================
+
+/**
+ * GET /social/profile/:userId
+ * Get user's social profile with full stats
+ */
+router.get('/profile/:userId', authMiddleware, async (req: Request, res: Response) => {
+  const { userId } = req.params;
+
+  try {
+    // In production, fetch from MongoDB
+    const profile = {
+      id: userId,
+      userId,
+      username: 'AlphaTrader_Pro',
+      displayName: 'Alpha Trader',
+      avatar: 'AT',
+      bio: 'Professional swing trader with 8+ years experience. Focused on technical analysis and risk management.',
+      website: 'https://alphatrader.com',
+      twitter: '@alphatrader_pro',
+      verified: true,
+      isPro: true,
+      isPublic: true,
+      memberSince: new Date('2023-03-15'),
+      lastActiveAt: new Date(),
+      followers: 12453,
+      following: 234,
+      copiers: 892,
+      copiedValue: 4500000,
+      tradingStyle: 'Swing Trader',
+      preferredAssets: ['Stocks', 'Crypto', 'Forex'],
+      riskLevel: 'moderate',
+      rank: 1,
+      stats: {
+        totalPnL: 1250000,
+        totalPnLPercent: 342.5,
+        winRate: 72.4,
+        totalTrades: 1247,
+        avgTradeSize: 25000,
+        profitFactor: 2.85,
+        sharpeRatio: 2.1,
+        sortinoRatio: 2.8,
+        maxDrawdown: 12.5,
+        avgHoldingPeriod: 1440,
+        bestTrade: 45000,
+        worstTrade: -15000,
+        currentStreak: 7,
+        streakType: 'win',
+        tradesThisMonth: 42,
+        monthlyReturn: 28.4,
+        weeklyReturn: 8.2,
+        dailyReturn: 1.5,
+      },
+      badges: [
+        { id: '1', name: 'Top Trader', icon: 'Crown', color: '#F59E0B', description: 'Top 10 on monthly leaderboard', earnedAt: new Date() },
+        { id: '2', name: 'Verified', icon: 'Shield', color: '#3B82F6', description: 'Verified identity', earnedAt: new Date() },
+        { id: '3', name: 'Consistent', icon: 'TrendingUp', color: '#10B981', description: '6 months profitable', earnedAt: new Date() },
+      ],
+      recentTrades: [
+        { id: '1', symbol: 'AAPL', direction: 'long', pnl: 2450, pnlPercent: 4.2, entryPrice: 178.50, exitPrice: 186.00, duration: 2880, timestamp: new Date() },
+        { id: '2', symbol: 'BTC/USD', direction: 'short', pnl: -850, pnlPercent: -1.2, entryPrice: 43500, exitPrice: 44020, duration: 360, timestamp: new Date() },
+        { id: '3', symbol: 'TSLA', direction: 'long', pnl: 5200, pnlPercent: 8.5, entryPrice: 245.00, exitPrice: 265.82, duration: 4320, timestamp: new Date() },
+      ],
+    };
+
+    res.json({
+      success: true,
+      data: profile,
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * PUT /social/profile
+ * Update current user's profile
+ */
+router.put('/profile', authMiddleware, async (req: Request, res: Response) => {
+  const user = (req as any).user;
+  const updates = req.body;
+
+  try {
+    // In production, update in MongoDB
+    res.json({
+      success: true,
+      message: 'Profile updated successfully',
+      data: { userId: user.id, ...updates },
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// ============================================================
+// TRADERS LIST (for discovery)
+// ============================================================
+
+/**
+ * GET /social/traders
+ * Get list of traders for discovery
+ */
+router.get('/traders', authMiddleware, async (req: Request, res: Response) => {
+  const { limit = '20', offset = '0', filter } = req.query;
+
+  try {
+    const traders = Array.from({ length: parseInt(limit as string) }, (_, i) => ({
+      id: `trader-${i + 1}`,
+      username: `Trader${String(i + 1).padStart(3, '0')}`,
+      avatar: String.fromCharCode(65 + (i % 26)) + String.fromCharCode(66 + (i % 25)),
+      rank: i + 1,
+      followers: 15000 - (i * 500) + Math.floor(Math.random() * 200),
+      following: Math.floor(Math.random() * 200),
+      totalReturn: 350 - i * 10 + Math.random() * 20,
+      winRate: 75 - (i * 1.5) + Math.random() * 5,
+      totalTrades: Math.floor(1500 - i * 50 + Math.random() * 100),
+      riskScore: 3 + Math.floor(Math.random() * 5),
+      verified: i < 8,
+      isPro: i < 5,
+      copiers: 1000 - (i * 50) + Math.floor(Math.random() * 30),
+      strategy: ['Swing Trader', 'Day Trader', 'Scalper', 'Position Trader'][i % 4],
+      monthlyReturn: 30 - i * 2 + Math.random() * 8,
+      isFollowing: Math.random() > 0.8,
+      isCopying: Math.random() > 0.9,
+    }));
+
+    res.json({
+      success: true,
+      data: traders,
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// ============================================================
+// TRADE FEED
+// ============================================================
+
+/**
+ * GET /social/feed
+ * Get trade feed
+ */
+router.get('/feed', authMiddleware, async (req: Request, res: Response) => {
+  const { filter = 'all', limit = '50', offset = '0' } = req.query;
+
+  try {
+    const trades = [
+      { username: 'AlphaTrader_Pro', symbol: 'AAPL', direction: 'long', action: 'close', pnl: 2450, pnlPercent: 4.2 },
+      { username: 'CryptoKing', symbol: 'BTC/USD', direction: 'long', action: 'open', pnl: 0, pnlPercent: 0 },
+      { username: 'ValueHunter', symbol: 'MSFT', direction: 'long', action: 'close', pnl: 1850, pnlPercent: 3.1 },
+      { username: 'ScalpMaster', symbol: 'EUR/USD', direction: 'short', action: 'close', pnl: -320, pnlPercent: -0.8 },
+      { username: 'TrendRider', symbol: 'TSLA', direction: 'long', action: 'add', pnl: 0, pnlPercent: 0 },
+    ];
+
+    const feed = trades.map((trade, index) => ({
+      id: `feed_${index + 1}`,
+      tradeId: `trade_${index + 1}`,
+      userId: `user_${index + 1}`,
+      username: trade.username,
+      displayName: trade.username.replace('_', ' '),
+      avatar: trade.username.substring(0, 2).toUpperCase(),
+      verified: index < 3,
+      isPro: index < 2,
+      isPublic: true,
+      symbol: trade.symbol,
+      assetType: trade.symbol.includes('/') ? 'forex' : trade.symbol.includes('BTC') ? 'crypto' : 'stock',
+      direction: trade.direction,
+      action: trade.action,
+      quantity: Math.floor(Math.random() * 100) + 10,
+      positionValue: Math.floor(Math.random() * 50000) + 5000,
+      pnl: trade.pnl,
+      pnlPercent: trade.pnlPercent,
+      winLoss: trade.pnl > 0 ? 'win' : trade.pnl < 0 ? 'loss' : undefined,
+      likes: Math.floor(Math.random() * 50),
+      comments: Math.floor(Math.random() * 15),
+      copies: Math.floor(Math.random() * 25),
+      shares: Math.floor(Math.random() * 10),
+      tradeTime: new Date(Date.now() - index * 300000),
+      postedAt: new Date(Date.now() - index * 300000),
+    }));
+
+    res.json({
+      success: true,
+      data: feed,
+      pagination: {
+        total: feed.length,
+        limit: Number(limit),
+        offset: Number(offset),
+        hasMore: false,
+      },
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * POST /social/feed/:entryId/like
+ * Like a feed entry
+ */
+router.post('/feed/:entryId/like', authMiddleware, async (req: Request, res: Response) => {
+  const { entryId } = req.params;
+  const user = (req as any).user;
+
+  try {
+    res.json({
+      success: true,
+      data: { entryId, liked: true, userId: user.id },
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * POST /social/feed/:entryId/comment
+ * Comment on a feed entry
+ */
+router.post('/feed/:entryId/comment', authMiddleware, async (req: Request, res: Response) => {
+  const { entryId } = req.params;
+  const { content } = req.body;
+  const user = (req as any).user;
+
+  try {
+    const comment = {
+      id: `comment_${Date.now()}`,
+      feedEntryId: entryId,
+      userId: user.id,
+      username: user.username || user.email?.split('@')[0] || 'User',
+      avatar: 'U',
+      verified: false,
+      content,
+      likes: 0,
+      createdAt: new Date(),
+    };
+
+    res.json({
+      success: true,
+      data: comment,
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// ============================================================
+// ACHIEVEMENTS & BADGES
+// ============================================================
+
+/**
+ * GET /social/achievements
+ * Get all achievements with user progress
+ */
+router.get('/achievements', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const achievements = [
+      { id: 'first_trade', name: 'First Steps', description: 'Complete your first trade', category: 'trading', icon: 'Rocket', iconColor: '#60A5FA', backgroundColor: '#1E3A5F', rarity: 'common', points: 10, progress: 1, target: 1, isComplete: true, percentOwned: 95 },
+      { id: 'ten_trades', name: 'Getting Started', description: 'Complete 10 trades', category: 'trading', icon: 'Target', iconColor: '#34D399', backgroundColor: '#1A3A2F', rarity: 'common', points: 25, progress: 10, target: 10, isComplete: true, percentOwned: 82 },
+      { id: 'hundred_trades', name: 'Centurion', description: 'Complete 100 trades', category: 'milestone', icon: 'Award', iconColor: '#F59E0B', backgroundColor: '#3D2A0A', rarity: 'uncommon', points: 100, progress: 67, target: 100, isComplete: false, percentOwned: 45 },
+      { id: 'first_win', name: 'Winner', description: 'Close your first profitable trade', category: 'trading', icon: 'Trophy', iconColor: '#FBBF24', backgroundColor: '#3D2A0A', rarity: 'common', points: 15, progress: 1, target: 1, isComplete: true, percentOwned: 92 },
+      { id: 'win_streak_5', name: 'Hot Streak', description: 'Win 5 trades in a row', category: 'trading', icon: 'Flame', iconColor: '#EF4444', backgroundColor: '#3D0A0A', rarity: 'uncommon', points: 75, progress: 3, target: 5, isComplete: false, percentOwned: 35 },
+      { id: 'profit_1k', name: 'First Thousand', description: 'Earn $1,000 in total profit', category: 'milestone', icon: 'DollarSign', iconColor: '#10B981', backgroundColor: '#0A3D2A', rarity: 'uncommon', points: 100, progress: 850, target: 1000, isComplete: false, percentOwned: 55 },
+      { id: 'first_follower', name: 'Getting Popular', description: 'Get your first follower', category: 'social', icon: 'UserPlus', iconColor: '#8B5CF6', backgroundColor: '#1E1A3D', rarity: 'common', points: 20, progress: 1, target: 1, isComplete: true, percentOwned: 78 },
+      { id: 'followers_100', name: 'Rising Star', description: 'Reach 100 followers', category: 'social', icon: 'Star', iconColor: '#FBBF24', backgroundColor: '#3D2A0A', rarity: 'uncommon', points: 150, progress: 45, target: 100, isComplete: false, percentOwned: 28 },
+    ];
+
+    res.json({
+      success: true,
+      data: achievements,
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * GET /social/badges
+ * Get all badges with earned status
+ */
+router.get('/badges', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const badges = [
+      { id: 'verified', name: 'Verified', description: 'Verified trader identity', category: 'verified', icon: 'Shield', color: '#3B82F6', backgroundColor: '#1E3A5F', isEarned: true, earnedAt: new Date(), isPrimary: false, isDisplayed: true, priority: 100 },
+      { id: 'consistent', name: 'Consistent', description: 'Consistent profitable months', category: 'trading', icon: 'TrendingUp', color: '#10B981', backgroundColor: '#0A3D2A', isEarned: true, earnedAt: new Date(), isPrimary: true, isDisplayed: true, priority: 80 },
+      { id: 'top_trader', name: 'Top Trader', description: 'Top 10 on the leaderboard', category: 'trading', icon: 'Crown', color: '#F59E0B', backgroundColor: '#3D2A0A', isEarned: false, isPrimary: false, isDisplayed: false, priority: 90 },
+      { id: 'elite_trader', name: 'Elite Trader', description: 'Top 1% by performance', category: 'trading', icon: 'Gem', color: '#EC4899', backgroundColor: '#3D0A2A', isEarned: false, isPrimary: false, isDisplayed: false, priority: 85 },
+      { id: 'community_leader', name: 'Community Leader', description: 'Active community contributor', category: 'social', icon: 'Users', color: '#6366F1', backgroundColor: '#1A1A3D', isEarned: false, isPrimary: false, isDisplayed: false, priority: 75 },
+      { id: 'signal_master', name: 'Signal Master', description: 'High-quality signal provider', category: 'trading', icon: 'Zap', color: '#F97316', backgroundColor: '#3D1F0A', isEarned: false, isPrimary: false, isDisplayed: false, priority: 70 },
+    ];
+
+    res.json({
+      success: true,
+      data: badges,
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * PUT /social/badges/:badgeId/display
+ * Toggle badge display on profile
+ */
+router.put('/badges/:badgeId/display', authMiddleware, async (req: Request, res: Response) => {
+  const { badgeId } = req.params;
+  const { isDisplayed, isPrimary } = req.body;
+  const user = (req as any).user;
+
+  try {
+    res.json({
+      success: true,
+      data: { badgeId, isDisplayed, isPrimary, userId: user.id },
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 export default router;

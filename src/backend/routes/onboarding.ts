@@ -51,12 +51,12 @@ interface PricingTier {
   features: string[];
 }
 
-// Pricing Tiers
+// Pricing Tiers (Updated: FREE=3, BASIC=5, + Marketplace for more)
 const PRICING_TIERS: PricingTier[] = [
-  { name: 'FREE', price: 0, bots: 1, features: ['1 Trading Bot', 'Basic Analytics', 'Paper Trading'] },
-  { name: 'BASIC', price: 19, bots: 3, features: ['3 Trading Bots', 'Advanced Analytics', 'Email Support'] },
-  { name: 'PRO', price: 49, bots: 7, features: ['7 Trading Bots', 'Priority Support', 'Custom Strategies'] },
-  { name: 'PREMIUM', price: 109, bots: 11, features: ['11 Super Bots', 'AI Optimization', 'Dedicated Manager'] },
+  { name: 'FREE', price: 0, bots: 3, features: ['3 Trading Bots', 'Paper Trading', 'Bot Marketplace Access', 'Basic Analytics'] },
+  { name: 'BASIC', price: 19, bots: 5, features: ['5 Trading Bots', 'Live Trading', 'Bot Marketplace Access', 'Email Support'] },
+  { name: 'PRO', price: 49, bots: 7, features: ['7 Trading Bots', 'Priority Support', 'Advanced Analytics', 'Custom Strategies'] },
+  { name: 'PREMIUM', price: 109, bots: 11, features: ['11 Super Bots', 'AI Optimization', 'Dedicated Manager', 'All Asset Classes'] },
   { name: 'ENTERPRISE', price: 450, bots: 'Unlimited', features: ['Unlimited Bots', 'White-label', 'API Access', 'Custom Development'] },
 ];
 
