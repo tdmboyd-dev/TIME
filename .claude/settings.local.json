@@ -38,7 +38,11 @@
       "WebFetch(domain:smrtalgo.com)",
       "WebFetch(domain:go.atnunlimited.com)",
       "Bash(eas --version:*)",
-      "Bash(eas whoami:*)"
+      "Bash(eas whoami:*)",
+      "Bash(eas build:*)",
+      "Bash(eas init:*)",
+      "Bash(eas credentials:*)",
+      "Bash(eas build:list:*)"
     ]
   }
 }
