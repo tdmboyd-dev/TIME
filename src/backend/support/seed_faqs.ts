@@ -131,31 +131,72 @@ We're constantly adding new broker integrations. Contact support if you need a s
     question: 'What are the pricing tiers and premium features?',
     answer: `TIME BEYOND US Pricing:
 
-Base Platform: FREE
-- Access to basic bots and strategies
-- Practice mode trading
-- Portfolio tracking
-- Educational content
+SUBSCRIPTION TIERS:
+- FREE: $0/month - 1 bot, paper trading only
+- BASIC: $19/month - 3 bots
+- PRO: $49/month - 7 bots
+- PREMIUM: $109/month - 11 Super Bots
+- ENTERPRISE: $450/month - Unlimited bots
 
-DROPBOT AutoPilot: $59/month
-- Fully automated trading
-- Advanced bot strategies
-- Risk management tools
-- Priority support
+OPTIONAL ADD-ONS (can be added to ANY tier):
+- DROPBOT AutoPilot: +$39/month
+  Fully automated "set it and forget it" trading
+  AI manages everything for you
 
-Ultimate Money Machine: $79/month
-- 25 Super Bots with institutional edge
-- Attack strategies for aggressive growth
-- Self-learning AI optimization
-- Maximum automation
+- Ultimate Money Machine (UMM): +$59/month
+  25 Super Bots with institutional-grade edge
+  Market Attack Strategies
+  Self-learning AI that improves over time
 
 Bot Marketplace: $5-50/day per bot
 - Rent individual premium bots
 - No long-term commitment
-- Try before subscribing`,
+- Try before you subscribe`,
     category: 'billing',
     keywords: ['pricing', 'cost', 'price', 'subscription', 'premium', 'paid'],
     order: 1,
+  },
+  {
+    question: 'What is DROPBOT AutoPilot?',
+    answer: `DROPBOT AutoPilot is our premium add-on feature for +$39/month.
+
+Key Features:
+- Fully automated "set it and forget it" trading
+- AI manages all trading decisions 24/7
+- Risk management built-in
+- Works with any subscription tier
+- No manual intervention needed
+
+Perfect for:
+- Busy professionals who don't have time to monitor markets
+- Beginners who want AI to handle trading
+- Anyone who wants passive income from trading
+
+Add DROPBOT to your subscription in Settings > Payments.`,
+    category: 'billing',
+    keywords: ['dropbot', 'autopilot', 'automated', 'set and forget', 'passive'],
+    order: 2,
+  },
+  {
+    question: 'What is the Ultimate Money Machine (UMM)?',
+    answer: `The Ultimate Money Machine (UMM) is our most advanced add-on for +$59/month.
+
+Includes:
+- 25 Super Bots with institutional-grade strategies
+- Market Attack Strategies for aggressive growth
+- Self-learning AI that improves with every trade
+- Combines multiple strategies for maximum returns
+- Works with any subscription tier
+
+Best for:
+- Serious traders looking for maximum edge
+- Those who want institutional-quality trading
+- Users who want self-improving AI strategies
+
+Add UMM to your subscription in Settings > Payments.`,
+    category: 'billing',
+    keywords: ['umm', 'ultimate', 'money machine', 'super bots', 'institutional'],
+    order: 3,
   },
 
   // Account Category

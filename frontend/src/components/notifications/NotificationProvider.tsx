@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * NotificationProvider Component
+ * NotificationProvider Component - Production Ready
  *
  * React Context for push notifications:
  * - Request notification permission on mount
@@ -9,14 +9,20 @@
  * - Show in-app notification toast on receive
  * - Store notifications in state
  * - Provide notification context to entire app
+ * - User notification preferences management
+ * - Quiet hours and rate limiting support
  */
 
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import { Bell, X, CheckCircle, AlertTriangle, Info, TrendingUp } from 'lucide-react';
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
+import { Bell, X, CheckCircle, AlertTriangle, Info, TrendingUp, Bot, Shield, Zap, Gift, DollarSign } from 'lucide-react';
 import { useNotificationUpdates } from '@/hooks/useWebSocket';
 import type { NotificationUpdate } from '@/hooks/useWebSocket';
+import { useRouter } from 'next/navigation';
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 'https://time-backend-hosting.fly.dev';
+
+// Notification categories
+export type NotificationCategory = 'trade' | 'bot' | 'price' | 'big_moves' | 'security' | 'marketing' | 'system';
 
 interface Notification {
   _id: string;
@@ -24,10 +30,77 @@ interface Notification {
   title: string;
   message: string;
   priority: 'low' | 'medium' | 'high' | 'critical';
+  category?: NotificationCategory;
   createdAt: Date;
   readAt?: Date;
   data?: Record<string, any>;
   url?: string;
+}
+
+// User notification preferences
+export interface NotificationPreferences {
+  categories: {
+    trade: boolean;
+    bot: boolean;
+    price: boolean;
+    big_moves: boolean;
+    security: boolean;
+    marketing: boolean;
+    system: boolean;
+  };
+  quietHours: {
+    enabled: boolean;
+    start: string;
+    end: string;
+    timezone: string;
+  };
+  frequencyLimits: {
+    maxPerHour: number;
+    maxPerDay: number;
+  };
+  deliveryMethods: {
+    push: boolean;
+    email: boolean;
+    sms: boolean;
+    inApp: boolean;
+  };
+  minPriority: 'low' | 'medium' | 'high' | 'critical';
+}
+
+const defaultPreferences: NotificationPreferences = {
+  categories: {
+    trade: true,
+    bot: true,
+    price: true,
+    big_moves: true,
+    security: true,
+    marketing: false,
+    system: true,
+  },
+  quietHours: {
+    enabled: false,
+    start: '22:00',
+    end: '07:00',
+    timezone: 'America/New_York',
+  },
+  frequencyLimits: {
+    maxPerHour: 20,
+    maxPerDay: 100,
+  },
+  deliveryMethods: {
+    push: true,
+    email: true,
+    sms: false,
+    inApp: true,
+  },
+  minPriority: 'low',
+};
+
+interface NotificationStats {
+  total: number;
+  unread: number;
+  byCategory: Record<NotificationCategory, number>;
+  lastNotification?: Date;
 }
 
 interface NotificationContextType {
@@ -35,6 +108,9 @@ interface NotificationContextType {
   unreadCount: number;
   isSubscribed: boolean;
   permission: NotificationPermission;
+  preferences: NotificationPreferences;
+  stats: NotificationStats | null;
+  isLoading: boolean;
   requestPermission: () => Promise<void>;
   subscribeToPush: () => Promise<void>;
   unsubscribeFromPush: () => Promise<void>;
@@ -42,7 +118,13 @@ interface NotificationContextType {
   markAllAsRead: () => Promise<void>;
   deleteNotification: (notificationId: string) => Promise<void>;
   refreshNotifications: () => Promise<void>;
+  updatePreferences: (updates: Partial<NotificationPreferences>) => Promise<void>;
+  resetPreferences: () => Promise<void>;
+  refreshStats: () => Promise<void>;
+  showToast: (title: string, message: string, type?: ToastType, url?: string) => void;
 }
+
+type ToastType = 'info' | 'success' | 'warning' | 'error' | 'trade' | 'bot' | 'security';
 
 const NotificationContext = createContext<NotificationContextType | null>(null);
 
@@ -58,16 +140,22 @@ interface ToastNotification {
   id: string;
   title: string;
   message: string;
-  type: 'info' | 'success' | 'warning' | 'error';
+  type: ToastType;
   url?: string;
+  category?: NotificationCategory;
 }
 
 export function NotificationProvider({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [permission, setPermission] = useState<NotificationPermission>('default');
   const [toasts, setToasts] = useState<ToastNotification[]>([]);
+  const [preferences, setPreferences] = useState<NotificationPreferences>(defaultPreferences);
+  const [stats, setStats] = useState<NotificationStats | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // Check if push notifications are supported
   const isPushSupported = () => {

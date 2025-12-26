@@ -1,20 +1,44 @@
 // TIME BEYOND US Platform Service Worker
-// Version 1.0.0 - PWA Support
+// Version 2.0.0 - Enhanced Push Notifications + PWA Support
 
-const CACHE_NAME = 'time-trading-v1';
+const CACHE_NAME = 'time-trading-v2';
 const STATIC_ASSETS = [
   '/',
   '/trade',
   '/portfolio',
   '/autopilot',
   '/timebeunus',
+  '/notifications',
+  '/settings',
   '/icon.svg',
   '/favicon.svg',
   '/apple-touch-icon.svg',
   '/manifest.json',
 ];
 
-// Install event - cache static assets
+// Notification category icons (emoji fallbacks)
+const CATEGORY_ICONS = {
+  trade: '/icons/trade.svg',
+  bot: '/icons/bot.svg',
+  price: '/icons/price.svg',
+  big_moves: '/icons/big-moves.svg',
+  security: '/icons/security.svg',
+  marketing: '/icons/marketing.svg',
+  system: '/icons/system.svg',
+};
+
+// Notification sounds (optional)
+const NOTIFICATION_SOUNDS = {
+  critical: '/sounds/critical.mp3',
+  high: '/sounds/alert.mp3',
+  medium: '/sounds/notification.mp3',
+  low: '/sounds/soft.mp3',
+};
+
+// ============================================================
+// INSTALL & ACTIVATE
+// ============================================================
+
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
@@ -22,11 +46,9 @@ self.addEventListener('install', (event) => {
       return cache.addAll(STATIC_ASSETS);
     })
   );
-  // Activate immediately
   self.skipWaiting();
 });
 
-// Activate event - clean old caches
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
@@ -37,16 +59,16 @@ self.addEventListener('activate', (event) => {
       );
     })
   );
-  // Take control immediately
   self.clients.claim();
 });
 
-// Fetch event - network first, fallback to cache
+// ============================================================
+// FETCH HANDLER
+// ============================================================
+
 self.addEventListener('fetch', (event) => {
-  // Skip non-GET requests
   if (event.request.method !== 'GET') return;
 
-  // Skip API requests and WebSocket connections
   const url = new URL(event.request.url);
   if (url.pathname.startsWith('/api') || url.protocol === 'ws:' || url.protocol === 'wss:') {
     return;
@@ -55,7 +77,6 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        // Clone the response before caching
         const responseClone = response.clone();
         caches.open(CACHE_NAME).then((cache) => {
           cache.put(event.request, responseClone);
@@ -63,12 +84,10 @@ self.addEventListener('fetch', (event) => {
         return response;
       })
       .catch(() => {
-        // Fallback to cache
         return caches.match(event.request).then((cachedResponse) => {
           if (cachedResponse) {
             return cachedResponse;
           }
-          // Return offline page for navigation requests
           if (event.request.mode === 'navigate') {
             return caches.match('/');
           }
@@ -78,7 +97,10 @@ self.addEventListener('fetch', (event) => {
   );
 });
 
-// Push notification support
+// ============================================================
+// ENHANCED PUSH NOTIFICATION HANDLER
+// ============================================================
+
 self.addEventListener('push', (event) => {
   console.log('[SW] Push notification received');
 
@@ -93,93 +115,333 @@ self.addEventListener('push', (event) => {
   try {
     if (event.data) {
       const payload = event.data.json();
-      data = {
-        ...data,
-        ...payload,
-      };
+      data = { ...data, ...payload };
     }
   } catch (error) {
     console.error('[SW] Error parsing push notification data:', error);
   }
 
-  const options = {
-    body: data.body,
-    icon: data.icon || '/icon.svg',
-    badge: data.badge || '/icon.svg',
-    vibrate: [200, 100, 200],
-    tag: data.data?.type || 'notification',
-    requireInteraction: data.data?.priority === 'critical',
-    data: data.data,
-    actions: data.data?.url ? [
-      { action: 'view', title: 'View' },
-      { action: 'dismiss', title: 'Dismiss' },
-    ] : [
-      { action: 'dismiss', title: 'Dismiss' },
-    ],
-  };
+  // Determine notification category and customize appearance
+  const category = data.data?.category || getCategoryFromType(data.data?.type || '');
+  const priority = data.data?.priority || 'medium';
 
+  // Build notification options
+  const options = buildNotificationOptions(data, category, priority);
+
+  // Show notification
   event.waitUntil(
     self.registration.showNotification(data.title, options)
   );
 
-  // Notify all clients about the new notification
+  // Broadcast to all clients
   event.waitUntil(
-    self.clients.matchAll({ includeUncontrolled: true, type: 'window' }).then((clients) => {
-      console.log(`[SW] Notifying ${clients.length} client(s) about push notification`);
-      clients.forEach((client) => {
-        client.postMessage({
-          type: 'PUSH_NOTIFICATION',
-          payload: data,
-        });
-      });
+    broadcastToClients({
+      type: 'PUSH_NOTIFICATION',
+      payload: data,
+      category,
+      priority,
+      timestamp: Date.now(),
     })
+  );
+
+  // Track notification for analytics
+  event.waitUntil(
+    trackNotificationReceived(data)
   );
 });
 
-// Notification click handler
+function getCategoryFromType(type) {
+  const lowerType = type.toLowerCase();
+  if (lowerType.includes('trade') || lowerType.includes('executed')) return 'trade';
+  if (lowerType.includes('bot') || lowerType.includes('signal')) return 'bot';
+  if (lowerType.includes('price') || lowerType.includes('alert')) return 'price';
+  if (lowerType.includes('big_moves') || lowerType.includes('market_move')) return 'big_moves';
+  if (lowerType.includes('security') || lowerType.includes('login')) return 'security';
+  if (lowerType.includes('marketing') || lowerType.includes('promo')) return 'marketing';
+  return 'system';
+}
+
+function buildNotificationOptions(data, category, priority) {
+  // Base vibration patterns
+  const vibrationPatterns = {
+    critical: [300, 100, 300, 100, 300],
+    high: [200, 100, 200],
+    medium: [200],
+    low: [100],
+  };
+
+  // Badge colors by category
+  const badgeByCategory = {
+    trade: '/icons/badge-trade.svg',
+    bot: '/icons/badge-bot.svg',
+    price: '/icons/badge-price.svg',
+    big_moves: '/icons/badge-alert.svg',
+    security: '/icons/badge-security.svg',
+    marketing: '/icons/badge-promo.svg',
+    system: '/icon.svg',
+  };
+
+  // Build actions based on category and data
+  const actions = buildActions(data, category);
+
+  return {
+    body: data.body,
+    icon: data.icon || CATEGORY_ICONS[category] || '/icon.svg',
+    badge: badgeByCategory[category] || '/icon.svg',
+    image: data.data?.image, // Optional large image
+    vibrate: vibrationPatterns[priority] || vibrationPatterns.medium,
+    tag: `${category}-${data.data?.id || Date.now()}`,
+    renotify: priority === 'critical', // Re-alert for critical
+    requireInteraction: priority === 'critical' || priority === 'high',
+    silent: priority === 'low',
+    data: {
+      ...data.data,
+      category,
+      priority,
+      receivedAt: Date.now(),
+    },
+    actions,
+    timestamp: data.data?.timestamp || Date.now(),
+  };
+}
+
+function buildActions(data, category) {
+  const actions = [];
+
+  // Category-specific actions
+  switch (category) {
+    case 'trade':
+      actions.push({ action: 'view-trade', title: 'View Trade' });
+      actions.push({ action: 'portfolio', title: 'Portfolio' });
+      break;
+    case 'bot':
+      actions.push({ action: 'view-bot', title: 'View Bot' });
+      actions.push({ action: 'autopilot', title: 'Autopilot' });
+      break;
+    case 'price':
+      if (data.data?.symbol) {
+        actions.push({ action: 'trade-now', title: 'Trade' });
+      }
+      actions.push({ action: 'view-alerts', title: 'Alerts' });
+      break;
+    case 'big_moves':
+      if (data.data?.symbol) {
+        actions.push({ action: 'trade-now', title: 'Trade Now' });
+      }
+      actions.push({ action: 'view-markets', title: 'Markets' });
+      break;
+    case 'security':
+      actions.push({ action: 'view-security', title: 'Review' });
+      actions.push({ action: 'secure-account', title: 'Secure' });
+      break;
+    case 'marketing':
+      if (data.data?.ctaUrl) {
+        actions.push({ action: 'learn-more', title: data.data.ctaText || 'Learn More' });
+      }
+      break;
+    default:
+      if (data.data?.url) {
+        actions.push({ action: 'view', title: 'View' });
+      }
+  }
+
+  actions.push({ action: 'dismiss', title: 'Dismiss' });
+
+  return actions.slice(0, 3); // Max 3 actions
+}
+
+async function broadcastToClients(message) {
+  const allClients = await self.clients.matchAll({
+    includeUncontrolled: true,
+    type: 'window',
+  });
+
+  console.log(`[SW] Broadcasting to ${allClients.length} client(s)`);
+
+  allClients.forEach((client) => {
+    client.postMessage(message);
+  });
+}
+
+async function trackNotificationReceived(data) {
+  // Could send analytics to backend
+  console.log('[SW] Notification tracked:', {
+    type: data.data?.type,
+    category: data.data?.category,
+    priority: data.data?.priority,
+    timestamp: Date.now(),
+  });
+}
+
+// ============================================================
+// NOTIFICATION CLICK HANDLER
+// ============================================================
+
 self.addEventListener('notificationclick', (event) => {
   console.log('[SW] Notification clicked:', event.action);
   event.notification.close();
 
-  if (event.action === 'dismiss') return;
+  const data = event.notification.data || {};
+  const category = data.category || 'system';
+  let targetUrl = '/';
 
-  const url = event.notification.data?.url || '/';
+  // Determine URL based on action
+  switch (event.action) {
+    case 'dismiss':
+      return;
+    case 'view-trade':
+    case 'portfolio':
+      targetUrl = '/portfolio';
+      break;
+    case 'view-bot':
+    case 'autopilot':
+      targetUrl = '/autopilot';
+      break;
+    case 'trade-now':
+      targetUrl = data.symbol ? `/trade?symbol=${data.symbol}` : '/trade';
+      break;
+    case 'view-alerts':
+      targetUrl = '/alerts';
+      break;
+    case 'view-markets':
+      targetUrl = '/markets';
+      break;
+    case 'view-security':
+    case 'secure-account':
+      targetUrl = '/settings?tab=security';
+      break;
+    case 'learn-more':
+      targetUrl = data.ctaUrl || '/offers';
+      break;
+    case 'view':
+    default:
+      targetUrl = data.url || '/notifications';
+  }
 
   event.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-      // Focus existing window
-      for (const client of clientList) {
-        if (client.url.includes(self.location.origin) && 'focus' in client) {
-          return client.focus().then(() => {
-            // Navigate to the notification URL
-            if (url !== '/') {
-              client.postMessage({
-                type: 'NAVIGATE',
-                url: url,
-              });
-            }
-          });
-        }
-      }
-      // No window open, open new one
-      if (clients.openWindow) {
-        return clients.openWindow(url);
-      }
-    })
+    handleNotificationClick(targetUrl, data)
   );
 });
 
-// Background sync for offline trades
+async function handleNotificationClick(targetUrl, data) {
+  // Try to focus existing window
+  const allClients = await self.clients.matchAll({
+    type: 'window',
+    includeUncontrolled: true,
+  });
+
+  for (const client of allClients) {
+    if (client.url.includes(self.location.origin) && 'focus' in client) {
+      await client.focus();
+      client.postMessage({
+        type: 'NAVIGATE',
+        url: targetUrl,
+        notificationData: data,
+      });
+      return;
+    }
+  }
+
+  // Open new window if none exists
+  if (self.clients.openWindow) {
+    return self.clients.openWindow(targetUrl);
+  }
+}
+
+// ============================================================
+// NOTIFICATION CLOSE HANDLER
+// ============================================================
+
+self.addEventListener('notificationclose', (event) => {
+  console.log('[SW] Notification closed');
+
+  // Track notification dismissal
+  const data = event.notification.data || {};
+  broadcastToClients({
+    type: 'NOTIFICATION_DISMISSED',
+    notificationId: data.id,
+    category: data.category,
+    timestamp: Date.now(),
+  });
+});
+
+// ============================================================
+// BACKGROUND SYNC
+// ============================================================
+
 self.addEventListener('sync', (event) => {
-  if (event.tag === 'sync-trades') {
-    event.waitUntil(syncPendingTrades());
+  console.log('[SW] Background sync:', event.tag);
+
+  switch (event.tag) {
+    case 'sync-trades':
+      event.waitUntil(syncPendingTrades());
+      break;
+    case 'sync-notifications':
+      event.waitUntil(syncNotifications());
+      break;
+    case 'sync-preferences':
+      event.waitUntil(syncPreferences());
+      break;
   }
 });
 
 async function syncPendingTrades() {
-  // Get pending trades from IndexedDB
-  // This would sync trades that were made while offline
   console.log('[SW] Syncing pending trades...');
+  // Implementation for offline trade sync
 }
 
-console.log('[SW] TIME BEYOND US Service Worker v1.0.0 loaded');
+async function syncNotifications() {
+  console.log('[SW] Syncing notifications...');
+  // Fetch latest notifications from server
+}
+
+async function syncPreferences() {
+  console.log('[SW] Syncing preferences...');
+  // Sync notification preferences
+}
+
+// ============================================================
+// PERIODIC BACKGROUND SYNC (if supported)
+// ============================================================
+
+self.addEventListener('periodicsync', (event) => {
+  console.log('[SW] Periodic sync:', event.tag);
+
+  if (event.tag === 'check-notifications') {
+    event.waitUntil(checkForNewNotifications());
+  }
+});
+
+async function checkForNewNotifications() {
+  console.log('[SW] Checking for new notifications...');
+  // Could poll server for new notifications when app is closed
+}
+
+// ============================================================
+// MESSAGE HANDLER
+// ============================================================
+
+self.addEventListener('message', (event) => {
+  console.log('[SW] Message received:', event.data?.type);
+
+  switch (event.data?.type) {
+    case 'SKIP_WAITING':
+      self.skipWaiting();
+      break;
+    case 'CLEAR_CACHE':
+      event.waitUntil(
+        caches.delete(CACHE_NAME).then(() => {
+          console.log('[SW] Cache cleared');
+        })
+      );
+      break;
+    case 'GET_VERSION':
+      event.source?.postMessage({
+        type: 'VERSION',
+        version: '2.0.0',
+      });
+      break;
+  }
+});
+
+console.log('[SW] TIME BEYOND US Service Worker v2.0.0 loaded');

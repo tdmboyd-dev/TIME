@@ -21,7 +21,16 @@ import {
   Calendar,
   Loader2,
   Bot,
-  Play
+  Play,
+  X,
+  Zap,
+  Crown,
+  Star,
+  Rocket,
+  Building2,
+  Bitcoin,
+  LineChart,
+  Activity
 } from 'lucide-react';
 import { TimeLogo, TimeIcon } from '@/components/branding/TimeLogo';
 
@@ -29,13 +38,13 @@ import { TimeLogo, TimeIcon } from '@/components/branding/TimeLogo';
  * TIME BEYOND US - User Onboarding Flow
  *
  * A comprehensive 7-step wizard to personalize the trading experience:
- * 1. Welcome + Platform Intro
- * 2. Risk Profile Questionnaire (5 questions)
- * 3. Trading Experience Level
- * 4. Investment Goals (growth, income, preservation)
- * 5. Broker Connection Prompt
- * 6. Bot Recommendation Based on Profile
- * 7. First Bot Activation
+ * 1. Welcome + Trading Experience (beginner/intermediate/advanced)
+ * 2. Risk Tolerance (1-5 scale questionnaire)
+ * 3. Investment Goals (growth/income/preservation)
+ * 4. Capital Range ($1K-$5K, $5K-$25K, $25K-$100K, $100K+)
+ * 5. Preferred Asset Classes (stocks/crypto/forex/options)
+ * 6. Bot Recommendations (based on answers) + Pricing Tiers
+ * 7. Complete + Start Trading
  *
  * Features:
  * - localStorage progress saving
@@ -44,13 +53,17 @@ import { TimeLogo, TimeIcon } from '@/components/branding/TimeLogo';
  * - Full TypeScript typing
  * - Production-ready validation
  * - API integration for saving preferences
+ * - Skip option for existing users
+ * - Pricing tiers display
  */
 
 // Types
-type ExperienceLevel = 'beginner' | 'intermediate' | 'expert';
-type RiskTolerance = 'conservative' | 'moderate' | 'aggressive';
+type ExperienceLevel = 'beginner' | 'intermediate' | 'advanced';
+type RiskTolerance = 1 | 2 | 3 | 4 | 5;
 type TradingGoal = 'day-trading' | 'long-term' | 'retirement' | 'passive-income' | 'tax-optimization';
 type InvestmentGoal = 'growth' | 'income' | 'preservation';
+type CapitalRange = '1k-5k' | '5k-25k' | '25k-100k' | '100k+';
+type AssetClass = 'stocks' | 'crypto' | 'forex' | 'options';
 
 interface RiskQuestion {
   id: string;
@@ -62,6 +75,21 @@ interface RiskQuestion {
   }>;
 }
 
+interface PricingTier {
+  name: string;
+  price: number;
+  bots: number | string;
+  features: string[];
+  popular?: boolean;
+  icon: any;
+}
+
+interface AddOn {
+  name: string;
+  price: number;
+  description: string;
+}
+
 interface OnboardingData {
   step: number;
   name: string;
@@ -69,20 +97,38 @@ interface OnboardingData {
   riskTolerance: RiskTolerance | null;
   goals: TradingGoal[];
   investmentGoal: InvestmentGoal | null;
+  capitalRange: CapitalRange | null;
+  assetClasses: AssetClass[];
   riskAnswers: Record<string, number>;
   brokerConnected: boolean;
   recommendedBots: string[];
   activatedBot: string | null;
+  selectedPlan: string | null;
 }
 
 const STORAGE_KEY = 'time_onboarding_progress';
 const COMPLETION_COOKIE = 'time_onboarding_complete';
+
+// Pricing tiers
+const PRICING_TIERS: PricingTier[] = [
+  { name: 'FREE', price: 0, bots: 1, features: ['1 Trading Bot', 'Basic Analytics', 'Paper Trading'], icon: Zap },
+  { name: 'BASIC', price: 19, bots: 3, features: ['3 Trading Bots', 'Advanced Analytics', 'Email Support'], icon: Star },
+  { name: 'PRO', price: 49, bots: 7, features: ['7 Trading Bots', 'Priority Support', 'Custom Strategies'], popular: true, icon: Rocket },
+  { name: 'PREMIUM', price: 109, bots: '11 Super Bots', features: ['11 Super Bots', 'AI Optimization', 'Dedicated Manager'], icon: Crown },
+  { name: 'ENTERPRISE', price: 450, bots: 'Unlimited', features: ['Unlimited Bots', 'White-label', 'API Access', 'Custom Development'], icon: Building2 },
+];
+
+const ADD_ONS: AddOn[] = [
+  { name: 'DROPBOT', price: 39, description: 'Automated drop trading with AI signals' },
+  { name: 'UMM', price: 59, description: 'Universal Money Machine - Fully automated trading' },
+];
 
 export default function OnboardingPage() {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
   const [isAnimating, setIsAnimating] = useState(false);
   const [direction, setDirection] = useState<'forward' | 'backward'>('forward');
+  const [showSkipModal, setShowSkipModal] = useState(false);
 
   // Form state
   const [name, setName] = useState('');
@@ -90,10 +136,14 @@ export default function OnboardingPage() {
   const [experienceLevel, setExperienceLevel] = useState<ExperienceLevel | null>(null);
   const [investmentGoal, setInvestmentGoal] = useState<InvestmentGoal | null>(null);
   const [riskTolerance, setRiskTolerance] = useState<RiskTolerance | null>(null);
+  const [capitalRange, setCapitalRange] = useState<CapitalRange | null>(null);
+  const [assetClasses, setAssetClasses] = useState<AssetClass[]>([]);
   const [goals, setGoals] = useState<TradingGoal[]>([]);
   const [selectedBroker, setSelectedBroker] = useState<string | null>(null);
   const [recommendedBots, setRecommendedBots] = useState<string[]>([]);
   const [activatedBot, setActivatedBot] = useState<string | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState<string>('FREE');
+  const [selectedAddOns, setSelectedAddOns] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState(false);
 
   // Load saved progress on mount
@@ -109,9 +159,12 @@ export default function OnboardingPage() {
           setExperienceLevel(data.experienceLevel);
           setInvestmentGoal(data.investmentGoal || null);
           setRiskTolerance(data.riskTolerance);
+          setCapitalRange(data.capitalRange || null);
+          setAssetClasses(data.assetClasses || []);
           setGoals(data.goals);
           setRecommendedBots(data.recommendedBots || []);
           setActivatedBot(data.activatedBot || null);
+          setSelectedPlan(data.selectedPlan || 'FREE');
         } catch (e) {
           console.error('Failed to load onboarding progress:', e);
         }
@@ -128,15 +181,18 @@ export default function OnboardingPage() {
         riskAnswers,
         experienceLevel,
         investmentGoal,
+        capitalRange,
+        assetClasses,
         riskTolerance,
         goals,
         brokerConnected: selectedBroker !== null,
         recommendedBots,
         activatedBot,
+        selectedPlan,
       };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     }
-  }, [currentStep, name, riskAnswers, experienceLevel, investmentGoal, riskTolerance, goals, selectedBroker, recommendedBots, activatedBot]);
+  }, [currentStep, name, riskAnswers, experienceLevel, investmentGoal, capitalRange, assetClasses, riskTolerance, goals, selectedBroker, recommendedBots, activatedBot, selectedPlan]);
 
   const handleNext = async () => {
     if (!canProceed()) return;
@@ -163,13 +219,23 @@ export default function OnboardingPage() {
     }, 300);
   };
 
+  const handleSkipOnboarding = () => {
+    // For existing users - skip to dashboard
+    if (typeof window !== 'undefined') {
+      const expires = new Date();
+      expires.setFullYear(expires.getFullYear() + 1);
+      document.cookie = `${COMPLETION_COOKIE}=true; expires=${expires.toUTCString()}; path=/; SameSite=Lax`;
+    }
+    router.push('/');
+  };
+
   const handleComplete = async () => {
     setIsSaving(true);
 
     try {
       // Save to backend API
       const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
-      const response = await fetch(`${API_BASE}/users/onboarding`, {
+      const response = await fetch(`${API_BASE}/onboarding/complete`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -179,11 +245,15 @@ export default function OnboardingPage() {
           riskAnswers,
           experienceLevel,
           investmentGoal,
+          capitalRange,
+          assetClasses,
           riskTolerance,
           goals,
           broker: selectedBroker,
           recommendedBots,
           activatedBot,
+          selectedPlan,
+          selectedAddOns,
         }),
       });
 
@@ -209,9 +279,13 @@ export default function OnboardingPage() {
         name,
         experienceLevel,
         investmentGoal,
+        capitalRange,
+        assetClasses,
         riskTolerance,
         goals,
         activatedBot,
+        selectedPlan,
+        selectedAddOns,
         onboardedAt: new Date().toISOString(),
       }));
     }
@@ -226,55 +300,79 @@ export default function OnboardingPage() {
     handleComplete();
   };
 
+  const toggleAddOn = (addOnName: string) => {
+    setSelectedAddOns(prev =>
+      prev.includes(addOnName)
+        ? prev.filter(a => a !== addOnName)
+        : [...prev, addOnName]
+    );
+  };
+
+  const toggleAssetClass = (asset: AssetClass) => {
+    setAssetClasses(prev =>
+      prev.includes(asset)
+        ? prev.filter(a => a !== asset)
+        : [...prev, asset]
+    );
+  };
+
   const canProceed = (): boolean => {
     switch (currentStep) {
       case 1:
-        return name.trim().length >= 2;
+        return name.trim().length >= 2 && experienceLevel !== null;
       case 2:
         return Object.keys(riskAnswers).length === 5; // All 5 questions answered
       case 3:
-        return experienceLevel !== null;
-      case 4:
         return investmentGoal !== null;
+      case 4:
+        return capitalRange !== null;
       case 5:
-        return true; // Broker connection is optional
+        return assetClasses.length > 0;
       case 6:
         return recommendedBots.length > 0;
       case 7:
-        return true; // Bot activation is optional
+        return true; // Completion is always allowed
       default:
         return false;
     }
   };
 
-  // Calculate risk tolerance from questionnaire answers
+  // Calculate risk tolerance from questionnaire answers (1-5 scale)
   const calculateRiskTolerance = (): RiskTolerance => {
     const avgScore = Object.values(riskAnswers).reduce((a, b) => a + b, 0) / Object.keys(riskAnswers).length;
-    if (avgScore <= 2) return 'conservative';
-    if (avgScore <= 3.5) return 'moderate';
-    return 'aggressive';
+    return Math.round(avgScore) as RiskTolerance;
   };
 
-  // Bot recommendation engine
+  // Get risk level label
+  const getRiskLabel = (risk: RiskTolerance | null): string => {
+    if (!risk) return 'Unknown';
+    const labels: Record<number, string> = {
+      1: 'Very Conservative',
+      2: 'Conservative',
+      3: 'Moderate',
+      4: 'Aggressive',
+      5: 'Very Aggressive'
+    };
+    return labels[risk] || 'Unknown';
+  };
+
+  // Bot recommendation engine based on risk profile
   const calculateBotRecommendations = () => {
     const calculatedRiskTolerance = calculateRiskTolerance();
     setRiskTolerance(calculatedRiskTolerance);
 
     const recommendations: string[] = [];
 
-    // Beginner recommendations
+    // Base recommendations by experience level
     if (experienceLevel === 'beginner') {
-      if (calculatedRiskTolerance === 'conservative') {
+      if (calculatedRiskTolerance <= 2) {
         recommendations.push('Index Tracker Bot', 'Dollar Cost Averaging Bot', 'Blue Chip Accumulator');
-      } else if (calculatedRiskTolerance === 'moderate') {
+      } else if (calculatedRiskTolerance === 3) {
         recommendations.push('Balanced Growth Bot', 'Smart Rebalancer', 'Trend Following Bot');
       } else {
         recommendations.push('Growth Momentum Bot', 'Swing Trader Bot', 'Volatility Rider');
       }
-    }
-
-    // Intermediate recommendations
-    else if (experienceLevel === 'intermediate') {
+    } else if (experienceLevel === 'intermediate') {
       if (investmentGoal === 'growth') {
         recommendations.push('Growth Momentum Bot', 'Breakout Hunter', 'Sector Rotation Bot');
       } else if (investmentGoal === 'income') {
@@ -282,20 +380,34 @@ export default function OnboardingPage() {
       } else {
         recommendations.push('Capital Preservation Bot', 'Low Volatility Bot', 'Defensive Allocator');
       }
-    }
-
-    // Expert recommendations
-    else {
-      if (calculatedRiskTolerance === 'aggressive') {
+    } else {
+      // Advanced
+      if (calculatedRiskTolerance >= 4) {
         recommendations.push('AI Trade God Bot', 'Algorithmic Scalper', 'Multi-Strategy Arbitrage');
-      } else if (calculatedRiskTolerance === 'moderate') {
+      } else if (calculatedRiskTolerance === 3) {
         recommendations.push('Statistical Arbitrage Bot', 'Mean Reversion Pro', 'Options Wheel Strategy');
       } else {
         recommendations.push('Market Neutral Bot', 'Pairs Trading Bot', 'Volatility Arbitrage');
       }
     }
 
-    // Add goal-specific bots
+    // Add asset-class specific bots
+    if (assetClasses.includes('crypto')) {
+      recommendations.push('Crypto Momentum Bot', 'DeFi Yield Bot');
+    }
+    if (assetClasses.includes('forex')) {
+      recommendations.push('Forex Carry Trade Bot', 'Currency Pairs Arbitrage');
+    }
+    if (assetClasses.includes('options')) {
+      recommendations.push('Options Wheel Strategy', 'Iron Condor Bot');
+    }
+
+    // Capital-based adjustments
+    if (capitalRange === '100k+') {
+      recommendations.push('Institutional Grade Bot', 'Multi-Asset Allocator');
+    }
+
+    // Goal-specific bots
     if (goals.includes('retirement')) {
       recommendations.push('Retirement Growth Bot');
     }
@@ -306,8 +418,9 @@ export default function OnboardingPage() {
       recommendations.push('Tax Loss Harvester');
     }
 
-    // Limit to top 3 recommendations
-    setRecommendedBots(recommendations.slice(0, 3));
+    // Remove duplicates and limit to top 5 recommendations
+    const uniqueRecs = [...new Set(recommendations)];
+    setRecommendedBots(uniqueRecs.slice(0, 5));
   };
 
   const toggleGoal = (goal: TradingGoal) => {
@@ -410,50 +523,40 @@ export default function OnboardingPage() {
       value: 'beginner' as ExperienceLevel,
       title: 'Beginner',
       description: 'New to trading or have limited experience',
-      icon: '🌱',
+      icon: User,
+      color: 'from-green-500 to-emerald-500',
       recommended: 'Conservative strategies recommended',
     },
     {
       value: 'intermediate' as ExperienceLevel,
       title: 'Intermediate',
       description: 'Some trading experience with basic strategies',
-      icon: '📈',
+      icon: TrendingUp,
+      color: 'from-blue-500 to-cyan-500',
       recommended: 'Balanced growth strategies',
     },
     {
-      value: 'expert' as ExperienceLevel,
-      title: 'Expert',
+      value: 'advanced' as ExperienceLevel,
+      title: 'Advanced',
       description: 'Experienced trader with deep market knowledge',
-      icon: '🚀',
+      icon: Rocket,
+      color: 'from-purple-500 to-pink-500',
       recommended: 'Advanced algorithmic strategies',
     },
   ];
 
-  const riskTolerances = [
-    {
-      value: 'conservative' as RiskTolerance,
-      title: 'Conservative',
-      description: 'Preserve capital, minimize losses',
-      color: 'from-blue-500 to-cyan-500',
-      icon: Shield,
-      features: ['Lower risk', 'Stable returns', 'Capital preservation'],
-    },
-    {
-      value: 'moderate' as RiskTolerance,
-      title: 'Moderate',
-      description: 'Balance between growth and safety',
-      color: 'from-purple-500 to-pink-500',
-      icon: BarChart3,
-      features: ['Balanced risk', 'Steady growth', 'Diversification'],
-    },
-    {
-      value: 'aggressive' as RiskTolerance,
-      title: 'Aggressive',
-      description: 'Maximum growth potential',
-      color: 'from-orange-500 to-red-500',
-      icon: TrendingUp,
-      features: ['Higher risk', 'Max returns', 'Active trading'],
-    },
+  const capitalRanges = [
+    { value: '1k-5k' as CapitalRange, label: '$1,000 - $5,000', description: 'Starting portfolio' },
+    { value: '5k-25k' as CapitalRange, label: '$5,000 - $25,000', description: 'Growing portfolio' },
+    { value: '25k-100k' as CapitalRange, label: '$25,000 - $100,000', description: 'Substantial portfolio' },
+    { value: '100k+' as CapitalRange, label: '$100,000+', description: 'Large portfolio' },
+  ];
+
+  const assetClassOptions = [
+    { value: 'stocks' as AssetClass, label: 'Stocks', icon: LineChart, description: 'US & International equities' },
+    { value: 'crypto' as AssetClass, label: 'Crypto', icon: Bitcoin, description: 'Bitcoin, Ethereum, altcoins' },
+    { value: 'forex' as AssetClass, label: 'Forex', icon: DollarSign, description: 'Currency pairs trading' },
+    { value: 'options' as AssetClass, label: 'Options', icon: Activity, description: 'Derivatives & options strategies' },
   ];
 
   const tradingGoals = [
@@ -544,7 +647,7 @@ export default function OnboardingPage() {
         {/* Main Content */}
         <main className="flex-1 flex items-center justify-center px-4 py-8">
           <div className="w-full max-w-4xl">
-            {/* Step 1: Welcome + Name */}
+            {/* Step 1: Welcome + Trading Experience */}
             {currentStep === 1 && (
               <div
                 className={`transition-all duration-300 ${
@@ -560,28 +663,73 @@ export default function OnboardingPage() {
                     <User className="w-10 h-10 text-white" />
                   </div>
                   <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-                    Welcome to TIME
+                    Welcome to TIME BEYOND US
                   </h1>
                   <p className="text-lg text-white/60 max-w-xl mx-auto">
-                    Let's personalize your trading experience. We'll help you get started with the perfect strategy for your goals.
+                    Let's personalize your trading experience. Tell us about yourself to get started.
                   </p>
                 </div>
 
-                <div className="max-w-md mx-auto">
-                  <label className="block mb-2 text-sm font-medium text-white/80">
-                    What should we call you?
-                  </label>
-                  <input
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Enter your name"
-                    className="w-full px-6 py-4 bg-slate-800/50 border border-slate-700/50 rounded-xl text-white text-lg placeholder-slate-500 focus:outline-none focus:border-time-primary transition-all"
-                    autoFocus
-                  />
-                  <p className="mt-2 text-sm text-white/40">
-                    This helps us personalize your experience
-                  </p>
+                <div className="max-w-xl mx-auto space-y-8">
+                  {/* Name Input */}
+                  <div>
+                    <label className="block mb-2 text-sm font-medium text-white/80">
+                      What should we call you?
+                    </label>
+                    <input
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="Enter your name"
+                      className="w-full px-6 py-4 bg-slate-800/50 border border-slate-700/50 rounded-xl text-white text-lg placeholder-slate-500 focus:outline-none focus:border-time-primary transition-all"
+                      autoFocus
+                    />
+                  </div>
+
+                  {/* Experience Level Selection */}
+                  <div>
+                    <label className="block mb-4 text-sm font-medium text-white/80">
+                      What's your trading experience?
+                    </label>
+                    <div className="grid md:grid-cols-3 gap-4">
+                      {experienceLevels.map((level) => {
+                        const Icon = level.icon;
+                        return (
+                          <button
+                            key={level.value}
+                            onClick={() => setExperienceLevel(level.value)}
+                            className={`p-5 rounded-2xl border-2 transition-all duration-300 text-left ${
+                              experienceLevel === level.value
+                                ? 'border-time-primary bg-time-primary/10 scale-105'
+                                : 'border-slate-700/50 bg-slate-800/30 hover:border-slate-600 hover:bg-slate-800/50'
+                            }`}
+                          >
+                            <div className={`inline-flex p-3 rounded-xl bg-gradient-to-br ${level.color} mb-3`}>
+                              <Icon className="w-6 h-6 text-white" />
+                            </div>
+                            <h3 className="text-lg font-bold text-white mb-1">{level.title}</h3>
+                            <p className="text-sm text-white/60">{level.description}</p>
+                            {experienceLevel === level.value && (
+                              <div className="mt-3 flex items-center gap-2 text-xs text-time-primary">
+                                <Check className="w-4 h-4" />
+                                {level.recommended}
+                              </div>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Skip Option */}
+                <div className="mt-8 text-center">
+                  <button
+                    onClick={() => setShowSkipModal(true)}
+                    className="text-white/40 hover:text-white/60 text-sm transition-colors"
+                  >
+                    Already have an account? Skip onboarding
+                  </button>
                 </div>
               </div>
             )}
@@ -654,7 +802,7 @@ export default function OnboardingPage() {
               </div>
             )}
 
-            {/* Step 3: Trading Experience Level */}
+            {/* Step 3: Investment Goals */}
             {currentStep === 3 && (
               <div
                 className={`transition-all duration-300 ${
@@ -666,50 +814,9 @@ export default function OnboardingPage() {
                 }`}
               >
                 <div className="text-center mb-8">
-                  <h2 className="text-3xl md:text-4xl font-bold text-white mb-3">
-                    What's your trading experience?
-                  </h2>
-                  <p className="text-white/60">
-                    This helps TIME recommend the right strategies for you
-                  </p>
-                </div>
-
-                <div className="grid md:grid-cols-3 gap-4">
-                  {experienceLevels.map((level) => (
-                    <button
-                      key={level.value}
-                      onClick={() => setExperienceLevel(level.value)}
-                      className={`p-6 rounded-2xl border-2 transition-all duration-300 text-left ${
-                        experienceLevel === level.value
-                          ? 'border-time-primary bg-time-primary/10 scale-105'
-                          : 'border-slate-700/50 bg-slate-800/30 hover:border-slate-600 hover:bg-slate-800/50'
-                      }`}
-                    >
-                      <div className="text-4xl mb-3">{level.icon}</div>
-                      <h3 className="text-xl font-bold text-white mb-2">{level.title}</h3>
-                      <p className="text-sm text-white/60 mb-3">{level.description}</p>
-                      <div className="flex items-center gap-2 text-xs text-time-primary">
-                        <Check className="w-4 h-4" />
-                        {level.recommended}
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Step 4: Investment Goals (growth, income, preservation) */}
-            {currentStep === 4 && (
-              <div
-                className={`transition-all duration-300 ${
-                  isAnimating
-                    ? direction === 'forward'
-                      ? 'opacity-0 -translate-x-8'
-                      : 'opacity-0 translate-x-8'
-                    : 'opacity-100 translate-x-0'
-                }`}
-              >
-                <div className="text-center mb-8">
+                  <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-time-primary to-time-secondary mb-6">
+                    <Target className="w-10 h-10 text-white" />
+                  </div>
                   <h2 className="text-3xl md:text-4xl font-bold text-white mb-3">
                     What is your primary investment goal?
                   </h2>
@@ -751,7 +858,60 @@ export default function OnboardingPage() {
               </div>
             )}
 
-            {/* Step 5: Broker Connection */}
+            {/* Step 4: Capital Range */}
+            {currentStep === 4 && (
+              <div
+                className={`transition-all duration-300 ${
+                  isAnimating
+                    ? direction === 'forward'
+                      ? 'opacity-0 -translate-x-8'
+                      : 'opacity-0 translate-x-8'
+                    : 'opacity-100 translate-x-0'
+                }`}
+              >
+                <div className="text-center mb-8">
+                  <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-time-primary to-time-secondary mb-6">
+                    <Wallet className="w-10 h-10 text-white" />
+                  </div>
+                  <h2 className="text-3xl md:text-4xl font-bold text-white mb-3">
+                    What's your starting capital?
+                  </h2>
+                  <p className="text-white/60">
+                    This helps us recommend appropriate strategies and position sizes
+                  </p>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-4 max-w-2xl mx-auto">
+                  {capitalRanges.map((range) => (
+                    <button
+                      key={range.value}
+                      onClick={() => setCapitalRange(range.value)}
+                      className={`p-6 rounded-2xl border-2 transition-all duration-300 text-left ${
+                        capitalRange === range.value
+                          ? 'border-time-primary bg-time-primary/10 scale-105'
+                          : 'border-slate-700/50 bg-slate-800/30 hover:border-slate-600 hover:bg-slate-800/50'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <h3 className="text-xl font-bold text-white">{range.label}</h3>
+                        {capitalRange === range.value && (
+                          <Check className="w-5 h-5 text-time-primary" />
+                        )}
+                      </div>
+                      <p className="text-sm text-white/60">{range.description}</p>
+                    </button>
+                  ))}
+                </div>
+
+                <div className="mt-8 p-4 bg-slate-800/30 border border-slate-700/50 rounded-xl max-w-2xl mx-auto">
+                  <p className="text-sm text-white/60 text-center">
+                    Your capital information is kept private and is only used to personalize your experience.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Step 5: Preferred Asset Classes */}
             {currentStep === 5 && (
               <div
                 className={`transition-all duration-300 ${
@@ -763,84 +923,60 @@ export default function OnboardingPage() {
                 }`}
               >
                 <div className="text-center mb-8">
+                  <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-time-primary to-time-secondary mb-6">
+                    <BarChart3 className="w-10 h-10 text-white" />
+                  </div>
                   <h2 className="text-3xl md:text-4xl font-bold text-white mb-3">
-                    Connect your first broker
+                    What markets interest you?
                   </h2>
                   <p className="text-white/60">
-                    Link a broker to start trading, or skip to explore TIME first
+                    Select one or more asset classes you want to trade (select at least one)
                   </p>
                 </div>
 
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-                  {brokers.map((broker) => (
-                    <button
-                      key={broker.id}
-                      onClick={() => broker.supported && setSelectedBroker(broker.id)}
-                      disabled={!broker.supported}
-                      className={`p-6 rounded-2xl border-2 transition-all duration-300 relative ${
-                        !broker.supported
-                          ? 'border-slate-700/30 bg-slate-800/20 opacity-50 cursor-not-allowed'
-                          : selectedBroker === broker.id
-                          ? 'border-time-primary bg-time-primary/10 scale-105'
-                          : 'border-slate-700/50 bg-slate-800/30 hover:border-slate-600 hover:bg-slate-800/50'
-                      }`}
-                    >
-                      {selectedBroker === broker.id && (
-                        <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-time-primary flex items-center justify-center">
-                          <Check className="w-4 h-4 text-white" />
+                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 max-w-4xl mx-auto">
+                  {assetClassOptions.map((asset) => {
+                    const Icon = asset.icon;
+                    const isSelected = assetClasses.includes(asset.value);
+                    return (
+                      <button
+                        key={asset.value}
+                        onClick={() => toggleAssetClass(asset.value)}
+                        className={`p-6 rounded-2xl border-2 transition-all duration-300 text-center ${
+                          isSelected
+                            ? 'border-time-primary bg-time-primary/10 scale-105'
+                            : 'border-slate-700/50 bg-slate-800/30 hover:border-slate-600 hover:bg-slate-800/50'
+                        }`}
+                      >
+                        <div className="flex justify-center mb-4">
+                          <div className={`p-4 rounded-xl ${isSelected ? 'bg-gradient-to-br from-time-primary to-time-secondary' : 'bg-slate-700/50'}`}>
+                            <Icon className="w-8 h-8 text-white" />
+                          </div>
                         </div>
-                      )}
-                      <div className="text-4xl mb-3">{broker.logo}</div>
-                      <h3 className="text-lg font-bold text-white mb-1">{broker.name}</h3>
-                      {!broker.supported && (
-                        <span className="text-xs text-white/40">Coming soon</span>
-                      )}
-                    </button>
-                  ))}
+                        <h3 className="text-lg font-bold text-white mb-2">{asset.label}</h3>
+                        <p className="text-sm text-white/60">{asset.description}</p>
+                        {isSelected && (
+                          <div className="mt-3 flex items-center justify-center gap-2 text-time-primary">
+                            <Check className="w-4 h-4" />
+                            <span className="text-xs font-medium">Selected</span>
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
 
-                {selectedBroker && (
-                  <div className="p-6 bg-slate-800/50 border border-slate-700/50 rounded-2xl">
-                    <div className="flex items-start gap-4">
-                      <div className="p-3 rounded-xl bg-time-primary/20">
-                        <LinkIcon className="w-6 h-6 text-time-primary" />
-                      </div>
-                      <div className="flex-1">
-                        <h4 className="text-white font-semibold mb-2">Ready to connect</h4>
-                        <p className="text-sm text-white/60 mb-4">
-                          You'll be redirected to authorize TIME to trade on your behalf. Your credentials are never stored.
-                        </p>
-                        <button
-                          onClick={handleComplete}
-                          className="px-6 py-3 bg-gradient-to-r from-time-primary to-time-secondary text-white font-medium rounded-xl hover:opacity-90 transition-all flex items-center gap-2"
-                        >
-                          Connect {brokers.find(b => b.id === selectedBroker)?.name}
-                          <ArrowRight className="w-5 h-5" />
-                        </button>
-                      </div>
-                    </div>
+                {assetClasses.length > 0 && (
+                  <div className="mt-6 p-4 bg-time-primary/10 border border-time-primary/30 rounded-xl max-w-2xl mx-auto text-center">
+                    <p className="text-sm text-white/80">
+                      Selected: {assetClasses.map(a => assetClassOptions.find(o => o.value === a)?.label).join(', ')}
+                    </p>
                   </div>
                 )}
-
-                <div className="mt-6 text-center">
-                  <button
-                    onClick={() => {
-                      setIsAnimating(true);
-                      setDirection('forward');
-                      setTimeout(() => {
-                        setCurrentStep(6);
-                        setIsAnimating(false);
-                      }, 300);
-                    }}
-                    className="text-white/60 hover:text-white transition-colors text-sm"
-                  >
-                    I'll connect a broker later
-                  </button>
-                </div>
               </div>
             )}
 
-            {/* Step 6: Bot Recommendations */}
+            {/* Step 6: Bot Recommendations + Pricing */}
             {currentStep === 6 && (
               <div
                 className={`transition-all duration-300 ${
@@ -863,61 +999,124 @@ export default function OnboardingPage() {
                   </p>
                 </div>
 
+                {/* Profile Summary */}
                 {riskTolerance && (
-                  <div className="mb-6 p-4 bg-slate-800/50 border border-slate-700/50 rounded-xl max-w-2xl mx-auto">
-                    <div className="flex items-center justify-between">
+                  <div className="mb-6 p-4 bg-slate-800/50 border border-slate-700/50 rounded-xl max-w-3xl mx-auto">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
                       <div>
-                        <p className="text-sm text-white/60">Your Risk Profile</p>
-                        <p className="text-lg font-bold text-white capitalize">{riskTolerance}</p>
+                        <p className="text-xs text-white/60">Risk Profile</p>
+                        <p className="text-sm font-bold text-white">{getRiskLabel(riskTolerance)}</p>
                       </div>
                       <div>
-                        <p className="text-sm text-white/60">Experience Level</p>
-                        <p className="text-lg font-bold text-white capitalize">{experienceLevel}</p>
+                        <p className="text-xs text-white/60">Experience</p>
+                        <p className="text-sm font-bold text-white capitalize">{experienceLevel}</p>
                       </div>
                       <div>
-                        <p className="text-sm text-white/60">Investment Goal</p>
-                        <p className="text-lg font-bold text-white capitalize">{investmentGoal}</p>
+                        <p className="text-xs text-white/60">Goal</p>
+                        <p className="text-sm font-bold text-white capitalize">{investmentGoal}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-white/60">Capital</p>
+                        <p className="text-sm font-bold text-white">{capitalRanges.find(c => c.value === capitalRange)?.label || '-'}</p>
                       </div>
                     </div>
                   </div>
                 )}
 
-                <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-                  {recommendedBots.map((botName, index) => (
-                    <div
-                      key={botName}
-                      className="p-6 bg-slate-800/30 border border-slate-700/50 rounded-2xl hover:border-time-primary/50 transition-all"
-                    >
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-time-primary to-time-secondary flex items-center justify-center">
-                          <Bot className="w-6 h-6 text-white" />
+                {/* Recommended Bots */}
+                <div className="mb-10">
+                  <h3 className="text-lg font-semibold text-white text-center mb-4">Recommended Bots for You</h3>
+                  <div className="flex flex-wrap justify-center gap-3 max-w-4xl mx-auto">
+                    {recommendedBots.map((botName, index) => (
+                      <div
+                        key={botName}
+                        className="px-4 py-3 bg-slate-800/30 border border-slate-700/50 rounded-xl flex items-center gap-3"
+                      >
+                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-time-primary to-time-secondary flex items-center justify-center">
+                          <Bot className="w-4 h-4 text-white" />
                         </div>
-                        <div className="px-3 py-1 bg-time-primary/20 text-time-primary text-xs font-medium rounded-full">
-                          #{index + 1} Match
-                        </div>
+                        <span className="text-white font-medium">{botName}</span>
+                        <span className="text-xs text-time-primary bg-time-primary/20 px-2 py-0.5 rounded-full">
+                          #{index + 1}
+                        </span>
                       </div>
-                      <h3 className="text-lg font-bold text-white mb-2">{botName}</h3>
-                      <p className="text-sm text-white/60 mb-4">
-                        Optimized for {riskTolerance} risk and {investmentGoal} strategy
-                      </p>
-                      <div className="flex items-center gap-2 text-xs text-white/40">
-                        <Check className="w-4 h-4 text-time-primary" />
-                        <span>Matches your profile</span>
-                      </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
 
-                <div className="mt-8 p-6 bg-time-primary/10 border border-time-primary/30 rounded-xl max-w-2xl mx-auto">
-                  <div className="flex items-start gap-4">
-                    <Sparkles className="w-6 h-6 text-time-primary flex-shrink-0 mt-1" />
-                    <div>
-                      <h4 className="text-white font-semibold mb-2">Next: Activate Your First Bot</h4>
-                      <p className="text-sm text-white/80">
-                        You can activate one of these bots now, or explore all available bots in the marketplace later.
-                      </p>
-                    </div>
+                {/* Pricing Tiers */}
+                <div className="mb-8">
+                  <h3 className="text-lg font-semibold text-white text-center mb-6">Choose Your Plan</h3>
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-3 max-w-6xl mx-auto">
+                    {PRICING_TIERS.map((tier) => {
+                      const Icon = tier.icon;
+                      return (
+                        <button
+                          key={tier.name}
+                          onClick={() => setSelectedPlan(tier.name)}
+                          className={`p-4 rounded-xl border-2 transition-all duration-300 text-center relative ${
+                            selectedPlan === tier.name
+                              ? 'border-time-primary bg-time-primary/10 scale-105'
+                              : 'border-slate-700/50 bg-slate-800/30 hover:border-slate-600'
+                          } ${tier.popular ? 'ring-2 ring-time-primary/50' : ''}`}
+                        >
+                          {tier.popular && (
+                            <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-time-primary text-white text-xs font-bold rounded-full">
+                              POPULAR
+                            </div>
+                          )}
+                          <Icon className={`w-6 h-6 mx-auto mb-2 ${selectedPlan === tier.name ? 'text-time-primary' : 'text-white/60'}`} />
+                          <h4 className="text-sm font-bold text-white mb-1">{tier.name}</h4>
+                          <p className="text-lg font-bold text-white">
+                            ${tier.price}<span className="text-xs text-white/60">/mo</span>
+                          </p>
+                          <p className="text-xs text-white/60 mt-1">
+                            {typeof tier.bots === 'number' ? `${tier.bots} Bot${tier.bots > 1 ? 's' : ''}` : tier.bots}
+                          </p>
+                          {selectedPlan === tier.name && (
+                            <Check className="w-4 h-4 text-time-primary mx-auto mt-2" />
+                          )}
+                        </button>
+                      );
+                    })}
                   </div>
+                </div>
+
+                {/* Add-ons */}
+                <div className="max-w-2xl mx-auto">
+                  <h3 className="text-sm font-semibold text-white/80 text-center mb-3">Optional Add-ons</h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    {ADD_ONS.map((addon) => (
+                      <button
+                        key={addon.name}
+                        onClick={() => toggleAddOn(addon.name)}
+                        className={`p-4 rounded-xl border-2 transition-all duration-300 text-left ${
+                          selectedAddOns.includes(addon.name)
+                            ? 'border-time-primary bg-time-primary/10'
+                            : 'border-slate-700/50 bg-slate-800/30 hover:border-slate-600'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <h4 className="text-sm font-bold text-white">{addon.name}</h4>
+                          <span className="text-sm font-bold text-time-primary">+${addon.price}/mo</span>
+                        </div>
+                        <p className="text-xs text-white/60">{addon.description}</p>
+                        {selectedAddOns.includes(addon.name) && (
+                          <Check className="w-4 h-4 text-time-primary mt-2" />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Total Summary */}
+                <div className="mt-6 p-4 bg-time-primary/10 border border-time-primary/30 rounded-xl max-w-md mx-auto text-center">
+                  <p className="text-sm text-white/80 mb-1">Your estimated monthly cost</p>
+                  <p className="text-3xl font-bold text-white">
+                    ${(PRICING_TIERS.find(t => t.name === selectedPlan)?.price || 0) +
+                       selectedAddOns.reduce((sum, addon) => sum + (ADD_ONS.find(a => a.name === addon)?.price || 0), 0)}
+                    <span className="text-sm text-white/60">/mo</span>
+                  </p>
                 </div>
               </div>
             )}

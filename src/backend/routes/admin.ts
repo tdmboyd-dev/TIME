@@ -1362,11 +1362,15 @@ router.post('/pricing', authMiddleware, adminMiddleware, async (req: Request, re
 router.get('/pricing', authMiddleware, adminMiddleware, (req: Request, res: Response) => {
   // Product pricing configuration
   const pricing = [
-    { id: 'dropbot', name: 'DROPBOT AutoPilot', price: '$59/mo', description: 'AI-powered automated trading' },
-    { id: 'ultimate', name: 'Ultimate Money Machine', price: '$79/mo', description: 'Complete wealth automation' },
-    { id: 'pro_monthly', name: 'Pro Subscription (Monthly)', price: '$29/mo', description: 'Pro features monthly' },
-    { id: 'pro_yearly', name: 'Pro Subscription (Yearly)', price: '$290/yr', description: 'Pro features yearly' },
-    { id: 'enterprise', name: 'Enterprise Plan', price: '$499/mo', description: 'Enterprise features' },
+    // Subscription Tiers
+    { id: 'free', name: 'Free', price: '$0/mo', description: '1 bot, paper trading' },
+    { id: 'basic', name: 'Basic', price: '$19/mo', description: '3 bots, $5K capital' },
+    { id: 'pro', name: 'Pro', price: '$49/mo', description: '7 bots, $25K capital' },
+    { id: 'premium', name: 'Premium', price: '$109/mo', description: '11 Super Bots, $100K capital' },
+    { id: 'enterprise', name: 'Enterprise', price: '$450/mo', description: 'Unlimited bots & capital' },
+    // Optional Add-Ons
+    { id: 'dropbot', name: 'DROPBOT AutoPilot (Add-On)', price: '+$39/mo', description: 'Zero-config autopilot trading' },
+    { id: 'umm', name: 'Ultimate Money Machine (Add-On)', price: '+$59/mo', description: '25 Super Bots, Market Attack Strategies' },
   ];
 
   res.json({

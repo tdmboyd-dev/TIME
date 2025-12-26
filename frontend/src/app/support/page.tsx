@@ -164,8 +164,8 @@ export default function SupportPage() {
   };
 
   // Send message
-  const sendMessage = async () => {
-    const text = input.trim();
+  const sendMessage = async (messageText?: string) => {
+    const text = messageText || input.trim();
     if (!text || isLoading) return;
 
     const userMessage: Message = {
@@ -418,14 +418,44 @@ export default function SupportPage() {
                           <Bot className="w-6 h-6 text-time-primary" />
                         </div>
                       </div>
-                      <div className="bg-slate-800 rounded-lg p-4">
-                        <Loader2 className="w-5 h-5 text-slate-400 animate-spin" />
+                      <div className="bg-slate-800 rounded-lg p-4 flex items-center gap-2">
+                        <div className="flex gap-1">
+                          <span className="w-2 h-2 bg-time-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
+                          <span className="w-2 h-2 bg-time-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
+                          <span className="w-2 h-2 bg-time-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+                        </div>
+                        <span className="text-sm text-slate-400 ml-2">AI is typing...</span>
                       </div>
                     </div>
                   )}
 
                   <div ref={messagesEndRef} />
                 </div>
+
+                {/* Quick Actions - shown when only welcome message exists */}
+                {messages.length === 1 && (
+                  <div className="px-4 py-3 border-t border-slate-700 bg-slate-800/50">
+                    <p className="text-xs text-slate-400 mb-2">Suggested questions:</p>
+                    <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
+                      {[
+                        { title: 'Show pricing plans', action: 'What are the pricing plans?' },
+                        { title: 'How do I start trading?', action: 'How do I start trading?' },
+                        { title: 'Connect my broker', action: 'How do I connect my broker?' },
+                        { title: 'My bot isn\'t trading', action: 'My bot is not trading. What should I check?' },
+                        { title: 'What is DROPBOT?', action: 'What is DROPBOT AutoPilot and how much does it cost?' },
+                        { title: 'Speak to a human', action: 'I would like to speak to a human support agent' },
+                      ].map((item, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => sendMessage(item.action)}
+                          className="text-left p-2 bg-slate-800 hover:bg-slate-700 hover:border-time-primary/50 border border-slate-600 rounded text-xs text-slate-300 transition-all duration-200"
+                        >
+                          {item.title}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* Input */}
                 <div className="p-4 border-t border-slate-700">

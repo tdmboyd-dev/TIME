@@ -682,10 +682,14 @@ export class ChatAssistant extends EventEmitter {
       `**Refunds:**\n` +
       `Refund requests are handled within 30 days of purchase. Email support@timebeyondus.com with your request.\n\n` +
       `**Current Pricing:**\n` +
-      `• FREE: $0/mo - Basic features\n` +
-      `• STARTER: $19/mo - 5 bots, copy trading\n` +
-      `• PRO: $49/mo - 25 bots, all strategies\n` +
-      `• ENTERPRISE: $249/mo - Unlimited + API\n\n` +
+      `• FREE: $0/mo - 1 bot, paper trading\n` +
+      `• BASIC: $19/mo - 3 bots\n` +
+      `• PRO: $49/mo - 7 bots\n` +
+      `• PREMIUM: $109/mo - 11 Super Bots\n` +
+      `• ENTERPRISE: $450/mo - Unlimited\n` +
+      `\n**Optional Add-Ons:**\n` +
+      `• DROPBOT: +$39/mo - AutoPilot trading\n` +
+      `• UMM: +$59/mo - Ultimate Money Machine\n\n` +
       `Need more help? Email support@timebeyondus.com`;
   }
 

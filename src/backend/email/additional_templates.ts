@@ -38,20 +38,42 @@ export const getUpgradeLimitationsTemplate = (data: TemplateData): string => `
         But did you know you're only accessing 3% of our platform's power?
       </p>
       <div style="background: #0f172a; padding: 20px; border-radius: 8px; margin: 20px 0;">
-        <p style="color: #ef4444; font-size: 18px; margin: 0 0 15px 0;"><strong>Current Limitations:</strong></p>
+        <p style="color: #ef4444; font-size: 18px; margin: 0 0 15px 0;"><strong>Current Limitations (FREE - $0/mo):</strong></p>
         <ul style="${EMAIL_STYLES.list}">
-          <li>Only 4 basic bots (you're missing 150+ advanced strategies)</li>
+          <li>Only 1 bot (you're missing 150+ advanced strategies)</li>
           <li>15-minute delayed data (competitors see opportunities first)</li>
-          <li>Limited to $1,000 portfolio value</li>
+          <li>Limited portfolio tracking</li>
           <li>No custom bot builder</li>
           <li>Basic analytics only</li>
         </ul>
       </div>
-      <p style="${EMAIL_STYLES.text}"><strong>What Premium unlocks:</strong></p>
+      <p style="${EMAIL_STYLES.text}"><strong>Upgrade to unlock more:</strong></p>
+      <div style="background: #0f172a; padding: 15px; border-radius: 8px; margin: 15px 0;">
+        <table style="width: 100%; color: #e2e8f0; border-collapse: collapse; font-size: 14px;">
+          <tr style="border-bottom: 1px solid #334155;">
+            <td style="padding: 8px 0;"><strong>BASIC</strong></td>
+            <td style="padding: 8px 0; text-align: right;">$19/mo - 3 bots</td>
+          </tr>
+          <tr style="border-bottom: 1px solid #334155;">
+            <td style="padding: 8px 0;"><strong>PRO</strong></td>
+            <td style="padding: 8px 0; text-align: right;">$49/mo - 7 bots</td>
+          </tr>
+          <tr style="border-bottom: 1px solid #334155; background: linear-gradient(90deg, rgba(124,58,237,0.2) 0%, rgba(6,182,212,0.2) 100%);">
+            <td style="padding: 8px 0;"><strong style="color: #7c3aed;">PREMIUM</strong></td>
+            <td style="padding: 8px 0; text-align: right;"><strong>$109/mo - 11 Super Bots</strong></td>
+          </tr>
+          <tr>
+            <td style="padding: 8px 0;"><strong>ENTERPRISE</strong></td>
+            <td style="padding: 8px 0; text-align: right;">$450/mo - Unlimited</td>
+          </tr>
+        </table>
+        <p style="color: #64748b; font-size: 11px; margin-top: 10px;">
+          Add-ons: DropBot (+$39/mo) | Universal Market Maker (+$59/mo)
+        </p>
+      </div>
       <ul style="${EMAIL_STYLES.list}">
         <li>154+ AI bots (every strategy imaginable)</li>
         <li>Real-time data (institutional-grade feeds)</li>
-        <li>Unlimited portfolio size</li>
         <li>Custom bot builder with backtesting</li>
         <li>Advanced analytics & reporting</li>
         <li>Priority support & trading coach</li>
@@ -59,9 +81,6 @@ export const getUpgradeLimitationsTemplate = (data: TemplateData): string => `
       <div style="text-align: center;">
         <a href="https://timebeyondus.com/upgrade" style="${EMAIL_STYLES.button}">Upgrade Now</a>
       </div>
-      <p style="${EMAIL_STYLES.text}" style="text-align: center; color: #64748b;">
-        From just $59/month
-      </p>
     </div>
     <div style="${EMAIL_STYLES.footer}">
       <p>© 2025 TIME Trading. All rights reserved.</p>
@@ -116,17 +135,26 @@ export const getUpgradeOfferTemplate = (data: TemplateData): string => `
     <div style="${EMAIL_STYLES.body}">
       <h2 style="${EMAIL_STYLES.bodyTitle}">This Is It, ${data.userName || 'Trader'}!</h2>
       <p style="${EMAIL_STYLES.text}">
-        We've sent you 2 emails about upgrading to Premium. This is your final chance to
+        We've sent you 2 emails about upgrading. This is your final chance to
         lock in our exclusive 40% discount before it expires tonight.
       </p>
       <div style="background: linear-gradient(135deg, #ef4444 0%, #f97316 100%); padding: 30px; border-radius: 12px; text-align: center; margin: 30px 0;">
         <p style="color: white; font-size: 42px; margin: 0; font-weight: bold;">40% OFF</p>
-        <p style="color: rgba(255,255,255,0.9); font-size: 24px; margin: 10px 0;">Premium Membership</p>
-        <p style="color: rgba(255,255,255,0.8); font-size: 18px; margin: 0;">Just $35.40/month (normally $59)</p>
+        <p style="color: rgba(255,255,255,0.9); font-size: 24px; margin: 10px 0;">Your First Month</p>
+        <p style="color: rgba(255,255,255,0.8); font-size: 16px; margin: 0;">PREMIUM just $65.40/mo (normally $109)</p>
         <p style="color: #ffedd5; font-size: 14px; margin: 10px 0; font-weight: bold;">EXPIRES IN: 12 HOURS</p>
       </div>
+      <div style="background: #0f172a; padding: 15px; border-radius: 8px; margin: 20px 0;">
+        <p style="color: #10b981; margin: 0 0 10px 0;"><strong>40% off first month on all plans:</strong></p>
+        <ul style="color: #e2e8f0; line-height: 1.8; padding-left: 20px; margin: 0;">
+          <li>BASIC: $11.40/mo (then $19/mo) - 3 bots</li>
+          <li>PRO: $29.40/mo (then $49/mo) - 7 bots</li>
+          <li>PREMIUM: $65.40/mo (then $109/mo) - 11 Super Bots</li>
+          <li>ENTERPRISE: $270/mo (then $450/mo) - Unlimited</li>
+        </ul>
+      </div>
       <p style="background: #fee2e2; color: #991b1b; padding: 15px; border-radius: 8px; border-left: 4px solid #ef4444; margin: 20px 0;">
-        <strong>IMPORTANT:</strong> After tonight, this price is gone forever. Don't miss out on saving $283.20/year!
+        <strong>IMPORTANT:</strong> After tonight, this price is gone forever!
       </p>
       <div style="text-align: center;">
         <a href="https://timebeyondus.com/upgrade?promo=FINAL40" style="${EMAIL_STYLES.button}">Claim 40% Off Now</a>

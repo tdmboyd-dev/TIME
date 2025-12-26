@@ -1,6 +1,13 @@
 /**
  * TIME — Meta-Intelligence Trading Governor
  * Backtesting Routes
+ *
+ * Complete API for:
+ * - Running backtests
+ * - Parameter optimization
+ * - Walk-forward analysis
+ * - Monte Carlo simulation
+ * - Result storage and retrieval
  */
 
 import { Router, Request, Response } from 'express';
@@ -11,6 +18,13 @@ import {
   MonteCarloSimulator,
   generateTestCandles,
 } from '../strategies/backtesting_engine';
+import {
+  EnhancedBacktestingEngine,
+  EnhancedBacktestConfig,
+  backtestResultStore,
+  VisualizationFormatter,
+} from '../backtesting/backtest_engine';
+import { candleDataCache, DataQualityChecker } from '../backtesting/data_cache';
 import { loggers } from '../utils/logger';
 
 const router = Router();
@@ -546,22 +560,402 @@ router.post('/analyze/sensitivity', async (req: Request, res: Response) => {
 
 /**
  * GET /backtest/results/:id
- * Get detailed backtest results (placeholder for future database storage)
+ * Get detailed backtest results from storage
  */
 router.get('/results/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
-    // TODO: Implement database storage and retrieval
-    log.info(`Retrieving backtest results for ID: ${id}`);
+    const result = backtestResultStore.get(id);
+
+    if (!result) {
+      return res.status(404).json({
+        success: false,
+        error: `Backtest result not found: ${id}`,
+      });
+    }
+
+    log.info(`Retrieved backtest results for ID: ${id}`);
 
     res.json({
       success: true,
-      message: 'Result storage coming soon',
-      data: null,
+      data: result,
     });
   } catch (error) {
     log.error('Failed to retrieve backtest results:', error as object);
+    res.status(500).json({ success: false, error: (error as Error).message });
+  }
+});
+
+/**
+ * GET /backtest/results
+ * List all stored backtest results
+ */
+router.get('/results', async (req: Request, res: Response) => {
+  try {
+    const { limit, tag } = req.query;
+
+    let results;
+    if (tag) {
+      results = backtestResultStore.searchByTag(tag as string);
+    } else {
+      results = backtestResultStore.list(parseInt(limit as string) || 100);
+    }
+
+    res.json({
+      success: true,
+      data: results.map(r => ({
+        id: r.id,
+        createdAt: r.createdAt,
+        symbol: r.config.symbol,
+        totalReturn: r.result.totalReturnPercent,
+        sharpeRatio: r.result.sharpeRatio,
+        maxDrawdown: r.result.maxDrawdownPercent,
+        trades: r.result.totalTrades,
+        tags: r.tags,
+      })),
+      total: results.length,
+    });
+  } catch (error) {
+    log.error('Failed to list backtest results:', error as object);
+    res.status(500).json({ success: false, error: (error as Error).message });
+  }
+});
+
+/**
+ * DELETE /backtest/results/:id
+ * Delete a stored backtest result
+ */
+router.delete('/results/:id', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const deleted = backtestResultStore.delete(id);
+
+    if (!deleted) {
+      return res.status(404).json({
+        success: false,
+        error: `Backtest result not found: ${id}`,
+      });
+    }
+
+    log.info(`Deleted backtest result: ${id}`);
+
+    res.json({
+      success: true,
+      message: `Backtest result ${id} deleted`,
+    });
+  } catch (error) {
+    log.error('Failed to delete backtest result:', error as object);
+    res.status(500).json({ success: false, error: (error as Error).message });
+  }
+});
+
+/**
+ * POST /backtest/enhanced
+ * Run enhanced backtest with additional metrics
+ */
+router.post('/enhanced', async (req: Request, res: Response) => {
+  try {
+    const {
+      symbol,
+      config,
+      candles,
+      storeResult,
+      tags,
+    } = req.body;
+
+    if (!symbol) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required field: symbol',
+      });
+    }
+
+    const enhancedConfig: EnhancedBacktestConfig = {
+      symbol,
+      startDate: config?.startDate ? new Date(config.startDate) : new Date(Date.now() - 365 * 24 * 60 * 60 * 1000),
+      endDate: config?.endDate ? new Date(config.endDate) : new Date(),
+      initialCapital: config?.initialCapital || 10000,
+      positionSizePercent: config?.positionSizePercent || 10,
+      maxDrawdownPercent: config?.maxDrawdownPercent || 20,
+      commissionPercent: config?.commissionPercent || 0.1,
+      slippagePercent: config?.slippagePercent || 0.05,
+      leverage: config?.leverage || 1,
+      timeframes: config?.timeframes,
+      assetType: config?.assetType || 'stock',
+      slippageModel: config?.slippageModel || 'fixed',
+      commissionModel: config?.commissionModel || 'percent',
+      positionSizingMethod: config?.positionSizingMethod || 'fixed',
+    };
+
+    let candleData = candles;
+    if (!candleData || candleData.length === 0) {
+      const days = Math.ceil((enhancedConfig.endDate.getTime() - enhancedConfig.startDate.getTime()) / (24 * 60 * 60 * 1000));
+      candleData = generateTestCandles(symbol, days, 100);
+    }
+
+    // Validate data quality
+    const validation = DataQualityChecker.validateCandles(candleData);
+    if (!validation.valid) {
+      log.warn(`Data quality issues for ${symbol}:`, validation.errors);
+    }
+
+    // Run enhanced backtest
+    const engine = new EnhancedBacktestingEngine(enhancedConfig);
+    const result = engine.runEnhancedBacktest(candleData);
+
+    // Store result if requested
+    let resultId;
+    if (storeResult) {
+      resultId = backtestResultStore.store(enhancedConfig, result, tags);
+    }
+
+    log.info(`Enhanced backtest completed for ${symbol}: ${result.totalTrades} trades, ${result.totalReturnPercent.toFixed(2)}% return`);
+
+    res.json({
+      success: true,
+      data: {
+        id: resultId,
+        summary: {
+          symbol: result.symbol,
+          period: result.period,
+          initialCapital: result.initialCapital,
+          finalCapital: result.finalCapital,
+          totalReturn: result.totalReturn,
+          totalReturnPercent: result.totalReturnPercent,
+          annualizedReturn: result.annualizedReturn,
+        },
+        tradeStats: {
+          totalTrades: result.totalTrades,
+          winningTrades: result.winningTrades,
+          losingTrades: result.losingTrades,
+          winRate: result.winRate,
+          avgWin: result.avgWin,
+          avgLoss: result.avgLoss,
+          profitFactor: result.profitFactor,
+        },
+        riskMetrics: {
+          maxDrawdown: result.maxDrawdown,
+          maxDrawdownPercent: result.maxDrawdownPercent,
+          sharpeRatio: result.sharpeRatio,
+          sortinoRatio: result.sortinoRatio,
+          calmarRatio: result.calmarRatio,
+          ulcerIndex: result.ulcerIndex,
+          painRatio: result.painRatio,
+          recoveryFactor: result.recoveryFactor,
+          tailRatio: result.tailRatio,
+        },
+        timeAnalysis: {
+          bestTradingDay: result.bestTradingDay,
+          worstTradingDay: result.worstTradingDay,
+          bestTradingHour: result.bestTradingHour,
+          worstTradingHour: result.worstTradingHour,
+        },
+        monthlyReturns: result.monthlyReturns,
+        tradeDistribution: result.tradeDistribution,
+        equityCurve: result.equityCurve,
+        drawdownCurve: result.drawdownCurve,
+        dataQuality: validation,
+      },
+    });
+  } catch (error) {
+    log.error('Failed to run enhanced backtest:', error as object);
+    res.status(500).json({ success: false, error: (error as Error).message });
+  }
+});
+
+/**
+ * POST /backtest/optimize
+ * Run comprehensive parameter optimization
+ */
+router.post('/optimize', async (req: Request, res: Response) => {
+  try {
+    const {
+      symbol,
+      config,
+      parameterSpace,
+      optimizationMethod,
+      candles,
+    } = req.body;
+
+    if (!symbol || !parameterSpace) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required fields: symbol, parameterSpace',
+      });
+    }
+
+    const method = optimizationMethod || 'grid';
+
+    const baseConfig: BacktestConfig = {
+      symbol,
+      startDate: config?.startDate ? new Date(config.startDate) : new Date(Date.now() - 365 * 24 * 60 * 60 * 1000),
+      endDate: config?.endDate ? new Date(config.endDate) : new Date(),
+      initialCapital: config?.initialCapital || 10000,
+      positionSizePercent: config?.positionSizePercent || 10,
+      maxDrawdownPercent: config?.maxDrawdownPercent || 20,
+      commissionPercent: config?.commissionPercent || 0.1,
+      slippagePercent: config?.slippagePercent || 0.05,
+      leverage: config?.leverage || 1,
+    };
+
+    let candleData = candles;
+    if (!candleData || candleData.length === 0) {
+      candleData = generateTestCandles(symbol, 365, 100);
+    }
+
+    let result;
+
+    if (method === 'genetic') {
+      const { GeneticAlgorithmOptimizer } = await import('../backtesting/optimization_engine');
+
+      const optimizer = new GeneticAlgorithmOptimizer(
+        {
+          populationSize: config?.populationSize || 50,
+          generations: config?.generations || 20,
+          mutationRate: config?.mutationRate || 0.1,
+          crossoverRate: config?.crossoverRate || 0.8,
+          elitismRate: config?.elitismRate || 0.1,
+        },
+        {
+          objective: config?.objective || 'multi_objective',
+          constraints: config?.constraints,
+        }
+      );
+
+      const gaResult = await optimizer.optimize(candleData, baseConfig, parameterSpace);
+
+      result = {
+        method: 'genetic',
+        bestResult: gaResult.bestResult,
+        generationHistory: gaResult.generationHistory,
+      };
+    } else {
+      const { GridSearchOptimizer } = await import('../backtesting/optimization_engine');
+
+      const optimizer = new GridSearchOptimizer({
+        objective: config?.objective || 'multi_objective',
+        constraints: config?.constraints,
+      });
+
+      const gsResult = await optimizer.optimize(candleData, baseConfig, parameterSpace);
+
+      result = {
+        method: 'grid',
+        bestResult: gsResult.bestResult,
+        topResults: gsResult.allResults.slice(0, 10),
+        paretoFrontier: gsResult.paretoFrontier,
+        totalCombinations: gsResult.allResults.length,
+      };
+    }
+
+    log.info(`Optimization completed for ${symbol} using ${method} method`);
+
+    res.json({
+      success: true,
+      data: result,
+    });
+  } catch (error) {
+    log.error('Failed to run optimization:', error as object);
+    res.status(500).json({ success: false, error: (error as Error).message });
+  }
+});
+
+/**
+ * GET /backtest/visualization/:id
+ * Get visualization-ready data for charts
+ */
+router.get('/visualization/:id', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { type } = req.query;
+
+    const stored = backtestResultStore.get(id);
+
+    if (!stored) {
+      return res.status(404).json({
+        success: false,
+        error: `Backtest result not found: ${id}`,
+      });
+    }
+
+    const result = stored.result;
+    let visualization: any = {};
+
+    switch (type) {
+      case 'equity':
+        visualization = VisualizationFormatter.formatEquityCurve(result.equityCurve);
+        break;
+      case 'drawdown':
+        visualization = VisualizationFormatter.formatDrawdownCurve(result.drawdownCurve);
+        break;
+      case 'monthly':
+        visualization = VisualizationFormatter.formatMonthlyHeatmap(result.monthlyReturns || []);
+        break;
+      case 'distribution':
+        visualization = VisualizationFormatter.formatTradeDistribution(result.tradeDistribution || {
+          byDay: [], byHour: [], byDuration: [], bySize: [],
+        });
+        break;
+      case 'scatter':
+        visualization = VisualizationFormatter.formatTradeScatter(result.trades);
+        break;
+      default:
+        // Return all visualizations
+        visualization = {
+          equity: VisualizationFormatter.formatEquityCurve(result.equityCurve),
+          drawdown: VisualizationFormatter.formatDrawdownCurve(result.drawdownCurve),
+          monthly: VisualizationFormatter.formatMonthlyHeatmap(result.monthlyReturns || []),
+          distribution: VisualizationFormatter.formatTradeDistribution(result.tradeDistribution || {
+            byDay: [], byHour: [], byDuration: [], bySize: [],
+          }),
+          scatter: VisualizationFormatter.formatTradeScatter(result.trades),
+        };
+    }
+
+    res.json({
+      success: true,
+      data: visualization,
+    });
+  } catch (error) {
+    log.error('Failed to get visualization data:', error as object);
+    res.status(500).json({ success: false, error: (error as Error).message });
+  }
+});
+
+/**
+ * GET /backtest/cache/stats
+ * Get cache statistics
+ */
+router.get('/cache/stats', async (req: Request, res: Response) => {
+  try {
+    const stats = candleDataCache.getStats();
+
+    res.json({
+      success: true,
+      data: stats,
+    });
+  } catch (error) {
+    log.error('Failed to get cache stats:', error as object);
+    res.status(500).json({ success: false, error: (error as Error).message });
+  }
+});
+
+/**
+ * POST /backtest/cache/clear
+ * Clear the data cache
+ */
+router.post('/cache/clear', async (req: Request, res: Response) => {
+  try {
+    await candleDataCache.clearAll();
+
+    res.json({
+      success: true,
+      message: 'Cache cleared successfully',
+    });
+  } catch (error) {
+    log.error('Failed to clear cache:', error as object);
     res.status(500).json({ success: false, error: (error as Error).message });
   }
 });

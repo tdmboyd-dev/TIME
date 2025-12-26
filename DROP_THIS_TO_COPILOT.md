@@ -1,8 +1,80 @@
 # DROP THIS TO COPILOT - QUICK REFERENCE
 
 **Last Updated:** 2025-12-25
-**Version:** v66.0.0 - MARKETING HUB COMPLETE
+**Version:** v68.0.0 - STRIPE PAYMENTS INTEGRATION COMPLETE
 **Purpose:** Quick summary for Copilot/Claude when starting new sessions
+
+---
+
+## 🎯 v68.0.0 - STRIPE PAYMENTS INTEGRATION COMPLETE (2025-12-25)
+
+**Complete Stripe subscription + add-on checkout system with frontend pricing page**
+
+**Files Updated:**
+- `src/backend/payments/stripe_service.ts` - Added add-on checkout sessions, getUserAddOns()
+- `src/backend/routes/stripe.ts` - Added 3 new endpoints for add-ons
+
+**Files Created:**
+- `frontend/src/app/pricing/page.tsx` - Full pricing page with tier comparison, add-on cards, checkout buttons (700+ lines)
+
+**New API Endpoints:**
+- `POST /api/v1/stripe/create-addon-checkout` - Create checkout for add-on purchase
+- `GET /api/v1/stripe/addons` - Get all available add-ons
+- `GET /api/v1/stripe/user-addons` - Get user's active add-ons
+
+**Frontend Pricing Page Features:**
+- 5 tier cards (FREE, BASIC, PRO, PREMIUM, ENTERPRISE)
+- 2 add-on cards (DROPBOT, UMM)
+- Current plan indicator
+- Manage billing button (opens Stripe portal)
+- Tier comparison table
+- FAQ section
+- Success/cancel URL handling
+- Mobile responsive design
+
+**Sidebar Updated:**
+- Added "Pricing" link with Crown icon
+- Updated DROPBOT price to $39/mo (was $59)
+- Updated UMM price to $59/mo (was $79)
+
+---
+
+## 🎯 v67.0.0 - PRICING FIXED + 11 FEATURES (2025-12-25)
+
+**CORRECTED SUBSCRIPTION TIERS:**
+| Tier | Price | Bots | Capital |
+|------|-------|------|---------|
+| FREE | $0/mo | 1 | Paper only |
+| BASIC | $19/mo | 3 | $5K |
+| PRO | $49/mo | 7 | $25K |
+| PREMIUM | $109/mo | 11 Super Bots | $100K |
+| ENTERPRISE | $450/mo | Unlimited | Unlimited |
+
+**OPTIONAL ADD-ONS (separate from tiers):**
+| Add-On | Price | Description |
+|--------|-------|-------------|
+| DROPBOT | +$39/mo | Zero-config autopilot trading |
+| UMM | +$59/mo | Ultimate Money Machine with 25 Super Bots |
+
+**Files Updated for Pricing:**
+- `src/backend/payments/stripe_service.ts` - Tiers + Add-ons defined
+- `src/backend/ai/chat_assistant.ts` - Pricing in AI responses
+- `src/backend/support/ai_chat_handler.ts` - Support bot pricing
+- `src/backend/support/seed_faqs.ts` - FAQ pricing
+- `src/backend/routes/admin.ts` - Admin pricing endpoint
+
+**11 FEATURES IN PROGRESS:**
+1. Onboarding Flow (7-step wizard)
+2. Stripe Payments (checkout, webhooks, portal)
+3. Analytics Dashboard (admin + user metrics)
+4. Push Notifications (Web Push API)
+5. Social Features (leaderboard, chat)
+6. AI Chat Support (GPT-4 powered)
+7. Marketing Hub (referrals, promos)
+8. Email Drip Campaigns (SendGrid)
+9. Broker Integrations (Coinbase, Robinhood, TD, Webull)
+10. Backtesting Enhancements (multi-asset, optimization)
+11. React Native Mobile App (Expo)
 
 ---
 
@@ -192,12 +264,16 @@ ADMIN_EMAIL=admin@timebeyondus.com
 - `package.json` - Added stripe@^17.5.0
 - `TIMEBEUNUS.md` - Updated to v62.0.0 with Stripe docs
 
-**Subscription Tiers:**
-- FREE: 3 bots, paper trading only
-- BASIC: 10 bots, $5K capital, real trading
-- PRO: 50 bots, $50K capital, API access
-- PREMIUM: 999 bots, $500K capital, Ultimate Money Machine
-- ENTERPRISE: Unlimited everything, white-label
+**Subscription Tiers (UPDATED v67):**
+- FREE: 1 bot, paper trading only
+- BASIC: $19/mo - 3 bots, $5K capital
+- PRO: $49/mo - 7 bots, $25K capital
+- PREMIUM: $109/mo - 11 Super Bots, $100K capital
+- ENTERPRISE: $450/mo - Unlimited everything + white-label
+
+**Optional Add-Ons:**
+- DROPBOT: +$39/mo - Autopilot trading
+- UMM: +$59/mo - Ultimate Money Machine
 
 **API Endpoints:**
 - POST `/api/v1/stripe/create-checkout` - Start subscription
@@ -760,14 +836,16 @@ GET    /api/chat/online-users/:channel
 - `src/backend/routes/stripe.ts` - API routes for checkout/portal/webhooks
 - `frontend/src/app/payments/page.tsx` - UPDATED with subscription UI
 
-**Subscription Tiers:**
-| Tier | Price | Key Features |
-|------|-------|--------------|
-| FREE | $0/mo | 5 bots, 10 backtests/mo |
-| STARTER | $24.99/mo | 25 bots, 50 backtests/mo |
-| PRO | $79/mo | 100 bots, unlimited backtests (POPULAR) |
-| UNLIMITED | $149/mo | Unlimited everything + API access |
-| ENTERPRISE | $499/mo | White-label + dedicated manager |
+**Subscription Tiers (UPDATED v67):**
+| Tier | Price | Bots | Key Features |
+|------|-------|------|--------------|
+| FREE | $0/mo | 1 | Paper trading |
+| BASIC | $19/mo | 3 | $5K capital |
+| PRO | $49/mo | 7 | $25K capital, API access |
+| PREMIUM | $109/mo | 11 | 11 Super Bots, $100K capital |
+| ENTERPRISE | $450/mo | ∞ | Unlimited, white-label |
+
+**Add-Ons:** DROPBOT (+$39/mo), UMM (+$59/mo)
 
 **Features:**
 - ✅ Stripe Checkout integration (redirects to Stripe for payment)
@@ -1173,13 +1251,15 @@ bot.startAutoPosting({
 
 ### Tier Comparison Table
 
-| Tier | Price | Bots | Capital | Monthly Trades | Key Features |
-|------|-------|------|---------|----------------|--------------|
-| **FREE** | $0 | 3 (paper only) | $0 | 0 | Paper trading, basic charts, community bots |
-| **STARTER** | $24.99/mo | 1 | $10,000 | 50 | Live trading, basic alerts, email support |
-| **PRO** | $79/mo | 5 | $100,000 | 500 | Tax harvesting, advanced charts, priority support |
-| **UNLIMITED** | $149/mo | ∞ | ∞ | ∞ | Dynasty Trust, Family Legacy AI, AutoPilot |
-| **ENTERPRISE** | $499/mo | ∞ | ∞ | ∞ | White-label, API access, custom strategies |
+| Tier | Price | Bots | Capital | Key Features |
+|------|-------|------|---------|--------------|
+| **FREE** | $0 | 1 (paper only) | $0 | Paper trading, basic charts |
+| **BASIC** | $19/mo | 3 | $5,000 | Live trading, email support |
+| **PRO** | $49/mo | 7 | $25,000 | Advanced charts, API access |
+| **PREMIUM** | $109/mo | 11 Super | $100,000 | Tax harvesting, priority support |
+| **ENTERPRISE** | $450/mo | ∞ | ∞ | White-label, custom strategies |
+
+**Add-Ons:** DROPBOT (+$39/mo), UMM (+$59/mo)
 
 ### Feature Access by Tier
 

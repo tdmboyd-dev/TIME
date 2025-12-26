@@ -706,4 +706,411 @@ router.get('/platform-summary', authMiddleware, adminMiddleware, async (req: Req
   }
 });
 
+/**
+ * GET /api/analytics/admin/overview
+ * Get comprehensive admin analytics overview
+ */
+router.get('/admin/overview', authMiddleware, adminMiddleware, async (req: Request, res: Response) => {
+  try {
+    const { period = 'month' } = req.query;
+    const dateRange = getDateRange(period as string);
+
+    // Get all data in parallel
+    const [allUsers, allBots, allTrades] = await Promise.all([
+      userRepository.findMany({}),
+      botRepository.findMany({}),
+      tradeRepository.findMany({}),
+    ]);
+
+    // Filter data by date range
+    const usersInRange = allUsers.filter((u: any) => {
+      const createdAt = new Date(u.createdAt);
+      return createdAt >= dateRange.start && createdAt <= dateRange.end;
+    });
+
+    const tradesInRange = allTrades.filter((t: any) => {
+      const createdAt = new Date(t.createdAt || t.timestamp || t.entryTime);
+      return createdAt >= dateRange.start && createdAt <= dateRange.end;
+    });
+
+    // User Growth Chart Data
+    const userGrowthData = groupByDate(usersInRange, 'createdAt', null as any);
+
+    // Trading Volume Chart Data
+    const tradingVolumeData = groupByDate(tradesInRange, 'createdAt', null as any);
+
+    // Subscription Distribution (mock - integrate with payment provider)
+    const tiers = ['free', 'pro_monthly', 'pro_yearly', 'ultimate', 'enterprise'];
+    const subscriptionData = tiers.map((tier, idx) => {
+      const tierCounts = [60, 20, 10, 8, 2];
+      return {
+        name: tier.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()),
+        value: Math.floor(allUsers.length * tierCounts[idx] / 100),
+        percentage: tierCounts[idx],
+      };
+    });
+
+    // Revenue metrics (mock - integrate with Stripe/payment provider)
+    const paidUsers = allUsers.length * 0.4;
+    const avgRevenue = 45; // Average revenue per paid user
+    const mrr = Math.round(paidUsers * avgRevenue);
+    const arr = mrr * 12;
+
+    // Top performers
+    const topBots = allBots
+      .filter((b: any) => b.performance?.winRate || b.winRate)
+      .sort((a: any, b: any) => (b.performance?.winRate || b.winRate || 0) - (a.performance?.winRate || a.winRate || 0))
+      .slice(0, 5)
+      .map((b: any) => ({
+        id: b._id,
+        name: b.name || b.filename,
+        winRate: b.performance?.winRate || b.winRate || 0,
+        profitFactor: b.performance?.profitFactor || b.profitFactor || 0,
+        totalTrades: b.performance?.totalTrades || b.totalTrades || 0,
+      }));
+
+    // Calculate P&L metrics
+    const totalPnL = tradesInRange.reduce((sum: number, t: any) => sum + (t.pnl || 0), 0);
+    const winningTrades = tradesInRange.filter((t: any) => (t.pnl || 0) > 0).length;
+    const totalTrades = tradesInRange.length;
+    const winRate = totalTrades > 0 ? (winningTrades / totalTrades * 100) : 0;
+
+    res.json({
+      success: true,
+      period,
+      dateRange,
+      overview: {
+        users: {
+          total: allUsers.length,
+          newInPeriod: usersInRange.length,
+          activeUsers: allUsers.filter((u: any) => {
+            const lastActivity = new Date(u.lastActivity || u.lastLogin || 0);
+            return lastActivity >= new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+          }).length,
+        },
+        trading: {
+          totalTrades: totalTrades,
+          winRate: Math.round(winRate * 10) / 10,
+          totalPnL: Math.round(totalPnL * 100) / 100,
+        },
+        bots: {
+          total: allBots.length,
+          active: allBots.filter((b: any) => b.status === 'active').length,
+          pending: allBots.filter((b: any) => b.status === 'pending').length,
+        },
+        revenue: {
+          mrr,
+          arr,
+          paidSubscribers: Math.round(paidUsers),
+        },
+      },
+      charts: {
+        userGrowth: userGrowthData,
+        tradingVolume: tradingVolumeData,
+        subscriptions: subscriptionData,
+      },
+      topPerformers: topBots,
+    });
+  } catch (error: any) {
+    console.error('Admin analytics overview error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * GET /api/analytics/admin/users
+ * Get detailed user analytics for admin
+ */
+router.get('/admin/users', authMiddleware, adminMiddleware, async (req: Request, res: Response) => {
+  try {
+    const { period = 'month' } = req.query;
+    const dateRange = getDateRange(period as string);
+
+    const allUsers = await userRepository.findMany({});
+
+    // Users by role
+    const byRole = {
+      owner: allUsers.filter((u: any) => u.role === 'owner').length,
+      admin: allUsers.filter((u: any) => u.role === 'admin').length,
+      'co-admin': allUsers.filter((u: any) => u.role === 'co-admin').length,
+      user: allUsers.filter((u: any) => u.role === 'user').length,
+    };
+
+    // Users by status
+    const byStatus = {
+      active: allUsers.filter((u: any) => u.status === 'active' || !u.status).length,
+      blocked: allUsers.filter((u: any) => u.status === 'blocked').length,
+      suspended: allUsers.filter((u: any) => u.status === 'suspended').length,
+      pending: allUsers.filter((u: any) => u.status === 'pending').length,
+    };
+
+    // Activity levels
+    const now = new Date();
+    const oneDay = 24 * 60 * 60 * 1000;
+    const activityLevels = {
+      daily: allUsers.filter((u: any) => {
+        const last = new Date(u.lastActivity || u.lastLogin || 0);
+        return now.getTime() - last.getTime() < oneDay;
+      }).length,
+      weekly: allUsers.filter((u: any) => {
+        const last = new Date(u.lastActivity || u.lastLogin || 0);
+        return now.getTime() - last.getTime() < 7 * oneDay;
+      }).length,
+      monthly: allUsers.filter((u: any) => {
+        const last = new Date(u.lastActivity || u.lastLogin || 0);
+        return now.getTime() - last.getTime() < 30 * oneDay;
+      }).length,
+      inactive: allUsers.filter((u: any) => {
+        const last = new Date(u.lastActivity || u.lastLogin || 0);
+        return now.getTime() - last.getTime() >= 30 * oneDay;
+      }).length,
+    };
+
+    // Recent signups
+    const recentUsers = allUsers
+      .filter((u: any) => new Date(u.createdAt) >= dateRange.start)
+      .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, 10)
+      .map((u: any) => ({
+        id: u._id,
+        name: u.name,
+        email: u.email,
+        role: u.role,
+        createdAt: u.createdAt,
+      }));
+
+    res.json({
+      success: true,
+      period,
+      totalUsers: allUsers.length,
+      byRole,
+      byStatus,
+      activityLevels,
+      recentUsers,
+    });
+  } catch (error: any) {
+    console.error('Admin users analytics error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * GET /api/analytics/admin/revenue
+ * Get detailed revenue analytics for admin
+ */
+router.get('/admin/revenue', authMiddleware, adminMiddleware, async (req: Request, res: Response) => {
+  try {
+    const { period = 'month' } = req.query;
+    const dateRange = getDateRange(period as string);
+
+    const allUsers = await userRepository.findMany({});
+    const totalUsers = allUsers.length;
+
+    // Subscription tier pricing
+    const tierPricing = {
+      free: 0,
+      pro_monthly: 29,
+      pro_yearly: 290,
+      ultimate: 79,
+      enterprise: 499,
+    };
+
+    // Mock distribution (in production, get from payment provider)
+    const distribution = {
+      free: Math.floor(totalUsers * 0.6),
+      pro_monthly: Math.floor(totalUsers * 0.2),
+      pro_yearly: Math.floor(totalUsers * 0.1),
+      ultimate: Math.floor(totalUsers * 0.08),
+      enterprise: Math.floor(totalUsers * 0.02),
+    };
+
+    // Calculate MRR by tier
+    const revenueByTier = Object.entries(tierPricing).map(([tier, price]) => {
+      const count = distribution[tier as keyof typeof distribution];
+      const monthly = tier === 'pro_yearly' ? price / 12 : price;
+      return {
+        tier: tier.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()),
+        subscribers: count,
+        price,
+        monthlyRevenue: Math.round(count * monthly * 100) / 100,
+      };
+    });
+
+    const mrr = revenueByTier.reduce((sum, t) => sum + t.monthlyRevenue, 0);
+    const arr = mrr * 12;
+    const paidSubscribers = totalUsers - distribution.free;
+
+    // Revenue trend (mock daily data)
+    const daysInPeriod = Math.min(30, Math.ceil((dateRange.end.getTime() - dateRange.start.getTime()) / (1000 * 60 * 60 * 24)));
+    const revenueTrend = Array.from({ length: daysInPeriod }, (_, i) => {
+      const date = new Date(dateRange.start);
+      date.setDate(date.getDate() + i);
+      const variance = 0.9 + Math.random() * 0.2;
+      return {
+        date: date.toISOString().split('T')[0],
+        revenue: Math.round((mrr / 30) * variance * 100) / 100,
+      };
+    });
+
+    res.json({
+      success: true,
+      period,
+      metrics: {
+        mrr: Math.round(mrr * 100) / 100,
+        arr: Math.round(arr * 100) / 100,
+        totalSubscribers: totalUsers,
+        paidSubscribers,
+        conversionRate: Math.round((paidSubscribers / totalUsers) * 1000) / 10,
+        churnRate: 3.5, // Mock
+        ltv: Math.round((mrr / paidSubscribers) * (1 / 0.035) * 100) / 100,
+      },
+      revenueByTier,
+      revenueTrend,
+    });
+  } catch (error: any) {
+    console.error('Admin revenue analytics error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * GET /api/analytics/user/:userId
+ * Get analytics for a specific user
+ */
+router.get('/user/:userId', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.params;
+    const { period = 'month' } = req.query;
+    const dateRange = getDateRange(period as string);
+
+    // Verify user has permission to view this data
+    const requestingUser = (req as any).user;
+    const isAdmin = requestingUser?.role === 'admin' || requestingUser?.role === 'owner';
+    const isSelf = requestingUser?.id === userId || requestingUser?._id?.toString() === userId;
+
+    if (!isAdmin && !isSelf) {
+      return res.status(403).json({ success: false, error: 'Not authorized to view this data' });
+    }
+
+    // Get user's trades
+    const userTrades = await tradeRepository.findMany({ userId });
+
+    // Filter by date range
+    const tradesInRange = userTrades.filter((t: any) => {
+      const createdAt = new Date(t.createdAt || t.timestamp || t.entryTime);
+      return createdAt >= dateRange.start && createdAt <= dateRange.end;
+    });
+
+    // Get user's bots
+    const userBots = await botRepository.findMany({ userId });
+
+    // Calculate trading metrics
+    const totalTrades = tradesInRange.length;
+    const winningTrades = tradesInRange.filter((t: any) => (t.pnl || 0) > 0).length;
+    const losingTrades = tradesInRange.filter((t: any) => (t.pnl || 0) < 0).length;
+    const winRate = totalTrades > 0 ? (winningTrades / totalTrades * 100) : 0;
+    const totalPnL = tradesInRange.reduce((sum: number, t: any) => sum + (t.pnl || 0), 0);
+    const grossProfit = tradesInRange
+      .filter((t: any) => (t.pnl || 0) > 0)
+      .reduce((sum: number, t: any) => sum + (t.pnl || 0), 0);
+    const grossLoss = Math.abs(tradesInRange
+      .filter((t: any) => (t.pnl || 0) < 0)
+      .reduce((sum: number, t: any) => sum + (t.pnl || 0), 0));
+
+    // P&L by date
+    const pnlByDate: { [key: string]: number } = {};
+    let cumulativePnL = 0;
+    tradesInRange.forEach((t: any) => {
+      const date = new Date(t.createdAt || t.timestamp || t.entryTime).toISOString().split('T')[0];
+      pnlByDate[date] = (pnlByDate[date] || 0) + (t.pnl || 0);
+    });
+
+    const pnlChart = Object.keys(pnlByDate).sort().map(date => {
+      cumulativePnL += pnlByDate[date];
+      return {
+        date,
+        dailyPnL: Math.round(pnlByDate[date] * 100) / 100,
+        cumulativePnL: Math.round(cumulativePnL * 100) / 100,
+      };
+    });
+
+    // Win rate by bot
+    const winRateByBot = userBots.map((bot: any) => {
+      const botTrades = tradesInRange.filter((t: any) => t.botId === bot._id?.toString());
+      const botWins = botTrades.filter((t: any) => (t.pnl || 0) > 0).length;
+      const botTotal = botTrades.length;
+      return {
+        botId: bot._id,
+        botName: bot.name || bot.filename,
+        trades: botTotal,
+        wins: botWins,
+        winRate: botTotal > 0 ? Math.round((botWins / botTotal) * 1000) / 10 : 0,
+        pnl: Math.round(botTrades.reduce((sum: number, t: any) => sum + (t.pnl || 0), 0) * 100) / 100,
+      };
+    }).sort((a: any, b: any) => b.pnl - a.pnl);
+
+    // Best and worst bots
+    const bestBot = winRateByBot.length > 0 ? winRateByBot[0] : null;
+    const worstBot = winRateByBot.length > 0 ? winRateByBot[winRateByBot.length - 1] : null;
+
+    // Recent trades
+    const recentTrades = tradesInRange
+      .sort((a: any, b: any) => new Date(b.createdAt || b.timestamp).getTime() - new Date(a.createdAt || a.timestamp).getTime())
+      .slice(0, 10)
+      .map((t: any) => ({
+        id: t._id,
+        symbol: t.symbol,
+        side: t.side,
+        pnl: t.pnl,
+        createdAt: t.createdAt || t.timestamp,
+      }));
+
+    // Portfolio allocation (by asset type)
+    const allocationByAsset: { [key: string]: number } = {};
+    tradesInRange.forEach((t: any) => {
+      const asset = t.assetType || 'unknown';
+      allocationByAsset[asset] = (allocationByAsset[asset] || 0) + Math.abs(t.amount || t.quantity || 1);
+    });
+
+    const totalAllocation = Object.values(allocationByAsset).reduce((sum, v) => sum + v, 0);
+    const portfolioAllocation = Object.entries(allocationByAsset).map(([asset, value]) => ({
+      asset,
+      value,
+      percentage: Math.round((value / totalAllocation) * 1000) / 10,
+    }));
+
+    res.json({
+      success: true,
+      userId,
+      period,
+      dateRange,
+      trading: {
+        totalTrades,
+        winningTrades,
+        losingTrades,
+        winRate: Math.round(winRate * 10) / 10,
+        totalPnL: Math.round(totalPnL * 100) / 100,
+        grossProfit: Math.round(grossProfit * 100) / 100,
+        grossLoss: Math.round(grossLoss * 100) / 100,
+        profitFactor: grossLoss > 0 ? Math.round((grossProfit / grossLoss) * 100) / 100 : grossProfit > 0 ? 999 : 0,
+      },
+      bots: {
+        total: userBots.length,
+        active: userBots.filter((b: any) => b.status === 'active').length,
+        bestPerformer: bestBot,
+        worstPerformer: worstBot,
+      },
+      charts: {
+        pnlHistory: pnlChart,
+        winRateByBot,
+        portfolioAllocation,
+      },
+      recentTrades,
+    });
+  } catch (error: any) {
+    console.error('User analytics error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 export default router;

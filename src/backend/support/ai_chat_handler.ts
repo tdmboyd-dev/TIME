@@ -42,15 +42,15 @@ export type Intent =
   | 'general_question'
   | 'escalate_human';
 
-// Platform knowledge base
+// Platform knowledge base - ACCURATE PRICING
 const PLATFORM_CONTEXT = `
 You are the AI support assistant for TIME BEYOND US, an advanced AI-powered trading platform.
 
 PLATFORM FEATURES:
 - 151+ AI Trading Bots (133 absorbed from open source, 18 fused meta-strategies)
-- DROPBOT AutoPilot ($59/mo) - Fully automated trading
-- Ultimate Money Machine ($79/mo) - 25 Super Bots with institutional edge
-- LIVE Bot Trading - Real-time bot execution
+- DROPBOT AutoPilot (+$39/mo add-on) - Fully automated "set it and forget it" trading
+- Ultimate Money Machine (UMM) (+$59/mo add-on) - 25 Super Bots with institutional edge
+- LIVE Bot Trading - Real-time bot execution with Practice or Live modes
 - Big Moves Alerts - Whale tracking, government policy, institutional moves
 - AI Vision Engine - Market analysis and predictions
 - Bot Marketplace - Rent bots from $5/day
@@ -63,6 +63,7 @@ PLATFORM FEATURES:
 - Tax Optimization - Tax-loss harvesting, wash sale tracking
 - Broker Connections - Alpaca, Interactive Brokers, OANDA, and more
 - Multi-asset Support - Stocks, crypto, forex, options
+- 24/7 AI Support - Instant help anytime
 
 SUPPORTED BROKERS:
 - Alpaca (stocks, paper & live)
@@ -70,17 +71,36 @@ SUPPORTED BROKERS:
 - OANDA (forex)
 - Binance (crypto)
 - Kraken (crypto)
-- More via SnapTrade integration
+- More via SnapTrade integration (Robinhood, E*TRADE, TD Ameritrade)
 
 TRADING MODES:
-- Practice Mode: Paper trading with simulated funds
-- Live Mode: Real money trading (requires broker connection)
+- Practice Mode: Paper trading with simulated funds - perfect for learning
+- Live Mode: Real money trading (requires broker connection and funds)
 
-PRICING:
-- Base Platform: Free with basic features
-- DROPBOT AutoPilot: $59/month
-- Ultimate Money Machine: $79/month
-- Bot Marketplace: $5-50/day per bot rental
+=== OFFICIAL PRICING (ALWAYS USE THESE EXACT PRICES) ===
+
+SUBSCRIPTION TIERS:
+- FREE: $0/month - 1 bot, paper trading only
+- BASIC: $19/month - 3 bots
+- PRO: $49/month - 7 bots
+- PREMIUM: $109/month - 11 Super Bots
+- ENTERPRISE: $450/month - Unlimited bots
+
+OPTIONAL ADD-ONS (can be added to ANY subscription tier):
+- DROPBOT AutoPilot: +$39/month
+  Fully automated trading, set it and forget it, AI manages everything
+
+- Ultimate Money Machine (UMM): +$59/month
+  25 Super Bots with institutional-grade edge
+  Market Attack Strategies
+  Self-learning AI that improves over time
+
+BOT MARKETPLACE:
+- Rent individual premium bots: $5-$50/day
+- No long-term commitment required
+- Try before you buy
+
+IMPORTANT: When users ask about pricing, ALWAYS provide the exact prices above. Never approximate or round.
 
 COMMON ISSUES & SOLUTIONS:
 1. "How do I start trading?"
@@ -101,7 +121,7 @@ COMMON ISSUES & SOLUTIONS:
    - Check bot has sufficient balance/buying power
 
 4. "How do I enable AutoPilot?"
-   - Upgrade to DROPBOT AutoPilot ($59/mo)
+   - Add DROPBOT AutoPilot (+$39/mo) to your subscription
    - Configure risk settings in Settings
    - Enable AutoPilot toggle in dashboard
 
@@ -109,6 +129,25 @@ COMMON ISSUES & SOLUTIONS:
    - Go to Settings > Payments
    - Update payment method if needed
    - Contact support for subscription issues
+
+6. "What's the difference between tiers?"
+   - FREE ($0/mo): 1 bot, paper trading - great for learning
+   - BASIC ($19/mo): 3 bots - perfect for beginners
+   - PRO ($49/mo): 7 bots - for active traders
+   - PREMIUM ($109/mo): 11 Super Bots - serious traders
+   - ENTERPRISE ($450/mo): Unlimited - for professionals
+
+7. "What are DROPBOT and UMM add-ons?"
+   - DROPBOT AutoPilot (+$39/mo): Set it and forget it, fully automated
+   - Ultimate Money Machine (+$59/mo): 25 Super Bots, institutional-grade strategies, self-learning AI
+
+HELPFUL LINKS:
+- Trading: /trade, /live-trading
+- Bots: /bots, /bot-marketplace
+- Brokers: /brokers, /settings
+- Billing: /payments, /subscription
+- Support: /support
+- Learning: /learn, /education
 
 GUIDELINES:
 - Be helpful, professional, and concise
@@ -155,36 +194,40 @@ function checkRateLimit(userId: string): boolean {
 /**
  * Detect intent from user message
  */
-async function detectIntent(message: string): Promise<{ intent: Intent; confidence: number }> {
+async function detectIntent(message: string): Promise<{ intent: Intent; confidence: number; isPricing?: boolean }> {
   const messageLower = message.toLowerCase();
+
+  // Check for pricing-related keywords first (high priority)
+  const pricingKeywords = ['price', 'pricing', 'cost', 'how much', 'subscription', 'tier', 'plan', 'fee', 'monthly', 'per month', '$', 'dollar', 'free', 'basic', 'pro', 'premium', 'enterprise', 'dropbot', 'umm', 'ultimate money machine', 'add-on', 'addon'];
+  const isPricing = pricingKeywords.some(keyword => messageLower.includes(keyword));
 
   // Simple keyword-based intent detection
   if (messageLower.includes('trade') || messageLower.includes('trading') || messageLower.includes('buy') || messageLower.includes('sell')) {
-    return { intent: 'trading_help', confidence: 0.8 };
+    return { intent: 'trading_help', confidence: 0.8, isPricing };
   }
   if (messageLower.includes('broker') || messageLower.includes('connect') || messageLower.includes('alpaca') || messageLower.includes('oanda')) {
-    return { intent: 'broker_connection', confidence: 0.85 };
+    return { intent: 'broker_connection', confidence: 0.85, isPricing };
   }
-  if (messageLower.includes('bot') || messageLower.includes('autopilot') || messageLower.includes('strategy')) {
-    return { intent: 'bot_question', confidence: 0.8 };
+  if (messageLower.includes('bot') || messageLower.includes('autopilot') || messageLower.includes('strategy') || messageLower.includes('dropbot') || messageLower.includes('umm')) {
+    return { intent: 'bot_question', confidence: 0.8, isPricing };
   }
-  if (messageLower.includes('payment') || messageLower.includes('billing') || messageLower.includes('subscription') || messageLower.includes('charge')) {
-    return { intent: 'billing_payment', confidence: 0.9 };
+  if (messageLower.includes('payment') || messageLower.includes('billing') || messageLower.includes('subscription') || messageLower.includes('charge') || isPricing) {
+    return { intent: 'billing_payment', confidence: 0.9, isPricing };
   }
   if (messageLower.includes('error') || messageLower.includes('bug') || messageLower.includes('broken') || messageLower.includes('not working')) {
-    return { intent: 'technical_issue', confidence: 0.85 };
+    return { intent: 'technical_issue', confidence: 0.85, isPricing };
   }
   if (messageLower.includes('account') || messageLower.includes('login') || messageLower.includes('password') || messageLower.includes('locked')) {
-    return { intent: 'account_help', confidence: 0.85 };
+    return { intent: 'account_help', confidence: 0.85, isPricing };
   }
   if (messageLower.includes('human') || messageLower.includes('agent') || messageLower.includes('person') || messageLower.includes('speak to someone')) {
-    return { intent: 'escalate_human', confidence: 1.0 };
+    return { intent: 'escalate_human', confidence: 1.0, isPricing };
   }
   if (messageLower.includes('feature') || messageLower.includes('request') || messageLower.includes('suggestion')) {
-    return { intent: 'feature_request', confidence: 0.7 };
+    return { intent: 'feature_request', confidence: 0.7, isPricing };
   }
 
-  return { intent: 'general_question', confidence: 0.6 };
+  return { intent: 'general_question', confidence: 0.6, isPricing };
 }
 
 /**

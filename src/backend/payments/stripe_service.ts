@@ -8,11 +8,15 @@
  * - Subscription status tracking
  *
  * SUBSCRIPTION TIERS:
- * - FREE: $0/month - 3 bots, paper trading only
- * - BASIC: $19/month - 10 bots, $5K capital
- * - PRO: $39/month - 50 bots, $50K capital
- * - PREMIUM: $59/month - 999 bots, $500K capital, Ultimate Money Machine
- * - ENTERPRISE: $250/month - Unlimited everything + white-label
+ * - FREE: $0/month - 1 bot, paper trading only
+ * - BASIC: $19/month - 3 bots, $5K capital
+ * - PRO: $49/month - 7 bots, $25K capital
+ * - PREMIUM: $109/month - 11 Super Bots, $100K capital
+ * - ENTERPRISE: $450/month - Unlimited everything + white-label
+ *
+ * OPTIONAL ADD-ONS (can be added to any tier):
+ * - DROPBOT: $39/month - Zero-config autopilot trading
+ * - UMM: $59/month - Ultimate Money Machine with 25 Super Bots
  */
 
 import Stripe from 'stripe';
@@ -77,17 +81,16 @@ export const SUBSCRIPTION_TIERS: Record<string, SubscriptionTier> = {
     priceId: '', // No Stripe price for free tier
     interval: 'month',
     features: [
-      '3 active bots',
+      '1 active bot',
       'Paper trading only',
       'Basic market data',
       'Community support',
-      'Standard backtesting',
     ],
     limits: {
-      bots: 3,
-      strategies: 5,
-      backtests: 10,
-      apiCalls: 1000,
+      bots: 1,
+      strategies: 2,
+      backtests: 5,
+      apiCalls: 500,
       support: 'community',
     },
   },
@@ -98,72 +101,68 @@ export const SUBSCRIPTION_TIERS: Record<string, SubscriptionTier> = {
     priceId: process.env.STRIPE_PRICE_BASIC || '',
     interval: 'month',
     features: [
-      '10 active bots',
+      '3 active bots',
       '$5,000 max capital',
       'Real trading enabled',
       'Email support',
-      'Advanced backtesting',
-      'Real-time market data',
+      'Basic backtesting',
     ],
     limits: {
-      bots: 10,
-      strategies: 20,
-      backtests: 50,
-      apiCalls: 10000,
+      bots: 3,
+      strategies: 5,
+      backtests: 20,
+      apiCalls: 5000,
       support: 'email',
     },
   },
   PRO: {
     id: 'pro',
     name: 'Pro',
-    price: 39,
+    price: 49,
     priceId: process.env.STRIPE_PRICE_PRO || '',
     interval: 'month',
     features: [
-      '50 active bots',
-      '$50,000 max capital',
+      '7 active bots',
+      '$25,000 max capital',
       'Priority execution',
       'Priority support',
-      'Advanced analytics',
+      'Advanced backtesting',
       'API access',
-      'Custom strategies',
     ],
     limits: {
-      bots: 50,
-      strategies: 100,
-      backtests: -1, // Unlimited
-      apiCalls: 100000,
+      bots: 7,
+      strategies: 20,
+      backtests: 100,
+      apiCalls: 50000,
       support: 'priority',
     },
   },
   PREMIUM: {
     id: 'premium',
     name: 'Premium',
-    price: 59,
+    price: 109,
     priceId: process.env.STRIPE_PRICE_PREMIUM || '',
     interval: 'month',
     features: [
-      '999 active bots',
-      '$500,000 max capital',
-      'Ultimate Money Machine',
+      '11 Super Bots',
+      '$100,000 max capital',
       '24/7 priority support',
-      'Institutional data feeds',
       'Advanced AI features',
       'Risk management tools',
-      'Multi-strategy portfolios',
+      'Unlimited backtesting',
     ],
     limits: {
-      bots: 999,
-      strategies: -1,
+      bots: 11,
+      strategies: 50,
       backtests: -1,
-      apiCalls: -1,
+      apiCalls: 200000,
       support: '24/7-priority',
     },
   },
   ENTERPRISE: {
     id: 'enterprise',
     name: 'Enterprise',
-    price: 250,
+    price: 450,
     priceId: process.env.STRIPE_PRICE_ENTERPRISE || '',
     interval: 'month',
     features: [
@@ -175,7 +174,6 @@ export const SUBSCRIPTION_TIERS: Record<string, SubscriptionTier> = {
       'On-premise deployment',
       'SLA guarantee',
       'Custom bot development',
-      'Training & onboarding',
     ],
     limits: {
       bots: -1,
@@ -184,6 +182,49 @@ export const SUBSCRIPTION_TIERS: Record<string, SubscriptionTier> = {
       apiCalls: -1,
       support: 'dedicated',
     },
+  },
+};
+
+// ============================================================
+// OPTIONAL ADD-ONS (can be added to any tier)
+// ============================================================
+
+export interface AddOn {
+  id: string;
+  name: string;
+  price: number;
+  priceId: string;
+  description: string;
+  features: string[];
+}
+
+export const ADD_ONS: Record<string, AddOn> = {
+  DROPBOT: {
+    id: 'dropbot',
+    name: 'DROPBOT AutoPilot',
+    price: 39,
+    priceId: process.env.STRIPE_PRICE_DROPBOT || '',
+    description: 'Zero-config autopilot trading for beginners',
+    features: [
+      'Set it and forget it trading',
+      'AI-powered entry/exit',
+      'Automatic risk management',
+      'Real-time notifications',
+    ],
+  },
+  UMM: {
+    id: 'umm',
+    name: 'Ultimate Money Machine',
+    price: 59,
+    priceId: process.env.STRIPE_PRICE_UMM || '',
+    description: 'Advanced trading suite with Super Bots',
+    features: [
+      '25 Super Bots access',
+      'Market Attack Strategies',
+      'Multi-strategy portfolios',
+      'Institutional data feeds',
+      'Advanced AI trading',
+    ],
   },
 };
 
@@ -612,6 +653,112 @@ export class StripeService extends EventEmitter {
 
     logger.info(`Subscription reactivated for user ${userId}`);
   }
+}
+
+// ============================================================
+// ADD-ON CHECKOUT SESSION
+// ============================================================
+
+/**
+ * Create a checkout session for add-on purchase
+ */
+public async createAddOnCheckoutSession(
+  userId: string,
+  addOnId: string,
+  successUrl: string,
+  cancelUrl: string,
+  customerEmail?: string
+): Promise<CheckoutSessionData> {
+  try {
+    const addOn = ADD_ONS[addOnId.toUpperCase()];
+    if (!addOn) {
+      throw new Error(`Invalid add-on: ${addOnId}`);
+    }
+
+    if (!addOn.priceId) {
+      throw new Error(`Price ID not configured for add-on: ${addOnId}`);
+    }
+
+    // Create or retrieve customer
+    let customer: Stripe.Customer | undefined;
+    const existingSub = Array.from(this.subscriptions.values()).find(
+      (sub) => sub.userId === userId
+    );
+
+    if (existingSub?.customerId) {
+      customer = await this.stripe.customers.retrieve(existingSub.customerId) as Stripe.Customer;
+    } else if (customerEmail) {
+      customer = await this.stripe.customers.create({
+        email: customerEmail,
+        metadata: {
+          userId,
+        },
+      });
+    }
+
+    const session = await this.stripe.checkout.sessions.create({
+      customer: customer?.id,
+      customer_email: !customer && customerEmail ? customerEmail : undefined,
+      mode: 'subscription',
+      payment_method_types: ['card'],
+      line_items: [
+        {
+          price: addOn.priceId,
+          quantity: 1,
+        },
+      ],
+      success_url: successUrl,
+      cancel_url: cancelUrl,
+      metadata: {
+        userId,
+        addOn: addOn.id,
+        type: 'add-on',
+      },
+      subscription_data: {
+        metadata: {
+          userId,
+          addOn: addOn.id,
+          type: 'add-on',
+        },
+      },
+      allow_promotion_codes: true,
+    });
+
+    logger.info(`Add-on checkout session created for user ${userId}, add-on ${addOn.name}`, {
+      sessionId: session.id,
+    });
+
+    return {
+      sessionId: session.id,
+      url: session.url!,
+      customerId: customer?.id,
+    };
+  } catch (error: any) {
+    logger.error('Failed to create add-on checkout session', { error: error.message });
+    throw error;
+  }
+}
+
+/**
+ * Get available add-ons
+ */
+public getAvailableAddOns(): AddOn[] {
+  return Object.values(ADD_ONS);
+}
+
+/**
+ * Get user's active add-ons
+ */
+public async getUserAddOns(userId: string): Promise<string[]> {
+  const userSubs = Array.from(this.subscriptions.values()).filter(
+    (sub) => sub.userId === userId && sub.status === 'active'
+  );
+
+  // Return add-ons from metadata (in a real implementation, this would be stored in DB)
+  return userSubs
+    .filter((sub) => (sub as any).addOn)
+    .map((sub) => (sub as any).addOn);
+}
 }
 
 // Export singleton instance

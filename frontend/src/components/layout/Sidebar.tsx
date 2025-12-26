@@ -144,8 +144,8 @@ const navigation = [
   // Core
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
   // PREMIUM FEATURES - Top of sidebar
-  { name: 'DROPBOT AutoPilot', href: '/autopilot', icon: Rocket, isPremium: true, price: '$59/mo' },
-  { name: 'Ultimate Money Machine', href: '/ultimate', icon: Gem, isNew: true, isPremium: true, price: '$79/mo' },
+  { name: 'DROPBOT AutoPilot', href: '/autopilot', icon: Rocket, isPremium: true, price: '$39/mo' },
+  { name: 'Ultimate Money Machine', href: '/ultimate', icon: Gem, isNew: true, isPremium: true, price: '$59/mo' },
   { name: 'LIVE Bot Trading', href: '/live-trading', icon: Play, isNew: true },
   { name: 'Big Moves Alerts', href: '/alerts', icon: Bell, isNew: true },
   { name: 'Bot Dropzone', href: '/dropzone', icon: Download, isNew: true },
@@ -173,6 +173,7 @@ const navigation = [
   { name: 'Learn', href: '/learn', icon: GraduationCap },
   // Connections
   { name: 'Broker Connect', href: '/brokers', icon: Link2 },
+  { name: 'Pricing', href: '/pricing', icon: Crown, isNew: true },
   { name: 'Payments', href: '/payments', icon: CreditCard },
   { name: 'Notifications', href: '/notifications', icon: Bell, isNew: true },
   // Wealth & Planning
@@ -183,10 +184,13 @@ const navigation = [
   { name: 'Investment Goals', href: '/goals', icon: Target, isNew: true },
   // Support
   { name: 'Support', href: '/support', icon: Headphones, isNew: true },
+  // Analytics (visible to all users)
+  { name: 'My Analytics', href: '/my-analytics', icon: BarChart3, isNew: true },
   // Settings (visible to all)
   { name: 'Settings', href: '/settings', icon: Settings },
   // ADMIN-ONLY FEATURES - Hidden from regular users
-  { name: 'Analytics', href: '/analytics', icon: BarChart3, adminOnly: true, isNew: true },
+  { name: 'Platform Analytics', href: '/analytics', icon: BarChart3, adminOnly: true },
+  { name: 'Admin Analytics', href: '/admin/analytics', icon: BarChart3, adminOnly: true, isNew: true },
   { name: 'Marketing Hub', href: '/marketing', icon: Megaphone, adminOnly: true, isNew: true },
   { name: 'Email Campaigns', href: '/email-campaigns', icon: Mail, adminOnly: true, isNew: true },
   { name: 'Announcement Bot', href: '/admin-bot', icon: Bot, adminOnly: true, isNew: true },

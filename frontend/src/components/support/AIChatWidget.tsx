@@ -40,7 +40,54 @@ interface QuickAction {
   title: string;
   description: string;
   action: string;
+  category?: string;
 }
+
+// Default quick actions in case API fails
+const DEFAULT_QUICK_ACTIONS: QuickAction[] = [
+  {
+    id: 'pricing',
+    title: 'Show pricing plans',
+    description: 'View subscription tiers',
+    action: 'What are the pricing plans?',
+    category: 'billing',
+  },
+  {
+    id: 'how-to-trade',
+    title: 'How do I start trading?',
+    description: 'Connect a broker and enable bots',
+    action: 'How do I start trading?',
+    category: 'trading',
+  },
+  {
+    id: 'connect-broker',
+    title: 'Connect my broker',
+    description: 'Link Alpaca, IB, OANDA, or others',
+    action: 'How do I connect my broker?',
+    category: 'broker',
+  },
+  {
+    id: 'bot-help',
+    title: 'My bot isn\'t trading',
+    description: 'Troubleshoot bot issues',
+    action: 'My bot is not trading. What should I check?',
+    category: 'bot',
+  },
+  {
+    id: 'dropbot',
+    title: 'What is DROPBOT?',
+    description: 'Learn about AutoPilot',
+    action: 'What is DROPBOT AutoPilot and how much does it cost?',
+    category: 'features',
+  },
+  {
+    id: 'umm',
+    title: 'Ultimate Money Machine',
+    description: 'Premium trading features',
+    action: 'What is the Ultimate Money Machine add-on?',
+    category: 'features',
+  },
+];
 
 export function AIChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
@@ -125,10 +172,15 @@ export function AIChatWidget() {
       const response = await fetch('/api/support/quick-actions');
       if (response.ok) {
         const data = await response.json();
-        setQuickActions(data.actions || []);
+        setQuickActions(data.actions || DEFAULT_QUICK_ACTIONS);
+      } else {
+        // Use default quick actions if API fails
+        setQuickActions(DEFAULT_QUICK_ACTIONS);
       }
     } catch (error) {
       console.error('Error loading quick actions:', error);
+      // Use default quick actions if API fails
+      setQuickActions(DEFAULT_QUICK_ACTIONS);
     }
   };
 
@@ -197,7 +249,8 @@ export function AIChatWidget() {
 
   // Handle quick action click
   const handleQuickAction = (action: QuickAction) => {
-    sendMessage(`${action.title}`);
+    // Use the action string if provided, otherwise use the title
+    sendMessage(action.action || action.title);
   };
 
   // Create support ticket
@@ -324,8 +377,13 @@ export function AIChatWidget() {
                     <Bot className="w-5 h-5 text-time-primary" />
                   </div>
                 </div>
-                <div className="bg-slate-800 rounded-lg p-3">
-                  <Loader2 className="w-5 h-5 text-slate-400 animate-spin" />
+                <div className="bg-slate-800 rounded-lg p-3 flex items-center gap-2">
+                  <div className="flex gap-1">
+                    <span className="w-2 h-2 bg-time-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
+                    <span className="w-2 h-2 bg-time-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
+                    <span className="w-2 h-2 bg-time-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+                  </div>
+                  <span className="text-xs text-slate-400 ml-1">AI is typing...</span>
                 </div>
               </div>
             )}
@@ -335,16 +393,19 @@ export function AIChatWidget() {
 
           {/* Quick Actions */}
           {messages.length === 1 && quickActions.length > 0 && (
-            <div className="px-4 py-2 border-t border-slate-700 bg-slate-800/50">
-              <p className="text-xs text-slate-400 mb-2">Quick actions:</p>
+            <div className="px-4 py-2 border-t border-slate-700 bg-slate-800/50 max-h-40 overflow-y-auto">
+              <p className="text-xs text-slate-400 mb-2">Suggested questions:</p>
               <div className="grid grid-cols-2 gap-2">
-                {quickActions.slice(0, 4).map(action => (
+                {quickActions.slice(0, 6).map(action => (
                   <button
                     key={action.id}
                     onClick={() => handleQuickAction(action)}
-                    className="text-left p-2 bg-slate-800 hover:bg-slate-700 rounded text-xs text-slate-300 transition-colors"
+                    className="text-left p-2 bg-slate-800 hover:bg-slate-700 hover:border-time-primary/50 border border-slate-600 rounded text-xs text-slate-300 transition-all duration-200"
                   >
-                    {action.title}
+                    <span className="block font-medium text-white truncate">{action.title}</span>
+                    {action.description && (
+                      <span className="text-slate-400 text-[10px] truncate block">{action.description}</span>
+                    )}
                   </button>
                 ))}
               </div>

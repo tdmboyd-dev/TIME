@@ -1,5 +1,5 @@
 /**
- * Notifications API Routes
+ * Notifications API Routes - Production Ready
  *
  * Push notification management endpoints:
  * - POST /api/notifications/subscribe - Subscribe to push notifications
@@ -10,8 +10,13 @@
  * - PUT /api/notifications/read-all - Mark all notifications as read
  * - DELETE /api/notifications/:id - Delete notification
  * - GET /api/notifications/subscriptions - Get user's push subscriptions
- * - PUT /api/notifications/settings - Update notification preferences
+ * - GET /api/notifications/preferences - Get notification preferences
+ * - PUT /api/notifications/preferences - Update notification preferences
+ * - POST /api/notifications/preferences/reset - Reset preferences to defaults
+ * - GET /api/notifications/stats - Get notification statistics
  * - POST /api/notifications/test - Send test notification (admin only)
+ * - POST /api/notifications/broadcast - Send broadcast notification (admin only)
+ * - GET /api/notifications/queue/stats - Get queue statistics (admin only)
  */
 
 import { Router, Request, Response } from 'express';
@@ -255,7 +260,112 @@ router.get('/subscriptions', async (req: Request, res: Response) => {
 });
 
 /**
+ * Get notification preferences
+ * GET /api/notifications/preferences
+ */
+router.get('/preferences', async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).user?.id;
+    const preferences = await pushService.getUserPreferences(userId);
+
+    res.json({
+      success: true,
+      preferences,
+    });
+  } catch (error: any) {
+    logger.error('Error fetching notification preferences', { error });
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch notification preferences',
+      error: error.message,
+    });
+  }
+});
+
+/**
  * Update notification preferences
+ * PUT /api/notifications/preferences
+ */
+router.put('/preferences', async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).user?.id;
+    const { categories, quietHours, frequencyLimits, deliveryMethods, minPriority } = req.body;
+
+    const updates: any = {};
+    if (categories) updates.categories = categories;
+    if (quietHours) updates.quietHours = quietHours;
+    if (frequencyLimits) updates.frequencyLimits = frequencyLimits;
+    if (deliveryMethods) updates.deliveryMethods = deliveryMethods;
+    if (minPriority) updates.minPriority = minPriority;
+
+    const preferences = await pushService.updateUserPreferences(userId, updates);
+
+    logger.info('Notification preferences updated', { userId });
+
+    res.json({
+      success: true,
+      message: 'Notification preferences updated',
+      preferences,
+    });
+  } catch (error: any) {
+    logger.error('Error updating notification preferences', { error });
+    res.status(500).json({
+      success: false,
+      message: 'Failed to update notification preferences',
+      error: error.message,
+    });
+  }
+});
+
+/**
+ * Reset notification preferences to defaults
+ * POST /api/notifications/preferences/reset
+ */
+router.post('/preferences/reset', async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).user?.id;
+    const preferences = await pushService.resetUserPreferences(userId);
+
+    res.json({
+      success: true,
+      message: 'Notification preferences reset to defaults',
+      preferences,
+    });
+  } catch (error: any) {
+    logger.error('Error resetting notification preferences', { error });
+    res.status(500).json({
+      success: false,
+      message: 'Failed to reset notification preferences',
+      error: error.message,
+    });
+  }
+});
+
+/**
+ * Get notification statistics
+ * GET /api/notifications/stats
+ */
+router.get('/stats', async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).user?.id;
+    const stats = await pushService.getNotificationStats(userId);
+
+    res.json({
+      success: true,
+      stats,
+    });
+  } catch (error: any) {
+    logger.error('Error fetching notification stats', { error });
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch notification stats',
+      error: error.message,
+    });
+  }
+});
+
+/**
+ * Legacy endpoint - Update notification preferences (settings)
  * PUT /api/notifications/settings
  */
 router.put('/settings', async (req: Request, res: Response) => {
@@ -263,14 +373,23 @@ router.put('/settings', async (req: Request, res: Response) => {
     const userId = (req as any).user?.id;
     const { preferences } = req.body;
 
-    // In a real implementation, save to database
-    // For now, just acknowledge the request
-    logger.info('Notification preferences updated', { userId, preferences });
+    // Map legacy preferences format to new format
+    const updates: any = {};
+    if (preferences) {
+      if (preferences.trades !== undefined) updates.categories = { ...updates.categories, trade: preferences.trades };
+      if (preferences.alerts !== undefined) updates.categories = { ...updates.categories, price: preferences.alerts };
+      if (preferences.bots !== undefined) updates.categories = { ...updates.categories, bot: preferences.bots };
+      if (preferences.system !== undefined) updates.categories = { ...updates.categories, system: preferences.system };
+    }
+
+    const updated = await pushService.updateUserPreferences(userId, updates);
+
+    logger.info('Notification preferences updated (legacy)', { userId, preferences });
 
     res.json({
       success: true,
       message: 'Notification preferences updated',
-      preferences,
+      preferences: updated,
     });
   } catch (error: any) {
     logger.error('Error updating notification preferences', { error });
@@ -387,6 +506,76 @@ router.post('/broadcast', adminMiddleware, async (req: Request, res: Response) =
     res.status(500).json({
       success: false,
       message: 'Failed to send broadcast notification',
+      error: error.message,
+    });
+  }
+});
+
+/**
+ * Get notification queue statistics (admin only)
+ * GET /api/notifications/queue/stats
+ */
+router.get('/queue/stats', adminMiddleware, async (req: Request, res: Response) => {
+  try {
+    const stats = pushService.getQueueStats();
+
+    res.json({
+      success: true,
+      stats,
+    });
+  } catch (error: any) {
+    logger.error('Error fetching queue stats', { error });
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch queue stats',
+      error: error.message,
+    });
+  }
+});
+
+/**
+ * Clear notification queue (admin only)
+ * POST /api/notifications/queue/clear
+ */
+router.post('/queue/clear', adminMiddleware, async (req: Request, res: Response) => {
+  try {
+    pushService.clearNotificationQueue();
+
+    res.json({
+      success: true,
+      message: 'Notification queue cleared',
+    });
+  } catch (error: any) {
+    logger.error('Error clearing queue', { error });
+    res.status(500).json({
+      success: false,
+      message: 'Failed to clear queue',
+      error: error.message,
+    });
+  }
+});
+
+/**
+ * Cleanup old notifications
+ * POST /api/notifications/cleanup
+ */
+router.post('/cleanup', async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).user?.id;
+    const { olderThanDays = 30 } = req.body;
+
+    const deleted = await pushService.cleanupOldNotifications(userId, olderThanDays);
+
+    res.json({
+      success: true,
+      message: `Deleted ${deleted} old notifications`,
+      deleted,
+    });
+  } catch (error: any) {
+    logger.error('Error cleaning up notifications', { error });
+    res.status(500).json({
+      success: false,
+      message: 'Failed to cleanup notifications',
       error: error.message,
     });
   }

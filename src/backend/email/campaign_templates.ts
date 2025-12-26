@@ -227,31 +227,47 @@ export const getWelcomeDay7Template = (data: TemplateData): string => `
       <h2 style="${EMAIL_STYLES.bodyTitle}">Ready to Level Up, ${data.userName}?</h2>
       <p style="${EMAIL_STYLES.text}">
         You've been using TIME for a week - impressive! Now it's time to unlock the full power
-        of our platform with Premium.
+        of our platform with a paid plan.
       </p>
-      <p style="${EMAIL_STYLES.text}"><strong>What you'll get with Premium:</strong></p>
-      <ul style="${EMAIL_STYLES.list}">
-        <li>🤖 <strong>154+ AI Bots</strong> - Every strategy imaginable</li>
-        <li>📊 <strong>Advanced Analytics</strong> - Institutional-grade tools</li>
-        <li>⚡ <strong>Real-Time Execution</strong> - Lightning-fast trades</li>
-        <li>🎯 <strong>Custom Strategies</strong> - Build your own bots</li>
-        <li>💰 <strong>Performance-Based Pricing</strong> - Only pay when you profit</li>
-        <li>🎓 <strong>Trading Academy</strong> - Exclusive courses & webinars</li>
-        <li>👨‍💼 <strong>Priority Support</strong> - Dedicated account manager</li>
-      </ul>
+      <p style="${EMAIL_STYLES.text}"><strong>Choose the plan that fits your trading style:</strong></p>
       <div style="background: #0f172a; padding: 20px; border-radius: 8px; margin: 20px 0;">
-        <p style="color: #10b981; font-size: 18px; margin: 0;"><strong>Success Story:</strong></p>
-        <p style="color: #e2e8f0; margin-top: 10px;">
-          "I went from $10k to $87k in 6 months using TIME's AI bots. The platform
-          literally changed my life." - Sarah M., Premium Member
+        <table style="width: 100%; color: #e2e8f0; border-collapse: collapse;">
+          <tr style="border-bottom: 1px solid #334155;">
+            <td style="padding: 10px 0;"><strong>FREE</strong></td>
+            <td style="padding: 10px 0; text-align: right;">$0/mo - 1 bot</td>
+          </tr>
+          <tr style="border-bottom: 1px solid #334155;">
+            <td style="padding: 10px 0;"><strong>BASIC</strong></td>
+            <td style="padding: 10px 0; text-align: right;">$19/mo - 3 bots</td>
+          </tr>
+          <tr style="border-bottom: 1px solid #334155;">
+            <td style="padding: 10px 0;"><strong>PRO</strong></td>
+            <td style="padding: 10px 0; text-align: right;">$49/mo - 7 bots</td>
+          </tr>
+          <tr style="border-bottom: 1px solid #334155; background: linear-gradient(90deg, rgba(124,58,237,0.2) 0%, rgba(6,182,212,0.2) 100%);">
+            <td style="padding: 10px 0;"><strong style="color: #7c3aed;">PREMIUM</strong> (Most Popular)</td>
+            <td style="padding: 10px 0; text-align: right;"><strong>$109/mo - 11 Super Bots</strong></td>
+          </tr>
+          <tr>
+            <td style="padding: 10px 0;"><strong>ENTERPRISE</strong></td>
+            <td style="padding: 10px 0; text-align: right;">$450/mo - Unlimited</td>
+          </tr>
+        </table>
+        <p style="color: #64748b; font-size: 12px; margin-top: 15px;">
+          Add-ons: DropBot (+$39/mo) | Universal Market Maker (+$59/mo)
         </p>
       </div>
+      <p style="${EMAIL_STYLES.text}"><strong>What you'll unlock:</strong></p>
+      <ul style="${EMAIL_STYLES.list}">
+        <li>More AI Bots - Access 154+ trading strategies</li>
+        <li>Advanced Analytics - Institutional-grade tools</li>
+        <li>Real-Time Execution - Lightning-fast trades</li>
+        <li>Custom Strategies - Build your own bots</li>
+        <li>Priority Support - Dedicated account manager</li>
+      </ul>
       <div style="text-align: center;">
-        <a href="https://timebeyondus.com/upgrade" style="${EMAIL_STYLES.button}">Upgrade to Premium</a>
+        <a href="https://timebeyondus.com/upgrade" style="${EMAIL_STYLES.button}">View All Plans</a>
       </div>
-      <p style="${EMAIL_STYLES.text}" style="text-align: center; color: #64748b;">
-        Starting at just $59/month
-      </p>
     </div>
     <div style="${EMAIL_STYLES.footer}">
       <p>© 2025 TIME Trading. All rights reserved.</p>
@@ -266,35 +282,44 @@ export const getWelcomeDay7Template = (data: TemplateData): string => `
 export const getWelcomeDay14Template = (data: TemplateData): string => `
   <div style="${EMAIL_STYLES.container}">
     <div style="${EMAIL_STYLES.header}">
-      <h1 style="${EMAIL_STYLES.headerTitle}">🎁 Special Offer Inside</h1>
-      <p style="${EMAIL_STYLES.headerSubtitle}">50% Off Premium - Expires in 48 Hours</p>
+      <h1 style="${EMAIL_STYLES.headerTitle}">Special Offer Inside</h1>
+      <p style="${EMAIL_STYLES.headerSubtitle}">50% Off Your First Month - Expires in 48 Hours</p>
     </div>
     <div style="${EMAIL_STYLES.body}">
-      <h2 style="${EMAIL_STYLES.bodyTitle}">Limited Time: 50% Off Premium! 🚀</h2>
+      <h2 style="${EMAIL_STYLES.bodyTitle}">Limited Time: 50% Off Your First Month!</h2>
       <p style="${EMAIL_STYLES.text}">
         ${data.userName}, you've been with TIME for 2 weeks now, and we want to reward you
         with an exclusive offer.
       </p>
       <div style="background: linear-gradient(135deg, #7c3aed 0%, #06b6d4 100%); padding: 30px; border-radius: 12px; text-align: center; margin: 30px 0;">
         <p style="color: white; font-size: 36px; margin: 0; font-weight: bold;">50% OFF</p>
-        <p style="color: rgba(255,255,255,0.9); font-size: 20px; margin: 10px 0;">Premium Membership</p>
-        <p style="color: rgba(255,255,255,0.8); font-size: 16px; margin: 0;">Just $29.50/month (normally $59)</p>
+        <p style="color: rgba(255,255,255,0.9); font-size: 20px; margin: 10px 0;">Your First Month</p>
+        <p style="color: rgba(255,255,255,0.8); font-size: 16px; margin: 0;">PREMIUM just $54.50/month (normally $109)</p>
       </div>
-      <p style="${EMAIL_STYLES.text}"><strong>This exclusive offer includes:</strong></p>
+      <div style="background: #0f172a; padding: 20px; border-radius: 8px; margin: 20px 0;">
+        <p style="color: #10b981; margin: 0 0 10px 0;"><strong>All plans 50% off first month:</strong></p>
+        <ul style="${EMAIL_STYLES.list}">
+          <li>BASIC: $9.50/mo (then $19/mo) - 3 bots</li>
+          <li>PRO: $24.50/mo (then $49/mo) - 7 bots</li>
+          <li>PREMIUM: $54.50/mo (then $109/mo) - 11 Super Bots</li>
+          <li>ENTERPRISE: $225/mo (then $450/mo) - Unlimited</li>
+        </ul>
+      </div>
+      <p style="${EMAIL_STYLES.text}"><strong>What you'll get:</strong></p>
       <ul style="${EMAIL_STYLES.list}">
-        <li>✅ Full access to 154+ AI trading bots</li>
-        <li>✅ Advanced analytics & backtesting tools</li>
-        <li>✅ Priority support with dedicated account manager</li>
-        <li>✅ Exclusive trading academy courses</li>
-        <li>✅ Early access to new features</li>
+        <li>Full access to 154+ AI trading bots</li>
+        <li>Advanced analytics & backtesting tools</li>
+        <li>Priority support with dedicated account manager</li>
+        <li>Exclusive trading academy courses</li>
+        <li>Early access to new features</li>
       </ul>
       <p style="${EMAIL_STYLES.text}">
-        <strong style="color: #ef4444;">⏰ Offer expires in 48 hours!</strong>
+        <strong style="color: #ef4444;">Offer expires in 48 hours!</strong>
       </p>
       <div style="text-align: center;">
         <a href="https://timebeyondus.com/upgrade?promo=WELCOME50" style="${EMAIL_STYLES.button}">Claim 50% Off Now</a>
       </div>
-      <p style="${EMAIL_STYLES.text}" style="text-align: center; color: #64748b; font-size: 12px;">
+      <p style="text-align: center; color: #64748b; font-size: 12px; margin-top: 10px;">
         Use code: WELCOME50 at checkout
       </p>
     </div>
