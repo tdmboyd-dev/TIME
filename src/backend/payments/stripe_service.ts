@@ -655,112 +655,111 @@ export class StripeService extends EventEmitter {
 
     logger.info(`Subscription reactivated for user ${userId}`);
   }
-}
 
-// ============================================================
-// ADD-ON CHECKOUT SESSION
-// ============================================================
+  // ============================================================
+  // ADD-ON CHECKOUT SESSION
+  // ============================================================
 
-/**
- * Create a checkout session for add-on purchase
- */
-public async createAddOnCheckoutSession(
-  userId: string,
-  addOnId: string,
-  successUrl: string,
-  cancelUrl: string,
-  customerEmail?: string
-): Promise<CheckoutSessionData> {
-  try {
-    const addOn = ADD_ONS[addOnId.toUpperCase()];
-    if (!addOn) {
-      throw new Error(`Invalid add-on: ${addOnId}`);
-    }
+  /**
+   * Create a checkout session for add-on purchase
+   */
+  public async createAddOnCheckoutSession(
+    userId: string,
+    addOnId: string,
+    successUrl: string,
+    cancelUrl: string,
+    customerEmail?: string
+  ): Promise<CheckoutSessionData> {
+    try {
+      const addOn = ADD_ONS[addOnId.toUpperCase()];
+      if (!addOn) {
+        throw new Error(`Invalid add-on: ${addOnId}`);
+      }
 
-    if (!addOn.priceId) {
-      throw new Error(`Price ID not configured for add-on: ${addOnId}`);
-    }
+      if (!addOn.priceId) {
+        throw new Error(`Price ID not configured for add-on: ${addOnId}`);
+      }
 
-    // Create or retrieve customer
-    let customer: Stripe.Customer | undefined;
-    const existingSub = Array.from(this.subscriptions.values()).find(
-      (sub) => sub.userId === userId
-    );
+      // Create or retrieve customer
+      let customer: Stripe.Customer | undefined;
+      const existingSub = Array.from(this.subscriptions.values()).find(
+        (sub) => sub.userId === userId
+      );
 
-    if (existingSub?.customerId) {
-      customer = await this.stripe.customers.retrieve(existingSub.customerId) as Stripe.Customer;
-    } else if (customerEmail) {
-      customer = await this.stripe.customers.create({
-        email: customerEmail,
-        metadata: {
-          userId,
-        },
-      });
-    }
+      if (existingSub?.customerId) {
+        customer = await this.stripe.customers.retrieve(existingSub.customerId) as Stripe.Customer;
+      } else if (customerEmail) {
+        customer = await this.stripe.customers.create({
+          email: customerEmail,
+          metadata: {
+            userId,
+          },
+        });
+      }
 
-    const session = await this.stripe.checkout.sessions.create({
-      customer: customer?.id,
-      customer_email: !customer && customerEmail ? customerEmail : undefined,
-      mode: 'subscription',
-      payment_method_types: ['card'],
-      line_items: [
-        {
-          price: addOn.priceId,
-          quantity: 1,
-        },
-      ],
-      success_url: successUrl,
-      cancel_url: cancelUrl,
-      metadata: {
-        userId,
-        addOn: addOn.id,
-        type: 'add-on',
-      },
-      subscription_data: {
+      const session = await this.stripe.checkout.sessions.create({
+        customer: customer?.id,
+        customer_email: !customer && customerEmail ? customerEmail : undefined,
+        mode: 'subscription',
+        payment_method_types: ['card'],
+        line_items: [
+          {
+            price: addOn.priceId,
+            quantity: 1,
+          },
+        ],
+        success_url: successUrl,
+        cancel_url: cancelUrl,
         metadata: {
           userId,
           addOn: addOn.id,
           type: 'add-on',
         },
-      },
-      allow_promotion_codes: true,
-    });
+        subscription_data: {
+          metadata: {
+            userId,
+            addOn: addOn.id,
+            type: 'add-on',
+          },
+        },
+        allow_promotion_codes: true,
+      });
 
-    logger.info(`Add-on checkout session created for user ${userId}, add-on ${addOn.name}`, {
-      sessionId: session.id,
-    });
+      logger.info(`Add-on checkout session created for user ${userId}, add-on ${addOn.name}`, {
+        sessionId: session.id,
+      });
 
-    return {
-      sessionId: session.id,
-      url: session.url!,
-      customerId: customer?.id,
-    };
-  } catch (error: any) {
-    logger.error('Failed to create add-on checkout session', { error: error.message });
-    throw error;
+      return {
+        sessionId: session.id,
+        url: session.url!,
+        customerId: customer?.id,
+      };
+    } catch (error: any) {
+      logger.error('Failed to create add-on checkout session', { error: error.message });
+      throw error;
+    }
   }
-}
 
-/**
- * Get available add-ons
- */
-public getAvailableAddOns(): AddOn[] {
-  return Object.values(ADD_ONS);
-}
+  /**
+   * Get available add-ons
+   */
+  public getAvailableAddOns(): AddOn[] {
+    return Object.values(ADD_ONS);
+  }
 
-/**
- * Get user's active add-ons
- */
-public async getUserAddOns(userId: string): Promise<string[]> {
-  const userSubs = Array.from(this.subscriptions.values()).filter(
-    (sub) => sub.userId === userId && sub.status === 'active'
-  );
+  /**
+   * Get user's active add-ons
+   */
+  public async getUserAddOns(userId: string): Promise<string[]> {
+    const userSubs = Array.from(this.subscriptions.values()).filter(
+      (sub) => sub.userId === userId && sub.status === 'active'
+    );
 
-  // Return add-ons from metadata (in a real implementation, this would be stored in DB)
-  return userSubs
-    .filter((sub) => (sub as any).addOn)
-    .map((sub) => (sub as any).addOn);
-}
+    // Return add-ons from metadata (in a real implementation, this would be stored in DB)
+    return userSubs
+      .filter((sub) => (sub as any).addOn)
+      .map((sub) => (sub as any).addOn);
+  }
 }
 
 // Export singleton instance

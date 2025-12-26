@@ -88,12 +88,12 @@ export class SendGridService {
         ],
         from: {
           email: options.from?.match(/<(.+)>/)?.[1] || options.from || FROM_EMAIL.match(/<(.+)>/)?.[1] || FROM_EMAIL,
-          name: options.from?.match(/^(.+)</)? [1].trim() || 'TIME Trading',
+          name: options.from?.match(/^(.+)</)?.[1]?.trim() || 'TIME Trading',
         },
         reply_to: options.replyTo
           ? {
               email: options.replyTo.match(/<(.+)>/)?.[1] || options.replyTo,
-              name: options.replyTo.match(/^(.+)</)? [1].trim(),
+              name: options.replyTo.match(/^(.+)</)?.[1]?.trim(),
             }
           : undefined,
         subject: options.subject,
