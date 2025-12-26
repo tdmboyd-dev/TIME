@@ -1337,23 +1337,271 @@ router.get('/autopost/status', (req: Request, res: Response) => {
   }
 });
 
-// Campaign management
+// ============================================================
+// CAMPAIGN MANAGEMENT (Enhanced)
+// ============================================================
+
+// In-memory storage for campaigns (replace with MongoDB in production)
+interface Campaign {
+  id: string;
+  name: string;
+  description: string;
+  type: 'email' | 'social' | 'referral' | 'affiliate' | 'ppc' | 'content' | 'multi-channel';
+  status: 'draft' | 'scheduled' | 'active' | 'paused' | 'completed' | 'archived';
+  startDate: Date;
+  endDate?: Date;
+  budget?: number;
+  spent: number;
+
+  // Targeting
+  targeting: {
+    segments: string[];
+    geoTargets: string[];
+    interests: string[];
+    excludeSegments: string[];
+    deviceTypes: ('desktop' | 'mobile' | 'tablet')[];
+    platforms: string[];
+  };
+
+  // Goals & KPIs
+  goals: {
+    impressions?: number;
+    clicks?: number;
+    conversions?: number;
+    signups?: number;
+    revenue?: number;
+    cpa?: number; // Cost per acquisition target
+    roas?: number; // Return on ad spend target
+  };
+
+  // Actual metrics
+  metrics: {
+    impressions: number;
+    uniqueReach: number;
+    clicks: number;
+    ctr: number;
+    conversions: number;
+    conversionRate: number;
+    signups: number;
+    revenue: number;
+    cpa: number;
+    roas: number;
+    engagements: number;
+    shares: number;
+    bounceRate: number;
+  };
+
+  // A/B Test variants
+  variants: Array<{
+    id: string;
+    name: string;
+    weight: number;
+    content: any;
+    impressions: number;
+    conversions: number;
+    conversionRate: number;
+    isWinner?: boolean;
+  }>;
+
+  // Assets
+  assets: Array<{
+    id: string;
+    type: 'image' | 'video' | 'html' | 'copy';
+    url: string;
+    name: string;
+  }>;
+
+  // Posts associated with campaign
+  posts: string[];
+
+  // UTM parameters
+  utmParams: {
+    source: string;
+    medium: string;
+    campaign: string;
+    term?: string;
+    content?: string;
+  };
+
+  // Schedule
+  schedule: {
+    timezone: string;
+    frequency: 'once' | 'daily' | 'weekly' | 'monthly' | 'custom';
+    daysOfWeek?: number[];
+    hoursOfDay?: number[];
+    customCron?: string;
+  };
+
+  // Metadata
+  createdBy: string;
+  createdAt: Date;
+  updatedAt: Date;
+  pausedAt?: Date;
+  completedAt?: Date;
+  notes: string[];
+  tags: string[];
+}
+
+const campaigns: Map<string, Campaign> = new Map();
+
+// Initialize sample campaigns
+const initializeSampleCampaigns = () => {
+  const samples: Campaign[] = [
+    {
+      id: 'camp_1',
+      name: 'New Year 2025 Promotion',
+      description: 'Drive signups with special holiday discounts',
+      type: 'multi-channel',
+      status: 'active',
+      startDate: new Date('2025-12-20'),
+      endDate: new Date('2026-01-15'),
+      budget: 5000,
+      spent: 1250,
+      targeting: {
+        segments: ['new_users', 'trial_users'],
+        geoTargets: ['US', 'UK', 'CA', 'AU'],
+        interests: ['trading', 'cryptocurrency', 'investing'],
+        excludeSegments: ['churned'],
+        deviceTypes: ['desktop', 'mobile', 'tablet'],
+        platforms: ['twitter', 'linkedin', 'email'],
+      },
+      goals: {
+        impressions: 100000,
+        clicks: 5000,
+        conversions: 500,
+        signups: 1000,
+        revenue: 25000,
+        cpa: 10,
+        roas: 5,
+      },
+      metrics: {
+        impressions: 45230,
+        uniqueReach: 38500,
+        clicks: 2340,
+        ctr: 5.17,
+        conversions: 234,
+        conversionRate: 10,
+        signups: 456,
+        revenue: 12500,
+        cpa: 5.34,
+        roas: 10,
+        engagements: 3456,
+        shares: 234,
+        bounceRate: 35.2,
+      },
+      variants: [
+        { id: 'v1', name: 'Control', weight: 50, content: {}, impressions: 22615, conversions: 100, conversionRate: 8.8 },
+        { id: 'v2', name: 'New CTA', weight: 50, content: {}, impressions: 22615, conversions: 134, conversionRate: 11.8, isWinner: true },
+      ],
+      assets: [],
+      posts: [],
+      utmParams: {
+        source: 'mixed',
+        medium: 'campaign',
+        campaign: 'newyear2025',
+      },
+      schedule: {
+        timezone: 'America/New_York',
+        frequency: 'daily',
+        hoursOfDay: [9, 12, 15, 18],
+      },
+      createdBy: 'admin',
+      createdAt: new Date('2025-12-15'),
+      updatedAt: new Date(),
+      notes: [],
+      tags: ['holiday', 'promotion', 'q1-2026'],
+    },
+  ];
+
+  samples.forEach(c => campaigns.set(c.id, c));
+};
+
+initializeSampleCampaigns();
+
 /**
  * GET /api/v1/marketing/campaigns
- * Get all marketing campaigns
+ * Get all marketing campaigns with filtering
  */
 router.get('/campaigns', (req: Request, res: Response) => {
   try {
-    const bot = getMarketingBot();
-    const campaigns = bot.getCampaigns();
+    const { status, type, startDate, endDate, limit = '50', offset = '0' } = req.query;
+
+    let allCampaigns = Array.from(campaigns.values());
+
+    // Filter by status
+    if (status) {
+      allCampaigns = allCampaigns.filter(c => c.status === status);
+    }
+
+    // Filter by type
+    if (type) {
+      allCampaigns = allCampaigns.filter(c => c.type === type);
+    }
+
+    // Filter by date range
+    if (startDate) {
+      const start = new Date(startDate as string);
+      allCampaigns = allCampaigns.filter(c => c.startDate >= start);
+    }
+    if (endDate) {
+      const end = new Date(endDate as string);
+      allCampaigns = allCampaigns.filter(c => !c.endDate || c.endDate <= end);
+    }
+
+    // Sort by start date descending
+    allCampaigns.sort((a, b) => b.startDate.getTime() - a.startDate.getTime());
+
+    // Pagination
+    const total = allCampaigns.length;
+    const paginatedCampaigns = allCampaigns.slice(
+      parseInt(offset as string),
+      parseInt(offset as string) + parseInt(limit as string)
+    );
 
     res.json({
       success: true,
-      count: campaigns.length,
-      campaigns,
+      summary: {
+        total,
+        active: Array.from(campaigns.values()).filter(c => c.status === 'active').length,
+        paused: Array.from(campaigns.values()).filter(c => c.status === 'paused').length,
+        scheduled: Array.from(campaigns.values()).filter(c => c.status === 'scheduled').length,
+        completed: Array.from(campaigns.values()).filter(c => c.status === 'completed').length,
+        totalBudget: Array.from(campaigns.values()).reduce((sum, c) => sum + (c.budget || 0), 0),
+        totalSpent: Array.from(campaigns.values()).reduce((sum, c) => sum + c.spent, 0),
+        totalRevenue: Array.from(campaigns.values()).reduce((sum, c) => sum + c.metrics.revenue, 0),
+      },
+      campaigns: paginatedCampaigns,
+      pagination: {
+        total,
+        limit: parseInt(limit as string),
+        offset: parseInt(offset as string),
+        hasMore: parseInt(offset as string) + parseInt(limit as string) < total,
+      },
     });
-  } catch {
-    res.status(500).json({ error: 'Failed to get campaigns' });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Failed to get campaigns' });
+  }
+});
+
+/**
+ * GET /api/v1/marketing/campaigns/:id
+ * Get detailed campaign information
+ */
+router.get('/campaigns/:id', (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const campaign = campaigns.get(id);
+
+    if (!campaign) {
+      return res.status(404).json({ error: 'Campaign not found' });
+    }
+
+    res.json({
+      success: true,
+      campaign,
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Failed to get campaign' });
   }
 });
 
@@ -1363,27 +1611,483 @@ router.get('/campaigns', (req: Request, res: Response) => {
  */
 router.post('/campaigns', (req: Request, res: Response) => {
   try {
-    const { name, description, startDate, endDate, goals } = req.body;
+    const user = (req as any).user;
+    const {
+      name,
+      description,
+      type = 'multi-channel',
+      startDate,
+      endDate,
+      budget,
+      targeting,
+      goals,
+      utmParams,
+      schedule,
+      tags,
+    } = req.body;
 
     if (!name || !startDate) {
       return res.status(400).json({ error: 'name and startDate are required' });
     }
 
-    const bot = getMarketingBot();
-    const campaign = bot.createCampaign(
+    const campaign: Campaign = {
+      id: `camp_${Date.now()}`,
       name,
-      description || '',
-      new Date(startDate),
-      endDate ? new Date(endDate) : undefined,
-      goals
-    );
+      description: description || '',
+      type,
+      status: new Date(startDate) > new Date() ? 'scheduled' : 'draft',
+      startDate: new Date(startDate),
+      endDate: endDate ? new Date(endDate) : undefined,
+      budget,
+      spent: 0,
+      targeting: targeting || {
+        segments: [],
+        geoTargets: [],
+        interests: [],
+        excludeSegments: [],
+        deviceTypes: ['desktop', 'mobile', 'tablet'],
+        platforms: [],
+      },
+      goals: goals || {},
+      metrics: {
+        impressions: 0,
+        uniqueReach: 0,
+        clicks: 0,
+        ctr: 0,
+        conversions: 0,
+        conversionRate: 0,
+        signups: 0,
+        revenue: 0,
+        cpa: 0,
+        roas: 0,
+        engagements: 0,
+        shares: 0,
+        bounceRate: 0,
+      },
+      variants: [],
+      assets: [],
+      posts: [],
+      utmParams: utmParams || {
+        source: 'time',
+        medium: 'campaign',
+        campaign: name.toLowerCase().replace(/\s+/g, '-'),
+      },
+      schedule: schedule || {
+        timezone: 'UTC',
+        frequency: 'once',
+      },
+      createdBy: user?.id || 'admin',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      notes: [],
+      tags: tags || [],
+    };
+
+    campaigns.set(campaign.id, campaign);
 
     res.json({
       success: true,
       campaign,
+      message: 'Campaign created successfully',
     });
-  } catch {
-    res.status(500).json({ error: 'Failed to create campaign' });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Failed to create campaign' });
+  }
+});
+
+/**
+ * PUT /api/v1/marketing/campaigns/:id
+ * Update a campaign
+ */
+router.put('/campaigns/:id', (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const updates = req.body;
+
+    const campaign = campaigns.get(id);
+    if (!campaign) {
+      return res.status(404).json({ error: 'Campaign not found' });
+    }
+
+    // Prevent certain updates based on status
+    if (campaign.status === 'completed' || campaign.status === 'archived') {
+      return res.status(400).json({ error: 'Cannot update completed or archived campaigns' });
+    }
+
+    const allowedFields = [
+      'name', 'description', 'endDate', 'budget', 'targeting',
+      'goals', 'schedule', 'tags', 'notes'
+    ];
+
+    allowedFields.forEach(field => {
+      if (updates[field] !== undefined) {
+        (campaign as any)[field] = updates[field];
+      }
+    });
+
+    campaign.updatedAt = new Date();
+    campaigns.set(id, campaign);
+
+    res.json({
+      success: true,
+      campaign,
+      message: 'Campaign updated successfully',
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Failed to update campaign' });
+  }
+});
+
+/**
+ * POST /api/v1/marketing/campaigns/:id/start
+ * Start/activate a campaign
+ */
+router.post('/campaigns/:id/start', (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const campaign = campaigns.get(id);
+
+    if (!campaign) {
+      return res.status(404).json({ error: 'Campaign not found' });
+    }
+
+    if (campaign.status === 'active') {
+      return res.status(400).json({ error: 'Campaign is already active' });
+    }
+
+    if (campaign.status === 'completed' || campaign.status === 'archived') {
+      return res.status(400).json({ error: 'Cannot start completed or archived campaigns' });
+    }
+
+    campaign.status = 'active';
+    campaign.updatedAt = new Date();
+    campaigns.set(id, campaign);
+
+    res.json({
+      success: true,
+      campaign,
+      message: 'Campaign started successfully',
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Failed to start campaign' });
+  }
+});
+
+/**
+ * POST /api/v1/marketing/campaigns/:id/pause
+ * Pause an active campaign
+ */
+router.post('/campaigns/:id/pause', (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { reason } = req.body;
+
+    const campaign = campaigns.get(id);
+    if (!campaign) {
+      return res.status(404).json({ error: 'Campaign not found' });
+    }
+
+    if (campaign.status !== 'active') {
+      return res.status(400).json({ error: 'Only active campaigns can be paused' });
+    }
+
+    campaign.status = 'paused';
+    campaign.pausedAt = new Date();
+    campaign.updatedAt = new Date();
+    if (reason) {
+      campaign.notes.push(`Paused: ${reason} (${new Date().toISOString()})`);
+    }
+
+    campaigns.set(id, campaign);
+
+    res.json({
+      success: true,
+      campaign,
+      message: 'Campaign paused successfully',
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Failed to pause campaign' });
+  }
+});
+
+/**
+ * POST /api/v1/marketing/campaigns/:id/resume
+ * Resume a paused campaign
+ */
+router.post('/campaigns/:id/resume', (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const campaign = campaigns.get(id);
+
+    if (!campaign) {
+      return res.status(404).json({ error: 'Campaign not found' });
+    }
+
+    if (campaign.status !== 'paused') {
+      return res.status(400).json({ error: 'Only paused campaigns can be resumed' });
+    }
+
+    campaign.status = 'active';
+    campaign.updatedAt = new Date();
+    campaign.notes.push(`Resumed (${new Date().toISOString()})`);
+
+    campaigns.set(id, campaign);
+
+    res.json({
+      success: true,
+      campaign,
+      message: 'Campaign resumed successfully',
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Failed to resume campaign' });
+  }
+});
+
+/**
+ * POST /api/v1/marketing/campaigns/:id/complete
+ * Mark a campaign as completed
+ */
+router.post('/campaigns/:id/complete', (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const campaign = campaigns.get(id);
+
+    if (!campaign) {
+      return res.status(404).json({ error: 'Campaign not found' });
+    }
+
+    campaign.status = 'completed';
+    campaign.completedAt = new Date();
+    campaign.updatedAt = new Date();
+
+    campaigns.set(id, campaign);
+
+    res.json({
+      success: true,
+      campaign,
+      message: 'Campaign marked as completed',
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Failed to complete campaign' });
+  }
+});
+
+/**
+ * DELETE /api/v1/marketing/campaigns/:id
+ * Archive a campaign (soft delete)
+ */
+router.delete('/campaigns/:id', (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const campaign = campaigns.get(id);
+
+    if (!campaign) {
+      return res.status(404).json({ error: 'Campaign not found' });
+    }
+
+    campaign.status = 'archived';
+    campaign.updatedAt = new Date();
+
+    campaigns.set(id, campaign);
+
+    res.json({
+      success: true,
+      message: 'Campaign archived successfully',
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Failed to archive campaign' });
+  }
+});
+
+/**
+ * GET /api/v1/marketing/campaigns/:id/analytics
+ * Get detailed analytics for a campaign
+ */
+router.get('/campaigns/:id/analytics', (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { period = '7d' } = req.query;
+
+    const campaign = campaigns.get(id);
+    if (!campaign) {
+      return res.status(404).json({ error: 'Campaign not found' });
+    }
+
+    // Generate time-series data based on period
+    const days = period === '30d' ? 30 : period === '7d' ? 7 : 1;
+    const dailyData = Array.from({ length: days }, (_, i) => {
+      const date = new Date();
+      date.setDate(date.getDate() - (days - 1 - i));
+      return {
+        date: date.toISOString().split('T')[0],
+        impressions: Math.floor(campaign.metrics.impressions / days * (0.8 + Math.random() * 0.4)),
+        clicks: Math.floor(campaign.metrics.clicks / days * (0.8 + Math.random() * 0.4)),
+        conversions: Math.floor(campaign.metrics.conversions / days * (0.8 + Math.random() * 0.4)),
+        revenue: Math.floor(campaign.metrics.revenue / days * (0.8 + Math.random() * 0.4)),
+        spend: Math.floor(campaign.spent / days * (0.8 + Math.random() * 0.4)),
+      };
+    });
+
+    // Calculate goal progress
+    const goalProgress = {
+      impressions: campaign.goals.impressions
+        ? { current: campaign.metrics.impressions, target: campaign.goals.impressions, percent: (campaign.metrics.impressions / campaign.goals.impressions * 100).toFixed(1) }
+        : null,
+      clicks: campaign.goals.clicks
+        ? { current: campaign.metrics.clicks, target: campaign.goals.clicks, percent: (campaign.metrics.clicks / campaign.goals.clicks * 100).toFixed(1) }
+        : null,
+      conversions: campaign.goals.conversions
+        ? { current: campaign.metrics.conversions, target: campaign.goals.conversions, percent: (campaign.metrics.conversions / campaign.goals.conversions * 100).toFixed(1) }
+        : null,
+      signups: campaign.goals.signups
+        ? { current: campaign.metrics.signups, target: campaign.goals.signups, percent: (campaign.metrics.signups / campaign.goals.signups * 100).toFixed(1) }
+        : null,
+      revenue: campaign.goals.revenue
+        ? { current: campaign.metrics.revenue, target: campaign.goals.revenue, percent: (campaign.metrics.revenue / campaign.goals.revenue * 100).toFixed(1) }
+        : null,
+    };
+
+    // Variant performance (A/B test results)
+    const variantPerformance = campaign.variants.map(v => ({
+      ...v,
+      lift: v.isWinner ? '+' + ((v.conversionRate / (campaign.variants.find(vv => !vv.isWinner)?.conversionRate || 1) - 1) * 100).toFixed(1) + '%' : 'baseline',
+    }));
+
+    res.json({
+      success: true,
+      campaignId: id,
+      period,
+      summary: {
+        ...campaign.metrics,
+        budget: campaign.budget,
+        spent: campaign.spent,
+        remaining: (campaign.budget || 0) - campaign.spent,
+        daysRemaining: campaign.endDate ? Math.ceil((campaign.endDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)) : null,
+        roi: campaign.spent > 0 ? ((campaign.metrics.revenue - campaign.spent) / campaign.spent * 100).toFixed(1) : 0,
+      },
+      dailyData,
+      goalProgress,
+      variantPerformance,
+      topPerformingPlatforms: campaign.targeting.platforms.map(p => ({
+        platform: p,
+        clicks: Math.floor(campaign.metrics.clicks / campaign.targeting.platforms.length * (0.5 + Math.random())),
+        conversions: Math.floor(campaign.metrics.conversions / campaign.targeting.platforms.length * (0.5 + Math.random())),
+      })).sort((a, b) => b.conversions - a.conversions),
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Failed to get campaign analytics' });
+  }
+});
+
+/**
+ * POST /api/v1/marketing/campaigns/:id/variants
+ * Add A/B test variant to campaign
+ */
+router.post('/campaigns/:id/variants', (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { name, weight, content } = req.body;
+
+    const campaign = campaigns.get(id);
+    if (!campaign) {
+      return res.status(404).json({ error: 'Campaign not found' });
+    }
+
+    if (!name || weight === undefined) {
+      return res.status(400).json({ error: 'name and weight are required' });
+    }
+
+    // Validate total weight doesn't exceed 100
+    const totalWeight = campaign.variants.reduce((sum, v) => sum + v.weight, 0) + weight;
+    if (totalWeight > 100) {
+      return res.status(400).json({ error: 'Total variant weight cannot exceed 100%' });
+    }
+
+    const variant = {
+      id: `var_${Date.now()}`,
+      name,
+      weight,
+      content: content || {},
+      impressions: 0,
+      conversions: 0,
+      conversionRate: 0,
+    };
+
+    campaign.variants.push(variant);
+    campaign.updatedAt = new Date();
+    campaigns.set(id, campaign);
+
+    res.json({
+      success: true,
+      variant,
+      message: 'Variant added successfully',
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Failed to add variant' });
+  }
+});
+
+/**
+ * POST /api/v1/marketing/campaigns/:id/duplicate
+ * Duplicate a campaign
+ */
+router.post('/campaigns/:id/duplicate', (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { name } = req.body;
+    const user = (req as any).user;
+
+    const original = campaigns.get(id);
+    if (!original) {
+      return res.status(404).json({ error: 'Campaign not found' });
+    }
+
+    const duplicate: Campaign = {
+      ...JSON.parse(JSON.stringify(original)),
+      id: `camp_${Date.now()}`,
+      name: name || `${original.name} (Copy)`,
+      status: 'draft',
+      spent: 0,
+      metrics: {
+        impressions: 0,
+        uniqueReach: 0,
+        clicks: 0,
+        ctr: 0,
+        conversions: 0,
+        conversionRate: 0,
+        signups: 0,
+        revenue: 0,
+        cpa: 0,
+        roas: 0,
+        engagements: 0,
+        shares: 0,
+        bounceRate: 0,
+      },
+      variants: original.variants.map(v => ({
+        ...v,
+        id: `var_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        impressions: 0,
+        conversions: 0,
+        conversionRate: 0,
+        isWinner: undefined,
+      })),
+      createdBy: user?.id || 'admin',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      pausedAt: undefined,
+      completedAt: undefined,
+      notes: [`Duplicated from ${original.id}`],
+    };
+
+    campaigns.set(duplicate.id, duplicate);
+
+    res.json({
+      success: true,
+      campaign: duplicate,
+      message: 'Campaign duplicated successfully',
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Failed to duplicate campaign' });
   }
 });
 

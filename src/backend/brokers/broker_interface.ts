@@ -7,12 +7,12 @@
 
 import { EventEmitter } from 'events';
 
-// Order types
-export type OrderType = 'market' | 'limit' | 'stop' | 'stop_limit';
+// Order types - Extended for full broker support
+export type OrderType = 'market' | 'limit' | 'stop' | 'stop_limit' | 'trailing_stop' | 'take_profit' | 'take_profit_limit';
 export type OrderSide = 'buy' | 'sell';
-export type OrderStatus = 'pending' | 'open' | 'filled' | 'partial' | 'cancelled' | 'rejected';
+export type OrderStatus = 'pending' | 'open' | 'filled' | 'partial' | 'cancelled' | 'rejected' | 'expired';
 export type PositionSide = 'long' | 'short' | 'flat';
-export type TimeInForce = 'day' | 'gtc' | 'ioc' | 'fok';
+export type TimeInForce = 'day' | 'gtc' | 'ioc' | 'fok' | 'gtd'; // gtd = good till date
 
 // Account types
 export type AccountType = 'cash' | 'margin' | 'paper';
@@ -64,7 +64,7 @@ export interface Tick {
   timestamp: Date;
 }
 
-// Order interface
+// Order interface - Extended for all order types
 export interface Order {
   id: string;
   clientOrderId?: string;
@@ -82,6 +82,19 @@ export interface Order {
   cancelledAt?: Date;
   averageFilledPrice?: number;
   commission?: number;
+  // Trailing stop info
+  trailingDelta?: number;
+  trailingPercent?: number;
+  activationPrice?: number; // Price at which trailing stop activates
+  // Bracket order info
+  takeProfitOrderId?: string;
+  stopLossOrderId?: string;
+  parentOrderId?: string;
+  // Additional info
+  reduceOnly?: boolean;
+  leverage?: number;
+  marginMode?: 'cross' | 'isolated';
+  rejectReason?: string;
 }
 
 // Position interface
@@ -123,7 +136,7 @@ export interface BrokerTrade {
   timestamp: Date;
 }
 
-// Order request
+// Order request - Extended for all order types
 export interface OrderRequest {
   symbol: string;
   side: OrderSide;
@@ -135,9 +148,18 @@ export interface OrderRequest {
   clientOrderId?: string;
   takeProfit?: number;
   stopLoss?: number;
+  // Trailing stop parameters
+  trailingDelta?: number; // Trailing amount in absolute terms
+  trailingPercent?: number; // Trailing amount as percentage
+  // Extended parameters
+  reduceOnly?: boolean; // For futures - only reduce position
+  postOnly?: boolean; // Maker only
+  leverage?: number; // For futures
+  marginMode?: 'cross' | 'isolated';
+  goodTillDate?: Date; // For GTD orders
 }
 
-// Broker configuration
+// Broker configuration - Extended for all brokers
 export interface BrokerConfig {
   apiKey: string;
   apiSecret: string;
@@ -145,6 +167,26 @@ export interface BrokerConfig {
   isPaper?: boolean;
   timeout?: number;
   retryAttempts?: number;
+  retryDelayMs?: number;
+  // Connection options
+  host?: string;
+  port?: number;
+  clientId?: number;
+  passphrase?: string; // For exchanges requiring passphrase
+  accountId?: string;
+  // WebSocket options
+  wsUrl?: string;
+  enableWebSocket?: boolean;
+  reconnectOnClose?: boolean;
+  heartbeatInterval?: number;
+}
+
+// Retry configuration
+export interface RetryConfig {
+  maxAttempts: number;
+  baseDelayMs: number;
+  maxDelayMs: number;
+  exponentialBackoff: boolean;
 }
 
 // Broker capabilities
