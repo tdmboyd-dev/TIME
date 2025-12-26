@@ -1,0 +1,108 @@
+{
+  "app_name": "TIME BEYOND US",
+  "subtitle": "AI Trading & Bot Platform",
+  "short_description": "AI-powered trading bots. Build, deploy, and profit with automated strategies.",
+  "full_description": "TIME BEYOND US is the ultimate AI-powered trading platform that puts professional-grade trading tools in your pocket.\n\n\ud83e\udd16 AUTOMATED TRADING BOTS\n\u2022 Create custom trading bots in seconds with AI\n\u2022 25+ pre-built strategy templates\n\u2022 Works with stocks, crypto, forex, options & futures\n\n\ud83d\udcca REAL-TIME PORTFOLIO TRACKING\n\u2022 Live P&L updates\n\u2022 Multi-broker integration\n\u2022 Performance analytics\n\n\ud83d\udce1 ADVANCED TRADING TOOLS\n\u2022 AI-powered trading signals\n\u2022 Technical analysis charts\n\u2022 Price alerts & notifications\n\n\ud83c\udfea BOT MARKETPLACE\n\u2022 Subscribe to top-performing bots\n\u2022 Share your strategies and earn\n\u2022 TIMEBEUNUS fusion for +15% performance boost\n\n\ud83d\udd12 SECURITY FIRST\n\u2022 Biometric authentication (Face ID / Fingerprint)\n\u2022 Bank-grade encryption\n\u2022 Never stores your broker credentials\n\n\ud83d\udcb0 SUBSCRIPTION TIERS:\n\u2022 FREE: 1 bot, paper trading\n\u2022 BASIC ($19/mo): 3 bots, $5K capital\n\u2022 PRO ($49/mo): 7 bots, $25K capital\n\u2022 PREMIUM ($99/mo): 15 bots, $100K capital\n\u2022 ENTERPRISE ($249/mo): Unlimited bots\n\nStart with $100 and let AI build profitable trading bots for you!\n\nDownload now and transform how you trade.",
+  "keywords": "trading,bots,ai,stocks,crypto,forex,automated,investing,portfolio,alerts,signals,strategy",
+  "category_primary": "Finance",
+  "category_secondary": "Business",
+  "age_rating": "17+",
+  "privacy_policy_url": "https://timebeyondus.com/privacy",
+  "terms_url": "https://timebeyondus.com/terms",
+  "support_url": "https://timebeyondus.com/support",
+  "marketing_url": "https://timebeyondus.com",
+  "promotional_text": "Build your own AI trading bots in seconds - no coding required!",
+  "whats_new": "Version 1.0 - Initial Release\n\u2022 AI-powered bot builder\n\u2022 25+ strategy templates\n\u2022 Real-time portfolio tracking\n\u2022 Bot marketplace\n\u2022 Biometric security\n\u2022 Push notifications",
+  "subscription_products": {
+    "ios": [
+      {
+        "product_id": "time_basic_monthly",
+        "name": "BASIC Monthly",
+        "price": 19.99,
+        "description": "3 bots, $5K capital limit, basic support"
+      },
+      {
+        "product_id": "time_pro_monthly",
+        "name": "PRO Monthly",
+        "price": 49.99,
+        "description": "7 bots, $25K capital limit, priority support"
+      },
+      {
+        "product_id": "time_premium_monthly",
+        "name": "PREMIUM Monthly",
+        "price": 99.99,
+        "description": "15 bots, $100K capital limit, 24/7 support"
+      },
+      {
+        "product_id": "time_enterprise_monthly",
+        "name": "ENTERPRISE Monthly",
+        "price": 249.99,
+        "description": "Unlimited bots, unlimited capital, dedicated support"
+      }
+    ],
+    "android": [
+      {
+        "product_id": "time_basic_monthly",
+        "name": "BASIC Monthly",
+        "price": 19.99
+      },
+      {
+        "product_id": "time_pro_monthly",
+        "name": "PRO Monthly",
+        "price": 49.99
+      },
+      {
+        "product_id": "time_premium_monthly",
+        "name": "PREMIUM Monthly",
+        "price": 99.99
+      },
+      {
+        "product_id": "time_enterprise_monthly",
+        "name": "ENTERPRISE Monthly",
+        "price": 249.99
+      }
+    ]
+  },
+  "screenshots": {
+    "iphone_6_7": {
+      "size": "1290x2796",
+      "count": 6,
+      "descriptions": [
+        "Dashboard - Your trading command center",
+        "AI Bot Builder - Create bots in seconds",
+        "Live Trading - Execute with precision",
+        "Portfolio - Track your performance",
+        "Leaderboard - Compete with traders",
+        "Bot Marketplace - Subscribe to winning strategies"
+      ]
+    },
+    "iphone_6_5": {
+      "size": "1284x2778",
+      "count": 6
+    },
+    "iphone_5_5": {
+      "size": "1242x2208",
+      "count": 6
+    },
+    "ipad_12_9": {
+      "size": "2048x2732",
+      "count": 5
+    },
+    "android_phone": {
+      "size": "1080x1920",
+      "count": 8
+    },
+    "android_tablet": {
+      "size": "1920x1080",
+      "count": 5
+    }
+  },
+  "feature_graphic_android": {
+    "size": "1024x500",
+    "tagline": "AI Trading Bots | Build. Deploy. Profit."
+  },
+  "localization": {
+    "supported": ["en-US"],
+    "planned": ["es-ES", "fr-FR", "de-DE", "zh-CN", "ja-JP"]
+  }
+}

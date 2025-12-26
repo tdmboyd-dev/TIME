@@ -16,14 +16,19 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.timebeyondus.trading",
+      "associatedDomains": ["applinks:timebeyondus.com"],
       "infoPlist": {
         "NSFaceIDUsageDescription": "Use Face ID to securely log in to TIME BEYOND US",
         "NSCameraUsageDescription": "Allow camera access for QR code scanning",
-        "NSUserTrackingUsageDescription": "This identifier will be used to deliver personalized trading insights"
+        "NSUserTrackingUsageDescription": "This identifier will be used to deliver personalized trading insights",
+        "ITSAppUsesNonExemptEncryption": false
       },
       "buildNumber": "1",
       "config": {
         "usesNonExemptEncryption": false
+      },
+      "entitlements": {
+        "aps-environment": "production"
       }
     },
     "android": {
@@ -38,9 +43,25 @@
         "USE_FINGERPRINT",
         "VIBRATE",
         "RECEIVE_BOOT_COMPLETED",
-        "CAMERA"
+        "CAMERA",
+        "INTERNET",
+        "ACCESS_NETWORK_STATE"
       ],
-      "googleServicesFile": "./google-services.json"
+      "googleServicesFile": "./google-services.json",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "timebeyondus.com",
+              "pathPrefix": "/app"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png",
@@ -61,13 +82,26 @@
         {
           "faceIDPermission": "Allow TIME BEYOND US to use Face ID for secure authentication"
         }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "compileSdkVersion": 34,
+            "targetSdkVersion": 34,
+            "buildToolsVersion": "34.0.0"
+          },
+          "ios": {
+            "deploymentTarget": "15.0"
+          }
+        }
       ]
     ],
     "extra": {
       "apiUrl": "https://time-backend-hosting.fly.dev/api/v1",
       "wsUrl": "wss://time-backend-hosting.fly.dev",
       "eas": {
-        "projectId": "time-beyond-us"
+        "projectId": "YOUR_EAS_PROJECT_ID"
       }
     },
     "notification": {
@@ -78,10 +112,11 @@
     },
     "updates": {
       "fallbackToCacheTimeout": 0,
-      "url": "https://u.expo.dev/time-beyond-us"
+      "url": "https://u.expo.dev/YOUR_EAS_PROJECT_ID"
     },
     "runtimeVersion": {
       "policy": "sdkVersion"
-    }
+    },
+    "owner": "timebeyondus"
   }
 }
