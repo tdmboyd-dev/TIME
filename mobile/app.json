@@ -41,7 +41,7 @@
         "backgroundColor": "#020617"
       },
       "package": "com.timebeyondus.trading",
-      "versionCode": 8,
+      "versionCode": 11,
       "permissions": [
         "USE_BIOMETRIC",
         "USE_FINGERPRINT",
@@ -95,7 +95,8 @@
             "deploymentTarget": "15.0"
           }
         }
-      ]
+      ],
+      "expo-font"
     ],
     "extra": {
       "apiUrl": "https://time-backend-hosting.fly.dev/api/v1",
