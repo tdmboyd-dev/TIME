@@ -5,7 +5,7 @@
 
 import { LinkingOptions } from '@react-navigation/native';
 import * as Linking from 'expo-linking';
-import * as Notifications from 'expo-notifications';
+// Note: expo-notifications removed - Firebase not configured
 
 const prefix = Linking.createURL('/');
 
@@ -31,91 +31,9 @@ export type TabParamList = {
   Settings: undefined;
 };
 
-// Parse notification data to navigation state
-function getStateFromNotification(notification: Notifications.Notification | null) {
-  if (!notification) return undefined;
-
-  const data = notification.request.content.data as {
-    type?: string;
-    tradeId?: string;
-    botId?: string;
-    symbol?: string;
-  };
-
-  if (!data) return undefined;
-
-  switch (data.type) {
-    case 'trade':
-      if (data.tradeId) {
-        return {
-          routes: [
-            {
-              name: 'Main',
-              state: {
-                routes: [{ name: 'Portfolio' }],
-              },
-            },
-            {
-              name: 'TradeDetail',
-              params: { tradeId: data.tradeId },
-            },
-          ],
-        };
-      }
-      break;
-
-    case 'bot':
-      if (data.botId) {
-        return {
-          routes: [
-            {
-              name: 'Main',
-              state: {
-                routes: [{ name: 'Bots' }],
-              },
-            },
-            {
-              name: 'BotDetail',
-              params: { botId: data.botId },
-            },
-          ],
-        };
-      }
-      break;
-
-    case 'price':
-      if (data.symbol) {
-        return {
-          routes: [
-            {
-              name: 'Main',
-              state: {
-                routes: [
-                  {
-                    name: 'Trade',
-                    params: { symbol: data.symbol },
-                  },
-                ],
-              },
-            },
-          ],
-        };
-      }
-      break;
-
-    case 'system':
-      return {
-        routes: [
-          {
-            name: 'Main',
-            state: {
-              routes: [{ name: 'Alerts' }],
-            },
-          },
-        ],
-      };
-  }
-
+// Parse notification data to navigation state (stubbed - notifications disabled)
+function getStateFromNotification(notification: any | null) {
+  // Notifications disabled - Firebase not configured
   return undefined;
 }
 
@@ -153,23 +71,7 @@ export const linking: LinkingOptions<RootStackParamList> = {
     if (url != null) {
       return url;
     }
-
-    // Check if there is an initial notification
-    const response = await Notifications.getLastNotificationResponseAsync();
-    if (response?.notification) {
-      const state = getStateFromNotification(response.notification);
-      if (state) {
-        // Convert state to URL format
-        const route = state.routes[state.routes.length - 1];
-        if (route.name === 'TradeDetail' && route.params?.tradeId) {
-          return `${prefix}trade/detail/${route.params.tradeId}`;
-        }
-        if (route.name === 'BotDetail' && route.params?.botId) {
-          return `${prefix}bot/${route.params.botId}`;
-        }
-      }
-    }
-
+    // Notifications disabled - Firebase not configured
     return null;
   },
 
@@ -180,50 +82,11 @@ export const linking: LinkingOptions<RootStackParamList> = {
       listener(url);
     });
 
-    // Listen to notifications being pressed
-    const notificationSubscription =
-      Notifications.addNotificationResponseReceivedListener((response) => {
-        const data = response.notification.request.content.data as {
-          type?: string;
-          tradeId?: string;
-          botId?: string;
-          symbol?: string;
-        };
-
-        if (data) {
-          let url: string | null = null;
-
-          switch (data.type) {
-            case 'trade':
-              if (data.tradeId) {
-                url = `${prefix}trade/detail/${data.tradeId}`;
-              }
-              break;
-            case 'bot':
-              if (data.botId) {
-                url = `${prefix}bot/${data.botId}`;
-              }
-              break;
-            case 'price':
-              if (data.symbol) {
-                url = `${prefix}trade/${data.symbol}`;
-              }
-              break;
-            case 'system':
-              url = `${prefix}alerts`;
-              break;
-          }
-
-          if (url) {
-            listener(url);
-          }
-        }
-      });
+    // Notifications disabled - Firebase not configured
 
     return () => {
       // Clean up the event listeners
       linkingSubscription.remove();
-      notificationSubscription.remove();
     };
   },
 };

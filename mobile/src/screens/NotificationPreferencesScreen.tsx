@@ -16,7 +16,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import * as Notifications from 'expo-notifications';
+// Note: expo-notifications removed - Firebase not configured
 import { useSettingsStore } from '../store/settingsStore';
 import pushService from '../services/push';
 
@@ -129,9 +129,9 @@ export default function NotificationPreferencesScreen({ navigation }: any) {
 
   const initializeSettings = async () => {
     try {
-      // Check notification permission status
-      const { status } = await Notifications.getPermissionsAsync();
-      setPermissionGranted(status === 'granted');
+      // Check notification permission status (stubbed - Firebase not configured)
+      // When Firebase is configured, replace with actual permission check
+      setPermissionGranted(false);
 
       // Initialize preferences from store or defaults
       const defaultPrefs: Record<string, boolean> = {};

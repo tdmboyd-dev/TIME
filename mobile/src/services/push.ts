@@ -1,85 +1,13 @@
-import * as Notifications from 'expo-notifications';
-import * as Device from 'expo-device';
-import { Platform } from 'react-native';
-import Constants from 'expo-constants';
-
-// Configure notification behavior
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-  }),
-});
+// Push Notification Service - Stubbed version (expo-notifications removed temporarily)
+// TODO: Re-enable when Firebase is configured properly
 
 class PushNotificationService {
   private expoPushToken: string | null = null;
 
-  // Register for push notifications
+  // Register for push notifications - stubbed
   async registerForPushNotifications(): Promise<string | null> {
-    if (!Device.isDevice) {
-      console.log('Push notifications only work on physical devices');
-      return null;
-    }
-
-    try {
-      const { status: existingStatus } = await Notifications.getPermissionsAsync();
-      let finalStatus = existingStatus;
-
-      if (existingStatus !== 'granted') {
-        const { status } = await Notifications.requestPermissionsAsync();
-        finalStatus = status;
-      }
-
-      if (finalStatus !== 'granted') {
-        console.log('Failed to get push notification permissions');
-        return null;
-      }
-
-      // Get the Expo push token
-      const tokenData = await Notifications.getExpoPushTokenAsync({
-        projectId: Constants.expoConfig?.extra?.eas?.projectId,
-      });
-
-      this.expoPushToken = tokenData.data;
-
-      // Configure notification channel for Android
-      if (Platform.OS === 'android') {
-        await Notifications.setNotificationChannelAsync('default', {
-          name: 'Default',
-          importance: Notifications.AndroidImportance.MAX,
-          vibrationPattern: [0, 250, 250, 250],
-          lightColor: '#00ff88',
-        });
-
-        await Notifications.setNotificationChannelAsync('trades', {
-          name: 'Trade Alerts',
-          importance: Notifications.AndroidImportance.HIGH,
-          vibrationPattern: [0, 250, 250, 250],
-          lightColor: '#00ff88',
-          sound: 'notification.wav',
-        });
-
-        await Notifications.setNotificationChannelAsync('bots', {
-          name: 'Bot Alerts',
-          importance: Notifications.AndroidImportance.DEFAULT,
-          vibrationPattern: [0, 250],
-          lightColor: '#6366f1',
-        });
-
-        await Notifications.setNotificationChannelAsync('price', {
-          name: 'Price Alerts',
-          importance: Notifications.AndroidImportance.DEFAULT,
-          vibrationPattern: [0, 250],
-          lightColor: '#22d3ee',
-        });
-      }
-
-      return this.expoPushToken;
-    } catch (error) {
-      console.error('Error registering for push notifications:', error);
-      return null;
-    }
+    console.log('Push notifications disabled - Firebase not configured');
+    return null;
   }
 
   // Get current push token
@@ -87,187 +15,129 @@ class PushNotificationService {
     return this.expoPushToken;
   }
 
-  // Schedule a local notification
+  // Schedule a local notification - stubbed
   async scheduleLocalNotification(
     title: string,
     body: string,
     data?: any,
     triggerSeconds: number = 0
   ): Promise<string> {
-    return await Notifications.scheduleNotificationAsync({
-      content: {
-        title,
-        body,
-        data,
-        sound: true,
-        priority: Notifications.AndroidNotificationPriority.HIGH,
-      },
-      trigger: triggerSeconds > 0 ? { seconds: triggerSeconds } : null,
-    });
+    console.log('Local notification (stubbed):', title, body);
+    return 'stub-notification-id';
   }
 
-  // Cancel a scheduled notification
+  // Cancel a scheduled notification - stubbed
   async cancelScheduledNotification(notificationId: string): Promise<void> {
-    await Notifications.cancelScheduledNotificationAsync(notificationId);
+    console.log('Cancel notification (stubbed):', notificationId);
   }
 
-  // Cancel all scheduled notifications
+  // Cancel all scheduled notifications - stubbed
   async cancelAllScheduledNotifications(): Promise<void> {
-    await Notifications.cancelAllScheduledNotificationsAsync();
+    console.log('Cancel all notifications (stubbed)');
   }
 
-  // Get badge count
+  // Get badge count - stubbed
   async getBadgeCount(): Promise<number> {
-    return await Notifications.getBadgeCountAsync();
+    return 0;
   }
 
-  // Set badge count
+  // Set badge count - stubbed
   async setBadgeCount(count: number): Promise<void> {
-    await Notifications.setBadgeCountAsync(count);
+    console.log('Set badge count (stubbed):', count);
   }
 
-  // Clear badge count
+  // Clear badge count - stubbed
   async clearBadgeCount(): Promise<void> {
-    await Notifications.setBadgeCountAsync(0);
+    console.log('Clear badge count (stubbed)');
   }
 
-  // Add notification received listener
-  addNotificationReceivedListener(
-    callback: (notification: Notifications.Notification) => void
-  ): Notifications.Subscription {
-    return Notifications.addNotificationReceivedListener(callback);
+  // Add notification received listener - stubbed
+  addNotificationReceivedListener(callback: (notification: any) => void): { remove: () => void } {
+    return { remove: () => {} };
   }
 
-  // Add notification response listener (when user taps notification)
-  addNotificationResponseReceivedListener(
-    callback: (response: Notifications.NotificationResponse) => void
-  ): Notifications.Subscription {
-    return Notifications.addNotificationResponseReceivedListener(callback);
+  // Add notification response listener - stubbed
+  addNotificationResponseReceivedListener(callback: (response: any) => void): { remove: () => void } {
+    return { remove: () => {} };
   }
 
-  // Remove all listeners
-  removeAllListeners(): void {
-    Notifications.removeNotificationSubscription;
-  }
+  // Remove all listeners - stubbed
+  removeAllListeners(): void {}
 
-  // Send notification to backend (to register device)
+  // Send notification to backend - stubbed
   async registerDeviceToken(token: string, userId: string): Promise<void> {
-    // This would call your backend API to register the device token
-    // Example:
-    // await apiService.registerPushToken(token, userId);
-    console.log('Registering device token:', token, 'for user:', userId);
+    console.log('Register device token (stubbed):', token, userId);
   }
 
-  // Create notification for trade execution
+  // Create notification for trade execution - stubbed
   async notifyTradeExecuted(
     symbol: string,
     side: 'buy' | 'sell',
     amount: number,
     price: number
   ): Promise<void> {
-    await this.scheduleLocalNotification(
-      'Trade Executed',
-      `${side.toUpperCase()} ${amount} ${symbol} at $${price}`,
-      {
-        type: 'trade',
-        symbol,
-        side,
-        amount,
-        price,
-      }
-    );
+    console.log('Trade notification (stubbed):', symbol, side, amount, price);
   }
 
-  // Create notification for bot alert
+  // Create notification for bot alert - stubbed
   async notifyBotAlert(botName: string, message: string, data?: any): Promise<void> {
-    await this.scheduleLocalNotification(
-      `Bot Alert: ${botName}`,
-      message,
-      {
-        type: 'bot',
-        botName,
-        ...data,
-      }
-    );
+    console.log('Bot alert notification (stubbed):', botName, message);
   }
 
-  // Create notification for price alert
+  // Create notification for price alert - stubbed
   async notifyPriceAlert(
     symbol: string,
     targetPrice: number,
     currentPrice: number
   ): Promise<void> {
-    await this.scheduleLocalNotification(
-      'Price Alert',
-      `${symbol} reached $${targetPrice} (current: $${currentPrice})`,
-      {
-        type: 'price',
-        symbol,
-        targetPrice,
-        currentPrice,
-      }
-    );
+    console.log('Price alert notification (stubbed):', symbol, targetPrice, currentPrice);
   }
 
-  // Get all scheduled notifications
-  async getAllScheduledNotifications(): Promise<Notifications.NotificationRequest[]> {
-    return await Notifications.getAllScheduledNotificationsAsync();
+  // Get all scheduled notifications - stubbed
+  async getAllScheduledNotifications(): Promise<any[]> {
+    return [];
   }
 
-  // Dismiss all notifications
+  // Dismiss all notifications - stubbed
   async dismissAllNotifications(): Promise<void> {
-    await Notifications.dismissAllNotificationsAsync();
+    console.log('Dismiss all notifications (stubbed)');
   }
 
-  // Dismiss a specific notification
+  // Dismiss a specific notification - stubbed
   async dismissNotification(notificationId: string): Promise<void> {
-    await Notifications.dismissNotificationAsync(notificationId);
+    console.log('Dismiss notification (stubbed):', notificationId);
   }
 
-  // Update notification preferences on backend
+  // Update notification preferences - stubbed
   async updateNotificationPreferences(preferences: Record<string, boolean>): Promise<void> {
-    try {
-      // This would call your backend API to update notification preferences
-      // await apiService.put('/notifications/preferences', preferences);
-      console.log('Updating notification preferences:', preferences);
-    } catch (error) {
-      console.error('Error updating notification preferences:', error);
-      throw error;
-    }
+    console.log('Update preferences (stubbed):', preferences);
   }
 
-  // Get notification preferences from backend
+  // Get notification preferences - stubbed
   async getNotificationPreferences(): Promise<Record<string, boolean>> {
-    try {
-      // This would call your backend API to get notification preferences
-      // return await apiService.get('/notifications/preferences');
-      return {
-        trades_executed: true,
-        trades_failed: true,
-        trades_pending: true,
-        trades_summary: true,
-        bots_signals: true,
-        bots_trades: true,
-        bots_status: true,
-        bots_performance: true,
-        bots_errors: true,
-        price_targets: true,
-        price_movement: true,
-        price_volatility: true,
-        portfolio_balance: true,
-        portfolio_performance: true,
-        portfolio_risk: true,
-        security_login: true,
-        security_changes: true,
-        security_suspicious: true,
-        marketing_news: false,
-        marketing_tips: false,
-        marketing_promotions: false,
-      };
-    } catch (error) {
-      console.error('Error getting notification preferences:', error);
-      return {};
-    }
+    return {
+      trades_executed: true,
+      trades_failed: true,
+      trades_pending: true,
+      trades_summary: true,
+      bots_signals: true,
+      bots_trades: true,
+      bots_status: true,
+      bots_performance: true,
+      bots_errors: true,
+      price_targets: true,
+      price_movement: true,
+      price_volatility: true,
+      portfolio_balance: true,
+      portfolio_performance: true,
+      portfolio_risk: true,
+      security_login: true,
+      security_changes: true,
+      security_suspicious: true,
+      marketing_news: false,
+      marketing_tips: false,
+      marketing_promotions: false,
+    };
   }
 }
 
