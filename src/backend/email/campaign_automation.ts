@@ -358,6 +358,104 @@ export class CampaignAutomation {
       logger.error('Failed to check expiring subscriptions', { error });
     }
   }
+
+  /**
+   * Handle abandoned cart event
+   * Triggers: Abandoned cart recovery email series (3 emails over 72 hours)
+   */
+  async onAbandonedCart(
+    userId: string,
+    userEmail: string,
+    userName: string,
+    cartData: {
+      planName: string;
+      planPrice: number;
+      planDescription?: string;
+      addons?: Array<{ name: string; price: number }>;
+      checkoutLink?: string;
+    }
+  ): Promise<void> {
+    try {
+      logger.info('Triggering abandoned cart campaign', { userId, plan: cartData.planName });
+
+      // Import email campaign manager
+      const { emailCampaignManager } = await import('./email_campaign_manager');
+
+      // Email 1: Send in 1 hour
+      await emailCampaignManager.sendEmail({
+        to: userEmail,
+        templateType: 'abandoned_cart_1',
+        templateData: { userName, ...cartData },
+        subject: 'You left something behind - Complete your upgrade',
+        userId,
+        campaignId: 'abandoned_cart',
+        scheduledAt: new Date(Date.now() + 60 * 60 * 1000),
+      });
+
+      // Email 2: Send in 24 hours
+      await emailCampaignManager.sendEmail({
+        to: userEmail,
+        templateType: 'abandoned_cart_2',
+        templateData: { userName, ...cartData },
+        subject: "Still thinking about it? Here's what you're missing",
+        userId,
+        campaignId: 'abandoned_cart',
+        scheduledAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      });
+
+      // Email 3: Send in 72 hours with discount
+      await emailCampaignManager.sendEmail({
+        to: userEmail,
+        templateType: 'abandoned_cart_3',
+        templateData: { userName, ...cartData },
+        subject: 'Final Chance: 20% OFF - Expires in 24 Hours',
+        userId,
+        campaignId: 'abandoned_cart',
+        scheduledAt: new Date(Date.now() + 72 * 60 * 60 * 1000),
+      });
+
+      logger.info('Abandoned cart campaign triggered', { userId });
+    } catch (error) {
+      logger.error('Failed to trigger abandoned cart campaign', { error, userId });
+    }
+  }
+
+  /**
+   * Send weekly newsletter digest
+   */
+  async sendWeeklyDigest(
+    userId: string,
+    userEmail: string,
+    userName: string,
+    digestData: {
+      marketSummary?: string;
+      marketStats?: { sp500: number; btc: number; eth: number };
+      topBots?: Array<{ name: string; strategy: string; returns: number; winRate: number }>;
+    }
+  ): Promise<void> {
+    try {
+      logger.info('Sending weekly digest', { userId });
+
+      const { emailCampaignManager } = await import('./email_campaign_manager');
+
+      await emailCampaignManager.sendEmail({
+        to: userEmail,
+        templateType: 'newsletter',
+        templateData: {
+          userName,
+          issueDate: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+          ...digestData,
+        },
+        subject: 'TIME Weekly Digest - Your Trading Roundup',
+        userId,
+        campaignId: 'weekly_digest',
+      });
+
+      logger.info('Weekly digest sent', { userId });
+    } catch (error) {
+      logger.error('Failed to send weekly digest', { error, userId });
+    }
+  }
 }
 
 // Singleton instance
@@ -386,4 +484,32 @@ export const triggerUpgradeNudge = (
   limitation: string
 ) => {
   return campaignAutomation.onFreeTierLimitHit(userId, userEmail, userName, limitation);
+};
+
+export const triggerAbandonedCart = (
+  userId: string,
+  userEmail: string,
+  userName: string,
+  cartData: {
+    planName: string;
+    planPrice: number;
+    planDescription?: string;
+    addons?: Array<{ name: string; price: number }>;
+    checkoutLink?: string;
+  }
+) => {
+  return campaignAutomation.onAbandonedCart(userId, userEmail, userName, cartData);
+};
+
+export const sendWeeklyDigest = (
+  userId: string,
+  userEmail: string,
+  userName: string,
+  digestData: {
+    marketSummary?: string;
+    marketStats?: { sp500: number; btc: number; eth: number };
+    topBots?: Array<{ name: string; strategy: string; returns: number; winRate: number }>;
+  }
+) => {
+  return campaignAutomation.sendWeeklyDigest(userId, userEmail, userName, digestData);
 };
