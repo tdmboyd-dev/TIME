@@ -10,8 +10,8 @@
 
 import { CampaignType, CampaignStatus, Campaign } from './drip_campaign_service';
 
-interface TemplateData {
-  name: string;
+export interface TemplateData {
+  name?: string;
   userName?: string;
   [key: string]: any;
 }

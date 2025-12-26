@@ -106,6 +106,9 @@ import supportRoutes from './support';
 // STRIPE PAYMENTS - Subscription management
 import stripeRoutes from './stripe';
 
+// USER ONBOARDING - 7-step wizard with bot recommendations
+import onboardingRoutes from './onboarding';
+
 const router = Router();
 
 // Mount routes
@@ -218,6 +221,9 @@ router.use('/support', supportRoutes);
 
 // STRIPE PAYMENTS - Subscription management, billing, checkout
 router.use('/stripe', stripeRoutes);
+
+// USER ONBOARDING - 7-step wizard with bot recommendations & pricing
+router.use('/onboarding', onboardingRoutes);
 
 export default router;
 

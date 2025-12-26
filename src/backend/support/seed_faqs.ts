@@ -132,8 +132,8 @@ We're constantly adding new broker integrations. Contact support if you need a s
     answer: `TIME BEYOND US Pricing:
 
 SUBSCRIPTION TIERS:
-- FREE: $0/month - 1 bot, paper trading only
-- BASIC: $19/month - 3 bots
+- FREE: $0/month - 3 bots, paper trading only (add more via Bot Marketplace)
+- BASIC: $19/month - 5 bots (add more via Bot Marketplace)
 - PRO: $49/month - 7 bots
 - PREMIUM: $109/month - 11 Super Bots
 - ENTERPRISE: $450/month - Unlimited bots

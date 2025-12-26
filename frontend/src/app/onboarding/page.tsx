@@ -111,8 +111,8 @@ const COMPLETION_COOKIE = 'time_onboarding_complete';
 
 // Pricing tiers
 const PRICING_TIERS: PricingTier[] = [
-  { name: 'FREE', price: 0, bots: 1, features: ['1 Trading Bot', 'Basic Analytics', 'Paper Trading'], icon: Zap },
-  { name: 'BASIC', price: 19, bots: 3, features: ['3 Trading Bots', 'Advanced Analytics', 'Email Support'], icon: Star },
+  { name: 'FREE', price: 0, bots: 3, features: ['3 Trading Bots', 'Basic Analytics', 'Paper Trading', 'Bot Marketplace Access'], icon: Zap },
+  { name: 'BASIC', price: 19, bots: 5, features: ['5 Trading Bots', 'Advanced Analytics', 'Email Support', 'Bot Marketplace Access'], icon: Star },
   { name: 'PRO', price: 49, bots: 7, features: ['7 Trading Bots', 'Priority Support', 'Custom Strategies'], popular: true, icon: Rocket },
   { name: 'PREMIUM', price: 109, bots: '11 Super Bots', features: ['11 Super Bots', 'AI Optimization', 'Dedicated Manager'], icon: Crown },
   { name: 'ENTERPRISE', price: 450, bots: 'Unlimited', features: ['Unlimited Bots', 'White-label', 'API Access', 'Custom Development'], icon: Building2 },

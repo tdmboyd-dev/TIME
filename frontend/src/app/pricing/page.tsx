@@ -73,12 +73,13 @@ const FALLBACK_TIERS: SubscriptionTier[] = [
     price: 0,
     interval: 'month',
     features: [
-      '1 active bot',
+      '3 active bots',
       'Paper trading only',
       'Basic market data',
       'Community support',
+      'Add more via Bot Marketplace',
     ],
-    limits: { bots: 1, strategies: 2, backtests: 5, apiCalls: 500, support: 'community' },
+    limits: { bots: 3, strategies: 3, backtests: 10, apiCalls: 1000, support: 'community' },
   },
   {
     id: 'basic',
@@ -86,13 +87,14 @@ const FALLBACK_TIERS: SubscriptionTier[] = [
     price: 19,
     interval: 'month',
     features: [
-      '3 active bots',
+      '5 active bots',
       '$5,000 max capital',
       'Real trading enabled',
       'Email support',
       'Basic backtesting',
+      'Add more via Bot Marketplace',
     ],
-    limits: { bots: 3, strategies: 5, backtests: 20, apiCalls: 5000, support: 'email' },
+    limits: { bots: 5, strategies: 10, backtests: 30, apiCalls: 10000, support: 'email' },
   },
   {
     id: 'pro',

@@ -30,7 +30,10 @@ import {
   Smartphone,
   MessageSquare,
   Camera,
-  Upload
+  Upload,
+  TrendingUp,
+  Bot,
+  Gift
 } from 'lucide-react';
 import clsx from 'clsx';
 import TradingModeToggle from '@/components/trading/TradingModeToggle';
@@ -525,17 +528,149 @@ export default function SettingsPage() {
             </div>
           )}
 
-          {/* Notifications Tab */}
+          {/* Notifications Tab - Enhanced */}
           {activeTab === 'notifications' && (
-            <div className="card p-6 space-y-6">
-              <h2 className="text-lg font-semibold text-white">Notification Preferences</h2>
+            <div className="space-y-6">
+              {/* Push Notification Status */}
+              <div className="card p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-semibold text-white">Push Notifications</h2>
+                  <div className="flex items-center gap-2">
+                    {notifications.pushNotifications ? (
+                      <span className="flex items-center gap-1 px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded-full">
+                        <Wifi className="w-3 h-3" /> Enabled
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-1 px-2 py-1 bg-slate-700 text-slate-400 text-xs rounded-full">
+                        <WifiOff className="w-3 h-3" /> Disabled
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <p className="text-sm text-slate-400 mb-4">
+                  Get instant alerts for trades, price movements, and important updates even when the app is closed.
+                </p>
+                <button
+                  onClick={() => setNotifications({ ...notifications, pushNotifications: !notifications.pushNotifications })}
+                  className={clsx(
+                    'w-full py-3 rounded-lg font-medium transition-colors',
+                    notifications.pushNotifications
+                      ? 'bg-slate-700 text-white hover:bg-slate-600'
+                      : 'bg-time-primary text-white hover:bg-time-primary/80'
+                  )}
+                >
+                  {notifications.pushNotifications ? 'Disable Push Notifications' : 'Enable Push Notifications'}
+                </button>
+              </div>
 
-              <div className="space-y-4">
-                <h3 className="text-sm font-medium text-slate-400">Delivery Methods</h3>
+              {/* Notification Categories */}
+              <div className="card p-6 space-y-4">
+                <h2 className="text-lg font-semibold text-white">Notification Categories</h2>
+                <p className="text-sm text-slate-400">Choose which types of notifications you want to receive.</p>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {[
+                    { key: 'tradeExecutions', label: 'Trade Executions', desc: 'When trades are opened or closed', icon: TrendingUp, color: 'text-green-400' },
+                    { key: 'riskAlerts', label: 'Bot Alerts', desc: 'Bot status changes and signals', icon: Bot, color: 'text-purple-400' },
+                    { key: 'insightAlerts', label: 'Price Targets', desc: 'When price targets are hit', icon: AlertTriangle, color: 'text-yellow-400' },
+                    { key: 'dailySummary', label: 'Big Moves', desc: 'Major market movements', icon: Zap, color: 'text-orange-400' },
+                    { key: 'weeklyReport', label: 'Security Alerts', desc: 'Account security notifications', icon: Shield, color: 'text-red-400' },
+                    { key: 'smsAlerts', label: 'Marketing', desc: 'Promotions and offers', icon: Gift, color: 'text-pink-400' },
+                  ].map((item) => {
+                    const Icon = item.icon;
+                    const isEnabled = notifications[item.key as keyof typeof notifications];
+                    return (
+                      <div
+                        key={item.key}
+                        className={clsx(
+                          'flex items-center gap-4 p-4 rounded-lg border transition-all cursor-pointer',
+                          isEnabled
+                            ? 'bg-slate-800/50 border-time-primary/50'
+                            : 'bg-slate-800/30 border-slate-700/50 opacity-60'
+                        )}
+                        onClick={() => setNotifications({
+                          ...notifications,
+                          [item.key]: !isEnabled
+                        })}
+                      >
+                        <div className={clsx('p-2 rounded-lg', isEnabled ? 'bg-slate-700' : 'bg-slate-800')}>
+                          <Icon className={clsx('w-5 h-5', item.color)} />
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-white">{item.label}</p>
+                          <p className="text-xs text-slate-500">{item.desc}</p>
+                        </div>
+                        <div className={clsx(
+                          'w-10 h-5 rounded-full transition-colors relative',
+                          isEnabled ? 'bg-time-primary' : 'bg-slate-600'
+                        )}>
+                          <span className={clsx(
+                            'absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform',
+                            isEnabled ? 'translate-x-5' : 'translate-x-0.5'
+                          )} />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Quiet Hours */}
+              <div className="card p-6 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-lg font-semibold text-white">Quiet Hours</h2>
+                    <p className="text-sm text-slate-400">Pause non-critical notifications during specific hours.</p>
+                  </div>
+                  <button
+                    onClick={() => setNotifications({ ...notifications, emailAlerts: !notifications.emailAlerts })}
+                    className={clsx(
+                      'w-12 h-6 rounded-full transition-colors relative',
+                      notifications.emailAlerts ? 'bg-time-primary' : 'bg-slate-600'
+                    )}
+                  >
+                    <span className={clsx(
+                      'absolute top-1 w-4 h-4 rounded-full bg-white transition-transform',
+                      notifications.emailAlerts ? 'translate-x-7' : 'translate-x-1'
+                    )} />
+                  </button>
+                </div>
+
+                {notifications.emailAlerts && (
+                  <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-700/50">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-300 mb-2">Start Time</label>
+                      <select className="w-full px-4 py-2 bg-slate-800/50 border border-slate-700/50 rounded-lg text-white focus:outline-none focus:border-time-primary/50">
+                        <option value="22:00">10:00 PM</option>
+                        <option value="23:00">11:00 PM</option>
+                        <option value="00:00">12:00 AM</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-300 mb-2">End Time</label>
+                      <select className="w-full px-4 py-2 bg-slate-800/50 border border-slate-700/50 rounded-lg text-white focus:outline-none focus:border-time-primary/50">
+                        <option value="06:00">6:00 AM</option>
+                        <option value="07:00">7:00 AM</option>
+                        <option value="08:00">8:00 AM</option>
+                        <option value="09:00">9:00 AM</option>
+                      </select>
+                    </div>
+                  </div>
+                )}
+
+                <p className="text-xs text-slate-500">
+                  Critical security alerts will always be delivered regardless of quiet hours.
+                </p>
+              </div>
+
+              {/* Delivery Methods */}
+              <div className="card p-6 space-y-4">
+                <h2 className="text-lg font-semibold text-white">Delivery Methods</h2>
+
                 {[
-                  { key: 'emailAlerts', label: 'Email Alerts', desc: 'Receive notifications via email' },
-                  { key: 'smsAlerts', label: 'SMS Alerts', desc: 'Receive text message notifications' },
-                  { key: 'pushNotifications', label: 'Push Notifications', desc: 'Browser push notifications' },
+                  { key: 'emailAlerts', label: 'Email Notifications', desc: 'Receive detailed notifications via email', icon: 'mail' },
+                  { key: 'smsAlerts', label: 'SMS Notifications', desc: 'Get text alerts for critical updates', icon: 'phone' },
+                  { key: 'pushNotifications', label: 'In-App Notifications', desc: 'Show notifications in the app', icon: 'bell' },
                 ].map((item) => (
                   <div key={item.key} className="flex items-center justify-between p-4 bg-slate-800/50 rounded-lg">
                     <div>
@@ -567,43 +702,42 @@ export default function SettingsPage() {
                 ))}
               </div>
 
-              <div className="space-y-4">
-                <h3 className="text-sm font-medium text-slate-400">Alert Types</h3>
-                {[
-                  { key: 'tradeExecutions', label: 'Trade Executions', desc: 'When trades are opened or closed' },
-                  { key: 'riskAlerts', label: 'Risk Alerts', desc: 'Important risk warnings and breaches' },
-                  { key: 'insightAlerts', label: 'Insight Alerts', desc: 'New insights and opportunities' },
-                  { key: 'dailySummary', label: 'Daily Summary', desc: 'End of day performance summary' },
-                  { key: 'weeklyReport', label: 'Weekly Report', desc: 'Weekly performance report' },
-                ].map((item) => (
-                  <div key={item.key} className="flex items-center justify-between p-4 bg-slate-800/50 rounded-lg">
-                    <div>
-                      <p className="text-sm font-medium text-white">{item.label}</p>
-                      <p className="text-xs text-slate-500">{item.desc}</p>
-                    </div>
-                    <button
-                      onClick={() => setNotifications({
-                        ...notifications,
-                        [item.key]: !notifications[item.key as keyof typeof notifications]
-                      })}
-                      className={clsx(
-                        'w-12 h-6 rounded-full transition-colors relative',
-                        notifications[item.key as keyof typeof notifications]
-                          ? 'bg-time-primary'
-                          : 'bg-slate-600'
-                      )}
-                    >
-                      <span
-                        className={clsx(
-                          'absolute top-1 w-4 h-4 rounded-full bg-white transition-transform',
-                          notifications[item.key as keyof typeof notifications]
-                            ? 'translate-x-7'
-                            : 'translate-x-1'
-                        )}
-                      />
-                    </button>
+              {/* Frequency Limits */}
+              <div className="card p-6 space-y-4">
+                <h2 className="text-lg font-semibold text-white">Frequency Limits</h2>
+                <p className="text-sm text-slate-400">Control how many notifications you receive.</p>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">Max per Hour</label>
+                    <select className="w-full px-4 py-2 bg-slate-800/50 border border-slate-700/50 rounded-lg text-white focus:outline-none focus:border-time-primary/50">
+                      <option value="10">10 notifications</option>
+                      <option value="20">20 notifications</option>
+                      <option value="50">50 notifications</option>
+                      <option value="0">Unlimited</option>
+                    </select>
                   </div>
-                ))}
+                  <div>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">Max per Day</label>
+                    <select className="w-full px-4 py-2 bg-slate-800/50 border border-slate-700/50 rounded-lg text-white focus:outline-none focus:border-time-primary/50">
+                      <option value="50">50 notifications</option>
+                      <option value="100">100 notifications</option>
+                      <option value="200">200 notifications</option>
+                      <option value="0">Unlimited</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Minimum Priority</label>
+                  <select className="w-full px-4 py-2 bg-slate-800/50 border border-slate-700/50 rounded-lg text-white focus:outline-none focus:border-time-primary/50">
+                    <option value="low">All notifications</option>
+                    <option value="medium">Medium and above</option>
+                    <option value="high">High and critical only</option>
+                    <option value="critical">Critical only</option>
+                  </select>
+                  <p className="text-xs text-slate-500 mt-1">Only receive notifications at or above this priority level.</p>
+                </div>
               </div>
             </div>
           )}

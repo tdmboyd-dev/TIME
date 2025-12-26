@@ -331,6 +331,175 @@ export interface ReferralRewardTierSchema {
   updatedAt: Date;
 }
 
+// ============================================================
+// AFFILIATE SYSTEM SCHEMAS
+// ============================================================
+
+export interface AffiliateSchema {
+  _id: string;
+  userId: string;
+  userName: string;
+  email: string;
+  status: 'pending' | 'active' | 'suspended' | 'terminated';
+
+  // Application
+  appliedAt: Date;
+  approvedAt?: Date;
+  approvedBy?: string;
+  applicationNotes?: string;
+  website?: string;
+  socialMedia?: string[];
+  audience?: string;
+
+  // Affiliate details
+  affiliateCode: string;
+  affiliateUrl: string;
+  customSlug?: string;
+
+  // Commission settings
+  commissionRate: number;
+  commissionType: 'percentage' | 'fixed' | 'hybrid';
+  fixedCommission?: number;
+  tier: string;
+
+  // Performance tracking
+  clicks: number;
+  uniqueClicks: number;
+  signups: number;
+  conversions: number;
+  revenue: number;
+
+  // Earnings
+  totalEarnings: number;
+  pendingEarnings: number;
+  paidEarnings: number;
+  lifetimeEarnings: number;
+
+  // Payout settings
+  payoutMethod: 'paypal' | 'stripe' | 'bank' | 'crypto';
+  payoutDetails: Record<string, string>;
+  payoutThreshold: number;
+  nextPayoutDate?: Date;
+
+  // Payout history
+  payoutHistory: Array<{
+    id: string;
+    amount: number;
+    status: 'pending' | 'processing' | 'completed' | 'failed';
+    method: string;
+    createdAt: Date;
+    processedAt?: Date;
+    transactionId?: string;
+    notes?: string;
+  }>;
+
+  // Referral tracking
+  referrals: Array<{
+    id: string;
+    userId: string;
+    email: string;
+    source: string;
+    landingPage: string;
+    signedUpAt: Date;
+    converted: boolean;
+    convertedAt?: Date;
+    subscriptionTier?: string;
+    revenue: number;
+    commission: number;
+    commissionPaid: boolean;
+  }>;
+
+  // Timestamps
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface AffiliateTierSchema {
+  _id: string;
+  name: string;
+  level: number;
+  minRevenue: number;
+  minConversions: number;
+  commissionRate: number;
+  bonuses: string[];
+  perks: string[];
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// ============================================================
+// SOCIAL SHARING SCHEMAS
+// ============================================================
+
+export interface SocialShareSchema {
+  _id: string;
+  userId: string;
+  referralCode: string;
+  platform: 'twitter' | 'facebook' | 'linkedin' | 'whatsapp' | 'telegram' | 'email' | 'copy';
+  sharedAt: Date;
+  content: string;
+  shortUrl: string;
+  clicks: number;
+  signups: number;
+  conversions: number;
+  ipAddress?: string;
+  userAgent?: string;
+}
+
+export interface SocialProofWidgetSchema {
+  _id: string;
+  type: 'recent_signups' | 'live_trades' | 'testimonials' | 'stats' | 'leaderboard';
+  title: string;
+  style: 'popup' | 'banner' | 'sidebar' | 'inline';
+  position: 'bottom-left' | 'bottom-right' | 'top-left' | 'top-right';
+  delay: number;
+  duration: number;
+  frequency: number;
+  enabled: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// ============================================================
+// A/B TESTING SCHEMAS
+// ============================================================
+
+export interface ABTestSchema {
+  _id: string;
+  name: string;
+  description: string;
+  type: 'landing_page' | 'email' | 'promo' | 'referral' | 'pricing';
+  status: 'draft' | 'running' | 'paused' | 'completed';
+  startDate: Date;
+  endDate?: Date;
+
+  variants: Array<{
+    id: string;
+    name: string;
+    description: string;
+    weight: number;
+    content: any;
+    impressions: number;
+    clicks: number;
+    conversions: number;
+    revenue: number;
+    conversionRate: number;
+    revenuePerVisitor: number;
+  }>;
+
+  winner?: string;
+  winnerConfidence?: number;
+
+  goal: 'signups' | 'conversions' | 'revenue' | 'clicks';
+  minSampleSize: number;
+  currentSampleSize: number;
+
+  createdBy: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 // Marketing indexes
 export const marketingIndexes = {
   referralCodes: [
@@ -363,5 +532,25 @@ export const marketingIndexes = {
   ],
   referralRewardTiers: [
     { isActive: 1, order: 1 },
+  ],
+  affiliates: [
+    { userId: 1, unique: true },
+    { affiliateCode: 1, unique: true },
+    { status: 1, createdAt: -1 },
+    { email: 1 },
+  ],
+  affiliateTiers: [
+    { level: 1 },
+    { isActive: 1 },
+  ],
+  socialShares: [
+    { userId: 1, sharedAt: -1 },
+    { referralCode: 1 },
+    { platform: 1 },
+  ],
+  abTests: [
+    { status: 1, startDate: -1 },
+    { type: 1 },
+    { createdBy: 1 },
   ],
 };

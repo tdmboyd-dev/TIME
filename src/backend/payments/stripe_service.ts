@@ -8,8 +8,8 @@
  * - Subscription status tracking
  *
  * SUBSCRIPTION TIERS:
- * - FREE: $0/month - 1 bot, paper trading only
- * - BASIC: $19/month - 3 bots, $5K capital
+ * - FREE: $0/month - 3 bots, paper trading only
+ * - BASIC: $19/month - 5 bots, $5K capital
  * - PRO: $49/month - 7 bots, $25K capital
  * - PREMIUM: $109/month - 11 Super Bots, $100K capital
  * - ENTERPRISE: $450/month - Unlimited everything + white-label
@@ -81,16 +81,17 @@ export const SUBSCRIPTION_TIERS: Record<string, SubscriptionTier> = {
     priceId: '', // No Stripe price for free tier
     interval: 'month',
     features: [
-      '1 active bot',
+      '3 active bots',
       'Paper trading only',
       'Basic market data',
       'Community support',
+      'Add more via Bot Marketplace',
     ],
     limits: {
-      bots: 1,
-      strategies: 2,
-      backtests: 5,
-      apiCalls: 500,
+      bots: 3,
+      strategies: 3,
+      backtests: 10,
+      apiCalls: 1000,
       support: 'community',
     },
   },
@@ -101,17 +102,18 @@ export const SUBSCRIPTION_TIERS: Record<string, SubscriptionTier> = {
     priceId: process.env.STRIPE_PRICE_BASIC || '',
     interval: 'month',
     features: [
-      '3 active bots',
+      '5 active bots',
       '$5,000 max capital',
       'Real trading enabled',
       'Email support',
       'Basic backtesting',
+      'Add more via Bot Marketplace',
     ],
     limits: {
-      bots: 3,
-      strategies: 5,
-      backtests: 20,
-      apiCalls: 5000,
+      bots: 5,
+      strategies: 10,
+      backtests: 30,
+      apiCalls: 10000,
       support: 'email',
     },
   },
