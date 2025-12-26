@@ -218,6 +218,32 @@ class ApiService {
     const response = await this.client.get('/analytics/trading-stats');
     return response.data;
   }
+
+  // Generic HTTP methods for auth.ts and other services
+  async get(path: string, params?: any) {
+    const response = await this.client.get(path, { params });
+    return response.data;
+  }
+
+  async post(path: string, data?: any) {
+    const response = await this.client.post(path, data);
+    return response.data;
+  }
+
+  async put(path: string, data?: any) {
+    const response = await this.client.put(path, data);
+    return response.data;
+  }
+
+  async patch(path: string, data?: any) {
+    const response = await this.client.patch(path, data);
+    return response.data;
+  }
+
+  async delete(path: string) {
+    const response = await this.client.delete(path);
+    return response.data;
+  }
 }
 
 export default new ApiService();

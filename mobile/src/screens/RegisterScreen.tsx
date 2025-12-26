@@ -159,7 +159,7 @@ export default function RegisterScreen({ navigation }: any) {
             {/* Name Input */}
             <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>Full Name</Text>
-              <View style={[styles.inputContainer, errors.name && styles.inputError]}>
+              <View style={[styles.inputContainer, errors.name ? styles.inputError : undefined]}>
                 <Ionicons name="person-outline" size={20} color="#64748b" style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}
@@ -179,7 +179,7 @@ export default function RegisterScreen({ navigation }: any) {
             {/* Email Input */}
             <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>Email Address</Text>
-              <View style={[styles.inputContainer, errors.email && styles.inputError]}>
+              <View style={[styles.inputContainer, errors.email ? styles.inputError : undefined]}>
                 <Ionicons name="mail-outline" size={20} color="#64748b" style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}
@@ -201,7 +201,7 @@ export default function RegisterScreen({ navigation }: any) {
             {/* Password Input */}
             <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>Password</Text>
-              <View style={[styles.inputContainer, errors.password && styles.inputError]}>
+              <View style={[styles.inputContainer, errors.password ? styles.inputError : undefined]}>
                 <Ionicons name="lock-closed-outline" size={20} color="#64748b" style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}
@@ -256,7 +256,7 @@ export default function RegisterScreen({ navigation }: any) {
             {/* Confirm Password Input */}
             <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>Confirm Password</Text>
-              <View style={[styles.inputContainer, errors.confirmPassword && styles.inputError]}>
+              <View style={[styles.inputContainer, errors.confirmPassword ? styles.inputError : undefined]}>
                 <Ionicons name="lock-closed-outline" size={20} color="#64748b" style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}

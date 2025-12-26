@@ -63,14 +63,15 @@ export default function Card({
     }
   };
 
-  const Container = onPress ? TouchableOpacity : View;
+  const containerStyle = [styles.container, getVariantStyles(), style];
 
-  return (
-    <Container
-      style={[styles.container, getVariantStyles(), style]}
-      onPress={onPress}
-      activeOpacity={0.7}
-    >
+  if (onPress) {
+    return (
+      <TouchableOpacity
+        style={containerStyle}
+        onPress={onPress}
+        activeOpacity={0.7}
+      >
       {(title || icon) && (
         <View style={styles.header}>
           {icon && (
@@ -90,7 +91,32 @@ export default function Card({
       <View style={title || icon ? styles.contentWithHeader : undefined}>
         {children}
       </View>
-    </Container>
+    </TouchableOpacity>
+    );
+  }
+
+  return (
+    <View style={containerStyle}>
+      {(title || icon) && (
+        <View style={styles.header}>
+          {icon && (
+            <View style={[styles.iconContainer, { backgroundColor: `${iconColor}20` }]}>
+              <Ionicons name={icon} size={24} color={iconColor} />
+            </View>
+          )}
+          <View style={styles.headerText}>
+            {title && <Text style={styles.title}>{title}</Text>}
+            {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
+          </View>
+          {showArrow && (
+            <Ionicons name="chevron-forward" size={20} color="#64748b" />
+          )}
+        </View>
+      )}
+      <View style={title || icon ? styles.contentWithHeader : undefined}>
+        {children}
+      </View>
+    </View>
   );
 }
 
@@ -112,14 +138,8 @@ export function StatCard({
   iconColor = '#6366f1',
   onPress,
 }: StatCardProps) {
-  const Container = onPress ? TouchableOpacity : View;
-
-  return (
-    <Container
-      style={styles.statCard}
-      onPress={onPress}
-      activeOpacity={0.7}
-    >
+  const content = (
+    <>
       {icon && (
         <Ionicons name={icon} size={24} color={iconColor} style={styles.statIcon} />
       )}
@@ -148,7 +168,25 @@ export function StatCard({
           </Text>
         </View>
       )}
-    </Container>
+    </>
+  );
+
+  if (onPress) {
+    return (
+      <TouchableOpacity
+        style={styles.statCard}
+        onPress={onPress}
+        activeOpacity={0.7}
+      >
+        {content}
+      </TouchableOpacity>
+    );
+  }
+
+  return (
+    <View style={styles.statCard}>
+      {content}
+    </View>
   );
 }
 

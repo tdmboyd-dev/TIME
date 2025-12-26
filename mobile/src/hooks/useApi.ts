@@ -64,6 +64,10 @@ class ApiClient {
   async delete<T = any>(url: string): Promise<T> {
     return this.client.delete(url);
   }
+
+  async patch<T = any>(url: string, data?: any): Promise<T> {
+    return this.client.patch(url, data);
+  }
 }
 
 export const api = new ApiClient();
