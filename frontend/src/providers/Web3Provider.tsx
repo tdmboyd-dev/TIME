@@ -7,46 +7,69 @@
  * Supports MetaMask, Coinbase Wallet, WalletConnect, and more.
  */
 
-import { getDefaultConfig, RainbowKitProvider, darkTheme } from '@rainbow-me/rainbowkit';
-import { WagmiProvider } from 'wagmi';
-import { mainnet, polygon, arbitrum, optimism, base, avalanche, bsc } from 'wagmi/chains';
+import { useState, useEffect } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import '@rainbow-me/rainbowkit/styles.css';
 
-// Supported chains for DeFi operations
-const chains = [mainnet, polygon, arbitrum, optimism, base, avalanche, bsc] as const;
+// Lazy load Web3 components to prevent SSR issues on mobile
+const LazyWeb3Provider = ({ children }: { children: React.ReactNode }) => {
+  const [mounted, setMounted] = useState(false);
+  const [queryClient] = useState(() => new QueryClient());
+  const [Web3Components, setWeb3Components] = useState<any>(null);
 
-// WalletConnect Project ID - Required for WalletConnect integration
-// Get one at https://cloud.walletconnect.com (free tier available)
-// Without a valid project ID, WalletConnect modal will show 403 errors but injected wallets (MetaMask) still work
-const WALLETCONNECT_PROJECT_ID = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID;
+  useEffect(() => {
+    setMounted(true);
+    // Dynamically import Web3 components only on client side
+    Promise.all([
+      import('@rainbow-me/rainbowkit'),
+      import('wagmi'),
+      import('wagmi/chains'),
+    ]).then(([rainbowkit, wagmi, chains]) => {
+      const { getDefaultConfig, RainbowKitProvider, darkTheme } = rainbowkit;
+      const { WagmiProvider } = wagmi;
+      const { mainnet, polygon, arbitrum, optimism, base, avalanche, bsc } = chains;
 
-// WalletConnect requires a project ID for full functionality
-// Get one at https://cloud.walletconnect.com (free tier available)
+      const chainList = [mainnet, polygon, arbitrum, optimism, base, avalanche, bsc] as const;
+      const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || 'demo-project-id';
 
-// Configure wagmi with RainbowKit
-// Note: Without valid projectId, WalletConnect won't work but MetaMask/injected wallets still function
-const config = getDefaultConfig({
-  appName: 'TIME DeFi',
-  projectId: WALLETCONNECT_PROJECT_ID || 'YOUR_PROJECT_ID', // Fallback to prevent crash
-  chains,
-  ssr: true,
-});
+      const config = getDefaultConfig({
+        appName: 'TIME DeFi',
+        projectId,
+        chains: chainList,
+        ssr: false, // Disable SSR for Web3 to prevent hydration issues
+      });
 
-// Create React Query client
-const queryClient = new QueryClient();
+      setWeb3Components({
+        WagmiProvider,
+        RainbowKitProvider,
+        darkTheme,
+        config,
+      });
+    }).catch((err) => {
+      console.warn('[Web3Provider] Failed to load Web3 components:', err);
+      // Still render children without Web3 functionality
+      setWeb3Components({ failed: true });
+    });
+  }, []);
 
-interface Web3ProviderProps {
-  children: React.ReactNode;
-}
+  // During SSR and initial mount, render children without Web3 wrapper
+  if (!mounted || !Web3Components) {
+    return <>{children}</>;
+  }
 
-export function Web3Provider({ children }: Web3ProviderProps) {
+  // If Web3 failed to load, render children without it
+  if (Web3Components.failed) {
+    return <>{children}</>;
+  }
+
+  const { WagmiProvider, RainbowKitProvider, darkTheme, config } = Web3Components;
+
   return (
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
         <RainbowKitProvider
           theme={darkTheme({
-            accentColor: '#6366f1', // TIME primary color
+            accentColor: '#6366f1',
             accentColorForeground: 'white',
             borderRadius: 'medium',
             fontStack: 'system',
@@ -58,6 +81,14 @@ export function Web3Provider({ children }: Web3ProviderProps) {
       </QueryClientProvider>
     </WagmiProvider>
   );
+};
+
+interface Web3ProviderProps {
+  children: React.ReactNode;
+}
+
+export function Web3Provider({ children }: Web3ProviderProps) {
+  return <LazyWeb3Provider>{children}</LazyWeb3Provider>;
 }
 
 export default Web3Provider;

@@ -159,7 +159,10 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
   // Check if push notifications are supported
   const isPushSupported = () => {
-    return 'serviceWorker' in navigator && 'PushManager' in window;
+    return typeof window !== 'undefined' &&
+           'serviceWorker' in navigator &&
+           'PushManager' in window &&
+           'Notification' in window;
   };
 
   // Request notification permission
@@ -552,14 +555,19 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   // Initialize on mount
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      setPermission(Notification.permission);
+      // Check if Notification API is available before accessing permission
+      if ('Notification' in window) {
+        setPermission(Notification.permission);
 
-      // Check if already subscribed
-      if (isPushSupported() && Notification.permission === 'granted') {
-        navigator.serviceWorker.ready.then(async (registration) => {
-          const subscription = await registration.pushManager.getSubscription();
-          setIsSubscribed(!!subscription);
-        });
+        // Check if already subscribed
+        if (isPushSupported() && Notification.permission === 'granted') {
+          navigator.serviceWorker.ready.then(async (registration) => {
+            const subscription = await registration.pushManager.getSubscription();
+            setIsSubscribed(!!subscription);
+          }).catch(() => {
+            // Service worker not ready, ignore
+          });
+        }
       }
 
       // Fetch initial notifications, preferences, and stats
