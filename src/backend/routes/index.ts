@@ -109,6 +109,9 @@ import stripeRoutes from './stripe';
 // USER ONBOARDING - 7-step wizard with bot recommendations
 import onboardingRoutes from './onboarding';
 
+// FEATURE FLAGS - Master admin feature control panel
+import featuresRoutes from './features';
+
 const router = Router();
 
 // Mount routes
@@ -224,6 +227,9 @@ router.use('/stripe', stripeRoutes);
 
 // USER ONBOARDING - 7-step wizard with bot recommendations & pricing
 router.use('/onboarding', onboardingRoutes);
+
+// FEATURE FLAGS - Master admin feature control panel with targeting
+router.use('/features', featuresRoutes);
 
 export default router;
 

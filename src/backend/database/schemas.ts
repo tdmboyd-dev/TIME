@@ -1376,3 +1376,92 @@ export const socialIndexes = {
     { followingId: 1, followedAt: -1 },
   ],
 };
+
+// ============================================================
+// FEATURE FLAGS SCHEMAS
+// ============================================================
+
+export type UserSegmentType = 'all' | 'premium' | 'free' | 'beta_testers' | 'by_country';
+
+export interface UserSegmentConfig {
+  type: UserSegmentType;
+  countries?: string[];          // For by_country segment
+  betaTesterIds?: string[];      // Specific beta tester user IDs
+}
+
+export interface FeatureFlagSchema {
+  _id: string;
+  name: string;
+  description: string;
+  enabled: boolean;
+  rolloutPercentage: number;     // 0-100
+  userSegments: UserSegmentConfig[];
+
+  // Metadata
+  createdAt: Date;
+  updatedAt: Date;
+  createdBy: string;
+  updatedBy?: string;
+
+  // Announcement configuration
+  announceOnEnable: boolean;
+  announcementTitle?: string;
+  announcementMessage?: string;
+  announcementBannerType?: 'info' | 'success' | 'warning' | 'feature';
+  announcementDurationDays?: number;
+
+  // Tracking
+  enabledAt?: Date;
+  disabledAt?: Date;
+  enableHistory: Array<{
+    id: string;
+    action: 'enabled' | 'disabled';
+    timestamp: Date;
+    performedBy: string;
+    previousState: boolean;
+    rolloutPercentage: number;
+    userSegments: UserSegmentConfig[];
+    announcementSent: boolean;
+    affectedUsers?: number;
+  }>;
+}
+
+export interface FeatureAnnouncementSchema {
+  _id: string;
+  featureId: string;
+  featureName: string;
+  title: string;
+  message: string;
+  bannerType: 'info' | 'success' | 'warning' | 'feature';
+  createdAt: Date;
+  expiresAt: Date;
+  targetSegments: UserSegmentConfig[];
+  isActive: boolean;
+
+  // Tracking
+  viewCount: number;
+  dismissCount: number;
+  clickCount: number;
+
+  // User interactions (optional, for more detailed tracking)
+  viewedBy?: string[];           // User IDs who viewed
+  dismissedBy?: string[];        // User IDs who dismissed
+}
+
+// Feature flag indexes
+export const featureFlagIndexes = {
+  featureFlags: [
+    { name: 1, unique: true },
+    { enabled: 1 },
+    { createdAt: -1 },
+    { updatedAt: -1 },
+    { 'userSegments.type': 1 },
+    { createdBy: 1 },
+  ],
+  featureAnnouncements: [
+    { featureId: 1 },
+    { isActive: 1, expiresAt: 1 },
+    { createdAt: -1 },
+    { 'targetSegments.type': 1 },
+  ],
+};
