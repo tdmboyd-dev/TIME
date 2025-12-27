@@ -96,3 +96,8 @@ expo-env.d.ts
 
 # Android Upload Key
 android-upload-key.json
+
+# Build scripts with credentials (create locally, don't commit)
+*-build.bat
+*-creds.bat
+BUILD-*.bat
