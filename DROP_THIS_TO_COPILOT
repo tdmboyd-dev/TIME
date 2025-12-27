@@ -1,10 +1,16 @@
-# TIME BEYOND US - Latest Status v70.0.0
+# TIME BEYOND US - Latest Status v71.0.0
 
 ## What's New (2025-12-27)
 
+### MOBILE FIX ✅ DEPLOYED
+- Fixed Chrome mobile client-side exception
+- Lazy-loaded Web3 components to prevent SSR issues
+- Added global error handlers for graceful failure
+- Live: https://timebeyondus.com (works on mobile now!)
+
 ### VERCEL ✅ DEPLOYED
 - Live: https://timebeyondus.com
-- All pages working
+- All 56 pages working
 
 ### iOS APP STORE ✅ SUBMITTED!
 - **App Name**: TIME APEX
