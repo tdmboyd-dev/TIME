@@ -1,98 +1,61 @@
-# TIME BEYOND US - Backtesting System Complete
+# TIME BEYOND US - Latest Status v68.0.0
 
-## Version 66.0.0 - Comprehensive Backtesting System
+## What's New (2025-12-27)
 
-### What Was Built
+### SECURITY FIX APPLIED
+- Fixed GitGuardian alert - removed exposed Apple passwords from batch files
+- Passwords now set via environment variables
+- **ACTION**: Revoke old app-specific passwords in Apple ID settings
 
-A production-ready backtesting system with:
+### iOS BUILD STATUS
+- Build #5 ERRORED - Certificate import issue on EAS servers
+- Need to regenerate credentials: `eas credentials --platform ios`
+- Android AAB ready for Google Play
 
-1. **Enhanced Backtesting Engine**
-   - Multi-asset support (stocks, crypto, forex)
-   - Multi-timeframe analysis
-   - Walk-forward optimization
-   - Monte Carlo simulation
-   - Realistic slippage/commission modeling
+### ADMIN FEATURE CONTROL PANEL - COMPLETE (/admin/features)
+- Feature flags CRUD (create, read, update, delete)
+- Enable/disable toggles with instant effect
+- Rollout percentage control (0-100%)
+- User segment targeting (all, premium, free, beta, by_country)
+- Auto-announcement on feature enable
+- Push notification broadcast
+- Stats dashboard
 
-2. **Historical Data Integration**
-   - Multiple providers (Finnhub, TwelveData, Coinbase)
-   - Data caching for performance
-   - Missing data handling with forward-fill
+### iOS CAPABILITIES ADDED
+- Sign In with Apple
+- In-App Purchases
+- HealthKit (stress tracking)
+- Siri integration
+- NFC for hardware wallets
+- iCloud sync
+- Background modes
 
-3. **Strategy Optimization**
-   - Grid search with Pareto frontier
-   - Genetic algorithm optimization
-   - Parameter sensitivity analysis
+### VERCEL DEPLOYMENT
+- Successfully deployed to production
+- Live at production URL
 
-4. **Portfolio Backtesting**
-   - Multiple strategies simultaneously
-   - Correlation analysis
-   - Markowitz mean-variance optimization
+## Key Files Modified
+- mobile/app.json - iOS capabilities
+- mobile/*.bat - Security fix
+- frontend/src/app/admin/features/page.tsx - Admin panel
+- TIME_TODO.md - Updated with completion status
 
-5. **Results Visualization**
-   - Equity curve chart data
-   - Drawdown chart data
-   - Monthly returns heatmap
-   - Trade distribution analysis
+## Remaining Work
+1. A/B Testing Framework
+2. Fix iOS certificate issue
+3. Submit apps to stores
 
-6. **API Endpoints**
-   - POST /api/backtest/run
-   - POST /api/backtest/optimize
-   - GET /api/backtest/results/:id
-   - POST /api/backtest/multi-asset
-   - Plus 10+ additional endpoints
+## Quick Commands
+```bash
+# Check iOS build status
+eas build:list --platform ios --limit 1
 
-### Key Files
-- src/backend/backtesting/backtest_engine.ts
-- src/backend/backtesting/data_cache.ts
-- src/backend/backtesting/optimization_engine.ts
-- src/backend/backtesting/multi_asset_backtest.ts
-- src/backend/backtesting/market_data_integration.ts
-- src/backend/backtesting/index.ts
-- src/backend/routes/backtest.ts
+# Regenerate iOS credentials
+eas credentials --platform ios
 
-### Risk Metrics Calculated
-- Sharpe Ratio
-- Sortino Ratio
-- Calmar Ratio
-- Max Drawdown
-- Ulcer Index
-- Pain Ratio
-- Recovery Factor
-- Tail Ratio
-- Win Rate
-- Profit Factor
-- Expectancy
+# Deploy frontend
+cd frontend && npx vercel --prod
 
-### Usage Example
-
-```typescript
-import { runQuickBacktest, runEnhancedBacktest, runOptimization } from './backtesting';
-
-// Simple backtest
-const result = await runQuickBacktest('AAPL', candles, {
-  initialCapital: 10000,
-  positionSizePercent: 10
-});
-
-// Enhanced backtest with full metrics
-const enhanced = await runEnhancedBacktest('AAPL', candles, {
-  timeframes: [
-    { interval: '1h', weight: 0.3 },
-    { interval: '4h', weight: 0.5 },
-    { interval: '1d', weight: 0.2 }
-  ],
-  slippageModel: 'volatility_based'
-});
-
-// Optimization
-const optimized = await runOptimization(candles, baseConfig, [
-  { name: 'positionSizePercent', min: 5, max: 20, step: 5 },
-  { name: 'leverage', min: 1, max: 3, step: 0.5 }
-], 'genetic');
+# Run local dev
+npm run dev
 ```
-
-### Next Steps
-- Frontend components for visualization
-- Database persistence for results
-- Strategy builder UI
-- Live paper trading integration

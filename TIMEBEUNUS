@@ -1,82 +1,79 @@
 # TIME BEYOND US - Development Status
 
-## Latest Update: Backtesting System Complete (v66.0.0)
+## Latest Update: v68.0.0 - iOS Capabilities & Admin Panel (2025-12-27)
 
-### BACKTESTING SYSTEM - PRODUCTION READY
+### SECURITY FIX APPLIED
+- Removed exposed Apple app-specific passwords from batch files
+- GitGuardian incident resolved
+- Passwords must now be set via environment variables or EAS secrets
+- **ACTION REQUIRED**: Revoke old app-specific passwords in Apple ID settings
 
-The comprehensive backtesting system has been completed with all features:
+### iOS BUILD STATUS
+- Build #5 ERRORED - Same certificate import issue
+- Error: "Distribution certificate hasn't been imported successfully"
+- The certificate exists but EAS can't import it to the build keychain
+- **SOLUTION**: Need to regenerate iOS credentials via `eas credentials`
 
-#### Enhanced Backtesting Engine (`backtest_engine.ts`)
-- Multi-asset support (stocks, crypto, forex, commodities)
-- Multi-timeframe analysis with signal aggregation
-- Enhanced slippage models (fixed, volume-based, volatility-based)
-- Enhanced commission models (percent, fixed, tiered)
-- Position sizing methods (fixed, Kelly, volatility targeting, risk parity)
-- Walk-forward optimization
-- Monte Carlo simulation
-- Comprehensive risk metrics (Ulcer Index, Pain Ratio, Recovery Factor, Tail Ratio)
+### COMPLETED FEATURES
 
-#### Data Caching System (`data_cache.ts`)
-- LRU cache for fast in-memory access
-- File-based persistence for larger datasets
-- Automatic data expiration
-- Data quality checking (missing data detection, outlier detection)
-- Forward-fill for missing candles
+#### Master Admin Feature Control Panel (/admin/features)
+- Full CRUD for feature flags
+- Enable/disable toggles
+- Rollout percentage slider (0-100%)
+- User segment targeting (all, premium, free, beta_testers, by_country)
+- Announcement system on feature enable
+- Real-time stats dashboard
 
-#### Strategy Optimization
-- Grid search optimization with Pareto frontier
-- Genetic algorithm optimization
-- Parameter sensitivity analysis
-- Multi-objective optimization (Sharpe, return, drawdown, win rate)
+#### Auto-Announcement System
+- Automatic announcements when features are enabled
+- Push notification broadcast
+- In-app banner with customizable types (info, success, warning, feature)
+- Duration control (1-30 days)
+- Announcement preview
 
-#### Multi-Asset Portfolio Backtesting
-- Portfolio-level backtesting across multiple assets
-- Correlation matrix analysis
-- Portfolio optimization (Markowitz mean-variance)
-- Rebalancing strategies (daily, weekly, monthly, quarterly)
-- Risk allocation analysis
-- Sector/asset class diversification metrics
+#### User Segment Targeting
+- Segment-based feature rollout
+- Percentage-based gradual rollout
+- Geographic targeting support
+- Beta tester targeting
 
-#### Historical Data Integration
-- Multiple providers (Finnhub, TwelveData, Coinbase)
-- Automatic provider fallback
-- Data alignment across assets
-- Missing data handling
+#### iOS Capabilities Added (app.json)
+- Sign In with Apple
+- In-App Purchases (merchant ID configured)
+- HealthKit integration
+- Siri integration
+- NFC Tag Reading
+- iCloud sync
+- Location services
+- Background modes (notifications, fetch, processing)
 
-#### Results Visualization
-- Equity curve charts
-- Drawdown curve charts
-- Monthly returns heatmap
-- Trade distribution (by day, hour, duration)
-- Trade scatter plots
+### MOBILE APP
+- Android build COMPLETE - AAB ready
+- iOS build needs credential regeneration
 
-#### API Endpoints
-- POST /api/backtest/run - Run basic backtest
-- POST /api/backtest/enhanced - Run enhanced backtest with full metrics
-- POST /api/backtest/optimize - Run parameter optimization
-- GET /api/backtest/results/:id - Get stored result
-- GET /api/backtest/results - List all results
-- DELETE /api/backtest/results/:id - Delete result
-- GET /api/backtest/visualization/:id - Get chart-ready data
-- POST /api/backtest/walk-forward - Walk-forward analysis
-- POST /api/backtest/monte-carlo - Monte Carlo simulation
-- POST /api/backtest/multi-asset - Portfolio backtest
-- POST /api/backtest/portfolio-optimization - Optimize weights
-- POST /api/backtest/correlation-analysis - Correlation matrix
+### VERCEL DEPLOYMENT
+- Production deployment successful
+- Frontend live at: https://frontend-dnmf7f0c7-tdmboyd-devs-projects.vercel.app
 
-### Files Modified/Created
-- src/backend/backtesting/backtest_engine.ts (NEW)
-- src/backend/backtesting/data_cache.ts (NEW)
-- src/backend/backtesting/index.ts (NEW)
-- src/backend/routes/backtest.ts (ENHANCED)
+### REMAINING TODO
+- [ ] A/B Testing Framework
+- [ ] App Groups for widgets
+- [ ] Wallet integration
+- [ ] WeatherKit API
+- [ ] Maps implementation
+- [ ] Submit to app stores
 
-### Previous Versions
+## Tech Stack
+- Frontend: Next.js 14 / React / TypeScript
+- Mobile: React Native / Expo SDK 50
+- Backend: Node.js / Express / TypeScript
+- Real-time: WebSocket
+- Auth: JWT + Biometric + Apple Sign In
+
+## Version History
+- v68.0.0: iOS Capabilities & Admin Panel Complete
+- v67.0.0: iOS Build Fix & Mobile App Improvements
+- v66.0.0: Backtesting System Complete
 - v65.0.0: AI Chat Support System
 - v64.0.0: User Onboarding Flow
 - v63.0.0: Push Notifications + Email Campaigns
-
-## Tech Stack
-- Backend: Node.js/Express/TypeScript
-- Trading: Multi-strategy engine with backtesting
-- Real-time: WebSocket for live data
-- Data: Multiple market data providers
