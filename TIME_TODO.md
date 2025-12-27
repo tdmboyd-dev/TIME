@@ -60,5 +60,11 @@
 - [x] Add batch files to .gitignore
 - [ ] Revoke old app-specific passwords in Apple ID settings
 
+## Apple Developer Setup (for full capabilities)
+- [ ] Apple Pay Payment Processing Certificate (for accepting payments)
+- [ ] Apple Pay Merchant Identity Certificate (for web payments)
+- [ ] Register merchant domains for Apple Pay on web
+- [ ] Configure Push Notification certificates if needed
+
 ---
 Last Updated: 2025-12-27

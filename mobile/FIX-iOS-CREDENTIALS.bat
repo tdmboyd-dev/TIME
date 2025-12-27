@@ -1,15 +1,21 @@
 @echo off
 echo ==========================================
-echo   TIME BEYOND US - iOS Credentials Fix
+echo   TIME BEYOND US - Provisioning Profile Fix
 echo ==========================================
 echo.
-echo The iOS distribution certificate on EAS is corrupted.
-echo This script will help you regenerate it.
+echo The provisioning profile needs to be regenerated to include
+echo newly enabled capabilities (Apple Pay, HealthKit, NFC, Siri, Sign in with Apple).
 echo.
-echo IMPORTANT: You will need to:
-echo 1. Select "production" profile when prompted
-echo 2. Choose "Delete current credentials and regenerate"
-echo 3. Follow the prompts to create new credentials
+echo STEP-BY-STEP GUIDE:
+echo.
+echo 1. Select "production" profile
+echo 2. Select "Build Credentials"
+echo 3. Select "Provisioning Profile: Delete one from your project"
+echo 4. Confirm deletion with "y"
+echo 5. Then exit (Ctrl+C or navigate back)
+echo.
+echo After deleting, run the build command - EAS will auto-generate
+echo a new provisioning profile with all capabilities!
 echo.
 echo Press any key to start...
 pause >nul
@@ -22,7 +28,9 @@ echo.
 eas credentials --platform ios
 
 echo.
-echo Done! Now run a new iOS build with:
+echo ==========================================
+echo   NOW RUN THE BUILD:
 echo   eas build --platform ios --profile production
+echo ==========================================
 echo.
 pause

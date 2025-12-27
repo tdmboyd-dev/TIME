@@ -1,18 +1,21 @@
 # TIME BEYOND US - Development Status
 
-## Latest Update: v68.1.0 - Vercel Fixed, iOS Needs Credential Regeneration (2025-12-27)
+## Latest Update: v68.2.0 - Provisioning Profile Needs Regeneration (2025-12-27)
 
 ### VERCEL DEPLOYMENT ✅ SUCCESS
 - Live at: https://timebeyondus.com
 - All 56 pages deployed successfully
-- Build completed without errors
 
-### iOS BUILD STATUS ⚠️ BLOCKED
-- Certificate on EAS servers is corrupted
-- Error: "Distribution certificate hasn't been imported successfully"
+### iOS BUILD STATUS ⚠️ NEEDS PROVISIONING PROFILE UPDATE
+- Certificate ✅ (regenerated - Serial: FA898B9CF78A212AC5EB1C4B4B23FEB)
+- Capabilities ✅ (enabled in Apple Developer portal)
+- Provisioning Profile ❌ (created before capabilities, needs regeneration)
+- Error: "Profile doesn't support Apple Pay, HealthKit, NFC, Sign in with Apple, Siri"
 - **TO FIX**: Run `FIX-iOS-CREDENTIALS.bat` in mobile folder
-- Or manually: `cd mobile && eas credentials --platform ios`
-- Then regenerate the distribution certificate
+  1. Select "production" profile
+  2. Select "Build Credentials"
+  3. Select "Provisioning Profile: Delete one from your project"
+  4. Then run: `eas build --platform ios --profile production`
 
 ### Android BUILD ✅ READY
 - AAB: https://expo.dev/artifacts/eas/6yzb9upXsWQNwFtHSE2fmZ.aab
