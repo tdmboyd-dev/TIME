@@ -30,7 +30,7 @@
       "ios": {
         "simulator": false,
         "buildConfiguration": "Release",
-        "image": "macos-ventura-13.6-xcode-15.2"
+        "image": "macos-sonoma-14.6-xcode-16.0"
       },
       "android": {
         "buildType": "app-bundle",
@@ -46,7 +46,7 @@
     "production": {
       "ios": {
         "appleId": "timebeunus.boyd@icloud.com",
-        "ascAppId": "1234567890",
+        "ascAppId": "6757105143",
         "appleTeamId": "DB9BF4C58Y",
         "sku": "com.timebeyondus.trading",
         "language": "en-US"

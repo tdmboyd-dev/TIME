@@ -4,11 +4,14 @@
 - [x] Create mobile app assets from SVGs
 - [x] Android build complete - AAB: https://expo.dev/artifacts/eas/6yzb9upXsWQNwFtHSE2fmZ.aab
 - [x] iOS credentials configured (cert, provisioning, push key, ASC API key)
-- [x] **iOS BUILD SUCCESS!** - IPA: https://expo.dev/artifacts/eas/ugwFkxb4cbA1Wyd2d3Tgke.ipa
-  - Build #10, Version 1.0.0
+- [x] **iOS SUBMITTED TO APP STORE!** - App Name: TIME APEX
+  - Build #13, Version 1.0.0
+  - Apple ID: 6757105143
+  - TestFlight: https://appstoreconnect.apple.com/apps/6757105143/testflight/ios
   - All capabilities: Push, Sign in with Apple, NFC, Siri, HealthKit, Apple Pay
 - [ ] Submit Android app to Google Play (need service account JSON)
-- [ ] Submit iOS app to App Store
+- [ ] Complete App Store screenshots and metadata
+- [ ] Submit for App Review
 
 ## Master Admin Feature Control Panel ✅ COMPLETE
 - [x] Build admin UI for feature flag management (/admin/features)

@@ -1,4 +1,4 @@
-# TIME BEYOND US - Latest Status v69.0.0
+# TIME BEYOND US - Latest Status v70.0.0
 
 ## What's New (2025-12-27)
 
@@ -6,11 +6,13 @@
 - Live: https://timebeyondus.com
 - All pages working
 
-### iOS BUILD ✅ SUCCESS!
-- **IPA**: https://expo.dev/artifacts/eas/ugwFkxb4cbA1Wyd2d3Tgke.ipa
-- Build #10, Version 1.0.0
+### iOS APP STORE ✅ SUBMITTED!
+- **App Name**: TIME APEX
+- **Apple ID**: 6757105143
+- **Build**: 13, Version 1.0.0
+- **TestFlight**: https://appstoreconnect.apple.com/apps/6757105143/testflight/ios
 - All capabilities: Push, Sign in with Apple, NFC, Siri, HealthKit, Apple Pay
-- Ready to submit to App Store!
+- Status: Processing by Apple, then ready for App Review!
 
 ### Android ✅ READY
 - AAB file ready for Google Play

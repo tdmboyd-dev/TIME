@@ -37,11 +37,10 @@
         "ITSAppUsesNonExemptEncryption": false,
         "UIBackgroundModes": [
           "remote-notification",
-          "fetch",
-          "processing"
+          "fetch"
         ]
       },
-      "buildNumber": "10",
+      "buildNumber": "13",
       "config": {
         "usesNonExemptEncryption": false
       },
