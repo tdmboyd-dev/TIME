@@ -84,3 +84,15 @@ expo-env.d.ts
 # Secrets (keeping these tracked for EAS builds)
 # google-services.json
 # GoogleService-Info.plist
+
+# iOS Certificates & Keys (NEVER COMMIT)
+*.p8
+*.p12
+*.cer
+*.pem
+*.key
+*.mobileprovision
+*.certSigningRequest
+
+# Android Upload Key
+android-upload-key.json
