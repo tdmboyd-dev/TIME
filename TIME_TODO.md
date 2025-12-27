@@ -4,11 +4,11 @@
 - [x] Create mobile app assets from SVGs
 - [x] Android build complete - AAB: https://expo.dev/artifacts/eas/6yzb9upXsWQNwFtHSE2fmZ.aab
 - [x] iOS credentials configured (cert, provisioning, push key, ASC API key)
-- [ ] **iOS BUILD BLOCKED** - Certificate corrupted on EAS servers
-  - Run `FIX-iOS-CREDENTIALS.bat` or see `iOS-BUILD-FIX-INSTRUCTIONS.md`
-  - Must regenerate credentials interactively
+- [x] **iOS BUILD SUCCESS!** - IPA: https://expo.dev/artifacts/eas/ugwFkxb4cbA1Wyd2d3Tgke.ipa
+  - Build #10, Version 1.0.0
+  - All capabilities: Push, Sign in with Apple, NFC, Siri, HealthKit, Apple Pay
 - [ ] Submit Android app to Google Play (need service account JSON)
-- [ ] Submit iOS app to App Store (after iOS build succeeds)
+- [ ] Submit iOS app to App Store
 
 ## Master Admin Feature Control Panel ✅ COMPLETE
 - [x] Build admin UI for feature flag management (/admin/features)

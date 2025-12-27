@@ -30,7 +30,7 @@
       "ios": {
         "simulator": false,
         "buildConfiguration": "Release",
-        "image": "latest"
+        "image": "macos-ventura-13.6-xcode-15.2"
       },
       "android": {
         "buildType": "app-bundle",

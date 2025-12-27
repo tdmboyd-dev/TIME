@@ -41,7 +41,7 @@
           "processing"
         ]
       },
-      "buildNumber": "6",
+      "buildNumber": "10",
       "config": {
         "usesNonExemptEncryption": false
       },
@@ -61,11 +61,7 @@
           "TAG"
         ],
         "com.apple.developer.siri": true,
-        "com.apple.developer.healthkit": true,
-        "com.apple.developer.healthkit.access": [
-          "HKQuantityTypeIdentifierHeartRate",
-          "HKQuantityTypeIdentifierRestingHeartRate"
-        ]
+        "com.apple.developer.healthkit": true
       },
       "usesAppleSignIn": true,
       "usesIcloudStorage": true

@@ -1,4 +1,4 @@
-# TIME BEYOND US - Latest Status v68.2.0
+# TIME BEYOND US - Latest Status v69.0.0
 
 ## What's New (2025-12-27)
 
@@ -6,19 +6,11 @@
 - Live: https://timebeyondus.com
 - All pages working
 
-### iOS BUILD ⚠️ NEEDS PROVISIONING PROFILE UPDATE
-- Certificate ✅ (regenerated successfully)
-- Capabilities ✅ (enabled in Apple Developer: Apple Pay, HealthKit, NFC, Siri, Sign in with Apple)
-- Provisioning Profile ❌ (created before capabilities were enabled)
-- Error: "Profile doesn't support Apple Pay, HealthKit, NFC, Sign in with Apple, Siri"
-
-**FIX STEPS**:
-1. Double-click `mobile/FIX-iOS-CREDENTIALS.bat`
-2. Select "production" profile
-3. Select "Build Credentials"
-4. Select "Provisioning Profile: Delete one from your project"
-5. Confirm deletion
-6. Then run: `eas build --platform ios --profile production`
+### iOS BUILD ✅ SUCCESS!
+- **IPA**: https://expo.dev/artifacts/eas/ugwFkxb4cbA1Wyd2d3Tgke.ipa
+- Build #10, Version 1.0.0
+- All capabilities: Push, Sign in with Apple, NFC, Siri, HealthKit, Apple Pay
+- Ready to submit to App Store!
 
 ### Android ✅ READY
 - AAB file ready for Google Play
