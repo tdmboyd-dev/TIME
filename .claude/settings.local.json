@@ -44,7 +44,32 @@
       "Bash(eas credentials:*)",
       "Bash(eas build:list:*)",
       "WebFetch(domain:expo.dev)",
-      "Bash(eas build:view:*)"
+      "Bash(eas build:view:*)",
+      "Bash(eas submit:*)",
+      "Bash(set EXPO_APPLE_ID=timebeunus.boyd@icloud.com)",
+      "Bash(set:*)",
+      "Bash(\"C:\\\\Users\\\\Timeb\\\\OneDrive\\\\TIME\\\\mobile\\\\run-ios-build.bat\")",
+      "Bash(cmd /c \"set EXPO_APPLE_ID=timebeunus.boyd@icloud.com && set EXPO_APPLE_PASSWORD=mkqk-lhbw-ajra-nuvx && set EXPO_APPLE_TEAM_ID=DB9BF4C58Y && eas build --platform ios --profile production --no-wait\")",
+      "Bash(eas --help:*)",
+      "Bash(eas credentials:configure-build:*)",
+      "Bash(\"C:\\\\Users\\\\Timeb\\\\OneDrive\\\\TIME\\\\mobile\\\\setup-ios-creds.bat\")",
+      "Bash(eas secret:list:*)",
+      "Bash(eas env:create:*)",
+      "Bash(del /q \"C:\\\\Users\\\\Timeb\\\\.app-store\\\\auth\\\\timebeunus.boyd@icloud.com\\\\*\")",
+      "Bash(cmd /c \"del /q C:\\\\Users\\\\Timeb\\\\.app-store\\\\auth\\\\timebeunus.boyd@icloud.com\\\\* 2>nul\")",
+      "Bash(cmd /c \"rmdir /s /q C:\\\\Users\\\\Timeb\\\\.app-store 2>nul\")",
+      "Bash(eas env:delete:*)",
+      "Bash(openssl genrsa:*)",
+      "Bash(where:*)",
+      "Bash(openssl req:*)",
+      "Bash(cmd /c \"openssl genrsa -out ios_distribution.key 2048\")",
+      "Bash(openssl x509:*)",
+      "Bash(openssl pkcs12:*)",
+      "Bash(echo:*)",
+      "Bash(copy \"C:\\\\Users\\\\Timeb\\\\Downloads\\\\TIME.mobileprovision\" \"C:\\\\Users\\\\Timeb\\\\OneDrive\\\\TIME\\\\mobile\\\\TIME.mobileprovision\")",
+      "Bash(cmd /c copy \"C:\\\\Users\\\\Timeb\\\\Downloads\\\\TIME.mobileprovision\" \"C:\\\\Users\\\\Timeb\\\\OneDrive\\\\TIME\\\\mobile\\\\TIME.mobileprovision\")",
+      "Bash(cmd /c dir \"C:\\\\Users\\\\Timeb\\\\OneDrive\\\\TIME\\\\mobile\\\\TIME.mobileprovision\")",
+      "WebFetch(domain:job-logs.eascdn.net)"
     ]
   }
 }

@@ -27,7 +27,7 @@
         "NSUserTrackingUsageDescription": "This identifier will be used to deliver personalized trading insights",
         "ITSAppUsesNonExemptEncryption": false
       },
-      "buildNumber": "1",
+      "buildNumber": "4",
       "config": {
         "usesNonExemptEncryption": false
       },
@@ -41,7 +41,7 @@
         "backgroundColor": "#020617"
       },
       "package": "com.timebeyondus.trading",
-      "versionCode": 12,
+      "versionCode": 14,
       "permissions": [
         "USE_BIOMETRIC",
         "USE_FINGERPRINT",
