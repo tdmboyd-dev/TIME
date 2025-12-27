@@ -71,3 +71,4 @@ secrets/
 bot_library/external/
 .vercel
 .env*.local
+.claude/
