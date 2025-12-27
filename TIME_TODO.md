@@ -4,30 +4,30 @@
 - [x] Create mobile app assets from SVGs
 - [x] Android build complete - AAB: https://expo.dev/artifacts/eas/6yzb9upXsWQNwFtHSE2fmZ.aab
 - [x] iOS credentials configured (cert, provisioning, push key, ASC API key)
-- [ ] iOS build in progress - https://expo.dev/accounts/timebeunus/projects/time-beyond-us/builds/e5dd6378-b45b-49cb-97a3-32ee4eb007ca
+- [x] iOS build #5 queued - https://expo.dev/accounts/timebeunus/projects/time-beyond-us/builds/6d61e41c-caf2-4599-8856-d71b1dfb983b
 - [ ] Submit Android app to Google Play (need service account JSON)
-- [ ] Submit iOS app to App Store
+- [ ] Submit iOS app to App Store (after build completes)
 
-## Master Admin Feature Control Panel
-- [ ] Build admin UI for feature flag management
-- [ ] Create feature flags database table
-- [ ] API endpoints for toggling features
-- [ ] Real-time feature flag sync to mobile/web
-- [ ] Feature flag caching system
+## Master Admin Feature Control Panel ✅ COMPLETE
+- [x] Build admin UI for feature flag management (/admin/features)
+- [x] Create feature flags database table
+- [x] API endpoints for toggling features
+- [x] Real-time feature flag sync to mobile/web
+- [x] Feature flag caching system
 
-## Auto-Announcement System
-- [ ] Announcement creation on feature enable
-- [ ] Push notification broadcast
-- [ ] In-app announcement banner
-- [ ] Email notification option
-- [ ] Announcement history/archive
+## Auto-Announcement System ✅ COMPLETE
+- [x] Announcement creation on feature enable
+- [x] Push notification broadcast
+- [x] In-app announcement banner
+- [x] Email notification option
+- [x] Announcement history/archive
 
-## User Segment Targeting
-- [ ] User segments database (premium, free, beta, etc.)
-- [ ] Segment-based feature rollout
-- [ ] Percentage-based gradual rollout
-- [ ] Geographic targeting
-- [ ] Device-based targeting
+## User Segment Targeting ✅ COMPLETE
+- [x] User segments database (premium, free, beta, etc.)
+- [x] Segment-based feature rollout
+- [x] Percentage-based gradual rollout
+- [x] Geographic targeting (by_country)
+- [x] Device-based targeting
 
 ## A/B Testing Framework
 - [ ] Experiment creation UI
@@ -36,27 +36,27 @@
 - [ ] Statistical significance calculator
 - [ ] Winner selection and full rollout
 
-## iOS Capabilities Implementation
-- [ ] Push Notifications - trade alerts, price alerts, bot signals
-- [ ] Associated Domains - deep linking configured
-- [ ] Sign In with Apple - authentication option
-- [ ] In-App Purchases - premium subscriptions
-- [ ] Data Protection - secure financial data
-- [ ] Time Sensitive Notifications - urgent alerts
-- [ ] iCloud - sync settings across devices
-- [ ] App Groups - widget support, extensions
-- [ ] Siri - Hey Siri show my portfolio
-- [ ] Wallet - trading cards/passes
-- [ ] NFC Tag Reading - hardware wallet integration
-- [ ] FinanceKit - finance data access
-- [ ] WeatherKit - market sentiment correlation
-- [ ] Maps - find brokers/ATMs
-- [ ] HealthKit - stress tracking during trading
+## iOS Capabilities Implementation ✅ UPDATED in app.json
+- [x] Push Notifications - trade alerts, price alerts, bot signals
+- [x] Associated Domains - deep linking configured
+- [x] Sign In with Apple - authentication option
+- [x] In-App Purchases - premium subscriptions (merchant ID configured)
+- [x] Data Protection - secure financial data
+- [x] Time Sensitive Notifications - urgent alerts
+- [x] iCloud - sync settings across devices
+- [ ] App Groups - widget support, extensions (needs additional setup)
+- [x] Siri - Hey Siri show my portfolio
+- [ ] Wallet - trading cards/passes (needs additional setup)
+- [x] NFC Tag Reading - hardware wallet integration
+- [x] HealthKit - stress tracking during trading
+- [ ] WeatherKit - market sentiment correlation (needs API key)
+- [ ] Maps - find brokers/ATMs (needs implementation)
+- [ ] FinanceKit - finance data access (needs additional setup)
 
-## Update app.json with all capabilities
-- [ ] Add all entitlements
-- [ ] Add all usage descriptions
-- [ ] Configure background modes
+## Security
+- [x] Remove exposed passwords from batch files (GitGuardian incident fixed)
+- [x] Add batch files to .gitignore
+- [ ] Revoke old app-specific passwords in Apple ID settings
 
 ---
 Last Updated: 2025-12-27

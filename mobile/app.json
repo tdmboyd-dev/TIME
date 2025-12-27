@@ -19,21 +19,47 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.timebeyondus.trading",
       "associatedDomains": [
-        "applinks:timebeyondus.com"
+        "applinks:timebeyondus.com",
+        "webcredentials:timebeyondus.com"
       ],
       "infoPlist": {
         "NSFaceIDUsageDescription": "Allow TIME BEYOND US to use Face ID for secure authentication",
-        "NSCameraUsageDescription": "Allow camera access for QR code scanning",
+        "NSCameraUsageDescription": "Allow camera access for QR code scanning and document verification",
         "NSUserTrackingUsageDescription": "This identifier will be used to deliver personalized trading insights",
-        "ITSAppUsesNonExemptEncryption": false
+        "NSLocationWhenInUseUsageDescription": "Find nearby brokers and financial services",
+        "NSLocationAlwaysUsageDescription": "Enable location-based price alerts and market notifications",
+        "NSPhotoLibraryUsageDescription": "Upload documents for account verification",
+        "NSMicrophoneUsageDescription": "Use voice commands for trading",
+        "NSSiriUsageDescription": "Ask Siri to check your portfolio and market data",
+        "NFCReaderUsageDescription": "Connect hardware wallets and security keys",
+        "NSHealthShareUsageDescription": "Track stress levels during trading sessions",
+        "NSHealthUpdateUsageDescription": "Record trading session wellness data",
+        "ITSAppUsesNonExemptEncryption": false,
+        "UIBackgroundModes": [
+          "remote-notification",
+          "fetch",
+          "processing"
+        ]
       },
-      "buildNumber": "4",
+      "buildNumber": "5",
       "config": {
         "usesNonExemptEncryption": false
       },
       "entitlements": {
-        "aps-environment": "production"
-      }
+        "aps-environment": "production",
+        "com.apple.developer.associated-domains": [
+          "applinks:timebeyondus.com",
+          "webcredentials:timebeyondus.com"
+        ],
+        "com.apple.developer.applesignin": ["Default"],
+        "com.apple.developer.in-app-payments": ["merchant.com.timebeyondus.trading"],
+        "com.apple.developer.nfc.readersession.formats": ["TAG"],
+        "com.apple.developer.siri": true,
+        "com.apple.developer.healthkit": true,
+        "com.apple.developer.healthkit.access": ["HKQuantityTypeIdentifierHeartRate", "HKQuantityTypeIdentifierRestingHeartRate"]
+      },
+      "usesAppleSignIn": true,
+      "usesIcloudStorage": true
     },
     "android": {
       "adaptiveIcon": {
