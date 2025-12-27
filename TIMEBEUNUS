@@ -1,18 +1,27 @@
 # TIME BEYOND US - Development Status
 
-## Latest Update: v68.0.0 - iOS Capabilities & Admin Panel (2025-12-27)
+## Latest Update: v68.1.0 - Vercel Fixed, iOS Needs Credential Regeneration (2025-12-27)
 
-### SECURITY FIX APPLIED
-- Removed exposed Apple app-specific passwords from batch files
-- GitGuardian incident resolved
-- Passwords must now be set via environment variables or EAS secrets
-- **ACTION REQUIRED**: Revoke old app-specific passwords in Apple ID settings
+### VERCEL DEPLOYMENT ✅ SUCCESS
+- Live at: https://timebeyondus.com
+- All 56 pages deployed successfully
+- Build completed without errors
 
-### iOS BUILD STATUS
-- Build #5 ERRORED - Same certificate import issue
+### iOS BUILD STATUS ⚠️ BLOCKED
+- Certificate on EAS servers is corrupted
 - Error: "Distribution certificate hasn't been imported successfully"
-- The certificate exists but EAS can't import it to the build keychain
-- **SOLUTION**: Need to regenerate iOS credentials via `eas credentials`
+- **TO FIX**: Run `FIX-iOS-CREDENTIALS.bat` in mobile folder
+- Or manually: `cd mobile && eas credentials --platform ios`
+- Then regenerate the distribution certificate
+
+### Android BUILD ✅ READY
+- AAB: https://expo.dev/artifacts/eas/6yzb9upXsWQNwFtHSE2fmZ.aab
+- Ready to submit to Google Play
+
+### SECURITY FIX ✅ COMPLETE
+- Removed exposed Apple passwords from batch files
+- GitGuardian incident resolved
+- **ACTION**: Revoke old app-specific passwords in Apple ID settings
 
 ### COMPLETED FEATURES
 
@@ -22,58 +31,42 @@
 - Rollout percentage slider (0-100%)
 - User segment targeting (all, premium, free, beta_testers, by_country)
 - Announcement system on feature enable
-- Real-time stats dashboard
 
 #### Auto-Announcement System
-- Automatic announcements when features are enabled
 - Push notification broadcast
-- In-app banner with customizable types (info, success, warning, feature)
+- In-app banner with customizable types
 - Duration control (1-30 days)
-- Announcement preview
 
 #### User Segment Targeting
 - Segment-based feature rollout
 - Percentage-based gradual rollout
 - Geographic targeting support
-- Beta tester targeting
 
 #### iOS Capabilities Added (app.json)
 - Sign In with Apple
-- In-App Purchases (merchant ID configured)
-- HealthKit integration
-- Siri integration
-- NFC Tag Reading
-- iCloud sync
-- Location services
-- Background modes (notifications, fetch, processing)
-
-### MOBILE APP
-- Android build COMPLETE - AAB ready
-- iOS build needs credential regeneration
-
-### VERCEL DEPLOYMENT
-- Production deployment successful
-- Frontend live at: https://frontend-dnmf7f0c7-tdmboyd-devs-projects.vercel.app
+- In-App Purchases
+- HealthKit, Siri, NFC, iCloud
+- Background modes
 
 ### REMAINING TODO
+- [ ] Fix iOS certificate (run FIX-iOS-CREDENTIALS.bat)
 - [ ] A/B Testing Framework
-- [ ] App Groups for widgets
-- [ ] Wallet integration
-- [ ] WeatherKit API
-- [ ] Maps implementation
-- [ ] Submit to app stores
+- [ ] Submit apps to stores
 
-## Tech Stack
-- Frontend: Next.js 14 / React / TypeScript
-- Mobile: React Native / Expo SDK 50
-- Backend: Node.js / Express / TypeScript
-- Real-time: WebSocket
-- Auth: JWT + Biometric + Apple Sign In
+## Quick Commands
+```bash
+# Fix iOS credentials (interactive)
+cd mobile && eas credentials --platform ios
+
+# Start iOS build after fix
+eas build --platform ios --profile production
+
+# Deploy frontend
+cd frontend && npx vercel --prod
+```
 
 ## Version History
+- v68.1.0: Vercel Fixed, iOS credential fix script added
 - v68.0.0: iOS Capabilities & Admin Panel Complete
 - v67.0.0: iOS Build Fix & Mobile App Improvements
 - v66.0.0: Backtesting System Complete
-- v65.0.0: AI Chat Support System
-- v64.0.0: User Onboarding Flow
-- v63.0.0: Push Notifications + Email Campaigns

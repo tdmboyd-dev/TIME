@@ -70,7 +70,10 @@
       "Bash(cmd /c copy \"C:\\\\Users\\\\Timeb\\\\Downloads\\\\TIME.mobileprovision\" \"C:\\\\Users\\\\Timeb\\\\OneDrive\\\\TIME\\\\mobile\\\\TIME.mobileprovision\")",
       "Bash(cmd /c dir \"C:\\\\Users\\\\Timeb\\\\OneDrive\\\\TIME\\\\mobile\\\\TIME.mobileprovision\")",
       "WebFetch(domain:job-logs.eascdn.net)",
-      "WebFetch(domain:vercel.com)"
+      "WebFetch(domain:vercel.com)",
+      "Bash(eas credentials:manager:*)",
+      "Bash(for i in {1..10})",
+      "Bash(do sleep 30)"
     ]
   }
 }

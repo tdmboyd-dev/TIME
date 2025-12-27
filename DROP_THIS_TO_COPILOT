@@ -1,61 +1,53 @@
-# TIME BEYOND US - Latest Status v68.0.0
+# TIME BEYOND US - Latest Status v68.1.0
 
 ## What's New (2025-12-27)
 
-### SECURITY FIX APPLIED
-- Fixed GitGuardian alert - removed exposed Apple passwords from batch files
-- Passwords now set via environment variables
-- **ACTION**: Revoke old app-specific passwords in Apple ID settings
+### VERCEL ✅ DEPLOYED
+- Live: https://timebeyondus.com
+- All pages working
 
-### iOS BUILD STATUS
-- Build #5 ERRORED - Certificate import issue on EAS servers
-- Need to regenerate credentials: `eas credentials --platform ios`
-- Android AAB ready for Google Play
+### iOS BUILD ⚠️ NEEDS FIX
+- Certificate corrupted on EAS servers
+- **FIX**: Double-click `mobile/FIX-iOS-CREDENTIALS.bat`
+- Or run: `cd mobile && eas credentials --platform ios`
+- Select "production" profile
+- Choose to regenerate distribution certificate
+- Then run: `eas build --platform ios --profile production`
 
-### ADMIN FEATURE CONTROL PANEL - COMPLETE (/admin/features)
-- Feature flags CRUD (create, read, update, delete)
-- Enable/disable toggles with instant effect
-- Rollout percentage control (0-100%)
-- User segment targeting (all, premium, free, beta, by_country)
-- Auto-announcement on feature enable
-- Push notification broadcast
-- Stats dashboard
+### Android ✅ READY
+- AAB file ready for Google Play
 
-### iOS CAPABILITIES ADDED
-- Sign In with Apple
-- In-App Purchases
-- HealthKit (stress tracking)
-- Siri integration
-- NFC for hardware wallets
-- iCloud sync
-- Background modes
+### Security ✅ FIXED
+- Removed exposed passwords
+- Need to revoke old app-specific passwords in Apple ID
 
-### VERCEL DEPLOYMENT
-- Successfully deployed to production
-- Live at production URL
-
-## Key Files Modified
-- mobile/app.json - iOS capabilities
-- mobile/*.bat - Security fix
-- frontend/src/app/admin/features/page.tsx - Admin panel
-- TIME_TODO.md - Updated with completion status
-
-## Remaining Work
-1. A/B Testing Framework
-2. Fix iOS certificate issue
-3. Submit apps to stores
-
-## Quick Commands
+## Commands Reference
 ```bash
-# Check iOS build status
-eas build:list --platform ios --limit 1
+# EAS CLI commands
+eas --version              # Check version
+eas whoami                 # Check logged in user
+eas credentials            # Manage credentials (interactive)
+eas build --platform ios   # Start iOS build
+eas build --platform android  # Start Android build
+eas build:list             # List builds
 
-# Regenerate iOS credentials
-eas credentials --platform ios
-
-# Deploy frontend
+# Vercel
 cd frontend && npx vercel --prod
 
-# Run local dev
+# Local dev
 npm run dev
 ```
+
+## Key Files
+- `mobile/FIX-iOS-CREDENTIALS.bat` - Fix iOS credentials
+- `mobile/iOS-BUILD-FIX-INSTRUCTIONS.md` - Detailed instructions
+- `frontend/src/app/admin/features/page.tsx` - Feature flags admin
+
+## Status Summary
+| Component | Status |
+|-----------|--------|
+| Vercel | ✅ Deployed |
+| Android | ✅ Ready |
+| iOS | ⚠️ Needs credential fix |
+| Admin Panel | ✅ Complete |
+| Security | ✅ Fixed |
