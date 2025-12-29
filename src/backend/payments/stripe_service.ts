@@ -11,7 +11,7 @@
  * - FREE: $0/month - 3 bots, paper trading only
  * - BASIC: $19/month - 5 bots, $5K capital
  * - PRO: $49/month - 7 bots, $25K capital
- * - PREMIUM: $109/month - 11 Super Bots, $100K capital
+ * - PREMIUM: $109/month - 11 Super Bots, Unlimited capital
  * - ENTERPRISE: $450/month - Unlimited everything + white-label
  *
  * OPTIONAL ADD-ONS (can be added to any tier):
@@ -147,7 +147,7 @@ export const SUBSCRIPTION_TIERS: Record<string, SubscriptionTier> = {
     interval: 'month',
     features: [
       '11 Super Bots',
-      '$100,000 max capital',
+      'Unlimited capital',
       '24/7 priority support',
       'Advanced AI features',
       'Risk management tools',

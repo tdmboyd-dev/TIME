@@ -133,7 +133,7 @@ SUBSCRIPTION TIERS:
 - FREE: 1 bot, paper trading
 - BASIC ($19/mo): 3 bots, $5K capital
 - PRO ($49/mo): 7 bots, $25K capital
-- PREMIUM ($99/mo): 15 bots, $100K capital
+- PREMIUM ($99/mo): 15 bots, unlimited capital
 - ENTERPRISE ($249/mo): Unlimited bots
 
 Start with $100 and let AI build profitable trading bots for you!

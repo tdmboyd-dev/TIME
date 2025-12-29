@@ -12,7 +12,13 @@
 - [x] Complete App Store screenshots and metadata
 - [x] Fix App Privacy (removed NSUserTrackingUsageDescription conflict)
 - [x] Submit for App Review - PENDING APPLE REVIEW
-- [ ] Submit Android app to Google Play (need service account JSON)
+- [ ] Submit Android app to Google Play (guide in mobile/GOOGLE_PLAY_SUBMISSION_GUIDE.md)
+- [ ] AAB file ready: mobile/application-2d09f050-0f4c-4307-ad9d-d07ffbd8a741.aab
+
+## iOS App Store Updates (After Jan 1st 2026)
+- [ ] Update PREMIUM tier description to "unlimited capital" (currently shows $100K)
+- [ ] Change App Store icon to TIME letter logo (same as sidebar logo)
+- [ ] Update app description with unlimited capital for PREMIUM tier
 
 ## Master Admin Feature Control Panel ✅ COMPLETE
 - [x] Build admin UI for feature flag management (/admin/features)
@@ -70,5 +76,10 @@
 - [ ] Register merchant domains for Apple Pay on web
 - [ ] Configure Push Notification certificates if needed
 
+## Mobile Web Bug Fix
+- [x] Fix "application error: a client-side exception has occurred" on mobile browsers
+  - v71.0.0 already deployed fix for mobile Chrome
+  - If still seeing error, force refresh (pull down on mobile or Ctrl+Shift+R)
+
 ---
-Last Updated: 2025-12-27
+Last Updated: 2025-12-28

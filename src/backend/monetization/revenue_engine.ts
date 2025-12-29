@@ -116,7 +116,7 @@ const SUBSCRIPTION_PLANS: Record<SubscriptionTier, SubscriptionPlan> = {
     features: [
       'Everything in Starter',
       '5 AI-powered bots',
-      '$100K capital limit',
+      'Unlimited capital',
       'Tax-loss harvesting',
       'Advanced charts',
       'Priority support',

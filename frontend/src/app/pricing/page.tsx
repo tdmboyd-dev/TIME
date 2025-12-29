@@ -118,7 +118,7 @@ const FALLBACK_TIERS: SubscriptionTier[] = [
     interval: 'month',
     features: [
       '11 Super Bots',
-      '$100,000 max capital',
+      'Unlimited capital',
       '24/7 priority support',
       'Advanced AI features',
       'Risk management tools',

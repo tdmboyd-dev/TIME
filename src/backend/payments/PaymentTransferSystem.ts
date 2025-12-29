@@ -401,7 +401,7 @@ export class PaymentTransferSystem extends EventEmitter {
         features: [
           'Everything in Starter',
           '5 AI-powered bots',
-          '$100K capital limit',
+          'Unlimited capital',
           'Tax-loss harvesting',
           'Advanced charts',
           'Priority support',

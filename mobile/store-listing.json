@@ -2,7 +2,7 @@
   "app_name": "TIME BEYOND US",
   "subtitle": "AI Trading & Bot Platform",
   "short_description": "AI-powered trading bots. Build, deploy, and profit with automated strategies.",
-  "full_description": "TIME BEYOND US is the ultimate AI-powered trading platform that puts professional-grade trading tools in your pocket.\n\n\ud83e\udd16 AUTOMATED TRADING BOTS\n\u2022 Create custom trading bots in seconds with AI\n\u2022 25+ pre-built strategy templates\n\u2022 Works with stocks, crypto, forex, options & futures\n\n\ud83d\udcca REAL-TIME PORTFOLIO TRACKING\n\u2022 Live P&L updates\n\u2022 Multi-broker integration\n\u2022 Performance analytics\n\n\ud83d\udce1 ADVANCED TRADING TOOLS\n\u2022 AI-powered trading signals\n\u2022 Technical analysis charts\n\u2022 Price alerts & notifications\n\n\ud83c\udfea BOT MARKETPLACE\n\u2022 Subscribe to top-performing bots\n\u2022 Share your strategies and earn\n\u2022 TIMEBEUNUS fusion for +15% performance boost\n\n\ud83d\udd12 SECURITY FIRST\n\u2022 Biometric authentication (Face ID / Fingerprint)\n\u2022 Bank-grade encryption\n\u2022 Never stores your broker credentials\n\n\ud83d\udcb0 SUBSCRIPTION TIERS:\n\u2022 FREE: 1 bot, paper trading\n\u2022 BASIC ($19/mo): 3 bots, $5K capital\n\u2022 PRO ($49/mo): 7 bots, $25K capital\n\u2022 PREMIUM ($99/mo): 15 bots, $100K capital\n\u2022 ENTERPRISE ($249/mo): Unlimited bots\n\nStart with $100 and let AI build profitable trading bots for you!\n\nDownload now and transform how you trade.",
+  "full_description": "TIME BEYOND US is the ultimate AI-powered trading platform that puts professional-grade trading tools in your pocket.\n\n\ud83e\udd16 AUTOMATED TRADING BOTS\n\u2022 Create custom trading bots in seconds with AI\n\u2022 25+ pre-built strategy templates\n\u2022 Works with stocks, crypto, forex, options & futures\n\n\ud83d\udcca REAL-TIME PORTFOLIO TRACKING\n\u2022 Live P&L updates\n\u2022 Multi-broker integration\n\u2022 Performance analytics\n\n\ud83d\udce1 ADVANCED TRADING TOOLS\n\u2022 AI-powered trading signals\n\u2022 Technical analysis charts\n\u2022 Price alerts & notifications\n\n\ud83c\udfea BOT MARKETPLACE\n\u2022 Subscribe to top-performing bots\n\u2022 Share your strategies and earn\n\u2022 TIMEBEUNUS fusion for +15% performance boost\n\n\ud83d\udd12 SECURITY FIRST\n\u2022 Biometric authentication (Face ID / Fingerprint)\n\u2022 Bank-grade encryption\n\u2022 Never stores your broker credentials\n\n\ud83d\udcb0 SUBSCRIPTION TIERS:\n\u2022 FREE: 1 bot, paper trading\n\u2022 BASIC ($19/mo): 3 bots, $5K capital\n\u2022 PRO ($49/mo): 7 bots, $25K capital\n\u2022 PREMIUM ($99/mo): 15 bots, unlimited capital\n\u2022 ENTERPRISE ($249/mo): Unlimited bots\n\nStart with $100 and let AI build profitable trading bots for you!\n\nDownload now and transform how you trade.",
   "keywords": "trading,bots,ai,stocks,crypto,forex,automated,investing,portfolio,alerts,signals,strategy",
   "category_primary": "Finance",
   "category_secondary": "Business",
@@ -31,7 +31,7 @@
         "product_id": "time_premium_monthly",
         "name": "PREMIUM Monthly",
         "price": 99.99,
-        "description": "15 bots, $100K capital limit, 24/7 support"
+        "description": "15 bots, unlimited capital, 24/7 support"
       },
       {
         "product_id": "time_enterprise_monthly",

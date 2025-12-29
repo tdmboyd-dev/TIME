@@ -1366,7 +1366,7 @@ router.get('/pricing', authMiddleware, adminMiddleware, (req: Request, res: Resp
     { id: 'free', name: 'Free', price: '$0/mo', description: '1 bot, paper trading' },
     { id: 'basic', name: 'Basic', price: '$19/mo', description: '3 bots, $5K capital' },
     { id: 'pro', name: 'Pro', price: '$49/mo', description: '7 bots, $25K capital' },
-    { id: 'premium', name: 'Premium', price: '$109/mo', description: '11 Super Bots, $100K capital' },
+    { id: 'premium', name: 'Premium', price: '$109/mo', description: '11 Super Bots, Unlimited capital' },
     { id: 'enterprise', name: 'Enterprise', price: '$450/mo', description: 'Unlimited bots & capital' },
     // Optional Add-Ons
     { id: 'dropbot', name: 'DROPBOT AutoPilot (Add-On)', price: '+$39/mo', description: 'Zero-config autopilot trading' },

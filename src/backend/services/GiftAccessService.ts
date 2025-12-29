@@ -191,8 +191,8 @@ class GiftAccessService extends EventEmitter {
       PRO: {
         monthlyPrice: 79,
         annualPrice: 758.40, // $63.20/mo billed annually (20% off)
-        features: ['5 bots', '$100K capital', 'Tax harvesting', 'Advanced charts', 'Priority support'],
-        limits: { maxBots: 5, maxCapital: 100000, maxTrades: 500 },
+        features: ['5 bots', 'Unlimited capital', 'Tax harvesting', 'Advanced charts', 'Priority support'],
+        limits: { maxBots: 5, maxCapital: -1, maxTrades: 500 },
       },
       UNLIMITED: {
         monthlyPrice: 149,

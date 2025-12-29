@@ -1,7 +1,7 @@
 # DROP THIS TO COPILOT - QUICK REFERENCE
 
 **Last Updated:** 2025-12-28
-**Version:** v72.0.0 - iOS APP SUBMITTED FOR APP STORE REVIEW
+**Version:** v73.0.0 - iOS SUBMITTED + ANDROID READY + PREMIUM UNLIMITED
 **Purpose:** Quick summary for Copilot/Claude when starting new sessions
 
 ---
