@@ -25,7 +25,6 @@
       "infoPlist": {
         "NSFaceIDUsageDescription": "Allow TIME BEYOND US to use Face ID for secure authentication",
         "NSCameraUsageDescription": "Allow camera access for QR code scanning and document verification",
-        "NSUserTrackingUsageDescription": "This identifier will be used to deliver personalized trading insights",
         "NSLocationWhenInUseUsageDescription": "Find nearby brokers and financial services",
         "NSLocationAlwaysUsageDescription": "Enable location-based price alerts and market notifications",
         "NSPhotoLibraryUsageDescription": "Upload documents for account verification",
@@ -40,7 +39,7 @@
           "fetch"
         ]
       },
-      "buildNumber": "13",
+      "buildNumber": "17",
       "config": {
         "usesNonExemptEncryption": false
       },

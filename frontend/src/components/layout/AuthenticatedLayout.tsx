@@ -30,7 +30,7 @@ function PWARegistration() {
 }
 
 // Routes that don't need the dashboard layout
-const publicRoutes = ['/login', '/register', '/admin-login', '/forgot-password', '/reset-password'];
+const publicRoutes = ['/login', '/register', '/admin-login', '/forgot-password', '/reset-password', '/privacy', '/terms', '/support'];
 
 function LayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();

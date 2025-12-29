@@ -16,6 +16,9 @@ const PUBLIC_ROUTES = [
   '/admin-login',
   '/markets',
   '/learn',
+  '/privacy',
+  '/terms',
+  '/support',
 ];
 
 // Routes that require admin privileges

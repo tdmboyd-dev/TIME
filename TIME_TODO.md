@@ -5,13 +5,14 @@
 - [x] Android build complete - AAB: https://expo.dev/artifacts/eas/6yzb9upXsWQNwFtHSE2fmZ.aab
 - [x] iOS credentials configured (cert, provisioning, push key, ASC API key)
 - [x] **iOS SUBMITTED TO APP STORE!** - App Name: TIME APEX
-  - Build #13, Version 1.0.0
+  - Build #15, Version 1.0.0
   - Apple ID: 6757105143
   - TestFlight: https://appstoreconnect.apple.com/apps/6757105143/testflight/ios
   - All capabilities: Push, Sign in with Apple, NFC, Siri, HealthKit, Apple Pay
+- [x] Complete App Store screenshots and metadata
+- [x] Fix App Privacy (removed NSUserTrackingUsageDescription conflict)
+- [x] Submit for App Review - PENDING APPLE REVIEW
 - [ ] Submit Android app to Google Play (need service account JSON)
-- [ ] Complete App Store screenshots and metadata
-- [ ] Submit for App Review
 
 ## Master Admin Feature Control Panel ✅ COMPLETE
 - [x] Build admin UI for feature flag management (/admin/features)

@@ -36,7 +36,7 @@ export function useAuth() {
 }
 
 // Routes that don't require authentication
-const publicRoutes = ['/login', '/register', '/admin-login', '/forgot-password', '/reset-password'];
+const publicRoutes = ['/login', '/register', '/admin-login', '/forgot-password', '/reset-password', '/privacy', '/terms', '/support'];
 
 // Routes that require admin access
 const adminRoutes = ['/admin', '/admin/', '/admin-portal', '/admin-bot', '/ai-trade-god', '/timebeunus', '/gift-access'];
