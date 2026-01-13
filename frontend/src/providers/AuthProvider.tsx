@@ -62,8 +62,29 @@ function getCookie(name: string): string | null {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  // Initialize user from localStorage immediately to prevent loading flash
+  const [user, setUser] = useState<User | null>(() => {
+    if (typeof window === 'undefined') return null;
+    try {
+      const stored = localStorage.getItem('time_user');
+      const token = getCookie('time_auth_token');
+      // Only use stored user if we also have a token
+      if (stored && token) {
+        console.log('[AuthProvider] Using stored user on init');
+        return JSON.parse(stored);
+      }
+    } catch {}
+    return null;
+  });
+  const [isLoading, setIsLoading] = useState(() => {
+    // Don't show loading if we already have user from localStorage
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('time_user');
+      const token = getCookie('time_auth_token');
+      if (stored && token) return false;
+    }
+    return true;
+  });
   const router = useRouter();
   const pathname = usePathname();
 
@@ -165,6 +186,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const checkAuth = async () => {
       console.log('[AuthProvider] Starting auth check...');
+
+      // If we already have a user from localStorage, just verify in background
+      const storedUser = localStorage.getItem('time_user');
+      const token = getCookie('time_auth_token');
+
+      if (storedUser && token && user) {
+        console.log('[AuthProvider] User already loaded, verifying in background...');
+        // Verify in background without blocking
+        refreshUser().catch(err => {
+          console.warn('[AuthProvider] Background verification failed:', err);
+        });
+        return;
+      }
+
+      // No stored user, need to load
       setIsLoading(true);
       try {
         await refreshUser();
