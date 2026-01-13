@@ -444,9 +444,13 @@
    - Token now set as cookie on frontend domain after API response
    - Bypasses cross-origin cookie restriction
 
-2. **AuthProvider Error Handling** (`AuthProvider.tsx`)
+2. **AuthProvider Error Handling** (`AuthProvider.tsx`) - v74.3.0
    - Added try-catch-finally to ensure loading state always updates
    - Prevents infinite loading on error
+   - **NEW**: Initialize user from localStorage immediately on mount
+   - **NEW**: Skip loading state if user already stored
+   - **NEW**: 10-second timeout for /auth/me to prevent hangs
+   - **NEW**: Verify session in background without blocking UI
 
 3. **WebSocket Production URL** (`useWebSocket.ts`)
    - Now detects production environment
@@ -455,6 +459,21 @@
 4. **MetaMask Error Suppression** (`Web3Provider.tsx`)
    - Filters MetaMask disconnect errors from console
    - Logs as debug instead of error
+
+5. **Socket.IO CORS** (`realtime_service.ts`, `socket_service.ts`, `realtime_hub.ts`)
+   - Added production domains to all Socket.IO CORS configs
+   - `timebeyondus.com`, `www.timebeyondus.com`, `time-frontend.vercel.app`
+
+6. **Main App CORS** (`config/index.ts`)
+   - Added all production domains to Express CORS config
+
+7. **Auth Cookie Settings** (`routes/auth.ts`)
+   - Changed `SameSite` to `none` for cross-origin compatibility
+   - Removed `domain` setting to allow browser default
+
+8. **Open Redirect Prevention** (`login/page.tsx`)
+   - All redirect parameters now validated
+   - Blocks `javascript:`, `data:`, and `//` URLs
 
 ---
 
