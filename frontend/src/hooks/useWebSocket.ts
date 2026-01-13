@@ -172,17 +172,17 @@ export interface UseWebSocketOptions {
 // ============================================================
 
 export function useWebSocket(options: UseWebSocketOptions = {}) {
-  // Don't auto-connect to localhost in production - it will fail
+  // Use real backend URL in production, localhost in development
   const isProduction = typeof window !== 'undefined' && window.location.hostname !== 'localhost';
-  const defaultUrl = process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:3001';
-  const shouldAutoConnect = !isProduction || (process.env.NEXT_PUBLIC_WS_URL && process.env.NEXT_PUBLIC_WS_URL !== 'http://localhost:3001');
+  const productionWsUrl = process.env.NEXT_PUBLIC_API_URL || 'https://time-backend-hosting.fly.dev';
+  const defaultUrl = process.env.NEXT_PUBLIC_WS_URL || (isProduction ? productionWsUrl : 'http://localhost:3001');
 
   const {
     url = defaultUrl,
-    autoConnect = shouldAutoConnect,
+    autoConnect = true, // Always try to connect now that we have correct URL
     reconnect = true,
-    reconnectAttempts = 3, // Reduced from 5 to fail faster
-    reconnectDelay = 3000,
+    reconnectAttempts = 3,
+    reconnectDelay = 5000, // 5 seconds between reconnects
     auth,
     channels = [],
     handlers = {},
@@ -211,13 +211,6 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
   const connect = useCallback(() => {
     if (socketRef.current?.connected) return;
 
-    // Don't try to connect to localhost in production
-    if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && url.includes('localhost')) {
-      console.log('[WebSocket] Skipping connection to localhost in production');
-      setConnectionState(prev => ({ ...prev, isConnecting: false, error: 'WebSocket not configured for production' }));
-      return;
-    }
-
     console.log('[WebSocket] Connecting to:', url);
     setConnectionState(prev => ({ ...prev, isConnecting: true, error: null }));
 
@@ -229,6 +222,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
         reconnectionDelay: reconnectDelay,
         auth: auth ? { token: auth.token } : undefined,
         timeout: 10000, // 10 second timeout
+        path: '/socket.io/', // Socket.IO default path
       });
 
       socketRef.current = socket;

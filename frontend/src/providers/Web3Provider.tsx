@@ -11,6 +11,26 @@ import { useState, useEffect } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import '@rainbow-me/rainbowkit/styles.css';
 
+// Suppress MetaMask disconnect errors - these are browser extension issues, not our code
+if (typeof window !== 'undefined') {
+  const originalConsoleError = console.error;
+  console.error = (...args) => {
+    // Filter out MetaMask disconnect errors
+    const message = args[0]?.toString() || '';
+    if (
+      message.includes('MetaMask') ||
+      message.includes('Disconnected from') ||
+      message.includes('inpage.js') ||
+      message.includes('_handleDisconnect')
+    ) {
+      // Log as debug instead of error
+      console.debug('[Web3] MetaMask event:', args[0]);
+      return;
+    }
+    originalConsoleError.apply(console, args);
+  };
+}
+
 // Lazy load Web3 components to prevent SSR issues on mobile
 const LazyWeb3Provider = ({ children }: { children: React.ReactNode }) => {
   const [mounted, setMounted] = useState(false);
