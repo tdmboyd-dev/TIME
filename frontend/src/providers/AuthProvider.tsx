@@ -1,5 +1,12 @@
 'use client';
 
+/**
+ * Auth Provider - v74.2.0
+ * Handles user authentication state and session management
+ * - Timeout protection to prevent infinite loading
+ * - localStorage fallback when API is slow/unavailable
+ */
+
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { API_BASE } from '@/lib/api';
