@@ -61,17 +61,13 @@ export function csrfMiddleware(req: Request, res: Response, next: NextFunction):
     return next();
   }
 
-  // Skip CSRF for webhook endpoints
+  // Skip CSRF for webhook endpoints (they have their own auth mechanisms)
   if (req.path.includes('/webhook') || req.path.includes('/callback')) {
     return next();
   }
 
-  // Skip CSRF for auth endpoints - they use rate limiting for protection
-  // and the cross-origin cookie issue makes CSRF impractical for these
-  if (req.path.includes('/auth/login') || req.path.includes('/auth/register') || req.path.includes('/auth/admin')) {
-    logger.info('Skipping CSRF for auth endpoint', { path: req.path });
-    return next();
-  }
+  // IMPORTANT: Auth endpoints DO require CSRF for trading platform security
+  // The frontend must fetch a CSRF token before login/register
 
   // Validate CSRF token from header or body
   const headerToken = req.headers[CSRF_HEADER_NAME] as string;
