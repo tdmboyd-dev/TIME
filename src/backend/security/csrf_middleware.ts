@@ -94,10 +94,17 @@ export function csrfMiddleware(req: Request, res: Response, next: NextFunction):
 
 /**
  * Generate new CSRF token endpoint
+ * Uses token from middleware if available, otherwise generates new one
  */
 export function getCSRFToken(req: Request, res: Response): void {
-  const csrfToken = generateCSRFToken();
-  res.cookie(CSRF_COOKIE_NAME, csrfToken, CSRF_COOKIE_OPTIONS);
+  // Use token already set by middleware, or generate new one
+  let csrfToken = res.locals.csrfToken || req.cookies[CSRF_COOKIE_NAME];
+
+  if (!csrfToken) {
+    csrfToken = generateCSRFToken();
+    res.cookie(CSRF_COOKIE_NAME, csrfToken, CSRF_COOKIE_OPTIONS);
+  }
+
   res.json({ csrfToken });
 }
 
