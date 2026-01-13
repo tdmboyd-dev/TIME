@@ -42,11 +42,16 @@ const publicRoutes = ['/login', '/register', '/admin-login', '/forgot-password',
 const adminRoutes = ['/admin', '/admin/', '/admin-portal', '/admin-bot', '/ai-trade-god', '/timebeunus', '/gift-access'];
 
 function getCookie(name: string): string | null {
-  if (typeof document === 'undefined') return null;
-  const value = `; ${document.cookie}`;
-  const parts = value.split(`; ${name}=`);
-  if (parts.length === 2) return parts.pop()?.split(';').shift() || null;
-  return null;
+  try {
+    if (typeof document === 'undefined') return null;
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop()?.split(';').shift() || null;
+    return null;
+  } catch (error) {
+    console.error('[AuthProvider] Error reading cookie:', error);
+    return null;
+  }
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -112,9 +117,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const checkAuth = async () => {
+      console.log('[AuthProvider] Starting auth check...');
       setIsLoading(true);
-      await refreshUser();
-      setIsLoading(false);
+      try {
+        await refreshUser();
+      } catch (error) {
+        console.error('[AuthProvider] Auth check failed:', error);
+      } finally {
+        console.log('[AuthProvider] Auth check complete, setting isLoading=false');
+        setIsLoading(false);
+      }
     };
 
     checkAuth();
