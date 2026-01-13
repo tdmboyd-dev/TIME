@@ -61,11 +61,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const refreshUser = async () => {
     try {
       const token = getCookie('time_auth_token');
+      console.log('[AuthProvider] Checking auth token:', token ? `${token.substring(0, 10)}...` : 'none');
+
       if (!token) {
+        console.log('[AuthProvider] No token found, setting user to null');
         setUser(null);
         return;
       }
 
+      console.log('[AuthProvider] Fetching /auth/me...');
       const response = await fetch(`${API_BASE}/auth/me`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -73,20 +77,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         credentials: 'include',
       });
 
+      console.log('[AuthProvider] /auth/me response:', response.status, response.ok);
+
       if (response.ok) {
         const data = await response.json();
+        console.log('[AuthProvider] User data received:', data.user ? 'yes' : 'no');
         if (data.user) {
           setUser(data.user);
         } else {
           setUser(null);
         }
       } else {
+        const errorData = await response.json().catch(() => ({}));
+        console.log('[AuthProvider] Auth failed:', errorData.error || response.status);
         setUser(null);
         // Clear invalid token
         document.cookie = 'time_auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
         document.cookie = 'time_is_admin=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
       }
     } catch (error) {
+      console.error('[AuthProvider] Error checking auth:', error);
       setUser(null);
     }
   };

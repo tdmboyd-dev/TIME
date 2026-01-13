@@ -102,7 +102,15 @@ export default function LoginPage() {
       });
 
       const data = await response.json();
-      console.log('[Login] Response received:', { ok: response.ok, status: response.status, success: data.success });
+      console.log('[Login] Response received:', {
+        ok: response.ok,
+        status: response.status,
+        success: data.success,
+        hasToken: !!data.token,
+        tokenPreview: data.token ? `${data.token.substring(0, 10)}...` : 'none',
+        hasUser: !!data.user,
+        expiresAt: data.expiresAt
+      });
 
       if (!response.ok) {
         // Handle rate limiting
@@ -164,7 +172,11 @@ export default function LoginPage() {
           }
         }
 
-        console.log('[Login] Cookies set, redirecting to:', redirectUrl);
+        // Verify cookie was set
+        const verifyToken = document.cookie.match(/time_auth_token=([^;]+)/)?.[1];
+        console.log('[Login] Cookie verification:', verifyToken ? `${verifyToken.substring(0, 10)}...` : 'NOT SET!');
+
+        console.log('[Login] Redirecting to:', redirectUrl);
         router.push(redirectUrl);
         return; // Exit early after successful login
       } else {
