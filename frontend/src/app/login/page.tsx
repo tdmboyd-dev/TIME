@@ -72,10 +72,22 @@ export default function LoginPage() {
 
     try {
       // SECURITY: Ensure CSRF token is available before making request
-      const csrfToken = await ensureCSRFToken();
+      let csrfToken: string;
+      try {
+        csrfToken = await ensureCSRFToken();
+        console.log('[Login] CSRF token obtained:', csrfToken ? 'yes' : 'no');
+      } catch (csrfError) {
+        console.error('[Login] Failed to get CSRF token:', csrfError);
+        throw new Error('Security token unavailable. Please refresh the page and try again.');
+      }
+
+      if (!csrfToken) {
+        throw new Error('Security token is empty. Please refresh the page and try again.');
+      }
 
       // REAL API call to backend authentication
       // SECURITY: Use credentials: 'include' to send/receive httpOnly cookies
+      console.log('[Login] Making login request with CSRF token');
       const response = await fetch(`${API_BASE}/auth/login`, {
         method: 'POST',
         headers: {

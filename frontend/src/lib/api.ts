@@ -47,11 +47,9 @@ export function getCSRFTokenFromCookie(): string | null {
  * SECURITY: Must be called before any state-changing request
  */
 export async function fetchCSRFToken(): Promise<string> {
-  // Check if we already have a valid token in cookie
-  const cookieToken = getCSRFTokenFromCookie();
-  if (cookieToken) {
-    csrfToken = cookieToken;
-    return cookieToken;
+  // Check if we already have a valid token in memory
+  if (csrfToken) {
+    return csrfToken;
   }
 
   // Avoid duplicate requests
@@ -61,18 +59,29 @@ export async function fetchCSRFToken(): Promise<string> {
 
   csrfTokenPromise = (async () => {
     try {
+      console.log('[CSRF] Fetching token from:', `${API_BASE}/csrf-token`);
       const response = await fetch(`${API_BASE}/csrf-token`, {
         method: 'GET',
         credentials: 'include',
       });
 
       if (!response.ok) {
+        console.error('[CSRF] Failed to fetch token:', response.status);
         throw new Error('Failed to fetch CSRF token');
       }
 
       const data = await response.json();
+      console.log('[CSRF] Token received:', data.csrfToken ? 'yes' : 'no');
+
+      if (!data.csrfToken) {
+        throw new Error('CSRF token not in response');
+      }
+
       csrfToken = data.csrfToken;
       return data.csrfToken;
+    } catch (error) {
+      console.error('[CSRF] Error fetching token:', error);
+      throw error;
     } finally {
       csrfTokenPromise = null;
     }
