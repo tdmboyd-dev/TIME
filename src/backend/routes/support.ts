@@ -399,7 +399,7 @@ router.get('/faq', async (req: Request, res: Response) => {
 
     // Increment view count
     if (faqList.length > 0) {
-      const faqIds = faqList.map(faq => faq._id);
+      const faqIds = faqList.map((faq: any) => faq._id);
       await faqs.updateMany(
         { _id: { $in: faqIds } },
         { $inc: { views: 1 } }
@@ -570,11 +570,11 @@ router.get('/admin/tickets', authMiddleware, async (req: Request, res: Response)
     // Get statistics
     const stats = {
       total: allTickets.length,
-      open: allTickets.filter(t => t.status === 'open').length,
-      in_progress: allTickets.filter(t => t.status === 'in_progress').length,
-      waiting_response: allTickets.filter(t => t.status === 'waiting_response').length,
-      resolved: allTickets.filter(t => t.status === 'resolved').length,
-      closed: allTickets.filter(t => t.status === 'closed').length,
+      open: allTickets.filter((t: any) => t.status === 'open').length,
+      in_progress: allTickets.filter((t: any) => t.status === 'in_progress').length,
+      waiting_response: allTickets.filter((t: any) => t.status === 'waiting_response').length,
+      resolved: allTickets.filter((t: any) => t.status === 'resolved').length,
+      closed: allTickets.filter((t: any) => t.status === 'closed').length,
     };
 
     res.json({

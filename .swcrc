@@ -1,0 +1,23 @@
+{
+  "jsc": {
+    "parser": {
+      "syntax": "typescript",
+      "decorators": true,
+      "dynamicImport": true
+    },
+    "target": "es2022",
+    "baseUrl": "./src",
+    "paths": {
+      "@core/*": ["backend/core/*"],
+      "@engines/*": ["backend/engines/*"],
+      "@bots/*": ["backend/bots/*"],
+      "@utils/*": ["backend/utils/*"],
+      "@types/*": ["backend/types/*"],
+      "@api/*": ["backend/api/*"]
+    }
+  },
+  "module": {
+    "type": "commonjs"
+  },
+  "sourceMaps": true
+}

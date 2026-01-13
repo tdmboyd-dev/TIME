@@ -54,6 +54,8 @@ export interface CryptoQuote {
   symbol: string;
   name: string;
   price: number;
+  change: number;          // Alias for change24h for compatibility
+  changePercent: number;   // Alias for changePercent24h for compatibility
   change24h: number;
   changePercent24h: number;
   high24h: number;
@@ -436,6 +438,8 @@ export class CoinGeckoAPI {
           symbol: data.symbol.toUpperCase(),
           name: data.name,
           price: data.market_data.current_price.usd,
+          change: data.market_data.price_change_24h,
+          changePercent: data.market_data.price_change_percentage_24h,
           change24h: data.market_data.price_change_24h,
           changePercent24h: data.market_data.price_change_percentage_24h,
           high24h: data.market_data.high_24h.usd,
@@ -542,6 +546,8 @@ export class BinanceAPI {
           symbol: symbol,
           name: symbol,
           price: parseFloat(data.lastPrice),
+          change: parseFloat(data.priceChange),
+          changePercent: parseFloat(data.priceChangePercent),
           change24h: parseFloat(data.priceChange),
           changePercent24h: parseFloat(data.priceChangePercent),
           high24h: parseFloat(data.highPrice),

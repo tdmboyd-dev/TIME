@@ -687,7 +687,7 @@ export interface CustomTemplate {
   subject: string;
   htmlContent: string;
   plainTextContent?: string;
-  variables: string[]; // List of {{variable}} names
+  variables?: string[]; // List of {{variable}} names - auto-extracted if not provided
   previewData?: Record<string, any>;
   createdBy: string;
   createdAt: Date;

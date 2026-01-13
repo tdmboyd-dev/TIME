@@ -584,4 +584,21 @@ export class DatabaseConnectionManager extends EventEmitter {
 // ============================================================================
 
 export const databaseManager = new DatabaseConnectionManager();
+
+/**
+ * Helper function to get the database
+ * Provides compatibility for modules that import { getDatabase }
+ */
+export function getDatabase() {
+  return databaseManager.getDatabase();
+}
+
+/**
+ * Helper function to get collection
+ * Provides compatibility for modules that import { getCollection }
+ */
+export function getCollection(name: string) {
+  return databaseManager.collection(name);
+}
+
 export default databaseManager;

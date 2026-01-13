@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 /**
@@ -14,7 +14,7 @@ import { useRouter } from 'next/navigation';
  * - Rate limiting protection
  */
 
-import { API_BASE } from '@/lib/api';
+import { API_BASE, ensureCSRFToken } from '@/lib/api';
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -30,6 +30,13 @@ export default function AdminLoginPage() {
     location: 'Checking...',
     lastLogin: 'Never',
   });
+
+  // SECURITY: Pre-fetch CSRF token on page load for faster auth
+  useEffect(() => {
+    ensureCSRFToken().catch(() => {
+      // Silent fail - will retry on form submit
+    });
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,12 +54,16 @@ export default function AdminLoginPage() {
       });
       setStep('security-check');
 
+      // SECURITY: Ensure CSRF token is available before making request
+      const csrfToken = await ensureCSRFToken();
+
       // REAL API call to backend authentication
       // SECURITY: Use credentials: 'include' for httpOnly cookies
       const response = await fetch(`${API_BASE}/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'x-csrf-token': csrfToken, // SECURITY: Include CSRF token
         },
         credentials: 'include', // IMPORTANT: Include cookies
         body: JSON.stringify({
@@ -110,12 +121,16 @@ export default function AdminLoginPage() {
     setIsLoading(true);
 
     try {
+      // SECURITY: Ensure CSRF token is available
+      const csrfToken = await ensureCSRFToken();
+
       // REAL MFA verification
       // SECURITY: Use credentials: 'include' for httpOnly cookies
       const response = await fetch(`${API_BASE}/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'x-csrf-token': csrfToken, // SECURITY: Include CSRF token
         },
         credentials: 'include', // IMPORTANT: Include cookies
         body: JSON.stringify({

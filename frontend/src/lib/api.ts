@@ -3,6 +3,8 @@
  *
  * Ensures consistent API URL handling across all frontend pages.
  * Always appends /api/v1 if not already present.
+ *
+ * SECURITY: Implements CSRF protection for all state-changing requests
  */
 
 const DEFAULT_API_URL = 'https://time-backend-hosting.fly.dev';
@@ -25,8 +27,80 @@ function getApiBase(): string {
 export const API_BASE = getApiBase();
 
 /**
- * Fetch wrapper with error handling
- * SECURITY: Always includes credentials for httpOnly cookie auth
+ * CSRF Token Management
+ * SECURITY: Required for all POST/PUT/DELETE requests
+ */
+let csrfToken: string | null = null;
+let csrfTokenPromise: Promise<string> | null = null;
+
+/**
+ * Get CSRF token from cookie
+ */
+export function getCSRFTokenFromCookie(): string | null {
+  if (typeof window === 'undefined') return null;
+  const match = document.cookie.match(/time_csrf_token=([^;]+)/);
+  return match ? match[1] : null;
+}
+
+/**
+ * Fetch CSRF token from server
+ * SECURITY: Must be called before any state-changing request
+ */
+export async function fetchCSRFToken(): Promise<string> {
+  // Check if we already have a valid token in cookie
+  const cookieToken = getCSRFTokenFromCookie();
+  if (cookieToken) {
+    csrfToken = cookieToken;
+    return cookieToken;
+  }
+
+  // Avoid duplicate requests
+  if (csrfTokenPromise) {
+    return csrfTokenPromise;
+  }
+
+  csrfTokenPromise = (async () => {
+    try {
+      const response = await fetch(`${API_BASE}/csrf-token`, {
+        method: 'GET',
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch CSRF token');
+      }
+
+      const data = await response.json();
+      csrfToken = data.csrfToken;
+      return data.csrfToken;
+    } finally {
+      csrfTokenPromise = null;
+    }
+  })();
+
+  return csrfTokenPromise;
+}
+
+/**
+ * Get current CSRF token (from memory or cookie)
+ */
+export function getCSRFToken(): string | null {
+  return csrfToken || getCSRFTokenFromCookie();
+}
+
+/**
+ * Ensure CSRF token is available
+ * SECURITY: Call this before making state-changing requests
+ */
+export async function ensureCSRFToken(): Promise<string> {
+  const token = getCSRFToken();
+  if (token) return token;
+  return fetchCSRFToken();
+}
+
+/**
+ * Fetch wrapper with error handling and CSRF protection
+ * SECURITY: Automatically includes CSRF token for state-changing requests
  */
 export async function apiFetch<T>(
   endpoint: string,
@@ -37,13 +111,22 @@ export async function apiFetch<T>(
       ? endpoint
       : `${API_BASE}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
 
+    const method = options?.method?.toUpperCase() || 'GET';
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      ...(options?.headers as Record<string, string> || {}),
+    };
+
+    // SECURITY: Include CSRF token for state-changing requests
+    if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(method)) {
+      const token = await ensureCSRFToken();
+      headers['x-csrf-token'] = token;
+    }
+
     const response = await fetch(url, {
       ...options,
       credentials: 'include', // SECURITY: Include httpOnly cookies for auth
-      headers: {
-        'Content-Type': 'application/json',
-        ...options?.headers,
-      },
+      headers,
     });
 
     const data = await response.json();

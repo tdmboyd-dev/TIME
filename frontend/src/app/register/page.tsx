@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { TimeLogo, TimeIcon } from '@/components/branding/TimeLogo';
@@ -17,7 +17,7 @@ import { TimeLogo, TimeIcon } from '@/components/branding/TimeLogo';
  * - Password strength requirements
  */
 
-import { API_BASE } from '@/lib/api';
+import { API_BASE, ensureCSRFToken } from '@/lib/api';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -37,6 +37,13 @@ export default function RegisterPage() {
   const [dataLearningConsent, setDataLearningConsent] = useState(false);
   const [riskDisclosureAccepted, setRiskDisclosureAccepted] = useState(false);
   const [marketingConsent, setMarketingConsent] = useState(false);
+
+  // SECURITY: Pre-fetch CSRF token on page load for faster auth
+  useEffect(() => {
+    ensureCSRFToken().catch(() => {
+      // Silent fail - will retry on form submit
+    });
+  }, []);
 
   // Password strength check
   const getPasswordStrength = (pwd: string) => {
@@ -82,11 +89,16 @@ export default function RegisterPage() {
     setIsLoading(true);
 
     try {
+      // SECURITY: Ensure CSRF token is available before making request
+      const csrfToken = await ensureCSRFToken();
+
       const response = await fetch(`${API_BASE}/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'x-csrf-token': csrfToken, // SECURITY: Include CSRF token
         },
+        credentials: 'include', // SECURITY: Include cookies
         body: JSON.stringify({
           name: name.trim(),
           email: email.toLowerCase().trim(),

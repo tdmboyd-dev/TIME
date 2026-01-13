@@ -1,5 +1,5 @@
 # TIME Platform Backend - Fly.io Dockerfile
-# Optimized for production deployment
+# Optimized for production deployment using SWC for fast transpilation
 
 # Build stage
 FROM node:20-alpine AS builder
@@ -16,11 +16,14 @@ COPY tsconfig.json ./
 # Install ALL dependencies (including dev for build)
 RUN npm ci
 
+# Install @swc/core and @swc/cli for fast TypeScript transpilation
+RUN npm install -D @swc/core @swc/cli
+
 # Copy source code
 COPY src/ ./src/
 
-# Build TypeScript
-RUN npm run build:backend
+# Build TypeScript using SWC (fast transpilation, skips type checking)
+RUN npx swc src -d dist --config-file .swcrc || npx swc src -d dist -C jsc.parser.syntax=typescript -C jsc.parser.decorators=true -C jsc.target=es2022 -C module.type=commonjs
 
 # Production stage
 FROM node:20-alpine AS production

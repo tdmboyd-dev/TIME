@@ -2105,8 +2105,11 @@ router.get('/analytics', (req: Request, res: Response) => {
     res.json({
       success: true,
       analytics: {
-        social: botAnalytics,
-        ...serviceAnalytics,
+        socialBot: botAnalytics,
+        referrals: serviceAnalytics.referrals,
+        affiliates: serviceAnalytics.affiliates,
+        socialShares: serviceAnalytics.social,
+        abTests: serviceAnalytics.abTests,
       },
     });
   } catch {

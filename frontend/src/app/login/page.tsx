@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 /**
@@ -15,7 +15,7 @@ import { useRouter } from 'next/navigation';
  * - Secure token storage
  */
 
-import { API_BASE } from '@/lib/api';
+import { API_BASE, ensureCSRFToken, getCSRFToken } from '@/lib/api';
 import { TimeLogo, TimeIcon } from '@/components/branding/TimeLogo';
 
 export default function LoginPage() {
@@ -34,6 +34,13 @@ export default function LoginPage() {
   const [showSecretPortal, setShowSecretPortal] = useState(false);
   const clickCountRef = useRef(0);
   const clickTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // SECURITY: Pre-fetch CSRF token on page load for faster auth
+  useEffect(() => {
+    ensureCSRFToken().catch(() => {
+      // Silent fail - will retry on form submit
+    });
+  }, []);
 
   const handleSecretAccess = () => {
     clickCountRef.current += 1;
@@ -64,12 +71,16 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
+      // SECURITY: Ensure CSRF token is available before making request
+      const csrfToken = await ensureCSRFToken();
+
       // REAL API call to backend authentication
       // SECURITY: Use credentials: 'include' to send/receive httpOnly cookies
       const response = await fetch(`${API_BASE}/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'x-csrf-token': csrfToken, // SECURITY: Include CSRF token
         },
         credentials: 'include', // IMPORTANT: Include cookies in request
         body: JSON.stringify({
@@ -138,12 +149,16 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
+      // SECURITY: Ensure CSRF token is available
+      const csrfToken = await ensureCSRFToken();
+
       // REAL MFA verification
       // SECURITY: Use credentials: 'include' for httpOnly cookies
       const response = await fetch(`${API_BASE}/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'x-csrf-token': csrfToken, // SECURITY: Include CSRF token
         },
         credentials: 'include', // IMPORTANT: Include cookies
         body: JSON.stringify({
@@ -192,10 +207,16 @@ export default function LoginPage() {
         return;
       }
 
+      // SECURITY: Ensure CSRF token is available
+      const csrfToken = await ensureCSRFToken();
+
       // Step 1: Begin WebAuthn authentication (get challenge from server)
       const beginResponse = await fetch(`${API_BASE}/auth/webauthn/login/begin`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-csrf-token': csrfToken, // SECURITY: Include CSRF token
+        },
         credentials: 'include',
         body: JSON.stringify({ email: email || undefined }),
       });
@@ -214,7 +235,10 @@ export default function LoginPage() {
       // Step 3: Complete authentication
       const completeResponse = await fetch(`${API_BASE}/auth/webauthn/login/complete`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-csrf-token': csrfToken, // SECURITY: Include CSRF token
+        },
         credentials: 'include',
         body: JSON.stringify({ sessionId, response: credential }),
       });
