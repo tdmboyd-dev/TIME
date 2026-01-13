@@ -49,38 +49,61 @@ export function getCSRFTokenFromCookie(): string | null {
 export async function fetchCSRFToken(): Promise<string> {
   // Check if we already have a valid token in memory
   if (csrfToken) {
+    console.log('[CSRF] Using cached token');
     return csrfToken;
   }
 
   // Avoid duplicate requests
   if (csrfTokenPromise) {
+    console.log('[CSRF] Waiting for existing fetch');
     return csrfTokenPromise;
   }
 
   csrfTokenPromise = (async () => {
+    const csrfUrl = `${API_BASE}/csrf-token`;
+    console.log('[CSRF] Fetching token from:', csrfUrl);
+    console.log('[CSRF] API_BASE is:', API_BASE);
+
+    // Add timeout to prevent hanging
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => {
+      console.error('[CSRF] Request timeout after 10s');
+      controller.abort();
+    }, 10000);
+
     try {
-      console.log('[CSRF] Fetching token from:', `${API_BASE}/csrf-token`);
-      const response = await fetch(`${API_BASE}/csrf-token`, {
+      const response = await fetch(csrfUrl, {
         method: 'GET',
         credentials: 'include',
+        signal: controller.signal,
       });
 
+      clearTimeout(timeoutId);
+      console.log('[CSRF] Response status:', response.status);
+
       if (!response.ok) {
-        console.error('[CSRF] Failed to fetch token:', response.status);
-        throw new Error('Failed to fetch CSRF token');
+        const errorText = await response.text().catch(() => 'Unknown error');
+        console.error('[CSRF] Failed to fetch token:', response.status, errorText);
+        throw new Error(`Failed to fetch CSRF token: ${response.status}`);
       }
 
       const data = await response.json();
       console.log('[CSRF] Token received:', data.csrfToken ? 'yes' : 'no');
 
       if (!data.csrfToken) {
+        console.error('[CSRF] Response missing csrfToken:', data);
         throw new Error('CSRF token not in response');
       }
 
       csrfToken = data.csrfToken;
       return data.csrfToken;
-    } catch (error) {
-      console.error('[CSRF] Error fetching token:', error);
+    } catch (error: any) {
+      clearTimeout(timeoutId);
+      if (error.name === 'AbortError') {
+        console.error('[CSRF] Request timed out');
+        throw new Error('CSRF token request timed out. Please check your network connection.');
+      }
+      console.error('[CSRF] Error fetching token:', error.message || error);
       throw error;
     } finally {
       csrfTokenPromise = null;

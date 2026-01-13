@@ -74,11 +74,19 @@ export default function LoginPage() {
       // SECURITY: Ensure CSRF token is available before making request
       let csrfToken: string;
       try {
+        console.log('[Login] Getting CSRF token...');
         csrfToken = await ensureCSRFToken();
-        console.log('[Login] CSRF token obtained:', csrfToken ? 'yes' : 'no');
-      } catch (csrfError) {
+        console.log('[Login] CSRF token obtained:', csrfToken ? `${csrfToken.substring(0, 10)}...` : 'no');
+      } catch (csrfError: any) {
         console.error('[Login] Failed to get CSRF token:', csrfError);
-        throw new Error('Security token unavailable. Please refresh the page and try again.');
+        // Provide more specific error message based on the error type
+        if (csrfError.message?.includes('timed out')) {
+          throw new Error('Connection to server timed out. Please check your network and try again.');
+        } else if (csrfError.message?.includes('network') || csrfError.name === 'TypeError') {
+          throw new Error('Unable to connect to server. Please check your network connection.');
+        } else {
+          throw new Error(`Security initialization failed: ${csrfError.message || 'Unknown error'}. Please refresh and try again.`);
+        }
       }
 
       if (!csrfToken) {
@@ -87,7 +95,7 @@ export default function LoginPage() {
 
       // REAL API call to backend authentication
       // SECURITY: Use credentials: 'include' to send/receive httpOnly cookies
-      console.log('[Login] Making login request with CSRF token');
+      console.log('[Login] Making login request with CSRF token:', csrfToken.substring(0, 10) + '...');
       const response = await fetch(`${API_BASE}/auth/login`, {
         method: 'POST',
         headers: {
