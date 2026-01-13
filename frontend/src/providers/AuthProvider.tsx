@@ -75,30 +75,70 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       console.log('[AuthProvider] Fetching /auth/me...');
-      const response = await fetch(`${API_BASE}/auth/me`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-        credentials: 'include',
-      });
 
-      console.log('[AuthProvider] /auth/me response:', response.status, response.ok);
+      // Add timeout to prevent infinite loading
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
 
-      if (response.ok) {
-        const data = await response.json();
-        console.log('[AuthProvider] User data received:', data.user ? 'yes' : 'no');
-        if (data.user) {
-          setUser(data.user);
+      try {
+        const response = await fetch(`${API_BASE}/auth/me`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+          credentials: 'include',
+          signal: controller.signal,
+        });
+
+        clearTimeout(timeoutId);
+
+        console.log('[AuthProvider] /auth/me response:', response.status, response.ok);
+
+        if (response.ok) {
+          const data = await response.json();
+          console.log('[AuthProvider] User data received:', data.user ? 'yes' : 'no');
+          if (data.user) {
+            setUser(data.user);
+          } else {
+            // Try to get user from localStorage as fallback
+            const storedUser = localStorage.getItem('time_user');
+            if (storedUser) {
+              try {
+                setUser(JSON.parse(storedUser));
+                console.log('[AuthProvider] Using stored user data');
+              } catch {
+                setUser(null);
+              }
+            } else {
+              setUser(null);
+            }
+          }
+        } else {
+          const errorData = await response.json().catch(() => ({}));
+          console.log('[AuthProvider] Auth failed:', errorData.error || response.status);
+          setUser(null);
+          // Clear invalid token
+          document.cookie = 'time_auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+          document.cookie = 'time_is_admin=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+        }
+      } catch (fetchError: any) {
+        clearTimeout(timeoutId);
+        if (fetchError.name === 'AbortError') {
+          console.warn('[AuthProvider] /auth/me timed out, using stored user');
+        } else {
+          console.error('[AuthProvider] Fetch error:', fetchError);
+        }
+        // Try to use localStorage user as fallback
+        const storedUser = localStorage.getItem('time_user');
+        if (storedUser) {
+          try {
+            setUser(JSON.parse(storedUser));
+            console.log('[AuthProvider] Using stored user data after fetch failure');
+          } catch {
+            setUser(null);
+          }
         } else {
           setUser(null);
         }
-      } else {
-        const errorData = await response.json().catch(() => ({}));
-        console.log('[AuthProvider] Auth failed:', errorData.error || response.status);
-        setUser(null);
-        // Clear invalid token
-        document.cookie = 'time_auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
-        document.cookie = 'time_is_admin=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
       }
     } catch (error) {
       console.error('[AuthProvider] Error checking auth:', error);
