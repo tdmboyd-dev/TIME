@@ -1156,6 +1156,55 @@ router.get('/admin-status', async (_req: Request, res: Response) => {
   }
 });
 
+/**
+ * POST /auth/reset-admin-password
+ * Reset admin password using setup key (for recovery)
+ * SECURITY: Requires ADMIN_SETUP_KEY from environment
+ */
+router.post('/reset-admin-password', async (req: Request, res: Response) => {
+  try {
+    const { email, newPassword, setupKey } = req.body;
+
+    // CRITICAL: Require setup key from environment
+    const ADMIN_SETUP_KEY = process.env.ADMIN_SETUP_KEY;
+    if (!ADMIN_SETUP_KEY) {
+      return res.status(500).json({ error: 'ADMIN_SETUP_KEY not configured' });
+    }
+    if (setupKey !== ADMIN_SETUP_KEY) {
+      logger.warn('[Auth] Invalid setup key attempt for password reset', { email });
+      return res.status(403).json({ error: 'Invalid setup key' });
+    }
+
+    if (!email || !newPassword) {
+      return res.status(400).json({ error: 'Email and newPassword required' });
+    }
+
+    if (newPassword.length < 8) {
+      return res.status(400).json({ error: 'Password must be at least 8 characters' });
+    }
+
+    const user = await userRepository.findByEmail(email.toLowerCase());
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Only allow reset for admin/owner accounts
+    if (user.role !== 'admin' && user.role !== 'owner') {
+      return res.status(403).json({ error: 'Can only reset admin/owner passwords with setup key' });
+    }
+
+    // Hash new password and update
+    const passwordHash = await bcrypt.hash(newPassword, SALT_ROUNDS);
+    await userRepository.update(user._id, { passwordHash });
+
+    logger.info('[Auth] Admin password reset successful', { email: user.email });
+    res.json({ success: true, message: 'Password reset successfully' });
+  } catch (error) {
+    logger.error('[Auth] Password reset error:', error);
+    res.status(500).json({ error: 'Failed to reset password' });
+  }
+});
+
 // ============================================================
 // WEBAUTHN / PASSKEY ROUTES
 // ============================================================
