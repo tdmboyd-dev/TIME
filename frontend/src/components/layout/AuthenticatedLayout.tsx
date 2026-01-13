@@ -77,14 +77,28 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
   return null;
 }
 
+// Wrapper that only loads notifications for authenticated routes
+function ConditionalNotificationProvider({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const isPublicRoute = publicRoutes.some(route => pathname?.startsWith(route));
+
+  // Don't load NotificationProvider (which uses WebSocket) for public routes
+  // This prevents WebSocket errors from affecting login/register pages
+  if (isPublicRoute) {
+    return <>{children}</>;
+  }
+
+  return <NotificationProvider>{children}</NotificationProvider>;
+}
+
 export function AuthenticatedLayout({ children }: { children: React.ReactNode }) {
   return (
     <Web3Provider>
       <AuthProvider>
-        <NotificationProvider>
+        <ConditionalNotificationProvider>
           <PWARegistration />
           <LayoutContent>{children}</LayoutContent>
-        </NotificationProvider>
+        </ConditionalNotificationProvider>
       </AuthProvider>
     </Web3Provider>
   );
