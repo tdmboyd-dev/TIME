@@ -238,11 +238,16 @@ export default function LoginPage() {
           role: data.user?.role,
         }));
 
-        // SECURITY: Validate redirect URL
+        // SECURITY: Validate redirect URL to prevent open redirect attacks
         const redirectParam = new URLSearchParams(window.location.search).get('redirect');
         let redirectUrl = '/';
-        if (redirectParam && redirectParam.startsWith('/') && !redirectParam.startsWith('//')) {
-          redirectUrl = redirectParam;
+        if (redirectParam) {
+          // Only allow internal paths (start with / but not //)
+          if (redirectParam.startsWith('/') && !redirectParam.startsWith('//') &&
+              !redirectParam.toLowerCase().startsWith('/javascript:') &&
+              !redirectParam.toLowerCase().startsWith('/data:')) {
+            redirectUrl = redirectParam;
+          }
         }
         router.push(redirectUrl);
       }
@@ -313,8 +318,18 @@ export default function LoginPage() {
         document.cookie = `time_is_admin=${data.user?.role === 'admin' || data.user?.role === 'owner'}; ${cookieOptions}`;
         localStorage.setItem('time_user', JSON.stringify(data.user));
 
-        const redirectUrl = new URLSearchParams(window.location.search).get('redirect');
-        router.push(redirectUrl || '/');
+        // SECURITY: Validate redirect URL to prevent open redirect attacks
+        const redirectParam = new URLSearchParams(window.location.search).get('redirect');
+        let redirectUrl = '/';
+        if (redirectParam) {
+          // Only allow internal paths (start with / but not //)
+          if (redirectParam.startsWith('/') && !redirectParam.startsWith('//') &&
+              !redirectParam.toLowerCase().startsWith('/javascript:') &&
+              !redirectParam.toLowerCase().startsWith('/data:')) {
+            redirectUrl = redirectParam;
+          }
+        }
+        router.push(redirectUrl);
       }
     } catch (err: any) {
       if (err.name === 'NotAllowedError') {
@@ -333,7 +348,18 @@ export default function LoginPage() {
     try {
       // Redirect to OAuth provider authorization URL
       const providerName = provider.toLowerCase();
-      const returnUrl = new URLSearchParams(window.location.search).get('redirect') || '/';
+
+      // SECURITY: Validate redirect URL to prevent open redirect attacks
+      const redirectParam = new URLSearchParams(window.location.search).get('redirect');
+      let returnUrl = '/';
+      if (redirectParam) {
+        // Only allow internal paths (start with / but not //)
+        if (redirectParam.startsWith('/') && !redirectParam.startsWith('//') &&
+            !redirectParam.toLowerCase().startsWith('/javascript:') &&
+            !redirectParam.toLowerCase().startsWith('/data:')) {
+          returnUrl = redirectParam;
+        }
+      }
 
       // Open OAuth flow in current window
       // The backend will redirect back to /login with token or error

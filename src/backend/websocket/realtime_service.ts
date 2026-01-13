@@ -187,7 +187,14 @@ export class RealtimeService extends EventEmitter {
     pingTimeout: 60000,
     maxConnections: 10000,
     enableCompression: true,
-    corsOrigins: ['http://localhost:3000', 'http://localhost:3001'],
+    corsOrigins: [
+      'http://localhost:3000',
+      'http://localhost:3001',
+      'https://timebeyondus.com',
+      'https://www.timebeyondus.com',
+      'https://time-frontend.vercel.app',
+      ...(process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',') : []),
+    ],
     rateLimitWindow: 60000, // 1 minute
     rateLimitMaxRequests: 100,
   };

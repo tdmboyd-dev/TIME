@@ -45,16 +45,17 @@ const MAX_LOGIN_ATTEMPTS = 5;
 const LOCKOUT_DURATION_MS = 15 * 60 * 1000; // 15 minutes
 
 // Cookie configuration for secure token storage
+// CROSS-ORIGIN NOTE: Backend on fly.dev cannot set cookies for timebeyondus.com domain
+// The frontend handles token storage via document.cookie after receiving token in response body
+// These settings are for same-origin scenarios and fallback compatibility
 const COOKIE_OPTIONS = {
   httpOnly: true,           // Prevents XSS attacks - JavaScript cannot access
   secure: process.env.NODE_ENV === 'production', // HTTPS only in production
-  sameSite: 'lax' as const, // CSRF protection
+  sameSite: (process.env.NODE_ENV === 'production' ? 'none' : 'lax') as 'none' | 'lax', // None for cross-origin
   maxAge: SESSION_DURATION_MS,
   path: '/',
-  // Domain configuration for production
-  domain: process.env.NODE_ENV === 'production'
-    ? process.env.COOKIE_DOMAIN || '.timebeyondus.com' // Share across subdomains
-    : undefined, // Let localhost use default
+  // NOTE: Do NOT set domain for cross-origin - let browser use request origin
+  // Setting domain to .timebeyondus.com from fly.dev will be rejected by browser
 };
 
 const ADMIN_COOKIE_OPTIONS = {

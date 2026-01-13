@@ -28,9 +28,18 @@ class SocketService {
    * Initialize Socket.IO server
    */
   initialize(httpServer: HTTPServer) {
+    const corsOrigins = [
+      'http://localhost:3000',
+      'http://localhost:3001',
+      'https://timebeyondus.com',
+      'https://www.timebeyondus.com',
+      'https://time-frontend.vercel.app',
+      ...(process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',') : []),
+    ];
+
     this.io = new Server(httpServer, {
       cors: {
-        origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+        origin: corsOrigins,
         methods: ['GET', 'POST'],
         credentials: true,
       },

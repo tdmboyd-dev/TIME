@@ -145,10 +145,20 @@ export class RealtimeHub extends EventEmitter {
    * Initialize WebSocket server
    */
   initialize(httpServer: HttpServer): void {
+    const corsOrigins = [
+      'http://localhost:3000',
+      'http://localhost:3001',
+      'https://timebeyondus.com',
+      'https://www.timebeyondus.com',
+      'https://time-frontend.vercel.app',
+      ...(process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',') : []),
+    ];
+
     this.io = new SocketServer(httpServer, {
       cors: {
-        origin: '*',
+        origin: corsOrigins,
         methods: ['GET', 'POST'],
+        credentials: true,
       },
       pingTimeout: 60000,
       pingInterval: 25000,
