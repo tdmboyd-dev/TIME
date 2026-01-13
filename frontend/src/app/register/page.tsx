@@ -89,15 +89,24 @@ export default function RegisterPage() {
     setIsLoading(true);
 
     try {
-      // SECURITY: Ensure CSRF token is available before making request
-      const csrfToken = await ensureCSRFToken();
+      // CSRF token is optional for registration (backend skips validation for auth endpoints)
+      let csrfToken: string | null = null;
+      try {
+        csrfToken = await ensureCSRFToken();
+      } catch {
+        console.warn('[Register] CSRF token fetch failed, continuing without it');
+      }
+
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      if (csrfToken) {
+        headers['x-csrf-token'] = csrfToken;
+      }
 
       const response = await fetch(`${API_BASE}/auth/register`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-csrf-token': csrfToken, // SECURITY: Include CSRF token
-        },
+        headers,
         credentials: 'include', // SECURITY: Include cookies
         body: JSON.stringify({
           name: name.trim(),

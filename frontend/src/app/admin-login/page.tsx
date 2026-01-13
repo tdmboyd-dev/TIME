@@ -54,29 +54,28 @@ export default function AdminLoginPage() {
       });
       setStep('security-check');
 
-      // SECURITY: Ensure CSRF token is available before making request
-      let csrfToken: string;
+      // CSRF token is optional for login (backend skips validation for auth endpoints)
+      let csrfToken: string | null = null;
       try {
         csrfToken = await ensureCSRFToken();
         console.log('[Admin Login] CSRF token obtained:', csrfToken ? 'yes' : 'no');
       } catch (csrfError) {
-        console.error('[Admin Login] Failed to get CSRF token:', csrfError);
-        throw new Error('Security token unavailable. Please refresh the page and try again.');
-      }
-
-      if (!csrfToken) {
-        throw new Error('Security token is empty. Please refresh the page and try again.');
+        console.warn('[Admin Login] CSRF token fetch failed, continuing without it:', csrfError);
       }
 
       // REAL API call to backend authentication
       // SECURITY: Use credentials: 'include' for httpOnly cookies
-      console.log('[Admin Login] Making login request with CSRF token');
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      if (csrfToken) {
+        headers['x-csrf-token'] = csrfToken;
+      }
+
+      console.log('[Admin Login] Making login request', csrfToken ? 'with CSRF token' : 'without CSRF token');
       const response = await fetch(`${API_BASE}/auth/login`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-csrf-token': csrfToken, // SECURITY: Include CSRF token
-        },
+        headers,
         credentials: 'include', // IMPORTANT: Include cookies
         body: JSON.stringify({
           // Admin key is used as email (or special admin identifier)
