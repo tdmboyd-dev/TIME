@@ -16,6 +16,9 @@ import {
   StrategyResult,
 } from './real_strategy_engine';
 
+// Re-export Candle for consumers of this module
+export { Candle } from './real_strategy_engine';
+
 // ==========================================
 // TYPES
 // ==========================================
