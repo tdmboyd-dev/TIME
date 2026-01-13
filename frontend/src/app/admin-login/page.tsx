@@ -86,6 +86,7 @@ export default function AdminLoginPage() {
       });
 
       const data = await response.json();
+      console.log('[AdminLogin] Response:', { ok: response.ok, status: response.status, success: data.success, role: data.user?.role });
 
       if (!response.ok) {
         // Handle rate limiting
@@ -97,16 +98,19 @@ export default function AdminLoginPage() {
 
       // Check if MFA is required
       if (data.requiresMfa) {
+        console.log('[AdminLogin] MFA required');
         setStep('mfa');
         return;
       }
 
       // Verify this is an admin user
       if (data.success) {
+        console.log('[AdminLogin] Success! Checking role...');
         if (data.user?.role !== 'admin' && data.user?.role !== 'owner') {
           throw new Error('This account does not have admin privileges');
         }
 
+        console.log('[AdminLogin] Role verified, setting cookies...');
         // Set auth cookies on frontend domain (cross-origin cookie fix)
         const expires = new Date(data.expiresAt);
         const cookieOptions = `path=/; expires=${expires.toUTCString()}; SameSite=Lax; Secure`;
@@ -117,7 +121,11 @@ export default function AdminLoginPage() {
 
         // Redirect to admin portal or requested page
         const redirectUrl = new URLSearchParams(window.location.search).get('redirect');
+        console.log('[AdminLogin] Redirecting to:', redirectUrl || '/admin-portal');
         router.push(redirectUrl || '/admin-portal');
+        return; // Exit after successful login
+      } else {
+        throw new Error('Login failed - unexpected response');
       }
     } catch (err: any) {
       setStep('credentials');

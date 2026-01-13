@@ -102,6 +102,7 @@ export default function LoginPage() {
       });
 
       const data = await response.json();
+      console.log('[Login] Response received:', { ok: response.ok, status: response.status, success: data.success });
 
       if (!response.ok) {
         // Handle rate limiting
@@ -113,14 +114,31 @@ export default function LoginPage() {
 
       // Check if MFA is required
       if (data.requiresMfa) {
+        console.log('[Login] MFA required');
         setStep('mfa');
         return;
       }
 
       // Login successful
+      console.log('[Login] Checking data.success:', data.success);
       if (data.success) {
-        // SECURITY: Backend sets httpOnly cookies - do NOT store token in localStorage or client-side cookies
-        // Only store non-sensitive display info in sessionStorage (cleared when browser closes)
+        console.log('[Login] Success! Setting cookies and redirecting...');
+
+        // CROSS-ORIGIN FIX: Backend can't set cookies for different domain
+        // Must set auth cookies on frontend domain manually
+        const expires = new Date(data.expiresAt);
+        const cookieOptions = `path=/; expires=${expires.toUTCString()}; SameSite=Lax; Secure`;
+        document.cookie = `time_auth_token=${data.token}; ${cookieOptions}`;
+
+        // Set admin flag if user has admin role
+        if (data.user?.role === 'admin' || data.user?.role === 'owner') {
+          document.cookie = `time_is_admin=true; ${cookieOptions}`;
+        }
+
+        // Store user info in localStorage for display purposes
+        localStorage.setItem('time_user', JSON.stringify(data.user));
+
+        // Also store in sessionStorage for backward compatibility
         sessionStorage.setItem('time_user_display', JSON.stringify({
           name: data.user?.name,
           email: data.user?.email,
@@ -146,7 +164,12 @@ export default function LoginPage() {
           }
         }
 
+        console.log('[Login] Cookies set, redirecting to:', redirectUrl);
         router.push(redirectUrl);
+        return; // Exit early after successful login
+      } else {
+        console.log('[Login] data.success is falsy, throwing error');
+        throw new Error('Login failed - unexpected response');
       }
     } catch (err: any) {
       setError(err.message || 'Invalid credentials. Please try again.');
@@ -187,7 +210,16 @@ export default function LoginPage() {
       }
 
       if (data.success) {
-        // SECURITY: Backend sets httpOnly cookies - only store display info
+        // CROSS-ORIGIN FIX: Set auth cookies on frontend domain manually
+        const expires = new Date(data.expiresAt);
+        const cookieOptions = `path=/; expires=${expires.toUTCString()}; SameSite=Lax; Secure`;
+        document.cookie = `time_auth_token=${data.token}; ${cookieOptions}`;
+
+        if (data.user?.role === 'admin' || data.user?.role === 'owner') {
+          document.cookie = `time_is_admin=true; ${cookieOptions}`;
+        }
+
+        localStorage.setItem('time_user', JSON.stringify(data.user));
         sessionStorage.setItem('time_user_display', JSON.stringify({
           name: data.user?.name,
           email: data.user?.email,
