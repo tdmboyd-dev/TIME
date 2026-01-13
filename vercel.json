@@ -10,6 +10,14 @@
       "NEXT_PUBLIC_API_URL": "https://time-backend-hosting.fly.dev"
     }
   },
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "www.timebeyondus.com" }],
+      "destination": "https://timebeyondus.com/:path*",
+      "permanent": true
+    }
+  ],
   "rewrites": [
     {
       "source": "/api/:path*",
