@@ -46,6 +46,12 @@ const nextConfig = {
         tls: false,
         crypto: false,
       };
+
+      // Mock React Native modules that MetaMask SDK incorrectly imports
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        '@react-native-async-storage/async-storage': false,
+      };
     }
 
     // Ignore specific modules that cause warnings
