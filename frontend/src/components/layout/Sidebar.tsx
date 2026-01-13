@@ -220,12 +220,22 @@ export function MobileMenuButton() {
 export function Sidebar() {
   const pathname = usePathname();
   const { isOpen, setIsOpen } = useSidebar();
-  const [marketStatus, setMarketStatus] = useState(getMarketStatus());
+  // Initialize with static default to prevent SSR/client hydration mismatch
+  const [marketStatus, setMarketStatus] = useState({ isOpen: false, status: 'Loading', detail: 'Checking market...' });
   const [visitedPages, setVisitedPages] = useState<Set<string>>(new Set());
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  // Hydrate client-side data after mount to prevent SSR mismatch
+  useEffect(() => {
+    setMarketStatus(getMarketStatus());
+    setVisitedPages(getVisitedPages());
+    setIsHydrated(true);
+  }, []);
 
   // Check if user is admin on mount
   useEffect(() => {
+    if (!isHydrated) return;
     const checkAdmin = () => {
       if (typeof document !== 'undefined') {
         const isAdminCookie = document.cookie.includes('time_is_admin=true');
@@ -236,12 +246,7 @@ export function Sidebar() {
     // Re-check when document changes
     const interval = setInterval(checkAdmin, 2000);
     return () => clearInterval(interval);
-  }, []);
-
-  // Load visited pages on mount
-  useEffect(() => {
-    setVisitedPages(getVisitedPages());
-  }, []);
+  }, [isHydrated]);
 
   // Mark current page as visited when pathname changes
   useEffect(() => {

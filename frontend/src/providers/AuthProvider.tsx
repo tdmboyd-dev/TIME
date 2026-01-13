@@ -62,29 +62,24 @@ function getCookie(name: string): string | null {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  // Initialize user from localStorage immediately to prevent loading flash
-  const [user, setUser] = useState<User | null>(() => {
-    if (typeof window === 'undefined') return null;
+  // Initialize with null/true - will hydrate on client
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  // Hydrate from localStorage AFTER mount to avoid SSR mismatch
+  useEffect(() => {
     try {
       const stored = localStorage.getItem('time_user');
       const token = getCookie('time_auth_token');
-      // Only use stored user if we also have a token
       if (stored && token) {
-        console.log('[AuthProvider] Using stored user on init');
-        return JSON.parse(stored);
+        console.log('[AuthProvider] Hydrating user from localStorage');
+        setUser(JSON.parse(stored));
+        setIsLoading(false);
       }
     } catch {}
-    return null;
-  });
-  const [isLoading, setIsLoading] = useState(() => {
-    // Don't show loading if we already have user from localStorage
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('time_user');
-      const token = getCookie('time_auth_token');
-      if (stored && token) return false;
-    }
-    return true;
-  });
+    setIsHydrated(true);
+  }, []);
   const router = useRouter();
   const pathname = usePathname();
 
