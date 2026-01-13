@@ -172,11 +172,16 @@ export interface UseWebSocketOptions {
 // ============================================================
 
 export function useWebSocket(options: UseWebSocketOptions = {}) {
+  // Don't auto-connect to localhost in production - it will fail
+  const isProduction = typeof window !== 'undefined' && window.location.hostname !== 'localhost';
+  const defaultUrl = process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:3001';
+  const shouldAutoConnect = !isProduction || (process.env.NEXT_PUBLIC_WS_URL && process.env.NEXT_PUBLIC_WS_URL !== 'http://localhost:3001');
+
   const {
-    url = process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:3001',
-    autoConnect = true,
+    url = defaultUrl,
+    autoConnect = shouldAutoConnect,
     reconnect = true,
-    reconnectAttempts = 5,
+    reconnectAttempts = 3, // Reduced from 5 to fail faster
     reconnectDelay = 3000,
     auth,
     channels = [],
@@ -206,17 +211,27 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
   const connect = useCallback(() => {
     if (socketRef.current?.connected) return;
 
+    // Don't try to connect to localhost in production
+    if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && url.includes('localhost')) {
+      console.log('[WebSocket] Skipping connection to localhost in production');
+      setConnectionState(prev => ({ ...prev, isConnecting: false, error: 'WebSocket not configured for production' }));
+      return;
+    }
+
+    console.log('[WebSocket] Connecting to:', url);
     setConnectionState(prev => ({ ...prev, isConnecting: true, error: null }));
 
-    const socket = io(url, {
-      transports: ['websocket', 'polling'],
-      reconnection: reconnect,
-      reconnectionAttempts: reconnectAttempts,
-      reconnectionDelay: reconnectDelay,
-      auth: auth ? { token: auth.token } : undefined,
-    });
+    try {
+      const socket = io(url, {
+        transports: ['websocket', 'polling'],
+        reconnection: reconnect,
+        reconnectionAttempts: reconnectAttempts,
+        reconnectionDelay: reconnectDelay,
+        auth: auth ? { token: auth.token } : undefined,
+        timeout: 10000, // 10 second timeout
+      });
 
-    socketRef.current = socket;
+      socketRef.current = socket;
 
     // Connection events
     socket.on('connect', () => {
@@ -352,6 +367,14 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
     socket.on('notifications:new', (payload: { data: NotificationUpdate }) => {
       handlersRef.current.onNotification?.(payload.data);
     });
+    } catch (error) {
+      console.error('[WebSocket] Failed to initialize connection:', error);
+      setConnectionState(prev => ({
+        ...prev,
+        isConnecting: false,
+        error: 'Failed to initialize WebSocket connection',
+      }));
+    }
   }, [url, reconnect, reconnectAttempts, reconnectDelay, auth, channels]);
 
   // Disconnect from WebSocket server
