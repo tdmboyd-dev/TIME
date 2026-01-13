@@ -16,10 +16,12 @@ const CSRF_COOKIE_NAME = 'time_csrf_token';
 const CSRF_HEADER_NAME = 'x-csrf-token';
 
 // Cookie configuration
+// IMPORTANT: SameSite=None required for cross-origin requests
+// (frontend at timebeyondus.com, backend at time-backend-hosting.fly.dev)
 const CSRF_COOKIE_OPTIONS = {
   httpOnly: false,  // Must be readable by JavaScript
   secure: process.env.NODE_ENV === 'production',
-  sameSite: 'strict' as const,
+  sameSite: (process.env.NODE_ENV === 'production' ? 'none' : 'strict') as 'none' | 'strict',
   maxAge: 24 * 60 * 60 * 1000, // 24 hours
   path: '/',
 };
