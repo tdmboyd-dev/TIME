@@ -95,6 +95,7 @@ export const loggers = {
   notifications: createComponentLogger('NOTIFICATIONS'),
   api: createComponentLogger('API'),
   inactivity: createComponentLogger('INACTIVITY_MONITOR'),
+  backtest: createComponentLogger('BACKTEST'),
 };
 
 export default logger;

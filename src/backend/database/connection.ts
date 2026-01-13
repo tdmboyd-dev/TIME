@@ -86,19 +86,96 @@ class InMemoryCollection {
     return null;
   }
 
-  async find(query: any = {}): Promise<{ toArray: () => Promise<any[]> }> {
+  find(query: any = {}) {
+    const self = this;
     const results: any[] = [];
     for (const [id, doc] of this.data) {
       if (this.matchesQuery(doc, query)) {
         results.push(doc);
       }
     }
-    return { toArray: async () => results };
+
+    // Return a chainable cursor-like object
+    const cursor = {
+      _results: results,
+      _sortKey: null as string | null,
+      _sortOrder: 1 as number,
+      _limit: 0 as number,
+
+      sort(sortSpec: any) {
+        if (typeof sortSpec === 'object') {
+          const keys = Object.keys(sortSpec);
+          if (keys.length > 0) {
+            this._sortKey = keys[0];
+            this._sortOrder = sortSpec[keys[0]];
+          }
+        }
+        return this;
+      },
+
+      limit(n: number) {
+        this._limit = n;
+        return this;
+      },
+
+      async toArray(): Promise<any[]> {
+        let result = [...this._results];
+        if (this._sortKey) {
+          const key = this._sortKey;
+          const order = this._sortOrder;
+          result.sort((a, b) => {
+            if (a[key] < b[key]) return -1 * order;
+            if (a[key] > b[key]) return 1 * order;
+            return 0;
+          });
+        }
+        if (this._limit > 0) {
+          result = result.slice(0, this._limit);
+        }
+        return result;
+      },
+    };
+
+    return cursor;
   }
 
-  async updateOne(query: any, update: any): Promise<{ modifiedCount: number }> {
+  async updateOne(query: any, update: any): Promise<{ modifiedCount: number; matchedCount: number }> {
     for (const [id, doc] of this.data) {
       if (this.matchesQuery(doc, query)) {
+        const $set = update.$set || {};
+        const $unset = update.$unset || {};
+        const $inc = update.$inc || {};
+        const $push = update.$push || {};
+
+        for (const [key, value] of Object.entries($set)) {
+          doc[key] = value;
+        }
+        for (const key of Object.keys($unset)) {
+          delete doc[key];
+        }
+        for (const [key, value] of Object.entries($inc)) {
+          doc[key] = (doc[key] || 0) + (value as number);
+        }
+        for (const [key, value] of Object.entries($push)) {
+          if (!Array.isArray(doc[key])) doc[key] = [];
+          doc[key].push(value);
+        }
+
+        doc.updatedAt = new Date();
+        this.data.set(id, doc);
+        return { modifiedCount: 1, matchedCount: 1 };
+      }
+    }
+    return { modifiedCount: 0, matchedCount: 0 };
+  }
+
+  async updateMany(query: any, update: any): Promise<{ modifiedCount: number; matchedCount: number }> {
+    let modifiedCount = 0;
+    let matchedCount = 0;
+
+    for (const [id, doc] of this.data) {
+      if (this.matchesQuery(doc, query)) {
+        matchedCount++;
         const $set = update.$set || {};
         const $unset = update.$unset || {};
         const $inc = update.$inc || {};
@@ -115,10 +192,22 @@ class InMemoryCollection {
 
         doc.updatedAt = new Date();
         this.data.set(id, doc);
-        return { modifiedCount: 1 };
+        modifiedCount++;
       }
     }
-    return { modifiedCount: 0 };
+
+    return { modifiedCount, matchedCount };
+  }
+
+  async insertMany(docs: any[]): Promise<{ insertedCount: number; insertedIds: string[] }> {
+    const insertedIds: string[] = [];
+    for (const doc of docs) {
+      const id = doc._id || `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      doc._id = id;
+      this.data.set(id, { ...doc, createdAt: doc.createdAt || new Date() });
+      insertedIds.push(id);
+    }
+    return { insertedCount: docs.length, insertedIds };
   }
 
   async deleteOne(query: any): Promise<{ deletedCount: number }> {

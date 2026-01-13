@@ -235,26 +235,41 @@ export const ADD_ONS: Record<string, AddOn> = {
 // ============================================================
 
 export class StripeService extends EventEmitter {
-  private stripe: Stripe;
+  private stripe: Stripe | null = null;
   private subscriptions: Map<string, CustomerSubscription> = new Map();
   private webhookSecret: string;
+  private enabled: boolean = false;
 
   constructor() {
     super();
 
     const secretKey = process.env.STRIPE_SECRET_KEY;
     if (!secretKey) {
-      throw new Error('STRIPE_SECRET_KEY environment variable is required');
+      logger.warn('STRIPE_SECRET_KEY not configured - payment features disabled');
+      this.webhookSecret = '';
+      this.enabled = false;
+      return;
     }
 
     this.webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || '';
+    this.enabled = true;
 
     this.stripe = new Stripe(secretKey, {
-      apiVersion: '2024-12-18.acacia',
+      apiVersion: '2025-02-24.acacia' as any, // Cast to any for version compatibility
       typescript: true,
     });
 
     logger.info('Stripe service initialized');
+  }
+
+  public isEnabled(): boolean {
+    return this.enabled;
+  }
+
+  private ensureEnabled(): void {
+    if (!this.enabled || !this.stripe) {
+      throw new Error('Stripe service is not configured. Please set STRIPE_SECRET_KEY.');
+    }
   }
 
   // ============================================================
@@ -271,6 +286,7 @@ export class StripeService extends EventEmitter {
     cancelUrl: string,
     customerEmail?: string
   ): Promise<CheckoutSessionData> {
+    this.ensureEnabled();
     try {
       const tier = SUBSCRIPTION_TIERS[tierId.toUpperCase()];
       if (!tier) {
