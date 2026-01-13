@@ -66,6 +66,13 @@ export function csrfMiddleware(req: Request, res: Response, next: NextFunction):
     return next();
   }
 
+  // Skip CSRF for auth endpoints - they use rate limiting for protection
+  // and the cross-origin cookie issue makes CSRF impractical for these
+  if (req.path.includes('/auth/login') || req.path.includes('/auth/register') || req.path.includes('/auth/admin')) {
+    logger.info('Skipping CSRF for auth endpoint', { path: req.path });
+    return next();
+  }
+
   // Validate CSRF token from header or body
   const headerToken = req.headers[CSRF_HEADER_NAME] as string;
   const bodyToken = req.body?._csrf;
@@ -94,17 +101,10 @@ export function csrfMiddleware(req: Request, res: Response, next: NextFunction):
 
 /**
  * Generate new CSRF token endpoint
- * Uses token from middleware if available, otherwise generates new one
  */
 export function getCSRFToken(req: Request, res: Response): void {
-  // Use token already set by middleware, or generate new one
-  let csrfToken = res.locals.csrfToken || req.cookies[CSRF_COOKIE_NAME];
-
-  if (!csrfToken) {
-    csrfToken = generateCSRFToken();
-    res.cookie(CSRF_COOKIE_NAME, csrfToken, CSRF_COOKIE_OPTIONS);
-  }
-
+  const csrfToken = generateCSRFToken();
+  res.cookie(CSRF_COOKIE_NAME, csrfToken, CSRF_COOKIE_OPTIONS);
   res.json({ csrfToken });
 }
 
