@@ -119,10 +119,14 @@ export default function AdminLoginPage() {
 
         localStorage.setItem('time_user', JSON.stringify(data.user));
 
+        // Wait a moment for cookies to propagate before navigation
+        console.log('[AdminLogin] Waiting for cookies to propagate...');
+        await new Promise(resolve => setTimeout(resolve, 500));
+
         // Redirect to admin portal or requested page
         const redirectUrl = new URLSearchParams(window.location.search).get('redirect');
         console.log('[AdminLogin] Redirecting to:', redirectUrl || '/admin-portal');
-        router.push(redirectUrl || '/admin-portal');
+        window.location.href = redirectUrl || '/admin-portal'; // Use full page navigation
         return; // Exit after successful login
       } else {
         throw new Error('Login failed - unexpected response');

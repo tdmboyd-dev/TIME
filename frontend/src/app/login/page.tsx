@@ -184,8 +184,12 @@ export default function LoginPage() {
         const verifyToken = document.cookie.match(/time_auth_token=([^;]+)/)?.[1];
         console.log('[Login] Cookie verification:', verifyToken ? `${verifyToken.substring(0, 10)}...` : 'NOT SET!');
 
+        // Wait a moment for cookies to propagate before navigation
+        console.log('[Login] Waiting for cookies to propagate...');
+        await new Promise(resolve => setTimeout(resolve, 500));
+
         console.log('[Login] Redirecting to:', redirectUrl);
-        router.push(redirectUrl);
+        window.location.href = redirectUrl; // Use full page navigation instead of router.push
         return; // Exit early after successful login
       } else {
         console.log('[Login] data.success is falsy, throwing error');
