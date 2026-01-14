@@ -329,16 +329,15 @@ export function Sidebar() {
             (item.href !== '/' && pathname.startsWith(item.href));
           const showNewBadge = shouldShowNew(item);
           return (
-            <Link
+            <button
               key={item.name}
-              href={item.href}
-              onClick={(e) => {
-                // Fallback navigation in case Link hydration fails
-                e.preventDefault();
+              type="button"
+              onClick={() => {
+                console.log('[Sidebar] Navigating to:', item.href);
                 router.push(item.href);
               }}
               className={clsx(
-                'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all cursor-pointer',
+                'w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all cursor-pointer',
                 isActive
                   ? 'bg-time-primary/20 text-time-primary border border-time-primary/30'
                   : (item as any).adminOnly
@@ -367,21 +366,21 @@ export function Sidebar() {
                   NEW
                 </span>
               )}
-            </Link>
+            </button>
           );
         })}
         </nav>
 
         {/* Trading Mode Indicator */}
         <div className="px-4 pt-4 border-t border-slate-700/50">
-          <Link href="/settings" onClick={(e) => { e.preventDefault(); router.push('/settings'); }} className="block cursor-pointer">
+          <button type="button" onClick={() => router.push('/settings')} className="block w-full cursor-pointer">
             <div className="flex items-center justify-center mb-2">
               <TradingModeIndicator />
             </div>
             <p className="text-[10px] text-slate-500 text-center hover:text-slate-400 transition-colors">
               Click to change mode
             </p>
-          </Link>
+          </button>
         </div>
 
         {/* Market Status */}
