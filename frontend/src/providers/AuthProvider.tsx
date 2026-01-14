@@ -76,9 +76,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.log('[AuthProvider] Hydrating user from localStorage');
         setUser(JSON.parse(stored));
         setIsLoading(false);
+      } else {
+        // No stored user/token - immediately stop loading
+        console.log('[AuthProvider] No stored user or token, stopping loading');
+        setIsLoading(false);
       }
-    } catch {}
+    } catch {
+      console.log('[AuthProvider] Error during hydration, stopping loading');
+      setIsLoading(false);
+    }
     setIsHydrated(true);
+
+    // Safety timeout - never stay stuck on loading for more than 5 seconds
+    const timeout = setTimeout(() => {
+      setIsLoading(false);
+      console.log('[AuthProvider] Safety timeout - forcing isLoading=false');
+    }, 5000);
+    return () => clearTimeout(timeout);
   }, []);
   const router = useRouter();
   const pathname = usePathname();
@@ -179,23 +193,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
+    // Wait for hydration to complete before running auth check
+    if (!isHydrated) return;
+
     const checkAuth = async () => {
       console.log('[AuthProvider] Starting auth check...');
 
-      // If we already have a user from localStorage, just verify in background
-      const storedUser = localStorage.getItem('time_user');
-      const token = getCookie('time_auth_token');
-
-      if (storedUser && token && user) {
-        console.log('[AuthProvider] User already loaded, verifying in background...');
-        // Verify in background without blocking
+      // If we already have a user from localStorage hydration, just verify in background
+      if (user) {
+        console.log('[AuthProvider] User already loaded from localStorage, verifying in background...');
+        // Verify in background without blocking - don't set loading
         refreshUser().catch(err => {
           console.warn('[AuthProvider] Background verification failed:', err);
         });
         return;
       }
 
-      // No stored user, need to load
+      // No stored user found during hydration, check if we need to load
+      const token = getCookie('time_auth_token');
+      if (!token) {
+        console.log('[AuthProvider] No token, setting isLoading=false');
+        setIsLoading(false);
+        return;
+      }
+
+      // Have token but no user - try to load from API
+      console.log('[AuthProvider] Have token, loading user from API...');
       setIsLoading(true);
       try {
         await refreshUser();
@@ -208,7 +231,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     checkAuth();
-  }, []);
+  }, [isHydrated, user]);
 
   useEffect(() => {
     if (isLoading) return;
