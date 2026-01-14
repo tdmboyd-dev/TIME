@@ -36,10 +36,10 @@ const DEFAULT_RATE_LIMITS: Record<string, RateLimitConfig> = {
   // General API rate limits
   general: { windowMs: 60000, maxRequests: 100 },
 
-  // Authentication - stricter limits
-  login: { windowMs: 900000, maxRequests: 5, message: 'Too many login attempts. Try again in 15 minutes.' },
-  register: { windowMs: 3600000, maxRequests: 3, message: 'Too many registration attempts. Try again in 1 hour.' },
-  passwordReset: { windowMs: 3600000, maxRequests: 3, message: 'Too many password reset requests.' },
+  // Authentication - reasonable limits (not too strict for development/testing)
+  login: { windowMs: 60000, maxRequests: 20, message: 'Too many login attempts. Try again in 1 minute.' },
+  register: { windowMs: 3600000, maxRequests: 10, message: 'Too many registration attempts. Try again in 1 hour.' },
+  passwordReset: { windowMs: 3600000, maxRequests: 5, message: 'Too many password reset requests.' },
 
   // Financial operations - very strict
   withdrawal: { windowMs: 60000, maxRequests: 3, message: 'Too many withdrawal requests. Please wait.' },

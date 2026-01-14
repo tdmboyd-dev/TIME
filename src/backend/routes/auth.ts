@@ -41,8 +41,8 @@ const router = Router();
 const SALT_ROUNDS = 12;
 const SESSION_DURATION_DAYS = 7;
 const SESSION_DURATION_MS = SESSION_DURATION_DAYS * 24 * 60 * 60 * 1000;
-const MAX_LOGIN_ATTEMPTS = 5;
-const LOCKOUT_DURATION_MS = 15 * 60 * 1000; // 15 minutes
+const MAX_LOGIN_ATTEMPTS = 20; // Increased for development/testing
+const LOCKOUT_DURATION_MS = 1 * 60 * 1000; // 1 minute lockout (was 15 minutes)
 
 // Cookie configuration for secure token storage
 // CROSS-ORIGIN NOTE: Backend on fly.dev cannot set cookies for timebeyondus.com domain
