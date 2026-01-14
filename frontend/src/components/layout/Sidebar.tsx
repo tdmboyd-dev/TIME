@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, createContext, useContext } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 
 // Mobile sidebar context
 interface SidebarContextType {
@@ -219,6 +219,7 @@ export function MobileMenuButton() {
 
 export function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const { isOpen, setIsOpen } = useSidebar();
   // Initialize with static default to prevent SSR/client hydration mismatch
   const [marketStatus, setMarketStatus] = useState({ isOpen: false, status: 'Loading', detail: 'Checking market...' });
@@ -278,6 +279,13 @@ export function Sidebar() {
     return (item as any).isNew && !visitedPages.has(item.href);
   }, [visitedPages]);
 
+  // Force re-render key after hydration to ensure event handlers are attached
+  const [renderKey, setRenderKey] = useState(0);
+  useEffect(() => {
+    // Force a re-render after mount to fix any hydration issues with event handlers
+    setRenderKey(1);
+  }, []);
+
   return (
     <>
       {/* Mobile overlay */}
@@ -288,8 +296,8 @@ export function Sidebar() {
         />
       )}
 
-      {/* Sidebar */}
-      <div className={clsx(
+      {/* Sidebar - key forces remount after hydration */}
+      <div key={`sidebar-${renderKey}`} className={clsx(
         'fixed lg:relative inset-y-0 left-0 z-50 w-64 bg-slate-900/95 lg:bg-slate-900/80 backdrop-blur-sm border-r border-slate-700/50 flex flex-col transition-transform duration-300 ease-in-out lg:translate-x-0',
         isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
       )}>
@@ -324,8 +332,13 @@ export function Sidebar() {
             <Link
               key={item.name}
               href={item.href}
+              onClick={(e) => {
+                // Fallback navigation in case Link hydration fails
+                e.preventDefault();
+                router.push(item.href);
+              }}
               className={clsx(
-                'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all',
+                'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all cursor-pointer',
                 isActive
                   ? 'bg-time-primary/20 text-time-primary border border-time-primary/30'
                   : (item as any).adminOnly
@@ -361,7 +374,7 @@ export function Sidebar() {
 
         {/* Trading Mode Indicator */}
         <div className="px-4 pt-4 border-t border-slate-700/50">
-          <Link href="/settings" className="block">
+          <Link href="/settings" onClick={(e) => { e.preventDefault(); router.push('/settings'); }} className="block cursor-pointer">
             <div className="flex items-center justify-center mb-2">
               <TradingModeIndicator />
             </div>
