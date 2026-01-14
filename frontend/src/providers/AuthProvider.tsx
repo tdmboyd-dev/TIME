@@ -69,27 +69,56 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Hydrate from localStorage AFTER mount to avoid SSR mismatch
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem('time_user');
-      const token = getCookie('time_auth_token');
-      if (stored && token) {
-        console.log('[AuthProvider] Hydrating user from localStorage');
-        setUser(JSON.parse(stored));
+    let retryCount = 0;
+    const maxRetries = 5;
+
+    const hydrate = () => {
+      try {
+        const stored = localStorage.getItem('time_user');
+        const token = getCookie('time_auth_token');
+        const justLoggedIn = sessionStorage.getItem('time_just_logged_in');
+
+        console.log('[AuthProvider] Hydration check:', {
+          hasStored: !!stored,
+          hasToken: !!token,
+          justLoggedIn: !!justLoggedIn,
+          retryCount
+        });
+
+        if (stored && token) {
+          console.log('[AuthProvider] Hydrating user from localStorage');
+          setUser(JSON.parse(stored));
+          setIsLoading(false);
+          setIsHydrated(true);
+          // Clear the just logged in flag
+          sessionStorage.removeItem('time_just_logged_in');
+        } else if (justLoggedIn && retryCount < maxRetries) {
+          // Just logged in but cookies not ready yet - retry after a short delay
+          console.log('[AuthProvider] Just logged in, waiting for cookies... retry', retryCount + 1);
+          retryCount++;
+          setTimeout(hydrate, 300);
+          return; // Don't finish hydration yet
+        } else {
+          // No stored user/token - stop loading
+          console.log('[AuthProvider] No stored user or token, stopping loading');
+          setIsLoading(false);
+          setIsHydrated(true);
+          sessionStorage.removeItem('time_just_logged_in');
+        }
+      } catch (err) {
+        console.log('[AuthProvider] Error during hydration:', err);
         setIsLoading(false);
-      } else {
-        // No stored user/token - immediately stop loading
-        console.log('[AuthProvider] No stored user or token, stopping loading');
-        setIsLoading(false);
+        setIsHydrated(true);
       }
-    } catch {
-      console.log('[AuthProvider] Error during hydration, stopping loading');
-      setIsLoading(false);
-    }
-    setIsHydrated(true);
+    };
+
+    hydrate();
 
     // Safety timeout - never stay stuck on loading for more than 5 seconds
     const timeout = setTimeout(() => {
       setIsLoading(false);
+      setIsHydrated(true);
+      sessionStorage.removeItem('time_just_logged_in');
       console.log('[AuthProvider] Safety timeout - forcing isLoading=false');
     }, 5000);
     return () => clearTimeout(timeout);

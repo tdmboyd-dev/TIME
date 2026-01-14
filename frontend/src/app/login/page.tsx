@@ -154,6 +154,9 @@ export default function LoginPage() {
         // Store user info in localStorage for display purposes
         localStorage.setItem('time_user', JSON.stringify(data.user));
 
+        // Set a flag to prevent AuthProvider from redirecting immediately
+        sessionStorage.setItem('time_just_logged_in', 'true');
+
         // Also store in sessionStorage for backward compatibility
         sessionStorage.setItem('time_user_display', JSON.stringify({
           name: data.user?.name,

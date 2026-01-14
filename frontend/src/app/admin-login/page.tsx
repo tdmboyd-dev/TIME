@@ -119,9 +119,12 @@ export default function AdminLoginPage() {
 
         localStorage.setItem('time_user', JSON.stringify(data.user));
 
+        // Set a flag to prevent AuthProvider from redirecting immediately
+        sessionStorage.setItem('time_just_logged_in', 'true');
+
         // Wait a moment for cookies to propagate before navigation
         console.log('[AdminLogin] Waiting for cookies to propagate...');
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise(resolve => setTimeout(resolve, 300));
 
         // Redirect to admin portal or requested page
         const redirectUrl = new URLSearchParams(window.location.search).get('redirect');
