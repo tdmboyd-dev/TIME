@@ -1,8 +1,36 @@
 # DROP THIS TO COPILOT - QUICK REFERENCE
 
-**Last Updated:** 2025-12-28
-**Version:** v73.0.0 - iOS SUBMITTED + ANDROID READY + PREMIUM UNLIMITED
+**Last Updated:** 2026-01-15
+**Version:** v74.12.0 - LOGIN FIX + SIDEBAR FIX + ADMIN ACCESS FIX
 **Purpose:** Quick summary for Copilot/Claude when starting new sessions
+
+---
+
+## 🎯 v74.12.0 - CRITICAL FIXES (2026-01-15)
+
+**Login/Auth Fixes:**
+- v74.10.0: Fixed redirect loop - user no longer logged out 3 seconds after login
+- v74.11.0: Removed hardcoded JWT secret fallbacks (security fix)
+- v74.12.0: Fixed sidebar navigation buttons not clickable
+- v74.12.0: Fixed admin portal "Access Denied" issue
+
+**Technical Changes:**
+- AuthProvider: Removed background API verification that reset user state
+- AuthProvider: Changed useEffect dependency to prevent re-running auth check
+- Sidebar: Changed from router.push() to window.location.href for reliable navigation
+- Admin Portal Layout: Now checks localStorage user role before API call
+- Admin Portal Layout: Falls back to localStorage if API fails
+
+**Files Modified:**
+- `frontend/src/providers/AuthProvider.tsx` - v74.10.0 fix
+- `src/backend/middleware/auth.ts` - JWT_SECRET required in production
+- `src/backend/services/sms_auth_service.ts` - JWT_SECRET security fix
+- `frontend/src/components/layout/Sidebar.tsx` - Navigation fix
+- `frontend/src/app/admin-portal/layout.tsx` - Admin access fix
+
+**Deployment:**
+- Frontend: https://timebeyondus.com (Vercel)
+- Backend: https://time-backend-hosting.fly.dev (Fly.io)
 
 ---
 
