@@ -505,12 +505,25 @@
 
 ---
 
-### v74.10.0 Fix (Jan 15, 2026)
-- **AuthProvider Redirect Loop Fixed**
-  - Removed background API verification that was resetting user state to null
-  - When user is loaded from localStorage, no longer re-verifies with /auth/me
-  - Changed useEffect dependency from [isHydrated, user] to [isHydrated]
-  - This fixes the issue where user was logged out 3 seconds after login
+### v74.10.0 - v74.12.0 Fixes (Jan 15, 2026)
+
+**v74.10.0 - AuthProvider Redirect Loop Fixed**
+- Removed background API verification that was resetting user state to null
+- When user is loaded from localStorage, no longer re-verifies with /auth/me
+- Changed useEffect dependency from [isHydrated, user] to [isHydrated]
+- This fixes the issue where user was logged out 3 seconds after login
+
+**v74.11.0 - JWT Secret Security Fix**
+- auth.ts: JWT_SECRET now required in production, throws error if not set
+- sms_auth_service.ts: JWT_SECRET only uses dev fallback in non-production
+- Removed hardcoded JWT secret fallbacks for security
+
+**v74.12.0 - Sidebar Navigation + Admin Access Fix**
+- Sidebar: Changed from router.push() to window.location.href for reliable navigation
+- Admin Portal Layout: Now checks localStorage user role before API call
+- Admin Portal Layout: Falls back to localStorage if API fails
+- Fixes sidebar buttons not being clickable
+- Fixes "Access Denied - Admin privileges required" error after login
 
 ---
 
