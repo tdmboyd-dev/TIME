@@ -228,13 +228,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const checkAuth = async () => {
       console.log('[AuthProvider] Starting auth check...');
 
-      // If we already have a user from localStorage hydration, just verify in background
+      // If we already have a user from localStorage hydration, DON'T verify
+      // Background verification was causing user to be reset and redirect loops
       if (user) {
-        console.log('[AuthProvider] User already loaded from localStorage, verifying in background...');
-        // Verify in background without blocking - don't set loading
-        refreshUser().catch(err => {
-          console.warn('[AuthProvider] Background verification failed:', err);
-        });
+        console.log('[AuthProvider] User already loaded from localStorage, skipping API verification');
         return;
       }
 
@@ -260,7 +257,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     checkAuth();
-  }, [isHydrated, user]);
+  }, [isHydrated]);
 
   useEffect(() => {
     if (isLoading) return;
