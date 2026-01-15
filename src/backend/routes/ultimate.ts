@@ -21,12 +21,18 @@ import { getSuperBotLiveTrading } from '../ultimate/SuperBotLiveTrading';
 
 const router = Router();
 
+// SECURE: Admin key validation - requires env var with min 32 chars
+const ADMIN_API_KEY = process.env.ADMIN_API_KEY;
+const isValidAdminKey = (key: string | undefined): boolean => {
+  return !!(key && ADMIN_API_KEY && ADMIN_API_KEY.length >= 32 && key === ADMIN_API_KEY);
+};
+
 // Middleware to check Premium/Admin access
 // Ultimate Money Machine is ADMIN-APPROVED ONLY - not part of regular subscriptions
 const requirePremium = (req: Request, res: Response, next: Function) => {
-  // Admin key bypasses all checks
+  // Admin key bypasses all checks (secure validation)
   const adminKey = req.headers['x-admin-key'] as string;
-  if (adminKey === 'TIME_ADMIN_2025') {
+  if (isValidAdminKey(adminKey)) {
     return next();
   }
 
@@ -53,7 +59,7 @@ const requirePremium = (req: Request, res: Response, next: Function) => {
 router.get('/super-bots', (req: Request, res: Response) => {
   try {
     const superBots = getAbsorbedSuperBots();
-    const isAdmin = req.headers['x-admin-key'] === 'TIME_ADMIN_2025';
+    const isAdmin = isValidAdminKey(req.headers['x-admin-key'] as string);
 
     // For admin: return full bot info including absorbedFrom
     // For users: return sanitized public info
@@ -101,7 +107,7 @@ router.get('/super-bots', (req: Request, res: Response) => {
 router.get('/super-bots/tier/:tier', (req: Request, res: Response) => {
   try {
     const superBots = getAbsorbedSuperBots();
-    const isAdmin = req.headers['x-admin-key'] === 'TIME_ADMIN_2025';
+    const isAdmin = isValidAdminKey(req.headers['x-admin-key'] as string);
     const tier = req.params.tier.toUpperCase() as 'LEGENDARY' | 'EPIC' | 'RARE';
 
     // Admin sees full info, users see public info

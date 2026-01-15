@@ -303,7 +303,13 @@ function createApp(): express.Application {
   // CSRF Protection and Rate Limiting
   const { csrfMiddleware, rateLimitMiddleware, getCSRFToken } = require('./security/csrf_middleware');
 
-  // Apply rate limiting first
+  // Bot/Scraper Detection (import from security middleware)
+  const { botDetection } = require('./middleware/security');
+
+  // Apply bot detection first (blocks scrapers/crawlers)
+  app.use('/api/v1', botDetection);
+
+  // Apply rate limiting
   app.use('/api/v1/auth', rateLimitMiddleware('auth'));
   app.use('/api/v1/admin', rateLimitMiddleware('admin'));
   app.use('/api/v1/trading', rateLimitMiddleware('trade'));

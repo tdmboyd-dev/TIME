@@ -22,16 +22,21 @@ import { createComponentLogger } from '../utils/logger';
 const router = Router();
 const logger = createComponentLogger('TimbeunusRoutes');
 
-// Middleware to verify owner access
+// Middleware to verify owner access - SECURE VERSION
 const ownerOnly = (req: Request, res: Response, next: any) => {
-  // Check for admin key or owner role
-  const adminKey = req.headers['x-admin-key'];
+  const adminKey = req.headers['x-admin-key'] as string | undefined;
   const user = (req as any).user;
+  const validAdminKey = process.env.ADMIN_API_KEY;
 
-  // Accept hardcoded admin key or env var
-  if (adminKey === 'TIME_ADMIN_2025' || adminKey === process.env.ADMIN_API_KEY || user?.role === 'owner' || user?.role === 'admin') {
+  // SECURITY: Only accept env var admin key (min 32 chars) or authenticated owner/admin
+  const isValidAdminKey = adminKey && validAdminKey && validAdminKey.length >= 32 && adminKey === validAdminKey;
+  const isOwnerOrAdmin = user?.role === 'owner' || user?.role === 'admin';
+
+  if (isValidAdminKey || isOwnerOrAdmin) {
+    logger.info(`Owner access granted: ${isValidAdminKey ? 'admin-key' : user?.email}`);
     next();
   } else {
+    logger.warn(`Owner access denied: ${req.ip}`);
     res.status(403).json({ error: 'Owner access required' });
   }
 };

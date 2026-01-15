@@ -341,7 +341,7 @@ export default function MarketsPage() {
         <div className="text-center">
           <Loader2 className="w-12 h-12 mx-auto mb-4 text-time-primary animate-spin" />
           <p className="text-slate-400">Loading real market data...</p>
-          <p className="text-xs text-slate-500 mt-2">Fetching from Finnhub, CoinGecko, FMP...</p>
+          <p className="text-xs text-slate-500 mt-2">Connecting to TIME Market Data Network...</p>
         </div>
       </div>
     );
@@ -353,7 +353,7 @@ export default function MarketsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white">Markets</h1>
-          <p className="text-slate-400">Real-time market data from live APIs</p>
+          <p className="text-slate-400">Live market data powered by TIME</p>
         </div>
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-800/50">
@@ -568,7 +568,7 @@ export default function MarketsPage() {
 
       {/* Data Sources */}
       <div className="text-center text-xs text-slate-500">
-        Data from Finnhub, CoinGecko, Binance, Alpha Vantage, and FMP APIs
+        Real-time data powered by TIME Market Intelligence
       </div>
     </div>
   );

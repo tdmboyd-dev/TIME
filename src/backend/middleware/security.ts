@@ -36,17 +36,21 @@ const DEFAULT_RATE_LIMITS: Record<string, RateLimitConfig> = {
   // General API rate limits
   general: { windowMs: 60000, maxRequests: 100 },
 
-  // Authentication - DISABLED for testing (set very high limits)
-  login: { windowMs: 60000, maxRequests: 999999, message: 'Rate limit exceeded.' },
-  register: { windowMs: 60000, maxRequests: 999999, message: 'Rate limit exceeded.' },
-  passwordReset: { windowMs: 60000, maxRequests: 999999, message: 'Rate limit exceeded.' },
+  // Authentication - PRODUCTION SECURITY ENABLED
+  login: { windowMs: 900000, maxRequests: 5, message: 'Too many login attempts. Please wait 15 minutes.' }, // 5 per 15 min
+  register: { windowMs: 3600000, maxRequests: 3, message: 'Too many registration attempts. Please wait 1 hour.' }, // 3 per hour
+  passwordReset: { windowMs: 3600000, maxRequests: 3, message: 'Too many password reset requests. Please wait 1 hour.' }, // 3 per hour
 
   // Financial operations - very strict
   withdrawal: { windowMs: 60000, maxRequests: 3, message: 'Too many withdrawal requests. Please wait.' },
   trade: { windowMs: 1000, maxRequests: 10, message: 'Trade rate limit exceeded.' },
+  transfer: { windowMs: 3600000, maxRequests: 5, message: 'Too many transfer requests. Please wait.' }, // 5 per hour
 
   // Admin operations
   admin: { windowMs: 60000, maxRequests: 50 },
+
+  // SMS/MFA
+  sms: { windowMs: 3600000, maxRequests: 5, message: 'Too many SMS requests. Please wait 1 hour.' }, // 5 per hour
 
   // Public API
   publicApi: { windowMs: 60000, maxRequests: 60 },
@@ -573,6 +577,107 @@ export function sanitizeObject(obj: any): any {
 }
 
 // ============================================================================
+// BOT & SCRAPER DETECTION
+// ============================================================================
+
+// Known bot/scraper user agents
+const BOT_USER_AGENTS = [
+  'GPTBot', 'ChatGPT-User', 'CCBot', 'Google-Extended', 'anthropic-ai', 'Claude-Web',
+  'cohere-ai', 'Bytespider', 'PetalBot', 'Amazonbot', 'FacebookBot', 'AhrefsBot',
+  'SemrushBot', 'MJ12bot', 'DotBot', 'BLEXBot', 'YandexBot', 'Baiduspider',
+  'DataForSeoBot', 'serpstatbot', 'SEOkicks', 'LinkpadBot', 'Cliqzbot', 'ZoominfoBot',
+  'crawler', 'spider', 'scraper', 'curl', 'wget', 'python-requests', 'axios/',
+  'node-fetch', 'scrapy', 'httpclient', 'libwww', 'Mechanize',
+];
+
+// Known suspicious patterns
+const SUSPICIOUS_PATTERNS = [
+  /^$/,                    // Empty user agent
+  /bot|crawler|spider/i,   // Generic bot patterns
+  /scraper|harvest/i,      // Scraping tools
+  /http|client|library/i,  // HTTP libraries
+];
+
+/**
+ * Detect and block bots/scrapers
+ */
+export function botDetection(req: Request, res: Response, next: NextFunction) {
+  const userAgent = req.headers['user-agent'] || '';
+  const ip = req.ip || req.socket.remoteAddress || 'unknown';
+
+  // Check against known bot user agents
+  const isKnownBot = BOT_USER_AGENTS.some(bot =>
+    userAgent.toLowerCase().includes(bot.toLowerCase())
+  );
+
+  // Check suspicious patterns
+  const isSuspiciousPattern = SUSPICIOUS_PATTERNS.some(pattern =>
+    pattern.test(userAgent)
+  );
+
+  // Check for missing/empty user agent (very suspicious)
+  const hasNoUserAgent = !userAgent || userAgent.length < 10;
+
+  // Check for too many headers (automated tool signature)
+  const headerCount = Object.keys(req.headers).length;
+  const hasTooManyHeaders = headerCount > 50;
+
+  // Calculate suspicion score
+  let suspicionScore = 0;
+  if (isKnownBot) suspicionScore += 100;
+  if (isSuspiciousPattern) suspicionScore += 50;
+  if (hasNoUserAgent) suspicionScore += 30;
+  if (hasTooManyHeaders) suspicionScore += 20;
+
+  // Block if highly suspicious
+  if (suspicionScore >= 50) {
+    logger.warn('[BotDetection] Blocked suspicious request', {
+      ip,
+      userAgent: userAgent.substring(0, 100),
+      score: suspicionScore,
+      path: req.path,
+    });
+
+    // Return 403 with minimal info (don't help scrapers)
+    return res.status(403).json({
+      error: 'Access denied',
+    });
+  }
+
+  // Add anti-scraping headers
+  res.setHeader('X-Robots-Tag', 'noindex, nofollow, noarchive, nosnippet, noimageindex');
+
+  next();
+}
+
+/**
+ * Apply strict bot blocking to sensitive routes
+ */
+export function strictBotBlocking(req: Request, res: Response, next: NextFunction) {
+  const userAgent = req.headers['user-agent'] || '';
+
+  // Block ANY request without a proper browser user agent
+  const browserSignatures = ['Mozilla', 'Chrome', 'Safari', 'Firefox', 'Edge', 'Opera'];
+  const hasBrowserSignature = browserSignatures.some(sig =>
+    userAgent.includes(sig)
+  );
+
+  if (!hasBrowserSignature) {
+    logger.warn('[StrictBot] Blocked non-browser request', {
+      ip: req.ip,
+      userAgent: userAgent.substring(0, 50),
+      path: req.path,
+    });
+
+    return res.status(403).json({
+      error: 'Access denied',
+    });
+  }
+
+  next();
+}
+
+// ============================================================================
 // EXPORTS
 // ============================================================================
 
@@ -606,4 +711,8 @@ export default {
   // Sanitization
   sanitizeString,
   sanitizeObject,
+
+  // Bot/scraper detection
+  botDetection,
+  strictBotBlocking,
 };

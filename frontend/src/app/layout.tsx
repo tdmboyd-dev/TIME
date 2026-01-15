@@ -30,6 +30,20 @@ export const metadata: Metadata = {
       { url: '/apple-touch-icon.svg', sizes: '180x180', type: 'image/svg+xml' },
     ],
   },
+  // Anti-crawling and proprietary protection
+  robots: {
+    index: false,
+    follow: false,
+    nocache: true,
+    googleBot: {
+      index: false,
+      follow: false,
+      noimageindex: true,
+    },
+  },
+  other: {
+    'X-Robots-Tag': 'noindex, nofollow, noarchive, nosnippet, noimageindex',
+  },
 };
 
 export default function RootLayout({

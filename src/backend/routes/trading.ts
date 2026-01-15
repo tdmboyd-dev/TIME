@@ -1257,8 +1257,11 @@ router.post('/timebeunus/stop', authMiddleware, async (req: Request, res: Respon
 // TEST ORDER ENDPOINT (Admin only)
 // ============================================
 
-// Admin test key for quick testing (set as env var)
-const ADMIN_TEST_KEY = process.env.ADMIN_TEST_KEY || 'TIME_ADMIN_TEST_2025';
+// Admin test key for quick testing (MUST be set as env var, min 32 chars)
+const ADMIN_TEST_KEY = process.env.ADMIN_TEST_KEY;
+const isValidAdminTestKey = (key: string | undefined): boolean => {
+  return !!(key && ADMIN_TEST_KEY && ADMIN_TEST_KEY.length >= 32 && key === ADMIN_TEST_KEY);
+};
 
 /**
  * GET /trading/test-broker
@@ -1268,10 +1271,10 @@ const ADMIN_TEST_KEY = process.env.ADMIN_TEST_KEY || 'TIME_ADMIN_TEST_2025';
 router.get('/test-broker', async (req: Request, res: Response) => {
   try {
     const adminKey = req.headers['x-admin-key'] as string;
-    if (adminKey !== ADMIN_TEST_KEY) {
+    if (!isValidAdminTestKey(adminKey)) {
       return res.status(401).json({
         success: false,
-        error: 'Invalid admin test key. Set x-admin-key header.',
+        error: 'Invalid admin test key. Set ADMIN_TEST_KEY env var (min 32 chars).',
       });
     }
 
@@ -1333,7 +1336,7 @@ router.get('/test-broker', async (req: Request, res: Response) => {
 router.post('/test-trade', async (req: Request, res: Response) => {
   try {
     const adminKey = req.headers['x-admin-key'] as string;
-    if (adminKey !== ADMIN_TEST_KEY) {
+    if (!isValidAdminTestKey(adminKey)) {
       return res.status(401).json({
         success: false,
         error: 'Invalid admin test key. Set x-admin-key header.',
@@ -1490,7 +1493,7 @@ router.get('/positions', authMiddleware, async (req: Request, res: Response) => 
 router.get('/test-bots', async (req: Request, res: Response) => {
   try {
     const adminKey = req.headers['x-admin-key'] as string;
-    if (adminKey !== ADMIN_TEST_KEY) {
+    if (!isValidAdminTestKey(adminKey)) {
       return res.status(401).json({
         success: false,
         error: 'Invalid admin test key. Set x-admin-key header.',
@@ -1533,7 +1536,7 @@ router.get('/test-bots', async (req: Request, res: Response) => {
 router.post('/test-bot-enable', async (req: Request, res: Response) => {
   try {
     const adminKey = req.headers['x-admin-key'] as string;
-    if (adminKey !== ADMIN_TEST_KEY) {
+    if (!isValidAdminTestKey(adminKey)) {
       return res.status(401).json({
         success: false,
         error: 'Invalid admin test key. Set x-admin-key header.',
@@ -1577,7 +1580,7 @@ router.post('/test-bot-enable', async (req: Request, res: Response) => {
 router.post('/test-bot-signal', async (req: Request, res: Response) => {
   try {
     const adminKey = req.headers['x-admin-key'] as string;
-    if (adminKey !== ADMIN_TEST_KEY) {
+    if (!isValidAdminTestKey(adminKey)) {
       return res.status(401).json({
         success: false,
         error: 'Invalid admin test key. Set x-admin-key header.',
@@ -1637,7 +1640,7 @@ router.post('/test-bot-signal', async (req: Request, res: Response) => {
 router.post('/test-bot-trade', async (req: Request, res: Response) => {
   try {
     const adminKey = req.headers['x-admin-key'] as string;
-    if (adminKey !== ADMIN_TEST_KEY) {
+    if (!isValidAdminTestKey(adminKey)) {
       return res.status(401).json({
         success: false,
         error: 'Invalid admin test key. Set x-admin-key header.',
@@ -1723,7 +1726,7 @@ router.post('/test-bot-trade', async (req: Request, res: Response) => {
 router.get('/test-bot-trades', async (req: Request, res: Response) => {
   try {
     const adminKey = req.headers['x-admin-key'] as string;
-    if (adminKey !== ADMIN_TEST_KEY) {
+    if (!isValidAdminTestKey(adminKey)) {
       return res.status(401).json({
         success: false,
         error: 'Invalid admin test key. Set x-admin-key header.',
@@ -1890,7 +1893,7 @@ const progressSnapshots: Map<string, {
 router.post('/progress/start', async (req: Request, res: Response) => {
   try {
     const adminKey = req.headers['x-admin-key'] as string;
-    if (adminKey !== (process.env.ADMIN_TEST_KEY || 'TIME_ADMIN_TEST_2025')) {
+    if (!isValidAdminTestKey(adminKey)) {
       return res.status(401).json({ success: false, error: 'Invalid admin key' });
     }
 
@@ -1947,7 +1950,7 @@ router.post('/progress/start', async (req: Request, res: Response) => {
 router.get('/progress/:sessionId', async (req: Request, res: Response) => {
   try {
     const adminKey = req.headers['x-admin-key'] as string;
-    if (adminKey !== (process.env.ADMIN_TEST_KEY || 'TIME_ADMIN_TEST_2025')) {
+    if (!isValidAdminTestKey(adminKey)) {
       return res.status(401).json({ success: false, error: 'Invalid admin key' });
     }
 
@@ -2057,7 +2060,7 @@ router.get('/progress/:sessionId', async (req: Request, res: Response) => {
 router.get('/progress/live', async (req: Request, res: Response) => {
   try {
     const adminKey = req.headers['x-admin-key'] as string;
-    if (adminKey !== (process.env.ADMIN_TEST_KEY || 'TIME_ADMIN_TEST_2025')) {
+    if (!isValidAdminTestKey(adminKey)) {
       return res.status(401).json({ success: false, error: 'Invalid admin key' });
     }
 

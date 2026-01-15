@@ -156,8 +156,8 @@ export default function ChartsPage() {
 
         setCandles(chartCandles);
         setIsLive(true);
-        setDataSource(data.data.meta?.source || 'API');
-        setNotification({ type: 'success', message: `Real data loaded from ${data.data.meta?.source || 'API'}` });
+        setDataSource('TIME');
+        setNotification({ type: 'success', message: 'Live market data connected' });
         setTimeout(() => setNotification(null), 2000);
       } else {
         throw new Error('No data returned');
