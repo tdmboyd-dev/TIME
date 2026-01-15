@@ -62,10 +62,58 @@ const categories = [
   { id: 'high-yield', label: 'High Yield', icon: Percent },
 ];
 
-// Stock symbols to fetch real prices for
-const STOCK_SYMBOLS = ['TSLA', 'AAPL', 'NVDA', 'MSFT', 'GOOGL'];
-const ETF_SYMBOLS = ['SPY', 'QQQ'];
-const CRYPTO_SYMBOLS = ['BTC', 'ETH'];
+// ============================================================================
+// MAXIMUM TOKENIZED ASSETS - ALL AVAILABLE FOR FRACTIONAL INVESTING
+// ============================================================================
+
+const STOCK_SYMBOLS = [
+  // MEGA CAP (Most popular for fractional)
+  'TSLA', 'AAPL', 'NVDA', 'MSFT', 'GOOGL', 'AMZN', 'META', 'NFLX', 'AMD', 'INTC',
+  'CRM', 'ADBE', 'ORCL', 'AVGO', 'QCOM', 'NOW', 'INTU',
+  // FINANCE
+  'JPM', 'BAC', 'V', 'MA', 'GS', 'MS', 'BLK', 'SCHW', 'COIN', 'HOOD',
+  // HEALTHCARE
+  'JNJ', 'UNH', 'PFE', 'LLY', 'ABBV', 'MRK', 'TMO', 'ABT', 'MRNA',
+  // CONSUMER
+  'WMT', 'HD', 'DIS', 'NKE', 'MCD', 'SBUX', 'KO', 'PEP', 'COST', 'CMG', 'LULU',
+  // ENERGY
+  'XOM', 'CVX', 'COP', 'NEE', 'ENPH', 'FSLR',
+  // INDUSTRIAL
+  'BA', 'CAT', 'GE', 'HON', 'UPS', 'RTX', 'LMT',
+  // EV & AUTO
+  'F', 'GM', 'RIVN', 'LCID', 'NIO',
+  // TECH
+  'UBER', 'ABNB', 'SHOP', 'SQ', 'PYPL', 'SNAP', 'ROKU', 'SPOT', 'RBLX', 'DKNG',
+];
+
+const ETF_SYMBOLS = [
+  // INDEX
+  'SPY', 'QQQ', 'IWM', 'DIA', 'VOO', 'VTI', 'IVV', 'VEA', 'VWO', 'EFA', 'EEM',
+  // SECTOR
+  'XLK', 'XLF', 'XLE', 'XLV', 'XLI', 'XLP', 'XLY', 'XLRE',
+  // THEMATIC
+  'ARKK', 'ARKG', 'ARKF', 'ARKW', 'ICLN', 'TAN', 'ROBO', 'HACK',
+  // CRYPTO
+  'BITO', 'IBIT', 'FBTC', 'GBTC', 'ETHE',
+  // BONDS
+  'TLT', 'IEF', 'AGG', 'BND', 'LQD', 'HYG', 'JNK',
+  // COMMODITIES
+  'GLD', 'SLV', 'IAU', 'USO', 'DBC',
+  // DIVIDEND
+  'VYM', 'VIG', 'SCHD', 'DVY', 'HDV',
+  // LEVERAGED
+  'TQQQ', 'SQQQ', 'UPRO', 'SOXL',
+];
+
+const CRYPTO_SYMBOLS = [
+  // TOP CRYPTOS
+  'BTC', 'ETH', 'BNB', 'SOL', 'XRP', 'ADA', 'DOGE', 'AVAX', 'DOT', 'MATIC',
+  'LINK', 'UNI', 'AAVE', 'LTC', 'BCH', 'ATOM', 'NEAR', 'APT', 'ARB', 'OP',
+  // DEFI
+  'MKR', 'CRV', 'LDO', 'GMX', 'DYDX',
+  // STAKING OPPORTUNITIES
+  'ETH', 'SOL', 'ADA', 'DOT', 'ATOM', 'NEAR',
+];
 
 export default function InvestPage() {
   const [selectedCategory, setSelectedCategory] = useState<InvestCategory>('all');

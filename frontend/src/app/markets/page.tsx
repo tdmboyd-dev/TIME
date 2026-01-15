@@ -36,9 +36,60 @@ interface MarketData {
   category: 'stock' | 'crypto' | 'forex' | 'commodity' | 'index';
 }
 
-// Symbols to fetch from real APIs
-const STOCK_SYMBOLS = ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'TSLA', 'NVDA', 'META', 'AMD'];
-const CRYPTO_SYMBOLS = ['BTC', 'ETH', 'SOL', 'XRP', 'ADA', 'DOGE', 'DOT', 'MATIC'];
+// ============================================================================
+// MAXIMUM ASSET LIST - ALL TRADABLE ASSETS
+// ============================================================================
+
+const STOCK_SYMBOLS = [
+  // MEGA CAP TECH
+  'AAPL', 'MSFT', 'GOOGL', 'AMZN', 'META', 'NVDA', 'TSLA', 'NFLX', 'INTC', 'AMD',
+  'CRM', 'ADBE', 'ORCL', 'CSCO', 'AVGO', 'QCOM', 'TXN', 'MU', 'NOW', 'INTU',
+  // FINTECH & PAYMENTS
+  'PYPL', 'SQ', 'V', 'MA', 'AXP', 'COF', 'COIN', 'HOOD', 'SOFI',
+  // FINANCE
+  'JPM', 'BAC', 'WFC', 'C', 'GS', 'MS', 'USB', 'PNC', 'BLK', 'SCHW',
+  // HEALTHCARE
+  'JNJ', 'UNH', 'PFE', 'ABBV', 'MRK', 'LLY', 'TMO', 'ABT', 'BMY', 'AMGN',
+  'GILD', 'MDT', 'CVS', 'ISRG', 'DHR', 'REGN', 'VRTX', 'MRNA', 'BNTX',
+  // CONSUMER
+  'WMT', 'HD', 'MCD', 'NKE', 'SBUX', 'TGT', 'COST', 'LOW', 'DIS', 'PEP', 'KO', 'PG',
+  'CMG', 'DPZ', 'YUM', 'LULU', 'GPS', 'TJX',
+  // ENERGY
+  'XOM', 'CVX', 'COP', 'SLB', 'EOG', 'OXY', 'PSX', 'MPC', 'VLO',
+  // CLEAN ENERGY
+  'NEE', 'ENPH', 'SEDG', 'FSLR', 'RUN', 'PLUG',
+  // INDUSTRIAL
+  'BA', 'CAT', 'GE', 'MMM', 'HON', 'UPS', 'FDX', 'RTX', 'LMT', 'DE',
+  // AUTO & EV
+  'F', 'GM', 'RIVN', 'LCID', 'NIO', 'XPEV', 'LI', 'FSR',
+  // E-COMMERCE
+  'SHOP', 'UBER', 'LYFT', 'ABNB', 'DASH', 'SNAP', 'PINS', 'ZM', 'DOCU', 'ROKU', 'SPOT',
+  'RBLX', 'U', 'TTWO', 'EA', 'DKNG',
+  // REAL ESTATE
+  'PLD', 'AMT', 'EQIX', 'CCI', 'PSA', 'SPG', 'O', 'DLR',
+  // TELECOM
+  'T', 'VZ', 'TMUS',
+];
+
+const CRYPTO_SYMBOLS = [
+  // TOP 30 BY MARKET CAP
+  'BTC', 'ETH', 'BNB', 'SOL', 'XRP', 'ADA', 'DOGE', 'AVAX', 'DOT', 'MATIC',
+  'LINK', 'TRX', 'SHIB', 'TON', 'NEAR', 'LTC', 'BCH', 'UNI', 'APT', 'ATOM',
+  'XLM', 'FIL', 'ICP', 'HBAR', 'ETC', 'VET', 'ARB', 'OP', 'IMX', 'INJ',
+  // DEFI
+  'MKR', 'AAVE', 'GRT', 'RUNE', 'CRV', 'COMP', 'SNX', 'SUSHI', 'YFI', '1INCH',
+  'DYDX', 'GMX', 'LDO', 'FXS',
+  // MEME
+  'PEPE', 'FLOKI', 'BONK', 'WIF', 'MEME',
+  // LAYER 2
+  'LRC', 'METIS', 'SKL', 'CELR',
+  // AI TOKENS
+  'FET', 'OCEAN', 'AGIX', 'RNDR',
+  // GAMING
+  'GALA', 'ENJ', 'CHZ', 'SAND', 'MANA', 'AXS', 'ILV',
+  // NEW
+  'SUI', 'SEI', 'TIA', 'PYTH', 'JUP', 'STRK', 'ENA',
+];
 
 export default function MarketsPage() {
   const router = useRouter();

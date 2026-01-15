@@ -23,11 +23,12 @@ import {
 } from 'lucide-react';
 
 import { API_BASE, getTokenFromCookie, getAuthHeadersWithCSRF } from '@/lib/api';
+import { useWebSocket, PriceUpdate } from '@/hooks/useWebSocket';
 
 interface Asset {
   symbol: string;
   name: string;
-  type: 'stock' | 'crypto' | 'forex' | 'commodity' | 'etf';
+  type: 'stock' | 'crypto' | 'forex' | 'commodity' | 'etf' | 'futures' | 'options';
   price: number;
   change: number;
   changePercent: number;
@@ -37,6 +38,8 @@ interface Asset {
   volume: string;
   high24h: number;
   low24h: number;
+  leverage?: number; // For futures
+  fundingRate?: number; // For perpetual futures
 }
 
 interface Order {
@@ -51,11 +54,197 @@ interface Order {
   timestamp: Date;
 }
 
-// Symbols to fetch from real API
-const STOCK_SYMBOLS = ['AAPL', 'MSFT', 'GOOGL', 'TSLA', 'NVDA', 'AMZN', 'META'];
-const CRYPTO_SYMBOLS = ['BTC', 'ETH', 'SOL', 'XRP'];
-const FOREX_SYMBOLS = ['EUR/USD', 'GBP/USD'];
-const ETF_SYMBOLS = ['SPY', 'QQQ'];
+// ============================================================================
+// MAXIMUM ASSET LIST - ALL TRADABLE ASSETS ACROSS ALL CLASSES
+// ============================================================================
+
+// STOCKS - S&P 500 + Major International (200+ stocks)
+const STOCK_SYMBOLS = [
+  // MEGA CAP TECH (Market Cap > $500B)
+  'AAPL', 'MSFT', 'GOOGL', 'GOOG', 'AMZN', 'META', 'NVDA', 'TSLA', 'BRK.B', 'TSM',
+  // LARGE CAP TECH
+  'NFLX', 'INTC', 'AMD', 'CRM', 'ORCL', 'ADBE', 'CSCO', 'AVGO', 'QCOM', 'TXN',
+  'MU', 'AMAT', 'LRCX', 'KLAC', 'MRVL', 'NOW', 'INTU', 'PANW', 'CRWD', 'SNOW',
+  'IBM', 'DELL', 'HPQ', 'HPE', 'ANET', 'CDNS', 'SNPS', 'FTNT', 'ZS', 'DDOG',
+  // FINTECH & PAYMENTS
+  'PYPL', 'SQ', 'V', 'MA', 'AXP', 'COF', 'DFS', 'COIN', 'HOOD', 'SOFI',
+  // E-COMMERCE & INTERNET
+  'SHOP', 'UBER', 'LYFT', 'ABNB', 'DASH', 'SNAP', 'PINS', 'TWLO', 'ZM', 'DOCU',
+  'ROKU', 'SPOT', 'RBLX', 'U', 'TTWO', 'EA', 'ATVI', 'MTCH', 'BMBL', 'YELP',
+  // FINANCE - BANKS
+  'JPM', 'BAC', 'WFC', 'C', 'GS', 'MS', 'USB', 'PNC', 'TFC', 'SCHW',
+  'BK', 'STT', 'NTRS', 'CFG', 'FITB', 'HBAN', 'MTB', 'KEY', 'RF', 'ZION',
+  // FINANCE - INSURANCE & ASSET MGMT
+  'BLK', 'BX', 'KKR', 'APO', 'ARES', 'OWL', 'MET', 'PRU', 'AIG', 'ALL',
+  'TRV', 'CB', 'PGR', 'AFL', 'MMC', 'AON', 'WTW', 'AJG', 'BROWN', 'ERIE',
+  // HEALTHCARE - PHARMA
+  'JNJ', 'UNH', 'PFE', 'ABBV', 'MRK', 'LLY', 'TMO', 'ABT', 'BMY', 'AMGN',
+  'GILD', 'REGN', 'VRTX', 'BIIB', 'MRNA', 'BNTX', 'AZN', 'NVO', 'SNY', 'GSK',
+  // HEALTHCARE - DEVICES & SERVICES
+  'MDT', 'CVS', 'ISRG', 'DHR', 'BDX', 'SYK', 'ZBH', 'EW', 'BSX', 'DXCM',
+  'HCA', 'CI', 'ELV', 'HUM', 'MCK', 'CAH', 'ABC', 'VEEV', 'IDXX', 'IQV',
+  // CONSUMER - RETAIL
+  'WMT', 'HD', 'COST', 'TGT', 'LOW', 'TJX', 'ROSS', 'DG', 'DLTR', 'BBY',
+  'ORLY', 'AZO', 'AAP', 'ULTA', 'FIVE', 'TSCO', 'WSM', 'RH', 'W', 'ETSY',
+  // CONSUMER - FOOD & BEVERAGE
+  'MCD', 'SBUX', 'CMG', 'DPZ', 'YUM', 'QSR', 'WING', 'SHAK', 'CAVA', 'BROS',
+  'PEP', 'KO', 'MNST', 'KDP', 'STZ', 'BF.B', 'TAP', 'SAM', 'CELH', 'FIZZ',
+  // CONSUMER - HOUSEHOLD & PERSONAL
+  'PG', 'CL', 'KMB', 'EL', 'CHD', 'CLX', 'SJM', 'K', 'GIS', 'CAG',
+  'HSY', 'MDLZ', 'KHC', 'CPB', 'HRL', 'TSN', 'BYND', 'TTCF', 'POST', 'BGS',
+  // CONSUMER - APPAREL & LEISURE
+  'NKE', 'LULU', 'DECK', 'CROX', 'SKX', 'UAA', 'GPS', 'ANF', 'AEO', 'URBN',
+  'DIS', 'CMCSA', 'PARA', 'WBD', 'FOXA', 'NWSA', 'LYV', 'MSGS', 'EDR', 'DKNG',
+  // ENERGY - OIL & GAS
+  'XOM', 'CVX', 'COP', 'SLB', 'EOG', 'OXY', 'PXD', 'DVN', 'FANG', 'MRO',
+  'HES', 'APA', 'OVV', 'CTRA', 'MTDR', 'PR', 'SM', 'RRC', 'SWN', 'AR',
+  // ENERGY - MIDSTREAM & REFINING
+  'PSX', 'MPC', 'VLO', 'KMI', 'WMB', 'OKE', 'ET', 'EPD', 'MPLX', 'PAA',
+  // ENERGY - CLEAN ENERGY
+  'NEE', 'ENPH', 'SEDG', 'FSLR', 'RUN', 'NOVA', 'PLUG', 'BE', 'BLNK', 'CHPT',
+  // INDUSTRIAL - AEROSPACE & DEFENSE
+  'BA', 'RTX', 'LMT', 'NOC', 'GD', 'LHX', 'HII', 'TDG', 'HWM', 'TXT',
+  // INDUSTRIAL - MACHINERY & EQUIPMENT
+  'CAT', 'DE', 'CMI', 'PCAR', 'PH', 'ROK', 'EMR', 'ITW', 'IR', 'DOV',
+  // INDUSTRIAL - TRANSPORTATION
+  'UPS', 'FDX', 'UNP', 'CSX', 'NSC', 'CP', 'CNI', 'JBHT', 'XPO', 'ODFL',
+  // INDUSTRIAL - CONGLOMERATE & OTHER
+  'GE', 'MMM', 'HON', 'JCI', 'ETN', 'APH', 'AME', 'ROP', 'IEX', 'NDSN',
+  // AUTO & EV
+  'F', 'GM', 'TSLA', 'RIVN', 'LCID', 'NIO', 'XPEV', 'LI', 'FSR', 'GOEV',
+  'APTV', 'BWA', 'LEA', 'VC', 'ALSN', 'ALV', 'AXL', 'DAN', 'LKQ', 'THRM',
+  // REAL ESTATE
+  'PLD', 'AMT', 'EQIX', 'CCI', 'PSA', 'SPG', 'O', 'DLR', 'AVB', 'EQR',
+  'WELL', 'VTR', 'ARE', 'BXP', 'SLG', 'VNO', 'KIM', 'REG', 'FRT', 'HST',
+  // MATERIALS
+  'LIN', 'APD', 'SHW', 'ECL', 'NEM', 'FCX', 'NUE', 'STLD', 'CLF', 'X',
+  'DOW', 'DD', 'PPG', 'VMC', 'MLM', 'BALL', 'PKG', 'IP', 'WRK', 'SEE',
+  // UTILITIES
+  'NEE', 'DUK', 'SO', 'D', 'AEP', 'EXC', 'SRE', 'XEL', 'PEG', 'ED',
+  'WEC', 'ES', 'AEE', 'DTE', 'CMS', 'FE', 'EVRG', 'AES', 'NRG', 'PPL',
+  // TELECOM
+  'T', 'VZ', 'TMUS', 'CHTR', 'LBRDA', 'FYBR', 'USM', 'LUMN', 'SATS', 'GSAT',
+];
+
+// CRYPTO - TOP 100+ CRYPTOCURRENCIES
+const CRYPTO_SYMBOLS = [
+  // TOP 10 BY MARKET CAP
+  'BTC', 'ETH', 'BNB', 'SOL', 'XRP', 'ADA', 'DOGE', 'AVAX', 'DOT', 'MATIC',
+  // TOP 11-30
+  'LINK', 'TRX', 'SHIB', 'TON', 'NEAR', 'LTC', 'BCH', 'UNI', 'APT', 'ATOM',
+  'XLM', 'FIL', 'ICP', 'HBAR', 'ETC', 'VET', 'ARB', 'OP', 'IMX', 'INJ',
+  // TOP 31-50
+  'MKR', 'AAVE', 'GRT', 'RUNE', 'QNT', 'ALGO', 'FTM', 'SAND', 'MANA', 'AXS',
+  'EGLD', 'THETA', 'LDO', 'STX', 'EOS', 'XTZ', 'FLOW', 'NEO', 'KCS', 'KAVA',
+  // DEFI TOKENS
+  'CRV', 'COMP', 'SNX', 'SUSHI', 'YFI', '1INCH', 'BAL', 'CAKE', 'JOE', 'GMX',
+  'DYDX', 'PERP', 'FXS', 'CVX', 'LQTY', 'SPELL', 'ALCX', 'OHM', 'FEI', 'TRIBE',
+  // LAYER 2 & SCALING
+  'LRC', 'METIS', 'BOBA', 'CTSI', 'SKL', 'CELR', 'ZKS', 'SYN', 'HOP', 'ACX',
+  // MEMECOINS
+  'PEPE', 'FLOKI', 'BONK', 'WIF', 'MEME', 'ELON', 'SAMO', 'BABYDOGE', 'KISHU', 'AKITA',
+  // AI & DATA TOKENS
+  'FET', 'OCEAN', 'AGIX', 'NMR', 'RLC', 'CTXC', 'PHB', 'AIOZ', 'RSS3', 'GNO',
+  // GAMING & METAVERSE
+  'GALA', 'ENJ', 'CHZ', 'ALICE', 'ILV', 'GODS', 'PYR', 'SUPER', 'ATLAS', 'UFO',
+  // PRIVACY COINS
+  'XMR', 'ZEC', 'DASH', 'DCR', 'ARRR', 'SCRT', 'ROSE', 'OASIS', 'NYM', 'OXEN',
+  // EXCHANGE TOKENS
+  'CRO', 'OKB', 'HT', 'GT', 'LEO', 'FTT', 'MX', 'BGB', 'ASD', 'WRX',
+  // STABLECOINS (for reference)
+  'USDT', 'USDC', 'BUSD', 'DAI', 'FRAX', 'TUSD', 'USDP', 'GUSD', 'LUSD', 'sUSD',
+  // MISC ALTCOINS
+  'SUI', 'SEI', 'TIA', 'PYTH', 'JTO', 'JUP', 'W', 'STRK', 'ETHFI', 'ENA',
+];
+
+// FOREX - ALL MAJOR, MINOR, AND EXOTIC PAIRS (60+ pairs)
+const FOREX_SYMBOLS = [
+  // MAJOR PAIRS (Most liquid)
+  'EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD', 'NZD/USD',
+  // CROSS PAIRS - EUR
+  'EUR/GBP', 'EUR/JPY', 'EUR/CHF', 'EUR/AUD', 'EUR/CAD', 'EUR/NZD',
+  // CROSS PAIRS - GBP
+  'GBP/JPY', 'GBP/CHF', 'GBP/AUD', 'GBP/CAD', 'GBP/NZD',
+  // CROSS PAIRS - AUD & NZD
+  'AUD/JPY', 'AUD/CHF', 'AUD/CAD', 'AUD/NZD', 'NZD/JPY', 'NZD/CHF', 'NZD/CAD',
+  // CROSS PAIRS - CAD & CHF
+  'CAD/JPY', 'CAD/CHF', 'CHF/JPY',
+  // EXOTIC PAIRS - AMERICAS
+  'USD/MXN', 'USD/BRL', 'USD/ARS', 'USD/CLP', 'USD/COP', 'USD/PEN',
+  // EXOTIC PAIRS - EUROPE
+  'EUR/NOK', 'EUR/SEK', 'EUR/DKK', 'EUR/PLN', 'EUR/HUF', 'EUR/CZK', 'EUR/TRY',
+  'USD/NOK', 'USD/SEK', 'USD/DKK', 'USD/PLN', 'USD/HUF', 'USD/CZK', 'USD/TRY',
+  // EXOTIC PAIRS - ASIA PACIFIC
+  'USD/SGD', 'USD/HKD', 'USD/CNH', 'USD/KRW', 'USD/TWD', 'USD/THB', 'USD/IDR',
+  'USD/MYR', 'USD/PHP', 'USD/INR', 'USD/VND',
+  // EXOTIC PAIRS - AFRICA & MIDDLE EAST
+  'USD/ZAR', 'USD/ILS', 'USD/AED', 'USD/SAR', 'USD/EGP', 'USD/NGN',
+];
+
+// ETFs - INDEX, SECTOR, THEMATIC, BOND, COMMODITY (100+ ETFs)
+const ETF_SYMBOLS = [
+  // MAJOR INDEX ETFs
+  'SPY', 'QQQ', 'IWM', 'DIA', 'VOO', 'VTI', 'IVV', 'SPLG', 'RSP', 'MDY',
+  'IJR', 'IJH', 'ITOT', 'VV', 'VB', 'VO', 'SCHX', 'SCHB', 'SCHA', 'SPTM',
+  // INTERNATIONAL ETFs
+  'VEA', 'VWO', 'EFA', 'EEM', 'IEFA', 'IEMG', 'VXUS', 'IXUS', 'VEU', 'VSS',
+  'VGK', 'EWJ', 'EWZ', 'FXI', 'MCHI', 'INDA', 'EWY', 'EWT', 'EWG', 'EWU',
+  // SECTOR ETFs
+  'XLK', 'XLF', 'XLE', 'XLV', 'XLI', 'XLP', 'XLY', 'XLB', 'XLU', 'XLRE',
+  'XLC', 'VGT', 'VFH', 'VDE', 'VHT', 'VIS', 'VDC', 'VCR', 'VAW', 'VPU',
+  // THEMATIC ETFs
+  'ARKK', 'ARKG', 'ARKF', 'ARKW', 'ARKQ', 'ARKX', 'QCLN', 'ICLN', 'TAN', 'FAN',
+  'ROBO', 'BOTZ', 'HACK', 'BUG', 'SKYY', 'CLOU', 'WCLD', 'CIBR', 'AIQ', 'IRBO',
+  // CRYPTO ETFs
+  'BITO', 'IBIT', 'FBTC', 'ARKB', 'BITB', 'BTCO', 'HODL', 'BTCW', 'EZBC', 'DEFI',
+  'ETHE', 'GBTC', 'GDLC', 'BITQ', 'BLOK', 'LEGR', 'DAPP', 'SATO', 'BKCH', 'CRPT',
+  // BOND ETFs
+  'TLT', 'IEF', 'SHY', 'AGG', 'BND', 'LQD', 'HYG', 'JNK', 'TIP', 'GOVT',
+  'VCIT', 'VCSH', 'VGLT', 'VGIT', 'VGSH', 'SPTL', 'SPTI', 'SPTS', 'SCHZ', 'SCHR',
+  'EMB', 'VWOB', 'PCY', 'BNDX', 'IAGG', 'BWX', 'IGOV', 'EMLC', 'EBND', 'LEMB',
+  // COMMODITY ETFs
+  'GLD', 'SLV', 'IAU', 'GLDM', 'SGOL', 'BAR', 'SIVR', 'PSLV', 'SLV', 'PPLT',
+  'USO', 'BNO', 'UNG', 'BOIL', 'KOLD', 'DBC', 'PDBC', 'GSG', 'DJP', 'RJI',
+  'CPER', 'JJC', 'CORN', 'WEAT', 'SOYB', 'CANE', 'NIB', 'JO', 'COW', 'MOO',
+  // LEVERAGED ETFs
+  'TQQQ', 'SQQQ', 'UPRO', 'SPXU', 'TNA', 'TZA', 'LABU', 'LABD', 'SOXL', 'SOXS',
+  'FNGU', 'FNGD', 'TECL', 'TECS', 'FAS', 'FAZ', 'NUGT', 'DUST', 'JNUG', 'JDST',
+  // DIVIDEND ETFs
+  'VYM', 'VIG', 'SCHD', 'DVY', 'HDV', 'DGRO', 'DGRW', 'SDY', 'NOBL', 'SPHD',
+  // VOLATILITY ETFs
+  'VXX', 'UVXY', 'SVXY', 'VIXY', 'VIXM', 'ZIVB', 'TAIL', 'CAOS', 'PFIX', 'IVOL',
+];
+
+// FUTURES - CRYPTO PERPETUALS (via Binance, Bybit)
+const FUTURES_SYMBOLS = [
+  // CRYPTO PERPETUALS (USDT-M)
+  'BTCUSDT', 'ETHUSDT', 'BNBUSDT', 'SOLUSDT', 'XRPUSDT', 'ADAUSDT', 'DOGEUSDT',
+  'AVAXUSDT', 'DOTUSDT', 'MATICUSDT', 'LINKUSDT', 'LTCUSDT', 'BCHUSDT', 'ATOMUSDT',
+  'UNIUSDT', 'AAVEUSDT', 'NEARUSDT', 'APTUSDT', 'FILUSDT', 'OPUSDT', 'ARBUSDT',
+  // HIGH LEVERAGE FUTURES
+  'SUIUSDT', 'SEIUSDT', 'TIAUSDT', 'INJUSDT', 'RUNEUSDT', 'MKRUSDT', 'LDOUSDT',
+  'ORDIUSDT', '1000PEPEUSDT', '1000SHIBUSDT', '1000FLOKIUSDT', 'WIFUSDT', 'BONKUSDT',
+];
+
+// COMMODITIES - PHYSICAL COMMODITIES (via ETFs and CFDs)
+const COMMODITY_SYMBOLS = [
+  // PRECIOUS METALS
+  'XAUUSD', 'XAGUSD', 'XPTUSD', 'XPDUSD',
+  // ENERGY
+  'USOIL', 'UKOIL', 'NATGAS',
+  // AGRICULTURE
+  'CORN', 'WHEAT', 'SOYBEAN', 'COFFEE', 'SUGAR', 'COCOA', 'COTTON',
+  // INDUSTRIAL METALS
+  'COPPER', 'ALUMINUM', 'ZINC', 'NICKEL', 'TIN', 'LEAD',
+];
+
+// OPTIONS - MOST TRADED OPTIONS CHAINS (via Polygon)
+const OPTIONS_UNDERLYING = [
+  // Most Active Options
+  'SPY', 'QQQ', 'AAPL', 'TSLA', 'NVDA', 'AMD', 'AMZN', 'GOOGL', 'META', 'MSFT',
+  'IWM', 'XLF', 'GLD', 'SLV', 'TLT', 'VIX', 'BA', 'DIS', 'NFLX', 'COIN',
+  'RIVN', 'NIO', 'PLTR', 'SOFI', 'LCID', 'F', 'GM', 'JPM', 'BAC', 'GS',
+];
 
 export default function TradePage() {
   const [liveAssets, setLiveAssets] = useState<Asset[]>([]);
@@ -119,6 +308,56 @@ export default function TradePage() {
   const [isConnected, setIsConnected] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
+
+  // WebSocket for REAL-TIME price updates - NO POLLING DELAY
+  const handlePriceUpdate = useCallback((update: PriceUpdate) => {
+    // Update selected asset if it matches
+    if (selectedAsset && update.symbol === selectedAsset.symbol) {
+      setSelectedAsset(prev => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          price: update.last,
+          change: update.change,
+          changePercent: update.changePercent,
+          bid: update.bid,
+          ask: update.ask,
+        };
+      });
+    }
+
+    // Update asset in the list
+    setLiveAssets(prev => prev.map(asset => {
+      if (asset.symbol === update.symbol) {
+        return {
+          ...asset,
+          price: update.last,
+          change: update.change,
+          changePercent: update.changePercent,
+          bid: update.bid,
+          ask: update.ask,
+        };
+      }
+      return asset;
+    }));
+  }, [selectedAsset]);
+
+  const { isConnected: wsConnected, subscribePrices } = useWebSocket({
+    channels: ['prices'],
+    handlers: {
+      onPrice: handlePriceUpdate,
+      onPrices: (updates) => updates.forEach(handlePriceUpdate),
+      onConnect: () => console.log('[Trade] WebSocket connected - real-time prices active'),
+    },
+  });
+
+  // Subscribe to price updates for all symbols when connected
+  useEffect(() => {
+    if (wsConnected) {
+      const allSymbols = [...STOCK_SYMBOLS, ...CRYPTO_SYMBOLS, ...FOREX_SYMBOLS, ...ETF_SYMBOLS];
+      subscribePrices(allSymbols);
+    }
+  }, [wsConnected, subscribePrices]);
 
   // Fetch real market data from API - NO FAKE DATA
   const fetchMarketData = useCallback(async () => {
