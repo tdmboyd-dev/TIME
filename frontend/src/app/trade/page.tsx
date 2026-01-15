@@ -256,6 +256,7 @@ export default function TradePage() {
   const [limitPrice, setLimitPrice] = useState<string>('');
   const [stopPrice, setStopPrice] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState('');
+  const [assetTypeFilter, setAssetTypeFilter] = useState<'all' | 'stock' | 'crypto' | 'forex' | 'etf' | 'futures' | 'commodity' | 'options'>('all');
   const [orders, setOrders] = useState<Order[]>([]);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
@@ -442,15 +443,142 @@ export default function TradePage() {
         return null;
       });
 
-      // Wait for all fetches
-      const [stocks, cryptos, etfs] = await Promise.all([
+      // Fetch FOREX prices
+      const forexPromises = FOREX_SYMBOLS.map(async (symbol) => {
+        try {
+          const res = await fetch(`${API_BASE}/real-market/forex/${encodeURIComponent(symbol)}`);
+          const data = await res.json();
+          if (data.success && data.data) {
+            const d = data.data;
+            return {
+              symbol,
+              name: `${symbol.split('/')[0]}/${symbol.split('/')[1]}`,
+              type: 'forex' as const,
+              price: d.rate || d.price || 0,
+              change: d.change || 0,
+              changePercent: d.changePercent || 0,
+              bid: d.bid || (d.rate || d.price || 0) * 0.9998,
+              ask: d.ask || (d.rate || d.price || 0) * 1.0002,
+              spread: d.spread || (d.rate || d.price || 0) * 0.0004,
+              volume: d.volume ? `${(d.volume / 1e9).toFixed(1)}B` : 'N/A',
+              high24h: d.high || (d.rate || d.price || 0) * 1.01,
+              low24h: d.low || (d.rate || d.price || 0) * 0.99,
+            };
+          }
+        } catch (e) { /* skip on error */ }
+        return null;
+      });
+
+      // Fetch FUTURES prices (crypto perpetuals)
+      const futuresPromises = FUTURES_SYMBOLS.map(async (symbol) => {
+        try {
+          // Use binance futures endpoint or crypto endpoint
+          const baseSymbol = symbol.replace('USDT', '');
+          const res = await fetch(`${API_BASE}/real-market/crypto/${baseSymbol}`);
+          const data = await res.json();
+          if (data.success && data.data) {
+            const d = data.data;
+            return {
+              symbol,
+              name: `${baseSymbol} Perpetual`,
+              type: 'futures' as const,
+              price: d.price || 0,
+              change: d.change24h || 0,
+              changePercent: d.changePercent24h || 0,
+              bid: (d.price || 0) * 0.999,
+              ask: (d.price || 0) * 1.001,
+              spread: (d.price || 0) * 0.002,
+              volume: d.volume24h ? `${(d.volume24h / 1e9).toFixed(1)}B` : '0',
+              high24h: d.high24h || (d.price || 0) * 1.05,
+              low24h: d.low24h || (d.price || 0) * 0.95,
+              leverage: 125, // Max leverage typically available
+              fundingRate: 0.01, // Default funding rate
+            };
+          }
+        } catch (e) { /* skip on error */ }
+        return null;
+      });
+
+      // Fetch COMMODITY prices (via ETF proxies)
+      const commodityPromises = COMMODITY_SYMBOLS.map(async (symbol) => {
+        try {
+          // Map commodities to ETF proxies or use forex endpoint for metals
+          let endpoint = '';
+          if (['XAUUSD', 'XAGUSD', 'XPTUSD', 'XPDUSD'].includes(symbol)) {
+            endpoint = `${API_BASE}/real-market/forex/${symbol}`;
+          } else {
+            // For energy/agriculture, try stock endpoint with ETF proxy
+            const etfMap: Record<string, string> = {
+              'USOIL': 'USO', 'UKOIL': 'BNO', 'NATGAS': 'UNG',
+              'CORN': 'CORN', 'WHEAT': 'WEAT', 'SOYBEAN': 'SOYB',
+              'COFFEE': 'JO', 'SUGAR': 'CANE', 'COCOA': 'NIB', 'COTTON': 'BAL',
+              'COPPER': 'CPER', 'ALUMINUM': 'FOIL', 'ZINC': 'ZINC', 'NICKEL': 'NICK',
+            };
+            const etf = etfMap[symbol] || symbol;
+            endpoint = `${API_BASE}/real-market/stock/${etf}`;
+          }
+          const res = await fetch(endpoint);
+          const data = await res.json();
+          if (data.success && data.data) {
+            const d = data.data;
+            return {
+              symbol,
+              name: symbol,
+              type: 'commodity' as const,
+              price: d.rate || d.price || 0,
+              change: d.change || 0,
+              changePercent: d.changePercent || 0,
+              bid: (d.rate || d.price || 0) * 0.999,
+              ask: (d.rate || d.price || 0) * 1.001,
+              spread: (d.rate || d.price || 0) * 0.002,
+              volume: d.volume ? `${(d.volume / 1e6).toFixed(1)}M` : 'N/A',
+              high24h: d.high || (d.rate || d.price || 0) * 1.02,
+              low24h: d.low || (d.rate || d.price || 0) * 0.98,
+            };
+          }
+        } catch (e) { /* skip on error */ }
+        return null;
+      });
+
+      // Fetch OPTIONS underlying prices
+      const optionsPromises = OPTIONS_UNDERLYING.map(async (symbol) => {
+        try {
+          const res = await fetch(`${API_BASE}/real-market/stock/${symbol}`);
+          const data = await res.json();
+          if (data.success && data.data) {
+            const d = data.data;
+            return {
+              symbol: `${symbol} Options`,
+              name: `${symbol} Options Chain`,
+              type: 'options' as const,
+              price: d.price || 0,
+              change: d.change || 0,
+              changePercent: d.changePercent || 0,
+              bid: (d.price || 0) * 0.9999,
+              ask: (d.price || 0) * 1.0001,
+              spread: (d.price || 0) * 0.0002,
+              volume: d.volume ? `${(d.volume / 1e6).toFixed(1)}M` : '0',
+              high24h: d.high || (d.price || 0) * 1.02,
+              low24h: d.low || (d.price || 0) * 0.98,
+            };
+          }
+        } catch (e) { /* skip on error */ }
+        return null;
+      });
+
+      // Wait for all fetches - ALL ASSET CLASSES
+      const [stocks, cryptos, etfs, forex, futures, commodities, options] = await Promise.all([
         Promise.all(stockPromises),
         Promise.all(cryptoPromises),
         Promise.all(etfPromises),
+        Promise.all(forexPromises),
+        Promise.all(futuresPromises),
+        Promise.all(commodityPromises),
+        Promise.all(optionsPromises),
       ]);
 
-      // Filter out nulls and combine - use explicit casting
-      const allResults = [...stocks, ...cryptos, ...etfs];
+      // Filter out nulls and combine - ALL ASSET CLASSES
+      const allResults = [...stocks, ...cryptos, ...etfs, ...forex, ...futures, ...commodities, ...options];
       const allAssets: Asset[] = allResults.filter((a) => a !== null) as Asset[];
 
       if (allAssets.length > 0) {
@@ -523,10 +651,12 @@ export default function TradePage() {
     fetchMarketData();
   };
 
-  const filteredAssets = liveAssets.filter(a =>
-    a.symbol.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    a.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredAssets = liveAssets.filter(a => {
+    const matchesSearch = a.symbol.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      a.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesType = assetTypeFilter === 'all' || a.type === assetTypeFilter;
+    return matchesSearch && matchesType;
+  });
 
   const calculateTotal = () => {
     if (!selectedAsset) return 0;
@@ -719,6 +849,32 @@ export default function TradePage() {
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-2 bg-slate-800 border border-slate-700/50 rounded-lg text-white text-sm focus:outline-none focus:border-time-primary/50"
             />
+          </div>
+
+          {/* Asset Type Filter */}
+          <div className="flex flex-wrap gap-1.5">
+            {[
+              { key: 'all', label: 'All', count: liveAssets.length },
+              { key: 'stock', label: 'Stocks', count: liveAssets.filter(a => a.type === 'stock').length },
+              { key: 'crypto', label: 'Crypto', count: liveAssets.filter(a => a.type === 'crypto').length },
+              { key: 'forex', label: 'Forex', count: liveAssets.filter(a => a.type === 'forex').length },
+              { key: 'etf', label: 'ETFs', count: liveAssets.filter(a => a.type === 'etf').length },
+              { key: 'futures', label: 'Futures', count: liveAssets.filter(a => a.type === 'futures').length },
+              { key: 'commodity', label: 'Commodities', count: liveAssets.filter(a => a.type === 'commodity').length },
+              { key: 'options', label: 'Options', count: liveAssets.filter(a => a.type === 'options').length },
+            ].map(({ key, label, count }) => (
+              <button
+                key={key}
+                onClick={() => setAssetTypeFilter(key as any)}
+                className={`px-2 py-1 text-xs font-medium rounded-md transition-colors ${
+                  assetTypeFilter === key
+                    ? 'bg-time-primary text-white'
+                    : 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700'
+                }`}
+              >
+                {label} {count > 0 && `(${count})`}
+              </button>
+            ))}
           </div>
 
           {/* Favorites */}
