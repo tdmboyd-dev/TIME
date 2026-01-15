@@ -1,8 +1,29 @@
 # DROP THIS TO COPILOT - QUICK REFERENCE
 
 **Last Updated:** 2026-01-15
-**Version:** v74.12.0 - LOGIN FIX + SIDEBAR FIX + ADMIN ACCESS FIX
+**Version:** v74.13.0 - LEADERBOARD CLEANUP
 **Purpose:** Quick summary for Copilot/Claude when starting new sessions
+
+---
+
+## 🎯 v74.13.0 - LEADERBOARD CLEANUP (2026-01-15)
+
+**Leaderboard Page Refactored:**
+- Consolidated duplicate leaderboard code - page now uses shared Leaderboard component
+- Removed all Math.random() fake data generation from frontend
+- Removed hardcoded mock trader/bot arrays from Leaderboard component
+- Added proper loading and empty states with retry functionality
+- Page now fetches real data from /api/v1/social/leaderboard API
+
+**Files Modified:**
+- `frontend/src/app/leaderboard/page.tsx` - Refactored to use Leaderboard component (reduced from 492 lines to 18 lines)
+- `frontend/src/components/social/Leaderboard.tsx` - Removed mock data, improved empty state
+
+**Technical Changes:**
+- LeaderboardPage now imports and renders the Leaderboard component from components/social
+- No more fallback to fake data - shows empty state with retry button if API fails
+- LIVE/DEMO indicator shows connection status
+- Proper error handling with user-friendly messages
 
 ---
 
