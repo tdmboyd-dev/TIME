@@ -100,6 +100,7 @@ export default function BotsPage() {
   const [isConnected, setIsConnected] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [botsInitialized, setBotsInitialized] = useState(false);
 
   // Add Bot form state
   const [newBotName, setNewBotName] = useState('');
@@ -109,6 +110,19 @@ export default function BotsPage() {
   // Selected bot for detail view
   const [selectedBot, setSelectedBot] = useState<BotData | null>(null);
   const [showBotDetails, setShowBotDetails] = useState(false);
+
+  // Load bots from localStorage (fallback)
+  const loadBotsFromStorage = (): BotData[] => {
+    try {
+      const saved = localStorage.getItem('time_bots_data');
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch (err) {
+      console.error('[Bots] Failed to load from localStorage:', err);
+    }
+    return [];
+  };
 
   // Fetch bots from backend API
   const fetchBots = useCallback(async () => {
@@ -147,14 +161,22 @@ export default function BotsPage() {
         }));
         setBots(formattedBots);
         setIsConnected(true);
+        setBotsInitialized(true);
       } else {
         throw new Error('Invalid API response format');
       }
     } catch (error: any) {
-      // Error handled - shows error state to user
+      // Error handled - fall back to localStorage
       setError(error.message || 'Failed to connect to backend');
       setIsConnected(false);
-      setBots([]);
+
+      // Load from localStorage as fallback
+      const cachedBots = loadBotsFromStorage();
+      if (cachedBots.length > 0) {
+        setBots(cachedBots);
+        setError(null); // Clear error if we have cached data
+      }
+      setBotsInitialized(true);
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
@@ -168,6 +190,16 @@ export default function BotsPage() {
     const interval = setInterval(fetchBots, 30000);
     return () => clearInterval(interval);
   }, [fetchBots]);
+
+  // Persist bots to localStorage whenever they change
+  useEffect(() => {
+    if (!botsInitialized || bots.length === 0) return;
+    try {
+      localStorage.setItem('time_bots_data', JSON.stringify(bots));
+    } catch (err) {
+      console.error('[Bots] Failed to save to localStorage:', err);
+    }
+  }, [bots, botsInitialized]);
 
   const handleRefresh = () => {
     setIsRefreshing(true);

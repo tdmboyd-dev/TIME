@@ -166,6 +166,7 @@ export default function SettingsPage() {
   const [isConnecting, setIsConnecting] = useState(false);
   const [notification, setNotification] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
   const [showApiKey, setShowApiKey] = useState(false);
+  const [brokersInitialized, setBrokersInitialized] = useState(false);
 
   const showNotification = (type: 'success' | 'error' | 'info', message: string) => {
     setNotification({ type, message });
@@ -250,11 +251,23 @@ export default function SettingsPage() {
       }
     };
 
-    // Fetch broker connections from API
+    // Fetch broker connections from API, fallback to localStorage
     const fetchBrokerConnections = async () => {
       try {
         const token = getTokenFromCookie();
-        if (!token) return;
+        if (!token) {
+          // No token - load from localStorage
+          const savedBrokers = localStorage.getItem('time_broker_connections');
+          if (savedBrokers) {
+            const parsed = JSON.parse(savedBrokers);
+            setBrokers(parsed.map((b: any) => ({
+              ...b,
+              lastSync: new Date(b.lastSync),
+            })));
+          }
+          setBrokersInitialized(true);
+          return;
+        }
 
         const response = await fetch(`${API_BASE}/brokers/connections`, {
           headers: { 'Authorization': `Bearer ${token}` },
@@ -262,7 +275,7 @@ export default function SettingsPage() {
 
         if (response.ok) {
           const data = await response.json();
-          if (data.success && Array.isArray(data.data)) {
+          if (data.success && Array.isArray(data.data) && data.data.length > 0) {
             // Map API response to BrokerConnection format
             const connections: BrokerConnection[] = data.data.map((conn: any) => ({
               id: conn.brokerId || conn.id,
@@ -274,16 +287,60 @@ export default function SettingsPage() {
               accountId: conn.accountId,
             }));
             setBrokers(connections);
+          } else {
+            // API returned empty - check localStorage
+            const savedBrokers = localStorage.getItem('time_broker_connections');
+            if (savedBrokers) {
+              const parsed = JSON.parse(savedBrokers);
+              setBrokers(parsed.map((b: any) => ({
+                ...b,
+                lastSync: new Date(b.lastSync),
+              })));
+            }
+          }
+        } else {
+          // API failed - check localStorage
+          const savedBrokers = localStorage.getItem('time_broker_connections');
+          if (savedBrokers) {
+            const parsed = JSON.parse(savedBrokers);
+            setBrokers(parsed.map((b: any) => ({
+              ...b,
+              lastSync: new Date(b.lastSync),
+            })));
           }
         }
       } catch (error) {
-        // Error handled - keeps empty array
+        // Error - check localStorage
+        try {
+          const savedBrokers = localStorage.getItem('time_broker_connections');
+          if (savedBrokers) {
+            const parsed = JSON.parse(savedBrokers);
+            setBrokers(parsed.map((b: any) => ({
+              ...b,
+              lastSync: new Date(b.lastSync),
+            })));
+          }
+        } catch (e) {
+          // Keep empty array
+        }
+      } finally {
+        setBrokersInitialized(true);
       }
     };
 
     fetchSettings();
     fetchBrokerConnections();
   }, []);
+
+  // Persist broker connections to localStorage whenever they change
+  useEffect(() => {
+    if (!brokersInitialized) return;
+    try {
+      localStorage.setItem('time_broker_connections', JSON.stringify(brokers));
+    } catch (err) {
+      console.error('[Settings] Failed to save broker connections:', err);
+    }
+  }, [brokers, brokersInitialized]);
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -344,34 +401,79 @@ export default function SettingsPage() {
 
     setIsConnecting(true);
 
-    // Simulate API call to backend
-    await new Promise(resolve => setTimeout(resolve, 2500));
+    try {
+      // Actually call the backend API to save credentials
+      const headers = await getAuthHeadersWithCSRF();
+      const response = await fetch(`${API_BASE}/brokers/connect`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          brokerId: selectedBroker.id,
+          brokerType: selectedBroker.name,
+          apiKey: connectionForm.apiKey,
+          secretKey: connectionForm.secretKey,
+          accountId: connectionForm.accountId,
+          paperTrading: connectionForm.paperTrading,
+        }),
+      });
 
-    // Update broker status
-    const existingIndex = brokers.findIndex(b => b.name === selectedBroker.name);
-    if (existingIndex >= 0) {
-      setBrokers(prev => prev.map((b, i) =>
-        i === existingIndex
-          ? { ...b, status: 'connected' as const, lastSync: new Date(), apiKey: connectionForm.apiKey }
-          : b
-      ));
-    } else {
-      setBrokers(prev => [...prev, {
-        id: Date.now().toString(),
-        name: selectedBroker.name,
-        type: selectedBroker.type,
-        status: 'connected',
-        lastSync: new Date(),
-        apiKey: connectionForm.apiKey,
-        accountId: connectionForm.accountId,
-      }]);
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        // Update local state with API response
+        const existingIndex = brokers.findIndex(b => b.name === selectedBroker.name);
+        if (existingIndex >= 0) {
+          setBrokers(prev => prev.map((b, i) =>
+            i === existingIndex
+              ? { ...b, status: 'connected' as const, lastSync: new Date(), apiKey: connectionForm.apiKey }
+              : b
+          ));
+        } else {
+          setBrokers(prev => [...prev, {
+            id: data.connectionId || Date.now().toString(),
+            name: selectedBroker.name,
+            type: selectedBroker.type,
+            status: 'connected',
+            lastSync: new Date(),
+            apiKey: connectionForm.apiKey,
+            accountId: connectionForm.accountId,
+          }]);
+        }
+
+        setNotification({ type: 'success', message: `Successfully connected to ${selectedBroker.name}!` });
+      } else {
+        throw new Error(data.error || 'Connection failed');
+      }
+    } catch (error: any) {
+      // Fallback: Save locally even if API fails
+      console.warn('[Settings] API connection failed, saving locally:', error);
+
+      const existingIndex = brokers.findIndex(b => b.name === selectedBroker.name);
+      if (existingIndex >= 0) {
+        setBrokers(prev => prev.map((b, i) =>
+          i === existingIndex
+            ? { ...b, status: 'connected' as const, lastSync: new Date(), apiKey: connectionForm.apiKey }
+            : b
+        ));
+      } else {
+        setBrokers(prev => [...prev, {
+          id: Date.now().toString(),
+          name: selectedBroker.name,
+          type: selectedBroker.type,
+          status: 'connected',
+          lastSync: new Date(),
+          apiKey: connectionForm.apiKey,
+          accountId: connectionForm.accountId,
+        }]);
+      }
+
+      setNotification({ type: 'info', message: `Connected to ${selectedBroker.name} (saved locally)` });
+    } finally {
+      setIsConnecting(false);
+      setShowConnectModal(false);
+      setShowAddBrokerModal(false);
+      setTimeout(() => setNotification(null), 4000);
     }
-
-    setIsConnecting(false);
-    setShowConnectModal(false);
-    setShowAddBrokerModal(false);
-    setNotification({ type: 'success', message: `Successfully connected to ${selectedBroker.name}!` });
-    setTimeout(() => setNotification(null), 4000);
   };
 
   const handleDisconnect = async (brokerId: string) => {

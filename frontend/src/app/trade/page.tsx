@@ -71,6 +71,51 @@ export default function TradePage() {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [favorites, setFavorites] = useState<string[]>(['AAPL', 'BTC/USD', 'SPY']);
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  // Load orders and favorites from localStorage on mount
+  useEffect(() => {
+    try {
+      const savedOrders = localStorage.getItem('time_trade_orders');
+      if (savedOrders) {
+        const parsed = JSON.parse(savedOrders);
+        // Convert timestamp strings back to Date objects
+        const ordersWithDates = parsed.map((o: Order & { timestamp: string }) => ({
+          ...o,
+          timestamp: new Date(o.timestamp),
+        }));
+        setOrders(ordersWithDates);
+      }
+
+      const savedFavorites = localStorage.getItem('time_trade_favorites');
+      if (savedFavorites) {
+        setFavorites(JSON.parse(savedFavorites));
+      }
+    } catch (err) {
+      console.error('[Trade] Failed to load from localStorage:', err);
+    }
+    setIsInitialized(true);
+  }, []);
+
+  // Persist orders to localStorage whenever they change
+  useEffect(() => {
+    if (!isInitialized) return; // Don't save until initial load complete
+    try {
+      localStorage.setItem('time_trade_orders', JSON.stringify(orders));
+    } catch (err) {
+      console.error('[Trade] Failed to save orders:', err);
+    }
+  }, [orders, isInitialized]);
+
+  // Persist favorites to localStorage whenever they change
+  useEffect(() => {
+    if (!isInitialized) return;
+    try {
+      localStorage.setItem('time_trade_favorites', JSON.stringify(favorites));
+    } catch (err) {
+      console.error('[Trade] Failed to save favorites:', err);
+    }
+  }, [favorites, isInitialized]);
   const [isConnected, setIsConnected] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);

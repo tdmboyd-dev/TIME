@@ -1,5 +1,43 @@
 # TIME BEYOND US - PRODUCTION TODO
 
+---
+## 🚨 CRITICAL PRODUCTION AUDIT (Jan 15, 2026) 🚨
+---
+
+### State Persistence Issues (DATA LOSS RISKS)
+- [ ] **Settings page**: Broker credentials only saved in memory, not to backend
+- [ ] **Trade page**: Orders stored in React state, no backend sync on failure
+- [ ] **Bots page**: Bot enable/disable state not persisted to backend
+- [ ] **Portfolio page**: No localStorage backup, preferences lost on refresh
+- [ ] **Strategies page**: Creates fake strategies with random data if API fails
+
+### Fake/Simulated Features (NOT REAL TRADING)
+- [ ] **LiveChart.tsx:70-82**: Chart candles use Math.random() - NOT REAL DATA
+- [ ] **autonomous_capital_agent.ts:1007**: simulateExecution() - NOT REAL TRADING
+- [ ] **universal_bot_engine.ts:490**: 30% random opportunity detection - NOT REAL
+- [ ] **capital_conductor.ts:700**: Fund transfers simulated - NO REAL MONEY MOVEMENT
+- [ ] **Leaderboard.tsx**: Hardcoded mockLeaderboard - NOT REAL USERS
+- [ ] **CommunityChat.tsx**: Hardcoded mockMessages - NOT REAL COMMUNITY
+- [ ] **Achievements.tsx**: Hardcoded badges - NOT REAL ACHIEVEMENTS
+
+### Real Features (WORKING IN PRODUCTION)
+- [x] Broker API integrations (Alpaca, Binance, Kraken, OANDA)
+- [x] Real market data (Finnhub, CoinGecko)
+- [x] Real portfolio aggregation from connected brokers
+- [x] Bot management infrastructure
+- [x] Backtesting engine with real historical data
+- [x] User authentication with JWT + CSRF protection
+
+### PRIORITY FIXES FOR PRODUCTION-READY STATUS
+1. **HIGHEST**: Remove simulateExecution(), connect autonomous agent to real brokers
+2. **HIGH**: Add localStorage persistence for orders, settings, bot state
+3. **HIGH**: Replace Math.random() charts with real OHLCV data from brokers
+4. **MEDIUM**: Implement real opportunity detection based on technical indicators
+5. **MEDIUM**: Add order status tracking and broker reconciliation
+6. **LOW**: Replace mock social features with real user data
+
+---
+
 ## CRITICAL FIXES NEEDED
 
 ### 1. CSRF Token Fix ✅ FULLY FIXED & VERIFIED (Jan 13, 2026)
