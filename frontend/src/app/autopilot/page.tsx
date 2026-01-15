@@ -9,7 +9,7 @@ import {
   CheckCircle, AlertCircle, X, Info
 } from 'lucide-react';
 import clsx from 'clsx';
-import { API_BASE, getAuthHeaders } from '@/lib/api';
+import { API_BASE, getAuthHeaders, getAuthHeadersWithCSRF } from '@/lib/api';
 import { PageIntroModal } from '@/components/onboarding/PageIntroModal';
 import { autopilotIntro } from '@/components/onboarding/pageIntroContent';
 
@@ -150,9 +150,10 @@ export default function AutoPilotPage() {
 
     try {
       // Create pilot via real API
+      const headers = await getAuthHeadersWithCSRF();
       const response = await fetch(`${API_BASE}/trading/autopilot/create`, {
         method: 'POST',
-        headers: getAuthHeaders(),
+        headers,
         body: JSON.stringify({
           riskProfile: selectedRisk,
           initialCapital: amount,

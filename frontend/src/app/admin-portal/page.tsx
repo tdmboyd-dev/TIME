@@ -16,7 +16,7 @@ import { useTimeStore, useHydration } from '@/store/timeStore';
  * - Real-time metrics from API
  */
 
-import { API_BASE, getTokenFromCookie } from '@/lib/api';
+import { API_BASE, getTokenFromCookie, getAuthHeadersWithCSRF } from '@/lib/api';
 
 interface SystemStatus {
   component: string;
@@ -279,12 +279,10 @@ export default function AdminPortalPage() {
     try {
       const token = getTokenFromCookie();
       if (token) {
+        const headers = await getAuthHeadersWithCSRF();
         await fetch(`${API_BASE}/admin/evolution/${newMode}`, {
           method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          },
+          headers,
         });
       }
     } catch {
@@ -300,13 +298,10 @@ export default function AdminPortalPage() {
   const createUser = async () => {
     setUserActionLoading(true);
     try {
-      const token = getTokenFromCookie();
+      const headers = await getAuthHeadersWithCSRF();
       const response = await fetch(`${API_BASE}/admin/users/create`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
+        headers,
         body: JSON.stringify(newUser),
       });
 
@@ -331,13 +326,10 @@ export default function AdminPortalPage() {
     if (!selectedUser) return;
     setUserActionLoading(true);
     try {
-      const token = getTokenFromCookie();
+      const headers = await getAuthHeadersWithCSRF();
       const response = await fetch(`${API_BASE}/admin/users/${selectedUser.id}/block`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
+        headers,
         body: JSON.stringify({ reason: blockReason }),
       });
 
@@ -362,12 +354,10 @@ export default function AdminPortalPage() {
   const unblockUser = async (user: AdminUser) => {
     setUserActionLoading(true);
     try {
-      const token = getTokenFromCookie();
+      const headers = await getAuthHeadersWithCSRF();
       const response = await fetch(`${API_BASE}/admin/users/${user.id}/unblock`, {
         method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
+        headers,
       });
 
       const data = await response.json();
@@ -388,13 +378,10 @@ export default function AdminPortalPage() {
   const updateUserRole = async (user: AdminUser, newRole: string) => {
     setUserActionLoading(true);
     try {
-      const token = getTokenFromCookie();
+      const headers = await getAuthHeadersWithCSRF();
       const response = await fetch(`${API_BASE}/admin/users/${user.id}/role`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
+        headers,
         body: JSON.stringify({ role: newRole }),
       });
 
@@ -416,13 +403,10 @@ export default function AdminPortalPage() {
   const updateUserPermissions = async (user: AdminUser, permissions: string[]) => {
     setUserActionLoading(true);
     try {
-      const token = getTokenFromCookie();
+      const headers = await getAuthHeadersWithCSRF();
       const response = await fetch(`${API_BASE}/admin/users/${user.id}/permissions`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
+        headers,
         body: JSON.stringify({ permissions }),
       });
 
@@ -448,12 +432,10 @@ export default function AdminPortalPage() {
 
     setUserActionLoading(true);
     try {
-      const token = getTokenFromCookie();
+      const headers = await getAuthHeadersWithCSRF();
       const response = await fetch(`${API_BASE}/admin/users/${user.id}`, {
         method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
+        headers,
       });
 
       const data = await response.json();
@@ -475,13 +457,10 @@ export default function AdminPortalPage() {
   const handleBotAction = async (bot: AdminBot, action: 'approve' | 'reject' | 'pause' | 'activate' | 'delete') => {
     setBotActionLoading(true);
     try {
-      const token = getTokenFromCookie();
+      const headers = await getAuthHeadersWithCSRF();
       const response = await fetch(`${API_BASE}/admin/bots/${bot.id}/${action}`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
+        headers,
       });
 
       const data = await response.json();

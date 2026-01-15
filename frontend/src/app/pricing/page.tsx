@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import clsx from 'clsx';
 import Link from 'next/link';
+import { getAuthHeadersWithCSRF } from '@/lib/api';
 
 const API_BASE = 'https://time-backend-hosting.fly.dev/api/v1';
 const STRIPE_API = `${API_BASE}/stripe`;
@@ -293,9 +294,10 @@ export default function PricingPage() {
   const handleSubscribe = async (tierId: string) => {
     setIsProcessing(tierId);
     try {
+      const headers = await getAuthHeadersWithCSRF();
       const response = await fetch(`${STRIPE_API}/create-checkout`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         credentials: 'include',
         body: JSON.stringify({
           tierId,
@@ -321,9 +323,10 @@ export default function PricingPage() {
   const handleAddOnPurchase = async (addOnId: string) => {
     setIsProcessing(`addon-${addOnId}`);
     try {
+      const headers = await getAuthHeadersWithCSRF();
       const response = await fetch(`${STRIPE_API}/create-addon-checkout`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         credentials: 'include',
         body: JSON.stringify({
           addOnId,
@@ -349,9 +352,10 @@ export default function PricingPage() {
   const handleManageSubscription = async () => {
     setIsProcessing('manage');
     try {
+      const headers = await getAuthHeadersWithCSRF();
       const response = await fetch(`${STRIPE_API}/create-portal`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         credentials: 'include',
         body: JSON.stringify({
           returnUrl: `${window.location.origin}/pricing`,

@@ -25,7 +25,7 @@ import {
   TrendingDownIcon,
   Gauge,
 } from 'lucide-react';
-import { API_BASE, getAuthHeaders } from '@/lib/api';
+import { API_BASE, getAuthHeaders, getAuthHeadersWithCSRF } from '@/lib/api';
 import { PageIntroModal } from '@/components/onboarding/PageIntroModal';
 import { backtestIntro } from '@/components/onboarding/pageIntroContent';
 import {
@@ -139,12 +139,10 @@ export default function BacktestPage() {
 
     try {
       // Run basic backtest
+      const headers = await getAuthHeadersWithCSRF();
       const res = await fetch(`${API_BASE}/backtest/run`, {
         method: 'POST',
-        headers: {
-          ...getAuthHeaders(),
-          'Content-Type': 'application/json',
-        },
+        headers,
         body: JSON.stringify({
           symbol,
           startDate,
@@ -192,12 +190,10 @@ export default function BacktestPage() {
 
   const runMonteCarlo = async (trades: any[]) => {
     try {
+      const headers = await getAuthHeadersWithCSRF();
       const res = await fetch(`${API_BASE}/backtest/advanced/monte-carlo`, {
         method: 'POST',
-        headers: {
-          ...getAuthHeaders(),
-          'Content-Type': 'application/json',
-        },
+        headers,
         body: JSON.stringify({
           symbol,
           config: { initialCapital },
@@ -223,12 +219,10 @@ export default function BacktestPage() {
 
   const runWalkForwardAnalysis = async () => {
     try {
+      const headers = await getAuthHeadersWithCSRF();
       const res = await fetch(`${API_BASE}/backtest/advanced/walk-forward`, {
         method: 'POST',
-        headers: {
-          ...getAuthHeaders(),
-          'Content-Type': 'application/json',
-        },
+        headers,
         body: JSON.stringify({
           symbol,
           config: {

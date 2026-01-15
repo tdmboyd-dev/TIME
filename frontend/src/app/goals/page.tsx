@@ -17,8 +17,7 @@ import {
   Wifi,
   WifiOff,
 } from 'lucide-react';
-
-const API_BASE = 'https://time-backend-hosting.fly.dev/api/v1';
+import { API_BASE, getAuthHeadersWithCSRF } from '@/lib/api';
 
 interface InvestmentGoal {
   id: string;
@@ -140,9 +139,10 @@ export default function GoalsPage() {
 
   const calculateRiskProfile = async () => {
     try {
+      const headers = await getAuthHeadersWithCSRF();
       const res = await fetch(`${API_BASE}/robo/risk-profile`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ answers: riskAnswers }),
       });
 
@@ -178,9 +178,10 @@ export default function GoalsPage() {
 
   const createGoal = async () => {
     try {
+      const headers = await getAuthHeadersWithCSRF();
       const res = await fetch(`${API_BASE}/robo/goals`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           userId: 'demo-user',
           name: goalName,

@@ -27,7 +27,7 @@ import {
 } from 'lucide-react';
 import clsx from 'clsx';
 
-import { API_BASE, getTokenFromCookie } from '@/lib/api';
+import { API_BASE, getTokenFromCookie, getAuthHeadersWithCSRF } from '@/lib/api';
 
 type EvolutionMode = 'controlled' | 'autonomous';
 
@@ -119,10 +119,10 @@ export default function AdminPage() {
   const handleStartAllBots = async () => {
     setNotification({ type: 'success', message: 'Starting all bots...' });
     try {
-      const token = getTokenFromCookie();
+      const headers = await getAuthHeadersWithCSRF();
       const response = await fetch(`${API_BASE}/trading/start-all`, {
         method: 'POST',
-        headers: { ...(token ? { 'Authorization': `Bearer ${token}` } : {}) },
+        headers,
       });
       if (response.ok) {
         setBotsRunning(true);
@@ -139,10 +139,10 @@ export default function AdminPage() {
   const handlePauseAllBots = async () => {
     setNotification({ type: 'warning', message: 'Pausing all bots...' });
     try {
-      const token = getTokenFromCookie();
+      const headers = await getAuthHeadersWithCSRF();
       const response = await fetch(`${API_BASE}/admin/emergency/pause-all`, {
         method: 'POST',
-        headers: { ...(token ? { 'Authorization': `Bearer ${token}` } : {}) },
+        headers,
       });
       if (response.ok) {
         setBotsRunning(false);
@@ -459,13 +459,10 @@ export default function AdminPage() {
                       <button
                         onClick={async () => {
                           try {
-                            const token = document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1];
+                            const headers = await getAuthHeadersWithCSRF();
                             await fetch(`${API_BASE}/admin/evolution/approve`, {
                               method: 'POST',
-                              headers: {
-                                'Authorization': `Bearer ${token}`,
-                                'Content-Type': 'application/json'
-                              },
+                              headers,
                               body: JSON.stringify({ itemId: item.id || item.title }),
                             });
                             setNotification({ type: 'success', message: `Approved: ${item.title}` });
@@ -480,13 +477,10 @@ export default function AdminPage() {
                       <button
                         onClick={async () => {
                           try {
-                            const token = document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1];
+                            const headers = await getAuthHeadersWithCSRF();
                             await fetch(`${API_BASE}/admin/evolution/reject`, {
                               method: 'POST',
-                              headers: {
-                                'Authorization': `Bearer ${token}`,
-                                'Content-Type': 'application/json'
-                              },
+                              headers,
                               body: JSON.stringify({ itemId: item.id || item.title }),
                             });
                             setNotification({ type: 'warning', message: `Rejected: ${item.title}` });

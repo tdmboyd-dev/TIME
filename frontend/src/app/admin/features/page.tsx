@@ -33,7 +33,7 @@ import {
 } from 'lucide-react';
 import clsx from 'clsx';
 
-import { API_BASE, getTokenFromCookie } from '@/lib/api';
+import { API_BASE, getTokenFromCookie, getAuthHeadersWithCSRF } from '@/lib/api';
 
 // ============================================================
 // TYPES
@@ -170,10 +170,10 @@ export default function FeatureFlagsPage() {
   // Toggle feature
   const toggleFeature = async (id: string) => {
     try {
-      const token = getTokenFromCookie();
+      const headers = await getAuthHeadersWithCSRF();
       const response = await fetch(`${API_BASE}/features/admin/features/${id}/toggle`, {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` },
+        headers,
       });
 
       if (response.ok) {
@@ -194,13 +194,10 @@ export default function FeatureFlagsPage() {
   // Update rollout percentage
   const updateRollout = async (id: string, percentage: number) => {
     try {
-      const token = getTokenFromCookie();
+      const headers = await getAuthHeadersWithCSRF();
       const response = await fetch(`${API_BASE}/features/admin/features/${id}/rollout`, {
         method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
+        headers,
         body: JSON.stringify({ percentage }),
       });
 
@@ -224,13 +221,10 @@ export default function FeatureFlagsPage() {
 
     setIsSaving(true);
     try {
-      const token = getTokenFromCookie();
+      const headers = await getAuthHeadersWithCSRF();
       const response = await fetch(`${API_BASE}/features/admin/features`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
+        headers,
         body: JSON.stringify(formData),
       });
 
@@ -260,13 +254,10 @@ export default function FeatureFlagsPage() {
 
     setIsSaving(true);
     try {
-      const token = getTokenFromCookie();
+      const headers = await getAuthHeadersWithCSRF();
       const response = await fetch(`${API_BASE}/features/admin/features/${editingFeature.id}`, {
         method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
+        headers,
         body: JSON.stringify(formData),
       });
 
@@ -293,10 +284,10 @@ export default function FeatureFlagsPage() {
   // Delete feature
   const deleteFeature = async (id: string) => {
     try {
-      const token = getTokenFromCookie();
+      const headers = await getAuthHeadersWithCSRF();
       const response = await fetch(`${API_BASE}/features/admin/features/${id}`, {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` },
+        headers,
       });
 
       if (response.ok) {

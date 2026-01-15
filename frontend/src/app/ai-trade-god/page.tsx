@@ -23,7 +23,7 @@ import {
   Check,
   Loader2,
 } from 'lucide-react';
-import { API_BASE } from '@/lib/api';
+import { API_BASE, getAuthHeadersWithCSRF } from '@/lib/api';
 import { PageIntroModal } from '@/components/onboarding/PageIntroModal';
 import { aiTradeGodIntro } from '@/components/onboarding/pageIntroContent';
 
@@ -168,9 +168,10 @@ export default function AITradeGodPage() {
   const createBot = async () => {
     setLoading(true);
     try {
+      const headers = await getAuthHeadersWithCSRF();
       const res = await fetch(`${API_BASE}/alerts/bots`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           name: `AI Trade God #${bots.length + 1}`,
           riskLevel: 'MODERATE',
@@ -189,8 +190,10 @@ export default function AITradeGodPage() {
 
   const toggleBot = async (botId: string, action: 'start' | 'stop') => {
     try {
+      const headers = await getAuthHeadersWithCSRF();
       await fetch(`${API_BASE}/alerts/bots/${botId}/${action}`, {
         method: 'POST',
+        headers,
       });
       fetchBots();
     } catch (error) {
@@ -202,9 +205,10 @@ export default function AITradeGodPage() {
     if (!command.trim()) return;
     setLoading(true);
     try {
+      const headers = await getAuthHeadersWithCSRF();
       const res = await fetch(`${API_BASE}/alerts/command`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ command }),
       });
       const data = await res.json();
@@ -220,9 +224,10 @@ export default function AITradeGodPage() {
 
   const listForLending = async (botId: string) => {
     try {
+      const headers = await getAuthHeadersWithCSRF();
       await fetch(`${API_BASE}/alerts/bots/${botId}/list-for-lending`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           monthlyFee: 20,
           profitShare: 10,
@@ -247,9 +252,10 @@ export default function AITradeGodPage() {
     if (!selectedBot) return;
     setSavingSettings(true);
     try {
+      const headers = await getAuthHeadersWithCSRF();
       const res = await fetch(`${API_BASE}/alerts/bots/${selectedBot.id}/settings`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify(botSettings),
       });
       const data = await res.json();
@@ -286,9 +292,10 @@ export default function AITradeGodPage() {
     if (!selectedMarketplaceBot) return;
     setBorrowing(true);
     try {
+      const headers = await getAuthHeadersWithCSRF();
       const res = await fetch(`${API_BASE}/alerts/marketplace/bots/${selectedMarketplaceBot.id}/subscribe`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           duration: 30, // 30-day rental
         }),

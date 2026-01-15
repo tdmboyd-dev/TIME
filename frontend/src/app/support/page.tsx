@@ -28,6 +28,7 @@ import {
   Ticket,
 } from 'lucide-react';
 import clsx from 'clsx';
+import { getAuthHeadersWithCSRF } from '@/lib/api';
 
 interface Message {
   id: string;
@@ -180,9 +181,10 @@ export default function SupportPage() {
     setIsLoading(true);
 
     try {
+      const headers = await getAuthHeadersWithCSRF();
       const response = await fetch('/api/support/chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         credentials: 'include',
         body: JSON.stringify({
           message: text,
@@ -228,9 +230,10 @@ export default function SupportPage() {
     setTicketSuccess(false);
 
     try {
+      const headers = await getAuthHeadersWithCSRF();
       const response = await fetch('/api/support/ticket', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         credentials: 'include',
         body: JSON.stringify(ticketForm),
       });
@@ -263,9 +266,10 @@ export default function SupportPage() {
   // Vote on FAQ
   const voteFAQ = async (faqId: string, helpful: boolean) => {
     try {
+      const headers = await getAuthHeadersWithCSRF();
       await fetch(`/api/support/faq/${faqId}/vote`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ helpful }),
       });
 

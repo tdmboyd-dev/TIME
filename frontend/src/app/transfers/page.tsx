@@ -14,8 +14,7 @@ import {
   WifiOff,
   RefreshCw,
 } from 'lucide-react';
-
-const API_BASE = 'https://time-backend-hosting.fly.dev/api/v1';
+import { API_BASE, getAuthHeadersWithCSRF } from '@/lib/api';
 
 interface Transfer {
   id: string;
@@ -106,9 +105,10 @@ export default function TransfersPage() {
 
   const initiateTransfer = async () => {
     try {
+      const headers = await getAuthHeadersWithCSRF();
       const res = await fetch(`${API_BASE}/transfers/initiate`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           userId: 'demo-user',
           receivingAccountId: 'time-account-001',

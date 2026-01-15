@@ -18,6 +18,7 @@ import {
   Crown,
 } from 'lucide-react';
 import clsx from 'clsx';
+import { getAuthHeadersWithCSRF } from '@/lib/api';
 
 interface Message {
   id: string;
@@ -227,12 +228,10 @@ export default function CommunityChat() {
     if (!inputMessage.trim()) return;
 
     try {
+      const headers = await getAuthHeadersWithCSRF();
       const response = await fetch(`/api/v1/social/chat/${currentChannel.id}/send`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'Content-Type': 'application/json',
-        },
+        headers,
         body: JSON.stringify({
           message: inputMessage,
           replyTo: replyTo?.id,
@@ -281,12 +280,10 @@ export default function CommunityChat() {
 
   const handleReaction = async (messageId: string, emoji: string) => {
     try {
+      const headers = await getAuthHeadersWithCSRF();
       await fetch(`/api/v1/social/chat/${currentChannel.id}/react`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'Content-Type': 'application/json',
-        },
+        headers,
         body: JSON.stringify({ messageId, emoji }),
       });
 

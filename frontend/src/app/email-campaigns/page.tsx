@@ -34,7 +34,7 @@ import {
  * - A/B testing support
  */
 
-import { API_BASE, getTokenFromCookie } from '@/lib/api';
+import { API_BASE, getTokenFromCookie, getAuthHeadersWithCSRF } from '@/lib/api';
 
 interface Campaign {
   id: string;
@@ -184,13 +184,10 @@ export default function EmailCampaignsPage() {
 
   const handlePauseCampaign = async (campaignId: string) => {
     try {
-      const token = getTokenFromCookie();
+      const headers = await getAuthHeadersWithCSRF();
       const res = await fetch(`${API_BASE}/api/v1/campaigns/${campaignId}/pause`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+        headers
       });
 
       const data = await res.json();
@@ -209,13 +206,10 @@ export default function EmailCampaignsPage() {
 
   const handleResumeCampaign = async (campaignId: string) => {
     try {
-      const token = getTokenFromCookie();
+      const headers = await getAuthHeadersWithCSRF();
       const res = await fetch(`${API_BASE}/api/v1/campaigns/${campaignId}/resume`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+        headers
       });
 
       const data = await res.json();
@@ -238,13 +232,10 @@ export default function EmailCampaignsPage() {
     }
 
     try {
-      const token = getTokenFromCookie();
+      const headers = await getAuthHeadersWithCSRF();
       const res = await fetch(`${API_BASE}/api/v1/campaigns/${campaignId}`, {
         method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+        headers
       });
 
       const data = await res.json();
@@ -284,13 +275,10 @@ export default function EmailCampaignsPage() {
 
   const handleInstallTemplate = async (templateType: string) => {
     try {
-      const token = getTokenFromCookie();
+      const headers = await getAuthHeadersWithCSRF();
       const res = await fetch(`${API_BASE}/api/v1/campaigns/templates/install`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
+        headers,
         body: JSON.stringify({ templateType })
       });
 

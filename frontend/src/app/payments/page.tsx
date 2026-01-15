@@ -26,6 +26,7 @@ import {
   Loader2
 } from 'lucide-react';
 import clsx from 'clsx';
+import { getAuthHeadersWithCSRF } from '@/lib/api';
 
 const API_BASE = 'https://time-backend-hosting.fly.dev/api/v1';
 const STRIPE_API = `${API_BASE}/stripe`;
@@ -197,9 +198,10 @@ export default function PaymentsPage() {
   const handleSubscribe = async (tierId: string) => {
     setIsSubscriptionLoading(true);
     try {
+      const headers = await getAuthHeadersWithCSRF();
       const response = await fetch(`${STRIPE_API}/create-checkout`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ tierId }),
       });
 
@@ -219,9 +221,10 @@ export default function PaymentsPage() {
   const handleManageSubscription = async () => {
     setIsSubscriptionLoading(true);
     try {
+      const headers = await getAuthHeadersWithCSRF();
       const response = await fetch(`${STRIPE_API}/create-portal`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({}),
       });
 

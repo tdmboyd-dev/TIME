@@ -33,6 +33,7 @@ import {
   Activity
 } from 'lucide-react';
 import { TimeLogo, TimeIcon } from '@/components/branding/TimeLogo';
+import { getAuthHeadersWithCSRF } from '@/lib/api';
 
 /**
  * TIME BEYOND US - User Onboarding Flow
@@ -235,11 +236,10 @@ export default function OnboardingPage() {
     try {
       // Save to backend API
       const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+      const headers = await getAuthHeadersWithCSRF();
       const response = await fetch(`${API_BASE}/onboarding/complete`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
         body: JSON.stringify({
           name,
           riskAnswers,

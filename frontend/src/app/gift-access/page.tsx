@@ -21,7 +21,7 @@ import {
   Tag,
   User,
 } from 'lucide-react';
-import { API_BASE, getAuthHeaders } from '@/lib/api';
+import { API_BASE, getAuthHeaders, getAuthHeadersWithCSRF } from '@/lib/api';
 
 interface ChatMessage {
   role: 'user' | 'assistant';
@@ -116,12 +116,10 @@ export default function GiftAccessPage() {
     }]);
 
     try {
+      const headers = await getAuthHeadersWithCSRF();
       const res = await fetch(`${API_BASE}/gift-access/chat`, {
         method: 'POST',
-        headers: {
-          ...getAuthHeaders(),
-          'Content-Type': 'application/json',
-        },
+        headers,
         body: JSON.stringify({ message: userMessage }),
       });
 
@@ -148,9 +146,10 @@ export default function GiftAccessPage() {
 
   const clearChatHistory = async () => {
     try {
+      const headers = await getAuthHeadersWithCSRF();
       await fetch(`${API_BASE}/gift-access/chat/history`, {
         method: 'DELETE',
-        headers: getAuthHeaders(),
+        headers,
       });
       setMessages([]);
     } catch (error) {
@@ -161,12 +160,10 @@ export default function GiftAccessPage() {
   const createGift = async () => {
     setIsCreatingGift(true);
     try {
+      const headers = await getAuthHeadersWithCSRF();
       const res = await fetch(`${API_BASE}/gift-access/gift`, {
         method: 'POST',
-        headers: {
-          ...getAuthHeaders(),
-          'Content-Type': 'application/json',
-        },
+        headers,
         body: JSON.stringify({
           tier: giftTier,
           durationDays: giftDuration,

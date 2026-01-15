@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useId } from 'react';
 
 // ============================================
 // BRAND TOKENS
@@ -42,6 +42,7 @@ export function TimeLogo({
   animated = true,
   className = ''
 }: TimeLogoProps) {
+  const uniqueId = useId();
   const [isBullish, setIsBullish] = useState(true);
 
   // Subtle breathing animation for candle
@@ -74,20 +75,20 @@ export function TimeLogo({
       >
         <defs>
           {/* Primary gradient (purple → cyan) */}
-          <linearGradient id="timePrimaryGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+          <linearGradient id={`timePrimaryGrad${uniqueId}`} x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor="#8b5cf6" />
             <stop offset="50%" stopColor="#6366f1" />
             <stop offset="100%" stopColor="#06b6d4" />
           </linearGradient>
 
           {/* Neon glow filter */}
-          <filter id="neonGlow" x="-50%" y="-50%" width="200%" height="200%">
+          <filter id={`neonGlow${uniqueId}`} x="-50%" y="-50%" width="200%" height="200%">
             <feGaussianBlur stdDeviation="2" result="blur" />
             <feComposite in="SourceGraphic" in2="blur" operator="over" />
           </filter>
 
           {/* Pulse glow animation */}
-          <filter id="pulseGlow" x="-100%" y="-100%" width="300%" height="300%">
+          <filter id={`pulseGlow${uniqueId}`} x="-100%" y="-100%" width="300%" height="300%">
             <feGaussianBlur stdDeviation="3" result="blur">
               {animated && (
                 <animate
@@ -102,7 +103,7 @@ export function TimeLogo({
           </filter>
 
           {/* Candle glow */}
-          <filter id="candleGlow" x="-100%" y="-100%" width="300%" height="300%">
+          <filter id={`candleGlow${uniqueId}`} x="-100%" y="-100%" width="300%" height="300%">
             <feGaussianBlur stdDeviation="2" result="blur" />
             <feMerge>
               <feMergeNode in="blur" />
@@ -112,7 +113,7 @@ export function TimeLogo({
         </defs>
 
         {/* T — The Pulse Bar */}
-        <g transform={`translate(${letterWidth * 0.05}, 0)`} filter="url(#pulseGlow)">
+        <g transform={`translate(${letterWidth * 0.05}, 0)`} filter={`url(#pulseGlow${uniqueId})`}>
           {/* Vertical bar */}
           <rect
             x={letterWidth * 0.35}
@@ -120,7 +121,7 @@ export function TimeLogo({
             width={letterWidth * 0.18}
             height={height * 0.8}
             rx="2"
-            fill="url(#timePrimaryGrad)"
+            fill={`url(#timePrimaryGrad${uniqueId})`}
           />
           {/* Top cap */}
           <rect
@@ -129,14 +130,14 @@ export function TimeLogo({
             width={letterWidth * 0.68}
             height={height * 0.12}
             rx="2"
-            fill="url(#timePrimaryGrad)"
+            fill={`url(#timePrimaryGrad${uniqueId})`}
           />
         </g>
 
         {/* I — The Candle Line */}
         <g
           transform={`translate(${letterWidth * 1.1}, 0)`}
-          filter="url(#candleGlow)"
+          filter={`url(#candleGlow${uniqueId})`}
           style={{ transition: 'all 0.7s ease-in-out' }}
         >
           {/* Wick */}
@@ -171,11 +172,11 @@ export function TimeLogo({
               L ${letterWidth * 0.8} ${height * 0.85}
             `}
             fill="none"
-            stroke="url(#timePrimaryGrad)"
+            stroke={`url(#timePrimaryGrad${uniqueId})`}
             strokeWidth={height * 0.1}
             strokeLinecap="round"
             strokeLinejoin="round"
-            filter="url(#neonGlow)"
+            filter={`url(#neonGlow${uniqueId})`}
           />
         </g>
 
@@ -188,7 +189,7 @@ export function TimeLogo({
             width={letterWidth * 0.15}
             height={height * 0.8}
             rx="2"
-            fill="url(#timePrimaryGrad)"
+            fill={`url(#timePrimaryGrad${uniqueId})`}
           />
           {/* Top level (resistance) - red */}
           <rect
@@ -199,7 +200,7 @@ export function TimeLogo({
             rx="2"
             fill="#ef4444"
             opacity="0.85"
-            filter="url(#neonGlow)"
+            filter={`url(#neonGlow${uniqueId})`}
           />
           {/* Middle level (neutral) */}
           <rect
@@ -219,7 +220,7 @@ export function TimeLogo({
             rx="2"
             fill="#22c55e"
             opacity="0.85"
-            filter="url(#neonGlow)"
+            filter={`url(#neonGlow${uniqueId})`}
           />
         </g>
       </svg>
@@ -245,6 +246,7 @@ export function TimeIcon({
   animated?: boolean;
   className?: string;
 }) {
+  const uniqueId = useId();
   const [isBullish, setIsBullish] = useState(true);
 
   useEffect(() => {
@@ -265,12 +267,12 @@ export function TimeIcon({
       className={className}
     >
       <defs>
-        <linearGradient id="iconPrimaryGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+        <linearGradient id={`iconPrimaryGrad${uniqueId}`} x1="0%" y1="0%" x2="0%" y2="100%">
           <stop offset="0%" stopColor="#8b5cf6" />
           <stop offset="50%" stopColor="#6366f1" />
           <stop offset="100%" stopColor="#06b6d4" />
         </linearGradient>
-        <filter id="iconGlow" x="-50%" y="-50%" width="200%" height="200%">
+        <filter id={`iconGlow${uniqueId}`} x="-50%" y="-50%" width="200%" height="200%">
           <feGaussianBlur stdDeviation="1" result="blur" />
           <feComposite in="SourceGraphic" in2="blur" operator="over" />
         </filter>
@@ -283,7 +285,7 @@ export function TimeIcon({
       <path
         d="M 4 22 Q 8 8, 14 16 Q 20 24, 22 10"
         fill="none"
-        stroke="url(#iconPrimaryGrad)"
+        stroke={`url(#iconPrimaryGrad${uniqueId})`}
         strokeWidth="2"
         strokeLinecap="round"
         opacity="0.7"
@@ -296,8 +298,8 @@ export function TimeIcon({
         width="4"
         height="20"
         rx="2"
-        fill="url(#iconPrimaryGrad)"
-        filter="url(#iconGlow)"
+        fill={`url(#iconPrimaryGrad${uniqueId})`}
+        filter={`url(#iconGlow${uniqueId})`}
       />
 
       {/* Candle (I reference) - Green at TOP (moved UP), Red at BOTTOM (moved DOWN) */}

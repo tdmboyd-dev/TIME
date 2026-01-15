@@ -29,7 +29,7 @@ import clsx from 'clsx';
 import { PageIntroModal } from '@/components/onboarding/PageIntroModal';
 import { strategiesIntro } from '@/components/onboarding/pageIntroContent';
 
-import { API_BASE, getTokenFromCookie } from '@/lib/api';
+import { API_BASE, getTokenFromCookie, getAuthHeadersWithCSRF } from '@/lib/api';
 
 interface Strategy {
   id: string;
@@ -195,13 +195,10 @@ export default function StrategiesPage() {
     setIsSynthesizing(true);
 
     try {
-      const token = getTokenFromCookie();
+      const headers = await getAuthHeadersWithCSRF();
       const response = await fetch(`${API_BASE}/strategies/synthesize`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-        },
+        headers,
         body: JSON.stringify({
           botIds: synthesizeSourceBots,
           method: 'ensemble',
@@ -258,13 +255,10 @@ export default function StrategiesPage() {
     setIsSynthesizing(true);
 
     try {
-      const token = getTokenFromCookie();
+      const headers = await getAuthHeadersWithCSRF();
       const response = await fetch(`${API_BASE}/strategies`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-        },
+        headers,
         body: JSON.stringify({
           name: newStrategyName,
           description: `Custom ${newStrategyType.replace('_', ' ')} strategy`,

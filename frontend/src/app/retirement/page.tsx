@@ -32,8 +32,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import clsx from 'clsx';
-
-const API_BASE = 'https://time-backend-hosting.fly.dev/api/v1';
+import { API_BASE, getAuthHeadersWithCSRF } from '@/lib/api';
 
 interface RetirementPlan {
   id: string;
@@ -250,9 +249,10 @@ export default function RetirementPage() {
         newPlan.expectedReturn
       );
 
+      const headers = await getAuthHeadersWithCSRF();
       const res = await fetch(`${API_BASE}/robo/goals`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           name: newPlan.name,
           type: 'retirement',
@@ -366,9 +366,10 @@ export default function RetirementPage() {
         editPlan.expectedReturn
       );
 
+      const headers = await getAuthHeadersWithCSRF();
       await fetch(`${API_BASE}/robo/goals/${editPlan.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           name: editPlan.name,
           current_age: editPlan.currentAge,
@@ -439,8 +440,10 @@ export default function RetirementPage() {
 
     setSaving(true);
     try {
+      const headers = await getAuthHeadersWithCSRF();
       await fetch(`${API_BASE}/robo/goals/${editPlan.id}`, {
         method: 'DELETE',
+        headers,
       });
     } catch (error) {
       // Continue with local delete

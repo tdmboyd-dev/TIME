@@ -15,9 +15,7 @@ import {
   Wifi,
   WifiOff,
 } from 'lucide-react';
-
-// Backend API Configuration
-const API_BASE = 'https://time-backend-hosting.fly.dev/api/v1';
+import { API_BASE, getAuthHeadersWithCSRF } from '@/lib/api';
 
 interface HarvestOpportunity {
   id: string;
@@ -162,9 +160,10 @@ export default function TaxPage() {
         return;
       }
 
+      const headers = await getAuthHeadersWithCSRF();
       const res = await fetch(`${API_BASE}/tax/harvest/opportunities`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           positions,
           taxLots,
@@ -190,9 +189,10 @@ export default function TaxPage() {
 
   const executeHarvest = async (opportunity: HarvestOpportunity) => {
     try {
+      const headers = await getAuthHeadersWithCSRF();
       const res = await fetch(`${API_BASE}/tax/harvest/execute`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ opportunity }),
       });
 

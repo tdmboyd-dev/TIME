@@ -26,6 +26,8 @@ import {
   ExternalLink,
 } from 'lucide-react';
 
+import { getAuthHeadersWithCSRF } from '@/lib/api';
+
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://time-backend-hosting.fly.dev';
 
 function getTokenFromCookie(): string | null {
@@ -253,13 +255,10 @@ export default function MarketingHubPage() {
   const startAutoPosting = async () => {
     setIsProcessing(true);
     try {
-      const token = getTokenFromCookie();
+      const headers = await getAuthHeadersWithCSRF();
       const response = await fetch(`${API_BASE}/api/v1/marketing/autopost/start`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
+        headers,
         body: JSON.stringify(config),
       });
 
@@ -280,10 +279,10 @@ export default function MarketingHubPage() {
   const stopAutoPosting = async () => {
     setIsProcessing(true);
     try {
-      const token = getTokenFromCookie();
+      const headers = await getAuthHeadersWithCSRF();
       const response = await fetch(`${API_BASE}/api/v1/marketing/autopost/stop`, {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` },
+        headers,
       });
 
       const data = await response.json();
@@ -305,13 +304,10 @@ export default function MarketingHubPage() {
     setConfig(newConfig);
 
     try {
-      const token = getTokenFromCookie();
+      const headers = await getAuthHeadersWithCSRF();
       await fetch(`${API_BASE}/api/v1/marketing/autopost/config`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
+        headers,
         body: JSON.stringify(updates),
       });
     } catch (error) {
@@ -327,13 +323,10 @@ export default function MarketingHubPage() {
 
     setIsProcessing(true);
     try {
-      const token = getTokenFromCookie();
+      const headers = await getAuthHeadersWithCSRF();
       const response = await fetch(`${API_BASE}/api/v1/marketing/post-now`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
+        headers,
         body: JSON.stringify({
           content: manualContent,
           platforms: manualPlatforms,
@@ -363,13 +356,10 @@ export default function MarketingHubPage() {
 
     setIsProcessing(true);
     try {
-      const token = getTokenFromCookie();
+      const headers = await getAuthHeadersWithCSRF();
       const response = await fetch(`${API_BASE}/api/v1/marketing/referrals/generate`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
+        headers,
         body: JSON.stringify(newReferralUser),
       });
 
@@ -397,13 +387,10 @@ export default function MarketingHubPage() {
 
     setIsProcessing(true);
     try {
-      const token = getTokenFromCookie();
+      const headers = await getAuthHeadersWithCSRF();
       const response = await fetch(`${API_BASE}/api/v1/marketing/promos`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
+        headers,
         body: JSON.stringify({
           ...newPromo,
           applicablePlans: ['all'],
@@ -438,13 +425,10 @@ export default function MarketingHubPage() {
   const togglePromoStatus = async (code: string, isActive: boolean) => {
     setIsProcessing(true);
     try {
-      const token = getTokenFromCookie();
+      const headers = await getAuthHeadersWithCSRF();
       const response = await fetch(`${API_BASE}/api/v1/marketing/promos/${code}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
+        headers,
         body: JSON.stringify({ isActive: !isActive }),
       });
 

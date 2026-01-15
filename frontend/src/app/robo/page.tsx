@@ -28,7 +28,7 @@ import clsx from 'clsx';
 import { PageIntroModal } from '@/components/onboarding/PageIntroModal';
 import { roboIntro } from '@/components/onboarding/pageIntroContent';
 
-import { API_BASE, getAuthHeaders } from '@/lib/api';
+import { API_BASE, getAuthHeaders, getAuthHeadersWithCSRF } from '@/lib/api';
 
 interface Portfolio {
   id: string;
@@ -663,9 +663,10 @@ export default function RoboAdvisorPage() {
                 <button
                   onClick={async () => {
                     try {
+                      const headers = await getAuthHeadersWithCSRF();
                       await fetch(`${API_BASE}/robo/portfolios/${editingPortfolio.id}/settings`, {
                         method: 'PUT',
-                        headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+                        headers,
                         body: JSON.stringify(portfolioSettings),
                       });
                     } catch {

@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 import clsx from 'clsx';
 import DOMPurify from 'dompurify';
-import { API_BASE, getTokenFromCookie } from '@/lib/api';
+import { API_BASE, getTokenFromCookie, getAuthHeadersWithCSRF } from '@/lib/api';
 
 // Sanitize user input to prevent XSS
 function sanitizeContent(content: string): string {
@@ -90,13 +90,10 @@ export default function AdminBotPage() {
             type: 'message' as const,
             execute: async () => {
               try {
-                const token = getTokenFromCookie();
+                const headers = await getAuthHeadersWithCSRF();
                 const res = await fetch(`${API_BASE}/admin/broadcast`, {
                   method: 'POST',
-                  headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                  },
+                  headers,
                   body: JSON.stringify({ message: broadcastMessage, type: 'announcement' }),
                 });
                 if (res.ok) {
@@ -136,13 +133,10 @@ export default function AdminBotPage() {
             type: 'price_change' as const,
             execute: async () => {
               try {
-                const token = getTokenFromCookie();
+                const headers = await getAuthHeadersWithCSRF();
                 const res = await fetch(`${API_BASE}/admin/pricing`, {
                   method: 'POST',
-                  headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                  },
+                  headers,
                   body: JSON.stringify({ productId: productMatch.id, price: newPrice }),
                 });
                 if (res.ok) {
@@ -175,13 +169,10 @@ export default function AdminBotPage() {
             type: 'message' as const,
             execute: async () => {
               try {
-                const token = getTokenFromCookie();
+                const headers = await getAuthHeadersWithCSRF();
                 await fetch(`${API_BASE}/admin/broadcast`, {
                   method: 'POST',
-                  headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                  },
+                  headers,
                   body: JSON.stringify({ message: alertMessage, type: 'urgent', priority: 'high' }),
                 });
                 return { success: true, message: `Urgent alert sent to all users with push notifications!` };

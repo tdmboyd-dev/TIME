@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { PageIntroModal } from '@/components/onboarding/PageIntroModal';
 import { ultimateIntro } from '@/components/onboarding/pageIntroContent';
+import { getAuthHeadersWithCSRF } from '@/lib/api';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://time-backend-hosting.fly.dev';
 
@@ -146,17 +147,18 @@ export default function UltimatePage() {
   const activateLegendaryBots = async () => {
     setActivatingBots(true);
     try {
+      const headers = await getAuthHeadersWithCSRF();
       // Enable paper trading first
       await fetch(`${API_BASE}/api/v1/ultimate/live/enable`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-admin-key': 'TIME_ADMIN_2025' },
+        headers: { ...headers, 'x-admin-key': 'TIME_ADMIN_2025' },
         body: JSON.stringify({ mode: 'paper' }),
       });
 
       // Activate all legendary bots
       await fetch(`${API_BASE}/api/v1/ultimate/live/activate-all-legendary`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-admin-key': 'TIME_ADMIN_2025' },
+        headers: { ...headers, 'x-admin-key': 'TIME_ADMIN_2025' },
       });
 
       // Refresh data
@@ -170,9 +172,10 @@ export default function UltimatePage() {
 
   const generateSignal = async (botId: string, botName: string) => {
     try {
+      const headers = await getAuthHeadersWithCSRF();
       const response = await fetch(`${API_BASE}/api/v1/ultimate/live/generate-signal`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-admin-key': 'TIME_ADMIN_2025' },
+        headers: { ...headers, 'x-admin-key': 'TIME_ADMIN_2025' },
         body: JSON.stringify({ botId, symbol: 'AAPL' }),
       });
       const data = await response.json();

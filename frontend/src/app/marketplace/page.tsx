@@ -20,7 +20,7 @@ import {
   BarChart3,
   X,
 } from 'lucide-react';
-import { API_BASE, getAuthHeaders } from '@/lib/api';
+import { API_BASE, getAuthHeaders, getAuthHeadersWithCSRF } from '@/lib/api';
 
 interface BotListing {
   botId: string;
@@ -461,9 +461,10 @@ export default function MarketplacePage() {
                   onClick={async () => {
                     setIsRenting(true);
                     try {
+                      const headers = await getAuthHeadersWithCSRF();
                       const response = await fetch(`${API_BASE}/marketplace/rent`, {
                         method: 'POST',
-                        headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+                        headers,
                         body: JSON.stringify({
                           botId: selectedBot.botId,
                           plan: selectedPlan,

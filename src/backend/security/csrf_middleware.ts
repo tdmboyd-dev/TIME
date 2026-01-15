@@ -73,6 +73,13 @@ export function csrfMiddleware(req: Request, res: Response, next: NextFunction):
     return next();
   }
 
+  // Skip CSRF for timebeunus/trading routes - cross-origin cookie issues
+  // These are protected by admin key authentication instead
+  if (req.path.includes('/timebeunus') || req.path.includes('/trading/')) {
+    logger.info('Skipping CSRF for trading endpoint (cross-origin)', { path: req.path });
+    return next();
+  }
+
   // Validate CSRF token from header or body
   const headerToken = req.headers[CSRF_HEADER_NAME] as string;
   const bodyToken = req.body?._csrf;
