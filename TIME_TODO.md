@@ -505,4 +505,13 @@
 
 ---
 
-Last Updated: 2026-01-13
+### v74.10.0 Fix (Jan 15, 2026)
+- **AuthProvider Redirect Loop Fixed**
+  - Removed background API verification that was resetting user state to null
+  - When user is loaded from localStorage, no longer re-verifies with /auth/me
+  - Changed useEffect dependency from [isHydrated, user] to [isHydrated]
+  - This fixes the issue where user was logged out 3 seconds after login
+
+---
+
+Last Updated: 2026-01-15

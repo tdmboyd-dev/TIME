@@ -10,7 +10,12 @@ import { createComponentLogger } from '../utils/logger';
 
 const logger = createComponentLogger('AuthMiddleware');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'time-jwt-secret-change-in-production';
+// JWT_SECRET must be set in production - no fallback allowed
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET && process.env.NODE_ENV === 'production') {
+  throw new Error('JWT_SECRET environment variable is required in production');
+}
+const JWT_SECRET_VALUE = JWT_SECRET || 'dev-only-secret-not-for-production';
 
 export interface AuthenticatedRequest extends Request {
   user?: {
@@ -44,7 +49,7 @@ export function authenticateToken(
   }
 
   try {
-    const decoded = jwt.verify(finalToken, JWT_SECRET) as any;
+    const decoded = jwt.verify(finalToken, JWT_SECRET_VALUE) as any;
     req.user = {
       id: decoded.userId || decoded.id,
       email: decoded.email,
@@ -73,7 +78,7 @@ export function optionalAuth(
 
   if (finalToken) {
     try {
-      const decoded = jwt.verify(finalToken, JWT_SECRET) as any;
+      const decoded = jwt.verify(finalToken, JWT_SECRET_VALUE) as any;
       req.user = {
         id: decoded.userId || decoded.id,
         email: decoded.email,
