@@ -58,32 +58,51 @@ export function LiveChart() {
     }
   };
 
-  // Generate realistic candles from current price
-  const generateCandlesFromPrice = (currentPrice: number): CandleData[] => {
-    const candles: CandleData[] = [];
-    let price = currentPrice * 0.98; // Start slightly lower
-    const now = Date.now();
+  // Fetch REAL OHLCV candles from backend API - NO FAKE DATA
+  const fetchRealCandles = async (symbol: string): Promise<CandleData[]> => {
+    try {
+      // Determine asset type (crypto vs stock)
+      const isCrypto = ['BTC', 'ETH', 'SOL', 'XRP', 'DOGE'].includes(symbol.toUpperCase());
+      const assetType = isCrypto ? 'crypto' : 'stock';
 
-    for (let i = 0; i < 50; i++) {
-      const open = price;
-      const volatility = currentPrice * 0.002; // 0.2% volatility per candle
-      const change = (Math.random() - 0.5) * volatility * 2;
-      const high = open + Math.abs(Math.random() * volatility);
-      const low = open - Math.abs(Math.random() * volatility);
-      const close = open + change;
-      price = close;
+      // Map crypto symbols to CoinGecko IDs
+      const cryptoIdMap: Record<string, string> = {
+        'BTC': 'bitcoin',
+        'ETH': 'ethereum',
+        'SOL': 'solana',
+        'XRP': 'ripple',
+        'DOGE': 'dogecoin',
+      };
 
-      candles.push({
-        time: now - (50 - i) * 60000, // 1 minute intervals
-        open,
-        high: Math.max(open, close, high),
-        low: Math.min(open, close, low),
-        close,
-        volume: Math.floor(Math.random() * 10000) + 1000,
-      });
+      const querySymbol = isCrypto ? cryptoIdMap[symbol.toUpperCase()] || symbol.toLowerCase() : symbol.toUpperCase();
+
+      const response = await fetch(
+        `${API_BASE}/charts/candles?symbol=${querySymbol}&interval=5min&limit=50&type=${assetType}`
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      if (data.success && data.data && data.data.candles) {
+        return data.data.candles.map((c: any) => ({
+          time: new Date(c.timestamp).getTime(),
+          open: c.open,
+          high: c.high,
+          low: c.low,
+          close: c.close,
+          volume: c.volume || 0,
+        }));
+      }
+
+      throw new Error('Invalid candle data format');
+    } catch (err) {
+      console.error('[LiveChart] Failed to fetch real candles:', err);
+      // Return empty array instead of fake data - let the UI show error state
+      return [];
     }
-
-    return candles;
   };
 
   // Initial data fetch
@@ -91,15 +110,30 @@ export function LiveChart() {
     fetchMarketData();
   }, []);
 
-  // Update candles when selected symbol or prices change
+  // Fetch real candles when selected symbol changes
   useEffect(() => {
-    if (prices.length > 0) {
+    const loadCandles = async () => {
       const symbolKey = selectedSymbol.replace('/USD', '');
-      const priceData = prices.find(p => p.symbol.includes(symbolKey));
-      if (priceData) {
-        setCandles(generateCandlesFromPrice(priceData.price));
+      const realCandles = await fetchRealCandles(symbolKey);
+      if (realCandles.length > 0) {
+        setCandles(realCandles);
+      } else if (prices.length > 0) {
+        // Fallback: If no real data available, show single candle from current price
+        const priceData = prices.find(p => p.symbol.includes(symbolKey));
+        if (priceData) {
+          const now = Date.now();
+          setCandles([{
+            time: now,
+            open: priceData.price,
+            high: priceData.price * 1.001,
+            low: priceData.price * 0.999,
+            close: priceData.price,
+            volume: 0,
+          }]);
+        }
       }
-    }
+    };
+    loadCandles();
   }, [selectedSymbol, prices]);
 
   // Polling for real-time updates

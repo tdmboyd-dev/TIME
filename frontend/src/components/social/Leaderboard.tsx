@@ -278,8 +278,35 @@ export function Leaderboard() {
       const response = await fetch(`${API_BASE}/social/leaderboard?period=${period}&type=${type}`);
       if (response.ok) {
         const data = await response.json();
-        if (data.success && Array.isArray(data.data)) {
-          setEntries(data.data);
+        // Handle both 'data' and 'leaderboard' response formats from backend
+        const leaderboardData = data.leaderboard || data.data;
+        if (data.success && Array.isArray(leaderboardData) && leaderboardData.length > 0) {
+          // Map backend format to frontend format
+          const mappedEntries: LeaderboardEntry[] = leaderboardData.map((entry: any, idx: number) => ({
+            rank: entry.rank || idx + 1,
+            previousRank: entry.previousRank || entry.rank || idx + 1,
+            rankChange: entry.rankChange || 0,
+            id: entry.id || entry.userId || `trader-${idx}`,
+            name: entry.username || entry.name || `Trader ${idx + 1}`,
+            avatar: entry.avatar || entry.name?.substring(0, 2).toUpperCase() || 'TR',
+            verified: entry.verified || false,
+            isPro: entry.isPro || false,
+            badges: entry.badges || [],
+            type: type,
+            totalReturn: entry.profitPercent || entry.totalReturn || 0,
+            monthlyReturn: entry.monthlyReturn || entry.monthlyProfit || 0,
+            weeklyReturn: entry.weeklyReturn || entry.weeklyProfit || 0,
+            winRate: entry.winRate || 50,
+            totalTrades: entry.totalTrades || 0,
+            profitFactor: entry.profitFactor || 1,
+            sharpeRatio: entry.sharpeRatio || 0,
+            maxDrawdown: entry.maxDrawdown || 0,
+            followers: entry.followers || 0,
+            copiers: entry.copiers || 0,
+            riskLevel: entry.riskLevel || 'moderate',
+            tradingStyle: entry.strategy || entry.tradingStyle || 'Day Trading',
+          }));
+          setEntries(mappedEntries);
           setIsConnected(true);
         } else {
           throw new Error('Invalid data');
@@ -288,7 +315,7 @@ export function Leaderboard() {
         throw new Error('API error');
       }
     } catch {
-      // Use mock data
+      // Use mock data as fallback - but clearly marked as DEMO
       setEntries(type === 'traders' ? mockLeaderboard : mockBotLeaderboard);
       setIsConnected(false);
     } finally {

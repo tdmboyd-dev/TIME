@@ -469,8 +469,8 @@ export class UniversalBotEngine extends EventEmitter {
    * Scan with a specific bot
    */
   private async scanWithBot(bot: UniversalBot): Promise<void> {
-    // Simulate finding opportunities based on bot type
-    const opportunity = this.generateOpportunity(bot);
+    // Find real opportunities based on market analysis
+    const opportunity = await this.generateOpportunity(bot);
 
     if (opportunity && opportunity.potentialValue > 0) {
       this.opportunities.set(opportunity.id, opportunity);
@@ -483,35 +483,99 @@ export class UniversalBotEngine extends EventEmitter {
   }
 
   /**
-   * Generate a simulated opportunity (In production, these would be real market scans)
+   * Generate REAL opportunity based on market analysis (not simulation)
    */
-  private generateOpportunity(bot: UniversalBot): Opportunity | null {
-    // 30% chance to find an opportunity each scan
-    if (Math.random() > 0.3) return null;
+  private async generateOpportunity(bot: UniversalBot): Promise<Opportunity | null> {
+    try {
+      // Use real market analysis instead of random generation
+      const opportunity = await this.analyzeMarketForOpportunity(bot);
+      return opportunity;
+    } catch (error) {
+      logger.warn(`[${bot.name}] Failed to analyze market for opportunities:`, error);
+      return null;
+    }
+  }
 
-    const opportunities = this.getOpportunityTemplates(bot);
-    if (opportunities.length === 0) return null;
+  /**
+   * Real market analysis for opportunities using signal engines
+   */
+  private async analyzeMarketForOpportunity(bot: UniversalBot): Promise<Opportunity | null> {
+    // Lazy import to avoid circular dependencies
+    const { AITradingSignals } = await import('../signals/ai_trading_signals');
+    const signalEngine = AITradingSignals.getInstance();
 
-    const template = opportunities[Math.floor(Math.random() * opportunities.length)];
+    // Get symbols to analyze based on bot type
+    const symbols = this.getSymbolsForBot(bot);
+    if (symbols.length === 0) return null;
 
-    return {
-      id: uuidv4(),
-      category: bot.category,
-      type: bot.type,
-      title: template.title,
-      description: template.description,
-      potentialValue: template.value * (0.8 + Math.random() * 0.4),
-      confidence: 0.6 + Math.random() * 0.35,
-      priority: template.value > 100 ? 'high' : template.value > 20 ? 'medium' : 'low',
-      timeToAct: template.urgency,
-      requiresAction: template.requiresAction,
-      autoExecutable: template.autoExecutable,
-      data: template.data,
-      foundBy: bot.id,
-      foundAt: new Date(),
-      expiresAt: new Date(Date.now() + template.urgency * 1000),
-      status: 'active',
+    // Analyze each symbol for real opportunities
+    for (const symbol of symbols) {
+      try {
+        // Get real-time signals from AI engine
+        const signal = await signalEngine.generateSignal(symbol, {
+          includeAnalysis: true,
+          timeframe: '15min',
+        });
+
+        // Only create opportunity if confidence is high enough (>70%)
+        if (signal && signal.confidence >= 0.70 && signal.action !== 'hold') {
+          const templates = this.getOpportunityTemplates(bot);
+          const relevantTemplate = templates.find(t =>
+            t.data?.symbol === symbol || templates.length > 0
+          ) || templates[0];
+
+          if (!relevantTemplate) continue;
+
+          return {
+            id: uuidv4(),
+            category: bot.category,
+            type: bot.type,
+            title: `${signal.action.toUpperCase()} ${symbol} - ${(signal.confidence * 100).toFixed(0)}% Confidence`,
+            description: signal.reasoning || `AI detected ${signal.action} signal on ${symbol}`,
+            potentialValue: relevantTemplate.value * signal.confidence,
+            confidence: signal.confidence,
+            priority: signal.confidence > 0.85 ? 'high' : signal.confidence > 0.75 ? 'medium' : 'low',
+            timeToAct: 300, // 5 minute window
+            requiresAction: signal.action !== 'hold',
+            autoExecutable: signal.confidence >= 0.80,
+            data: {
+              symbol,
+              action: signal.action,
+              price: signal.price,
+              targetPrice: signal.targetPrice,
+              stopLoss: signal.stopLoss,
+              indicators: signal.indicators,
+            },
+            foundBy: bot.id,
+            foundAt: new Date(),
+            expiresAt: new Date(Date.now() + 300 * 1000),
+            status: 'active',
+          };
+        }
+      } catch (err) {
+        // Skip this symbol on error, try next
+        continue;
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Get relevant symbols for a bot type
+   */
+  private getSymbolsForBot(bot: UniversalBot): string[] {
+    const symbolMap: Record<string, string[]> = {
+      cross_exchange_arb: ['BTC', 'ETH', 'SOL'],
+      nft_floor_arb: [], // NFT symbols handled differently
+      trend_following: ['SPY', 'QQQ', 'AAPL', 'MSFT', 'TSLA'],
+      mean_reversion: ['SPY', 'QQQ', 'IWM'],
+      scalping: ['SPY', 'QQQ', 'BTC', 'ETH'],
+      swing_trading: ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'META'],
+      crypto_momentum: ['BTC', 'ETH', 'SOL', 'XRP'],
+      defi_yield: ['ETH', 'USDC', 'DAI'],
     };
+    return symbolMap[bot.type] || ['SPY', 'BTC'];
   }
 
   /**

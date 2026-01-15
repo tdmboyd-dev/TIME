@@ -1002,21 +1002,25 @@ export class AutonomousCapitalAgent extends EventEmitter {
       this.emit('decisionExecuting', { agentId, decision });
 
       try {
-        // In production, integrate with execution systems
-        // For now, simulate execution
-        await this.simulateExecution(decision);
+        // REAL EXECUTION: Submit to broker via BrokerManager
+        const execResult = await this.simulateExecution(decision);
 
-        decision.status = 'executed';
-        decision.executionResult = {
-          actualPrice: 100,
-          actualAmount: decision.action.amount,
-          fees: 5,
-          slippage: 0.001,
-          completedAt: new Date()
-        };
+        if (execResult.success) {
+          decision.status = 'executed';
+          decision.executionResult = {
+            actualPrice: execResult.price || 0,
+            actualAmount: decision.action.amount,
+            fees: (execResult.price || 0) * (decision.action.amount || 0) * 0.001, // Estimate 0.1% fee
+            slippage: 0.001,
+            completedAt: new Date(),
+            orderId: execResult.orderId,
+          };
 
-        this.emit('decisionExecuted', { agentId, decision });
-        console.log(`[ACA] Executed decision: ${decision.id}`);
+          this.emit('decisionExecuted', { agentId, decision });
+          console.log(`[ACA] Executed decision: ${decision.id} - Order ID: ${execResult.orderId}`);
+        } else {
+          throw new Error(execResult.error || 'Execution failed');
+        }
 
       } catch (error) {
         decision.status = 'failed';
@@ -1026,9 +1030,77 @@ export class AutonomousCapitalAgent extends EventEmitter {
     }
   }
 
-  private async simulateExecution(decision: AgentDecision): Promise<void> {
-    // Simulate execution delay
-    await new Promise(resolve => setTimeout(resolve, 100));
+  private async simulateExecution(decision: AgentDecision): Promise<{ success: boolean; orderId?: string; price?: number; error?: string }> {
+    // REAL EXECUTION: Use BrokerManager for actual order placement
+    // Import broker manager dynamically to avoid circular dependencies
+    const { BrokerManager } = await import('../brokers/broker_manager');
+    const brokerManager = BrokerManager.getInstance();
+
+    // Check if we have a valid action
+    if (!decision.action.asset || !decision.action.direction || !decision.action.amount) {
+      console.warn('[ACA] Decision missing required fields for execution');
+      return { success: false, error: 'Missing required execution fields' };
+    }
+
+    // Determine asset class from symbol
+    const assetClass = this.determineAssetClass(decision.action.asset);
+
+    try {
+      // Build order request
+      const orderRequest = {
+        symbol: decision.action.asset,
+        qty: decision.action.amount,
+        side: decision.action.direction as 'buy' | 'sell',
+        type: 'market' as const,
+        timeInForce: 'day' as const,
+        limitPrice: decision.action.targetPrice,
+        stopPrice: decision.action.stopLoss,
+        clientOrderId: `ACA-${decision.id}`,
+      };
+
+      console.log(`[ACA] Submitting REAL order to broker:`, orderRequest);
+
+      // Submit to broker manager - it will route to appropriate broker
+      const result = await brokerManager.submitOrder(orderRequest, assetClass);
+
+      console.log(`[ACA] Order submitted successfully via ${result.brokerId}: ${result.order.id}`);
+
+      return {
+        success: true,
+        orderId: result.order.id,
+        price: result.order.filledAvgPrice || result.order.limitPrice || 0,
+      };
+    } catch (error: any) {
+      console.error('[ACA] Broker execution failed:', error.message);
+      return { success: false, error: error.message };
+    }
+  }
+
+  private determineAssetClass(symbol: string): 'equity' | 'crypto' | 'forex' | 'options' | 'futures' | 'commodities' {
+    const upperSymbol = symbol.toUpperCase();
+
+    // Crypto symbols
+    if (['BTC', 'ETH', 'SOL', 'XRP', 'DOGE', 'ADA', 'DOT', 'LINK'].some(c => upperSymbol.includes(c))) {
+      return 'crypto';
+    }
+
+    // Forex pairs
+    if (upperSymbol.includes('/') && ['EUR', 'GBP', 'JPY', 'CHF', 'AUD', 'CAD', 'NZD'].some(c => upperSymbol.includes(c))) {
+      return 'forex';
+    }
+
+    // Options (typically have expiry dates in symbol)
+    if (upperSymbol.match(/\d{6}[CP]\d+/)) {
+      return 'options';
+    }
+
+    // Futures
+    if (['ES', 'NQ', 'CL', 'GC', 'SI', 'ZB', 'ZN'].includes(upperSymbol)) {
+      return 'futures';
+    }
+
+    // Default to equity (stocks/ETFs)
+    return 'equity';
   }
 
   // ==========================================================================
