@@ -32,7 +32,7 @@ import { PageIntroModal } from '@/components/onboarding/PageIntroModal';
 import { botsIntro } from '@/components/onboarding/pageIntroContent';
 import clsx from 'clsx';
 
-import { API_BASE, getAuthHeaders } from '@/lib/api';
+import { API_BASE, getAuthHeaders, getAuthHeadersWithCSRF } from '@/lib/api';
 
 interface BotData {
   id: string;
@@ -183,9 +183,10 @@ export default function BotsPage() {
     setIsImporting(true);
 
     try {
+      const headers = await getAuthHeadersWithCSRF();
       const response = await fetch(`${API_BASE}/bots/upload`, {
         method: 'POST',
-        headers: getAuthHeaders(),
+        headers,
         body: JSON.stringify({
           name: `Imported Bot from ${importSource}`,
           description: `Bot imported from ${importUrl}`,
@@ -231,9 +232,10 @@ export default function BotsPage() {
     setIsImporting(true);
 
     try {
+      const headers = await getAuthHeadersWithCSRF();
       const response = await fetch(`${API_BASE}/bots/quick-add`, {
         method: 'POST',
-        headers: getAuthHeaders(),
+        headers,
         body: JSON.stringify({
           name: newBotName,
           description: newBotDescription || `Custom ${newBotStrategy.replace('_', ' ')} bot`,
@@ -272,9 +274,10 @@ export default function BotsPage() {
 
   const handleStartBot = async (botId: string) => {
     try {
+      const headers = await getAuthHeadersWithCSRF();
       const response = await fetch(`${API_BASE}/bots/${botId}/activate`, {
         method: 'POST',
-        headers: getAuthHeaders(),
+        headers,
         body: JSON.stringify({
           paperMode: true,
         }),
@@ -302,9 +305,10 @@ export default function BotsPage() {
 
   const handleStopBot = async (botId: string) => {
     try {
+      const headers = await getAuthHeadersWithCSRF();
       const response = await fetch(`${API_BASE}/bots/${botId}/deactivate`, {
         method: 'POST',
-        headers: getAuthHeaders(),
+        headers,
       });
 
       const result: ApiResponse = await response.json();

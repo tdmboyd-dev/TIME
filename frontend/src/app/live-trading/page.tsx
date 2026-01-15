@@ -27,7 +27,7 @@ import {
 import { PageIntroModal } from '@/components/onboarding/PageIntroModal';
 import { liveTradingIntro } from '@/components/onboarding/pageIntroContent';
 
-import { API_BASE, getAuthHeaders, isLoggedIn } from '@/lib/api';
+import { API_BASE, getAuthHeaders, isLoggedIn, getAuthHeadersWithCSRF } from '@/lib/api';
 
 interface BotTradingState {
   botId: string;
@@ -219,7 +219,8 @@ export default function LiveTradingPage() {
   const startTrading = async () => {
     if (!requireAuth('start trading')) return;
     try {
-      const res = await fetch(`${API_BASE}/trading/start`, { method: 'POST', headers: getAuthHeaders() });
+      const headers = await getAuthHeadersWithCSRF();
+      const res = await fetch(`${API_BASE}/trading/start`, { method: 'POST', headers });
       const data = await res.json();
       if (data.success) {
         showNotification('success', 'Trading started!');
@@ -235,7 +236,8 @@ export default function LiveTradingPage() {
   const stopTrading = async () => {
     if (!requireAuth('stop trading')) return;
     try {
-      const res = await fetch(`${API_BASE}/trading/stop`, { method: 'POST', headers: getAuthHeaders() });
+      const headers = await getAuthHeadersWithCSRF();
+      const res = await fetch(`${API_BASE}/trading/stop`, { method: 'POST', headers });
       const data = await res.json();
       if (data.success) {
         showNotification('success', 'Trading stopped');
@@ -251,9 +253,10 @@ export default function LiveTradingPage() {
   const enableBot = async (botId: string) => {
     if (!requireAuth('enable bot')) return;
     try {
+      const headers = await getAuthHeadersWithCSRF();
       const res = await fetch(`${API_BASE}/trading/bot/${botId}/enable`, {
         method: 'POST',
-        headers: getAuthHeaders(),
+        headers,
         body: JSON.stringify({ riskLevel: 'MEDIUM', maxPositionSize: 1000 }),
       });
       const data = await res.json();
@@ -271,7 +274,8 @@ export default function LiveTradingPage() {
   const disableBot = async (botId: string) => {
     if (!requireAuth('disable bot')) return;
     try {
-      const res = await fetch(`${API_BASE}/trading/bot/${botId}/disable`, { method: 'POST', headers: getAuthHeaders() });
+      const headers = await getAuthHeadersWithCSRF();
+      const res = await fetch(`${API_BASE}/trading/bot/${botId}/disable`, { method: 'POST', headers });
       const data = await res.json();
       if (data.success) {
         showNotification('success', 'Bot disabled');
@@ -287,7 +291,8 @@ export default function LiveTradingPage() {
   const executeSignal = async (signalId: string) => {
     if (!requireAuth('execute signal')) return;
     try {
-      const res = await fetch(`${API_BASE}/trading/signals/${signalId}/execute`, { method: 'POST', headers: getAuthHeaders() });
+      const headers = await getAuthHeadersWithCSRF();
+      const res = await fetch(`${API_BASE}/trading/signals/${signalId}/execute`, { method: 'POST', headers });
       const data = await res.json();
       if (data.success) {
         showNotification('success', 'Signal executed!');
@@ -303,9 +308,10 @@ export default function LiveTradingPage() {
   const enableTopBots = async () => {
     if (!requireAuth('enable top bots')) return;
     try {
+      const headers = await getAuthHeadersWithCSRF();
       const res = await fetch(`${API_BASE}/trading/quick/enable-top-bots`, {
         method: 'POST',
-        headers: getAuthHeaders(),
+        headers,
         body: JSON.stringify({ count: 5, riskLevel: 'MEDIUM' }),
       });
       const data = await res.json();
@@ -481,7 +487,8 @@ export default function LiveTradingPage() {
           </button>
           <button
             onClick={async () => {
-              await fetch(`${API_BASE}/trading/quick/stop-all`, { method: 'POST', headers: getAuthHeaders() });
+              const headers = await getAuthHeadersWithCSRF();
+              await fetch(`${API_BASE}/trading/quick/stop-all`, { method: 'POST', headers });
               showNotification('success', 'All trading stopped');
               fetchData();
             }}

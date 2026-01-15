@@ -13,7 +13,7 @@ import {
 import clsx from 'clsx';
 import { TimebeunusLogo, TimebeunusIcon, TimebeunusWordmark } from '@/components/branding/TimebeunusLogo';
 
-import { API_BASE, getAuthHeaders } from '@/lib/api';
+import { API_BASE, getAuthHeaders, ensureCSRFToken } from '@/lib/api';
 
 type DominanceMode = 'stealth' | 'aggressive' | 'defensive' | 'balanced' | 'competition' | 'destroy';
 
@@ -443,6 +443,21 @@ export default function TIMEBEUNUSPage() {
     };
   };
 
+  // Get headers with CSRF token for POST/PUT/DELETE requests
+  const getAdminHeadersWithCSRF = async () => {
+    const baseHeaders = getAdminHeaders();
+    try {
+      const csrfToken = await ensureCSRFToken();
+      return {
+        ...baseHeaders,
+        'x-csrf-token': csrfToken,
+      };
+    } catch (err) {
+      console.error('[TIMEBEUNUS] Failed to get CSRF token:', err);
+      return baseHeaders;
+    }
+  };
+
   // Fetch owner dashboard (positions, trades, automation, yields, suggestions)
   const fetchOwnerDashboard = async () => {
     try {
@@ -473,9 +488,10 @@ export default function TIMEBEUNUSPage() {
     setIsExecutingTrade(true);
     addActivityLog('trade', 'Executing Trade', `Placing ${manualTradeAction.toUpperCase()} order for ${manualTradeQuantity} ${manualTradeSymbol}...`, 'pending');
     try {
+      const headers = await getAdminHeadersWithCSRF();
       const response = await fetch(`${API_BASE}/timebeunus/trade`, {
         method: 'POST',
-        headers: getAdminHeaders(),
+        headers,
         body: JSON.stringify({
           symbol: manualTradeSymbol,
           action: manualTradeAction,
@@ -505,9 +521,10 @@ export default function TIMEBEUNUSPage() {
   const closeAllPositions = async () => {
     addActivityLog('trade', 'Closing All Positions', `Liquidating ${ownerPositions.length} open positions...`, 'pending');
     try {
+      const headers = await getAdminHeadersWithCSRF();
       const response = await fetch(`${API_BASE}/timebeunus/trade/close-all`, {
         method: 'POST',
-        headers: getAdminHeaders(),
+        headers,
       });
       const data = await response.json();
       if (data.success) {
@@ -544,9 +561,10 @@ export default function TIMEBEUNUSPage() {
     addActivityLog('automation', `${label?.name} ${newValue ? 'Enabled' : 'Disabled'}`, newValue ? label?.onDesc : label?.offDesc, 'pending');
 
     try {
+      const headers = await getAdminHeadersWithCSRF();
       await fetch(`${API_BASE}/timebeunus/automation/${key}`, {
         method: 'PUT',
-        headers: getAdminHeaders(),
+        headers,
         body: JSON.stringify({ value: newValue }),
       });
       addActivityLog('automation', `${label?.name} Updated`, newValue ? label?.onDesc : label?.offDesc, 'success');
@@ -563,9 +581,10 @@ export default function TIMEBEUNUSPage() {
   // Deposit to yield
   const depositToYield = async (opportunityId: string, amount: number) => {
     try {
+      const headers = await getAdminHeadersWithCSRF();
       const response = await fetch(`${API_BASE}/timebeunus/yield/deposit`, {
         method: 'POST',
-        headers: getAdminHeaders(),
+        headers,
         body: JSON.stringify({ opportunityId, amount }),
       });
       const data = await response.json();
@@ -583,9 +602,10 @@ export default function TIMEBEUNUSPage() {
   // Create suggested bot
   const createSuggestedBot = async (suggestionId: string) => {
     try {
+      const headers = await getAdminHeadersWithCSRF();
       const response = await fetch(`${API_BASE}/timebeunus/bot-suggestions/${suggestionId}/create`, {
         method: 'POST',
-        headers: getAdminHeaders(),
+        headers,
       });
       const data = await response.json();
       if (data.success) {
@@ -666,9 +686,10 @@ export default function TIMEBEUNUSPage() {
     setIsStarting(true);
     addActivityLog('system', 'Starting Bot', `Initializing TIMEBEUNUS in ${dominanceMode.toUpperCase()} mode...`, 'pending');
     try {
+      const headers = await getAdminHeadersWithCSRF();
       const response = await fetch(`${API_BASE}/trading/timebeunus/start`, {
         method: 'POST',
-        headers: getAuthHeaders(),
+        headers,
         body: JSON.stringify({ dominanceMode, enableTopBots: 5 }),
       });
       const data = await response.json();
@@ -691,9 +712,10 @@ export default function TIMEBEUNUSPage() {
   const handlePause = async () => {
     addActivityLog('system', 'Pausing Bot', 'Stopping new trades, keeping existing positions open...', 'pending');
     try {
+      const headers = await getAdminHeadersWithCSRF();
       const response = await fetch(`${API_BASE}/trading/timebeunus/pause`, {
         method: 'POST',
-        headers: getAuthHeaders(),
+        headers,
       });
       const data = await response.json();
       if (data.success) {
@@ -714,8 +736,10 @@ export default function TIMEBEUNUSPage() {
   const handleResume = async () => {
     addActivityLog('system', 'Resuming Bot', 'Reactivating trading engine...', 'pending');
     try {
+      const headers = await getAdminHeadersWithCSRF();
       const response = await fetch(`${API_BASE}/trading/timebeunus/resume`, {
         method: 'POST',
+        headers,
         credentials: 'include',
       });
       const data = await response.json();
@@ -751,9 +775,10 @@ export default function TIMEBEUNUSPage() {
 
     // Call API to change mode
     try {
+      const headers = await getAdminHeadersWithCSRF();
       const response = await fetch(`${API_BASE}/trading/timebeunus/mode`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         credentials: 'include',
         body: JSON.stringify({ mode }),
       });

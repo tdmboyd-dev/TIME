@@ -26,7 +26,7 @@ import {
   Loader2
 } from 'lucide-react';
 
-import { API_BASE, getAuthHeaders } from '@/lib/api';
+import { API_BASE, getAuthHeaders, getAuthHeadersWithCSRF } from '@/lib/api';
 
 // Broker types
 interface BrokerConnection {
@@ -764,9 +764,10 @@ export default function BrokersPage() {
 
     try {
       // First verify the credentials work by connecting to the real broker
+      const headers = await getAuthHeadersWithCSRF();
       const response = await fetch(`${API_BASE}/brokers/connect`, {
         method: 'POST',
-        headers: getAuthHeaders(),
+        headers,
         body: JSON.stringify({
           brokerId: selectedBroker.id,
           brokerName: selectedBroker.name,
@@ -804,9 +805,10 @@ export default function BrokersPage() {
     const brokerId = connection?.brokerId || connectionId;
 
     try {
+      const headers = await getAuthHeadersWithCSRF();
       const response = await fetch(`${API_BASE}/brokers/disconnect/${brokerId}`, {
         method: 'DELETE',
-        headers: getAuthHeaders(),
+        headers,
       });
 
       if (response.ok) {
@@ -828,9 +830,10 @@ export default function BrokersPage() {
     const brokerId = connection?.brokerId || connectionId;
 
     try {
+      const headers = await getAuthHeadersWithCSRF();
       await fetch(`${API_BASE}/brokers/${brokerId}/sync`, {
         method: 'PUT',
-        headers: getAuthHeaders(),
+        headers,
       });
       // Refresh the list to show updated lastSync
       await fetchBrokerStatus();
@@ -1621,12 +1624,10 @@ export default function BrokersPage() {
                 onClick={async () => {
                   // Save settings to backend
                   try {
+                    const csrfHeaders = await getAuthHeadersWithCSRF();
                     await fetch(`${API_BASE}/brokers/connections/${editingBroker.id}/settings`, {
                       method: 'PUT',
-                      headers: {
-                        'Content-Type': 'application/json',
-                        ...getAuthHeaders(),
-                      },
+                      headers: csrfHeaders,
                       body: JSON.stringify(brokerSettingsForm),
                     });
                   } catch (e) {

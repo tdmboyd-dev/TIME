@@ -39,7 +39,7 @@ import clsx from 'clsx';
 import TradingModeToggle from '@/components/trading/TradingModeToggle';
 import { useTimeStore } from '@/store/timeStore';
 
-import { API_BASE, getTokenFromCookie } from '@/lib/api';
+import { API_BASE, getTokenFromCookie, getAuthHeadersWithCSRF } from '@/lib/api';
 
 type Tab = 'profile' | 'notifications' | 'security' | 'brokers' | 'trading-mode' | 'preferences';
 
@@ -288,14 +288,11 @@ export default function SettingsPage() {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      const token = getTokenFromCookie();
+      const headers = await getAuthHeadersWithCSRF();
 
       const response = await fetch(`${API_BASE}/users/settings`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-        },
+        headers,
         body: JSON.stringify({
           profile,
           notifications,
@@ -1365,8 +1362,10 @@ export default function SettingsPage() {
                       const formData = new FormData();
                       formData.append('avatar', avatarFile);
                       try {
+                        const csrfToken = await getAuthHeadersWithCSRF();
                         await fetch(`${API_BASE}/user/avatar`, {
                           method: 'POST',
+                          headers: { 'x-csrf-token': csrfToken['x-csrf-token'] || '' },
                           body: formData,
                         });
                       } catch (e) {
@@ -1464,9 +1463,10 @@ export default function SettingsPage() {
                       return;
                     }
                     try {
+                      const csrfHeaders = await getAuthHeadersWithCSRF();
                       const res = await fetch(`${API_BASE}/auth/change-password`, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: csrfHeaders,
                         body: JSON.stringify({
                           currentPassword: passwordForm.currentPassword,
                           newPassword: passwordForm.newPassword,
@@ -1525,9 +1525,10 @@ export default function SettingsPage() {
                         setTwoFactorMethod('app');
                         // Generate QR code
                         try {
+                          const csrfHeaders = await getAuthHeadersWithCSRF();
                           const res = await fetch(`${API_BASE}/auth/2fa/setup`, {
                             method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
+                            headers: csrfHeaders,
                             body: JSON.stringify({ method: 'app' }),
                           });
                           const data = await res.json();
@@ -1598,9 +1599,10 @@ export default function SettingsPage() {
                     <button
                       onClick={async () => {
                         try {
+                          const csrfHeaders = await getAuthHeadersWithCSRF();
                           await fetch(`${API_BASE}/auth/2fa/verify`, {
                             method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
+                            headers: csrfHeaders,
                             body: JSON.stringify({ code: verificationCode, method: 'app' }),
                           });
                         } catch (e) {

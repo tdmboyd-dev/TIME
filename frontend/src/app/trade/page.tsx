@@ -22,7 +22,7 @@ import {
   Loader2,
 } from 'lucide-react';
 
-import { API_BASE, getTokenFromCookie } from '@/lib/api';
+import { API_BASE, getTokenFromCookie, getAuthHeadersWithCSRF } from '@/lib/api';
 
 interface Asset {
   symbol: string;
@@ -271,13 +271,10 @@ export default function TradePage() {
 
     try {
       // Submit REAL order to backend via Smart Order Routing
+      const headers = await getAuthHeadersWithCSRF();
       const response = await fetch(`${API_BASE}/advanced-broker/smart-order`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          // Include auth token if user is logged in
-          ...(getTokenFromCookie() ? { 'Authorization': `Bearer ${getTokenFromCookie()}` } : {}),
-        },
+        headers,
         body: JSON.stringify({
           symbol: selectedAsset.symbol.replace('/USD', ''),  // Clean symbol for API
           side: orderSide,

@@ -202,6 +202,24 @@ export function getAuthHeaders(): Record<string, string> {
 }
 
 /**
+ * Get auth headers with CSRF token for POST/PUT/DELETE requests
+ * SECURITY: Always use this for state-changing requests
+ */
+export async function getAuthHeadersWithCSRF(): Promise<Record<string, string>> {
+  const baseHeaders = getAuthHeaders();
+  try {
+    const csrfToken = await ensureCSRFToken();
+    return {
+      ...baseHeaders,
+      'x-csrf-token': csrfToken,
+    };
+  } catch (err) {
+    console.error('[API] Failed to get CSRF token:', err);
+    return baseHeaders;
+  }
+}
+
+/**
  * Get auth token from cookie (for backward compatibility)
  * Note: httpOnly cookies are not accessible via JavaScript by design
  * This function returns the user info stored in localStorage
