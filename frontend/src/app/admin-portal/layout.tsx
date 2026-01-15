@@ -26,12 +26,38 @@ export default function AdminPortalLayout({
     const checkAuth = async () => {
       try {
         const token = getCookie('time_auth_token');
+        const isAdminCookie = getCookie('time_is_admin') === 'true';
 
         if (!token) {
           router.push('/login?redirect=/admin-portal');
           return;
         }
 
+        // First check localStorage for cached user (faster)
+        const storedUser = localStorage.getItem('time_user');
+        if (storedUser) {
+          try {
+            const user = JSON.parse(storedUser);
+            if (user.role === 'admin' || user.role === 'owner') {
+              console.log('[AdminPortal] User authorized from localStorage:', user.role);
+              setIsAuthorized(true);
+              setIsLoading(false);
+              return;
+            }
+          } catch {
+            // Invalid stored data, continue with API check
+          }
+        }
+
+        // Also check the time_is_admin cookie as backup
+        if (isAdminCookie && storedUser) {
+          console.log('[AdminPortal] User authorized from cookie');
+          setIsAuthorized(true);
+          setIsLoading(false);
+          return;
+        }
+
+        // Fall back to API verification
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://time-backend-hosting.fly.dev'}/api/v1/auth/me`, {
           headers: { 'Authorization': `Bearer ${token}` },
           credentials: 'include',
@@ -53,6 +79,21 @@ export default function AdminPortalLayout({
         setIsAuthorized(true);
       } catch (error) {
         console.error('Auth check failed:', error);
+        // Try localStorage fallback on error
+        const storedUser = localStorage.getItem('time_user');
+        if (storedUser) {
+          try {
+            const user = JSON.parse(storedUser);
+            if (user.role === 'admin' || user.role === 'owner') {
+              console.log('[AdminPortal] Auth API failed, using localStorage fallback');
+              setIsAuthorized(true);
+              setIsLoading(false);
+              return;
+            }
+          } catch {
+            // Invalid stored data
+          }
+        }
         router.push('/login?redirect=/admin-portal');
       } finally {
         setIsLoading(false);

@@ -332,9 +332,12 @@ export function Sidebar() {
             <button
               key={item.name}
               type="button"
-              onClick={() => {
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
                 console.log('[Sidebar] Navigating to:', item.href);
-                router.push(item.href);
+                // Use window.location for more reliable navigation
+                window.location.href = item.href;
               }}
               className={clsx(
                 'w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all cursor-pointer',
@@ -373,7 +376,7 @@ export function Sidebar() {
 
         {/* Trading Mode Indicator */}
         <div className="px-4 pt-4 border-t border-slate-700/50">
-          <button type="button" onClick={() => router.push('/settings')} className="block w-full cursor-pointer">
+          <button type="button" onClick={() => { window.location.href = '/settings'; }} className="block w-full cursor-pointer">
             <div className="flex items-center justify-center mb-2">
               <TradingModeIndicator />
             </div>
