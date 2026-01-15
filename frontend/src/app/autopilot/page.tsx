@@ -87,6 +87,9 @@ export default function AutoPilotPage() {
   }, [pilot?.autopilotEnabled]);
 
   // Live commentary effect when watch mode is on
+  // NOTE: This is a UI animation effect only - messages are illustrative placeholders.
+  // TODO: Replace with real market signals from API endpoint (e.g., /trading/autopilot/{pilotId}/signals)
+  // when backend support is available. Math.random() here is acceptable for UI animation purposes.
   useEffect(() => {
     if (pilot && watchMode) {
       const interval = setInterval(() => {

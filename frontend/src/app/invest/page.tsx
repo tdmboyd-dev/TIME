@@ -103,7 +103,7 @@ export default function InvestPage() {
               changePercent: d.changePercent || 0,
               minInvestment: 10,
               totalValue: (d.price || 0) * 1000000, // Estimated based on price
-              investors: Math.floor(Math.random() * 50000) + 10000,
+              investors: 0, // Actual investor count not available - display hidden
               description: `Fractional ownership of ${d.name || symbol} stock through tokenization`,
               features: ['24/7 Trading', 'No Minimum Shares', 'Instant Settlement', 'Dividend Pass-through'],
               risk: 'medium' as const,
@@ -131,7 +131,7 @@ export default function InvestPage() {
               changePercent: d.changePercent || 0,
               minInvestment: 10,
               totalValue: (d.price || 0) * 5000000,
-              investors: Math.floor(Math.random() * 100000) + 50000,
+              investors: 0, // Actual investor count not available - display hidden
               description: `Tokenized exposure to ${d.name || symbol} index`,
               features: ['Broad Market Exposure', 'Low Fees', '24/7 Trading', 'Dividend Reinvestment'],
               risk: 'medium' as const,
@@ -159,7 +159,7 @@ export default function InvestPage() {
               changePercent: d.changePercent24h || 0,
               minInvestment: 50,
               totalValue: (d.price || 0) * 10000000,
-              investors: Math.floor(Math.random() * 80000) + 20000,
+              investors: 0, // Actual investor count not available - display hidden
               apy: symbol === 'ETH' ? 4.5 : 5.2,
               description: `Liquid staking token for ${d.name || symbol} staking rewards`,
               features: ['Crypto Exposure + Yield', 'Liquid Staking', 'No Lock-up', 'Compound Rewards'],
@@ -277,6 +277,15 @@ export default function InvestPage() {
         </div>
       )}
 
+      {/* Simulation Disclaimer */}
+      <div className="flex items-center gap-3 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+        <Info className="w-5 h-5 text-yellow-400 flex-shrink-0" />
+        <div>
+          <p className="text-sm text-yellow-400 font-medium">Simulation Mode</p>
+          <p className="text-xs text-yellow-300/70">This is a demo platform. All investments shown are simulations only and do not represent real financial transactions. Prices are fetched from real markets for educational purposes.</p>
+        </div>
+      </div>
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -327,16 +336,16 @@ export default function InvestPage() {
             <span className="text-sm text-slate-400">Total AUM</span>
           </div>
           <p className="text-2xl font-bold text-white">${(totalAUM / 1000000000).toFixed(2)}B</p>
-          <p className="text-xs text-green-400 mt-1">+5.2% this month</p>
+          <p className="text-xs text-slate-500 mt-1">Based on current prices</p>
         </div>
 
         <div className="card p-4">
           <div className="flex items-center gap-2 mb-2">
-            <Users className="w-5 h-5 text-purple-400" />
-            <span className="text-sm text-slate-400">Total Investors</span>
+            <Info className="w-5 h-5 text-purple-400" />
+            <span className="text-sm text-slate-400">Platform Status</span>
           </div>
-          <p className="text-2xl font-bold text-white">{(totalInvestors / 1000).toFixed(0)}K+</p>
-          <p className="text-xs text-slate-500 mt-1">Worldwide</p>
+          <p className="text-2xl font-bold text-white">{isConnected ? 'Live' : 'Demo'}</p>
+          <p className="text-xs text-slate-500 mt-1">Simulation only - not real trading</p>
         </div>
 
         <div className="card p-4">
@@ -425,10 +434,12 @@ export default function InvestPage() {
                   {asset.liquidity} liquidity
                 </span>
               </div>
-              <span className="text-slate-500 flex items-center gap-1">
-                <Users className="w-3 h-3" />
-                {(asset.investors / 1000).toFixed(1)}K
-              </span>
+{asset.investors > 0 && (
+                <span className="text-slate-500 flex items-center gap-1">
+                  <Users className="w-3 h-3" />
+                  {(asset.investors / 1000).toFixed(1)}K
+                </span>
+              )}
             </div>
 
             <div className="flex flex-wrap gap-1 mb-4">

@@ -199,25 +199,66 @@ export default function ExecutionPage() {
   const handleSmartOrder = async () => {
     setIsSubmitting(true);
 
-    // Simulate order submission
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    try {
+      // TODO: Replace with real API call to POST /advanced-broker/smart-orders
+      const response = await fetch(`${API_BASE}/advanced-broker/smart-orders`, {
+        method: 'POST',
+        headers: {
+          ...getAuthHeaders(),
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          symbol: orderForm.symbol,
+          side: orderForm.side,
+          quantity: orderForm.quantity,
+          orderType: orderForm.orderType,
+          urgency: orderForm.urgency,
+          darkPoolPriority: orderForm.darkPoolPriority,
+          maxSlippageBps: orderForm.maxSlippageBps,
+        }),
+      });
 
-    const newOrder: SmartOrder = {
-      id: `SO_${Date.now()}`,
-      symbol: orderForm.symbol,
-      side: orderForm.side,
-      quantity: orderForm.quantity,
-      quantityFilled: Math.floor(orderForm.quantity * Math.random()),
-      status: 'working',
-      avgFillPrice: 175.50 + Math.random() * 5,
-      venueCount: 4 + Math.floor(Math.random() * 3),
-    };
-
-    setActiveOrders(prev => [...prev, newOrder]);
-    setIsSubmitting(false);
-    setShowOrderModal(false);
-    setNotification({ type: 'success', message: `Smart order created: ${orderForm.side} ${orderForm.quantity} ${orderForm.symbol}` });
-    setTimeout(() => setNotification(null), 4000);
+      if (response.ok) {
+        const data = await response.json();
+        // Use real order data from API response
+        if (data && data.order) {
+          setActiveOrders(prev => [...prev, data.order]);
+        }
+        setNotification({ type: 'success', message: `Smart order created: ${orderForm.side} ${orderForm.quantity} ${orderForm.symbol}` });
+      } else {
+        // Fallback: Create placeholder order with 0 defaults (no fake fills/P&L)
+        const newOrder: SmartOrder = {
+          id: `SO_${Date.now()}`,
+          symbol: orderForm.symbol,
+          side: orderForm.side,
+          quantity: orderForm.quantity,
+          quantityFilled: 0, // No fake fills - will be updated by real execution
+          status: 'pending',
+          avgFillPrice: 0, // No fake price - will be updated by real execution
+          venueCount: 0, // No fake venue count - will be updated by real routing
+        };
+        setActiveOrders(prev => [...prev, newOrder]);
+        setNotification({ type: 'warning', message: `Order created locally (API unavailable): ${orderForm.side} ${orderForm.quantity} ${orderForm.symbol}` });
+      }
+    } catch {
+      // Fallback: Create placeholder order with 0 defaults (no fake fills/P&L)
+      const newOrder: SmartOrder = {
+        id: `SO_${Date.now()}`,
+        symbol: orderForm.symbol,
+        side: orderForm.side,
+        quantity: orderForm.quantity,
+        quantityFilled: 0, // No fake fills - will be updated by real execution
+        status: 'pending',
+        avgFillPrice: 0, // No fake price - will be updated by real execution
+        venueCount: 0, // No fake venue count - will be updated by real routing
+      };
+      setActiveOrders(prev => [...prev, newOrder]);
+      setNotification({ type: 'warning', message: `Order created locally (API unavailable): ${orderForm.side} ${orderForm.quantity} ${orderForm.symbol}` });
+    } finally {
+      setIsSubmitting(false);
+      setShowOrderModal(false);
+      setTimeout(() => setNotification(null), 4000);
+    }
   };
 
   const handleExecuteArbitrage = async (oppId: string) => {
@@ -226,14 +267,39 @@ export default function ExecutionPage() {
 
     setNotification({ type: 'warning', message: `Executing arbitrage: ${opp.symbol}...` });
 
-    await new Promise(resolve => setTimeout(resolve, 800));
+    try {
+      // TODO: Replace with real API call to POST /advanced-broker/arbitrage/execute
+      const response = await fetch(`${API_BASE}/advanced-broker/arbitrage/execute`, {
+        method: 'POST',
+        headers: {
+          ...getAuthHeaders(),
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          opportunityId: oppId,
+          symbol: opp.symbol,
+          buyVenue: opp.buyVenue,
+          sellVenue: opp.sellVenue,
+        }),
+      });
 
-    const success = Math.random() > 0.2;
-    if (success) {
-      setNotification({ type: 'success', message: `Arbitrage executed! Profit: +$${(opp.netProfitBps * 10).toFixed(2)}` });
-      setArbitrageOpps(prev => prev.filter(o => o.id !== oppId));
-    } else {
-      setNotification({ type: 'error', message: 'Arbitrage expired - prices moved' });
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          // Use real profit from API response, fallback to estimated profit
+          const realProfit = data.profit ?? opp.netProfitBps * 10;
+          setNotification({ type: 'success', message: `Arbitrage executed! Profit: +$${realProfit.toFixed(2)}` });
+          setArbitrageOpps(prev => prev.filter(o => o.id !== oppId));
+        } else {
+          setNotification({ type: 'error', message: data.message || 'Arbitrage execution failed' });
+        }
+      } else {
+        // API unavailable - do not execute with fake success/failure
+        setNotification({ type: 'error', message: 'Arbitrage API unavailable - cannot execute' });
+      }
+    } catch {
+      // API error - do not execute with fake success/failure
+      setNotification({ type: 'error', message: 'Arbitrage API unavailable - cannot execute' });
     }
 
     setTimeout(() => setNotification(null), 4000);

@@ -106,9 +106,13 @@ export default function CommunityChat() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const [isLoading, setIsLoading] = useState(true);
+  const [chatAvailable, setChatAvailable] = useState(false);
+
   // Fetch messages from API
   useEffect(() => {
     const fetchMessages = async () => {
+      setIsLoading(true);
       try {
         const response = await fetch(
           `/api/v1/social/chat/${currentChannel.id}/messages?limit=50`,
@@ -134,51 +138,22 @@ export default function CommunityChat() {
           })),
         }));
         setMessages(formattedMessages);
+        setChatAvailable(true);
+        setIsConnected(true);
       } catch (error) {
         console.error('Failed to fetch messages:', error);
-        // Fallback to demo data
-        const demoMessages: Message[] = Array.from({ length: 20 }, (_, i) => {
-          const usernames = ['TraderPro', 'CryptoKing', 'WallStWolf', 'BotMaster', 'ForexGuru', 'StockWhiz', 'ChartWizard'];
-          const messages = [
-            'Just made a huge profit on $AAPL calls!',
-            'Anyone watching BTC right now? Looking bullish',
-            'My bot just executed 50 trades in 5 minutes',
-            'Best trading day of the year so far!',
-            'Looking for good entry point on EUR/USD',
-            'The market is crazy today',
-            'Check out this pattern on $TSLA',
-            'Who else is using the DROPBOT?',
-          ];
-
-          return {
-            id: `msg-${i}`,
-            userId: `user-${i % 7}`,
-            username: usernames[i % 7],
-            avatar: String.fromCharCode(65 + (i % 26)),
-            verified: i % 5 === 0,
-            isPro: i % 7 === 0,
-            message: messages[i % messages.length],
-            timestamp: new Date(Date.now() - (20 - i) * 60000),
-            reactions: i % 3 === 0 ? [
-              { emoji: '👍', count: Math.floor(Math.random() * 10) + 1, userReacted: false },
-              { emoji: '🚀', count: Math.floor(Math.random() * 5) + 1, userReacted: false },
-            ] : [],
-            mentions: i % 4 === 0 ? ['@TraderPro'] : [],
-            isPinned: i === 0,
-            channel: currentChannel.id,
-          };
-        });
-
-        setMessages(demoMessages);
+        // Chat API not available - show coming soon state
+        setMessages([]);
+        setChatAvailable(false);
+        setIsConnected(false);
+      } finally {
+        setIsLoading(false);
       }
     };
 
     fetchMessages();
 
-    // Simulate WebSocket connection
-    setIsConnected(true);
-
-    // TODO: Setup Socket.IO connection
+    // TODO: Setup Socket.IO connection when chat API is available
     // const socket = io('/');
     // socket.on('connect', () => setIsConnected(true));
     // socket.on('disconnect', () => setIsConnected(false));
@@ -190,33 +165,6 @@ export default function CommunityChat() {
     //   socket.emit('leave_channel', currentChannel.id);
     //   socket.disconnect();
     // };
-
-    // Simulate new messages (replace with Socket.IO in production)
-    const interval = setInterval(() => {
-      const newMessage: Message = {
-        id: `msg-${Date.now()}`,
-        userId: `user-${Math.floor(Math.random() * 7)}`,
-        username: ['TraderPro', 'CryptoKing', 'WallStWolf'][Math.floor(Math.random() * 3)],
-        avatar: String.fromCharCode(65 + Math.floor(Math.random() * 26)),
-        verified: Math.random() > 0.7,
-        isPro: Math.random() > 0.8,
-        message: [
-          'Great analysis!',
-          'Thanks for sharing!',
-          'What do you think about this setup?',
-          'Market looking strong today',
-        ][Math.floor(Math.random() * 4)],
-        timestamp: new Date(),
-        reactions: [],
-        mentions: [],
-        isPinned: false,
-        channel: currentChannel.id,
-      };
-
-      setMessages(prev => [...prev, newMessage]);
-    }, 15000); // New message every 15 seconds
-
-    return () => clearInterval(interval);
   }, [currentChannel]);
 
   // Auto-scroll to bottom
@@ -407,7 +355,49 @@ export default function CommunityChat() {
 
         {/* Messages */}
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          {messages.map((message) => (
+          {/* Loading State */}
+          {isLoading && (
+            <div className="flex-1 flex items-center justify-center h-full">
+              <div className="text-center">
+                <div className="w-12 h-12 border-4 border-time-primary/30 border-t-time-primary rounded-full animate-spin mx-auto mb-4" />
+                <p className="text-slate-400">Loading messages...</p>
+              </div>
+            </div>
+          )}
+
+          {/* Chat Coming Soon State */}
+          {!isLoading && !chatAvailable && (
+            <div className="flex-1 flex items-center justify-center h-full">
+              <div className="text-center max-w-md">
+                <div className="w-20 h-20 bg-gradient-to-br from-time-primary/20 to-purple-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <MessageCircle className="w-10 h-10 text-time-primary" />
+                </div>
+                <h3 className="text-2xl font-bold text-white mb-3">Chat Coming Soon</h3>
+                <p className="text-slate-400 mb-6">
+                  We are building a real-time trading community chat. Connect with fellow traders,
+                  share strategies, and discuss market movements.
+                </p>
+                <div className="flex items-center justify-center gap-2 text-sm text-slate-500">
+                  <Clock className="w-4 h-4" />
+                  <span>Stay tuned for updates</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Empty State - Connected but no messages */}
+          {!isLoading && chatAvailable && messages.length === 0 && (
+            <div className="flex-1 flex items-center justify-center h-full">
+              <div className="text-center">
+                <MessageCircle className="w-12 h-12 text-slate-600 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-white mb-2">No messages yet</h3>
+                <p className="text-slate-400">Be the first to start the conversation in #{currentChannel.name}!</p>
+              </div>
+            </div>
+          )}
+
+          {/* Messages List */}
+          {!isLoading && chatAvailable && messages.map((message) => (
             <div
               key={message.id}
               className={clsx(
@@ -521,7 +511,7 @@ export default function CommunityChat() {
 
         {/* Input */}
         <div className="p-4 border-t border-slate-700/50">
-          {replyTo && (
+          {replyTo && chatAvailable && (
             <div className="mb-2 px-3 py-2 bg-slate-800/50 rounded-lg flex items-center justify-between">
               <div className="flex items-center gap-2 text-sm">
                 <MessageCircle className="w-4 h-4 text-slate-400" />
@@ -544,33 +534,53 @@ export default function CommunityChat() {
                 type="text"
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                placeholder={`Message #${currentChannel.name}`}
-                className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder:text-slate-500 pr-20"
+                onKeyPress={(e) => e.key === 'Enter' && chatAvailable && handleSendMessage()}
+                placeholder={chatAvailable ? `Message #${currentChannel.name}` : 'Chat coming soon...'}
+                disabled={!chatAvailable}
+                className={clsx(
+                  'w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder:text-slate-500 pr-20',
+                  !chatAvailable && 'opacity-50 cursor-not-allowed'
+                )}
               />
               <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
                 <button
-                  onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                  className="p-1.5 rounded hover:bg-slate-700 text-slate-400 hover:text-white transition-colors"
+                  onClick={() => chatAvailable && setShowEmojiPicker(!showEmojiPicker)}
+                  disabled={!chatAvailable}
+                  className={clsx(
+                    'p-1.5 rounded hover:bg-slate-700 text-slate-400 hover:text-white transition-colors',
+                    !chatAvailable && 'opacity-50 cursor-not-allowed'
+                  )}
                 >
                   <Smile className="w-5 h-5" />
                 </button>
-                <button className="p-1.5 rounded hover:bg-slate-700 text-slate-400 hover:text-white transition-colors">
+                <button
+                  disabled={!chatAvailable}
+                  className={clsx(
+                    'p-1.5 rounded hover:bg-slate-700 text-slate-400 hover:text-white transition-colors',
+                    !chatAvailable && 'opacity-50 cursor-not-allowed'
+                  )}
+                >
                   <AtSign className="w-5 h-5" />
                 </button>
               </div>
             </div>
             <button
               onClick={handleSendMessage}
-              disabled={!inputMessage.trim()}
-              className="btn-primary px-4 py-3 flex items-center gap-2"
+              disabled={!inputMessage.trim() || !chatAvailable}
+              className={clsx(
+                'btn-primary px-4 py-3 flex items-center gap-2',
+                !chatAvailable && 'opacity-50 cursor-not-allowed'
+              )}
             >
               <Send className="w-5 h-5" />
             </button>
           </div>
 
           <p className="text-xs text-slate-500 mt-2">
-            Use @username to mention someone • Shift + Enter for new line
+            {chatAvailable
+              ? 'Use @username to mention someone - Shift + Enter for new line'
+              : 'Chat functionality is coming soon. Stay tuned!'
+            }
           </p>
         </div>
       </div>

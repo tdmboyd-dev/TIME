@@ -64,203 +64,8 @@ interface LeaderboardEntry {
   isCopying?: boolean;
 }
 
-const mockLeaderboard: LeaderboardEntry[] = [
-  {
-    rank: 1,
-    previousRank: 1,
-    rankChange: 0,
-    id: '1',
-    name: 'AlphaTrader_Pro',
-    avatar: 'AT',
-    verified: true,
-    isPro: true,
-    badges: ['top_trader', 'elite_trader', 'consistent'],
-    type: 'traders',
-    totalReturn: 342.5,
-    monthlyReturn: 28.4,
-    weeklyReturn: 8.2,
-    winRate: 72.4,
-    totalTrades: 1247,
-    profitFactor: 2.85,
-    sharpeRatio: 2.1,
-    maxDrawdown: 12.5,
-    followers: 12453,
-    copiers: 892,
-    riskLevel: 'moderate',
-    tradingStyle: 'Swing Trader',
-  },
-  {
-    rank: 2,
-    previousRank: 4,
-    rankChange: 2,
-    id: '2',
-    name: 'CryptoKing',
-    avatar: 'CK',
-    verified: true,
-    isPro: true,
-    badges: ['top_trader', 'signal_master'],
-    type: 'traders',
-    totalReturn: 298.7,
-    monthlyReturn: 32.1,
-    weeklyReturn: 12.5,
-    winRate: 68.2,
-    totalTrades: 2341,
-    profitFactor: 2.42,
-    sharpeRatio: 1.9,
-    maxDrawdown: 18.2,
-    followers: 8932,
-    copiers: 567,
-    riskLevel: 'aggressive',
-    tradingStyle: 'Day Trader',
-  },
-  {
-    rank: 3,
-    previousRank: 2,
-    rankChange: -1,
-    id: '3',
-    name: 'ValueHunter',
-    avatar: 'VH',
-    verified: true,
-    isPro: false,
-    badges: ['consistent'],
-    type: 'traders',
-    totalReturn: 245.2,
-    monthlyReturn: 18.3,
-    weeklyReturn: 4.2,
-    winRate: 78.5,
-    totalTrades: 456,
-    profitFactor: 3.12,
-    sharpeRatio: 2.4,
-    maxDrawdown: 8.5,
-    followers: 5621,
-    copiers: 234,
-    riskLevel: 'conservative',
-    tradingStyle: 'Position Trader',
-  },
-  {
-    rank: 4,
-    previousRank: 3,
-    rankChange: -1,
-    id: '4',
-    name: 'ScalpMaster',
-    avatar: 'SM',
-    verified: false,
-    isPro: true,
-    badges: ['signal_master'],
-    type: 'traders',
-    totalReturn: 198.4,
-    monthlyReturn: 22.7,
-    weeklyReturn: 6.8,
-    winRate: 64.2,
-    totalTrades: 5678,
-    profitFactor: 1.95,
-    sharpeRatio: 1.6,
-    maxDrawdown: 15.3,
-    followers: 3245,
-    copiers: 145,
-    riskLevel: 'aggressive',
-    tradingStyle: 'Scalper',
-  },
-  {
-    rank: 5,
-    previousRank: 7,
-    rankChange: 2,
-    id: '5',
-    name: 'QuietWealth',
-    avatar: 'QW',
-    verified: true,
-    isPro: false,
-    badges: ['consistent', 'community_leader'],
-    type: 'traders',
-    totalReturn: 187.9,
-    monthlyReturn: 15.2,
-    weeklyReturn: 3.5,
-    winRate: 81.2,
-    totalTrades: 234,
-    profitFactor: 3.45,
-    sharpeRatio: 2.8,
-    maxDrawdown: 6.2,
-    followers: 2890,
-    copiers: 189,
-    riskLevel: 'conservative',
-    tradingStyle: 'Value Investor',
-  },
-];
-
-const mockBotLeaderboard: LeaderboardEntry[] = [
-  {
-    rank: 1,
-    previousRank: 1,
-    rankChange: 0,
-    id: 'bot-1',
-    name: 'TrendMaster AI',
-    avatar: 'TM',
-    verified: true,
-    isPro: true,
-    badges: ['top_trader', 'consistent'],
-    type: 'bots',
-    totalReturn: 412.5,
-    monthlyReturn: 34.2,
-    weeklyReturn: 9.5,
-    winRate: 74.5,
-    totalTrades: 8945,
-    profitFactor: 2.95,
-    sharpeRatio: 2.3,
-    maxDrawdown: 10.2,
-    followers: 5432,
-    copiers: 1245,
-    riskLevel: 'moderate',
-    tradingStyle: 'Trend Following',
-  },
-  {
-    rank: 2,
-    previousRank: 3,
-    rankChange: 1,
-    id: 'bot-2',
-    name: 'ScalpBot Pro',
-    avatar: 'SB',
-    verified: true,
-    isPro: true,
-    badges: ['signal_master'],
-    type: 'bots',
-    totalReturn: 356.8,
-    monthlyReturn: 42.1,
-    weeklyReturn: 14.2,
-    winRate: 68.9,
-    totalTrades: 24567,
-    profitFactor: 2.15,
-    sharpeRatio: 1.8,
-    maxDrawdown: 14.5,
-    followers: 4321,
-    copiers: 892,
-    riskLevel: 'aggressive',
-    tradingStyle: 'Scalping',
-  },
-  {
-    rank: 3,
-    previousRank: 2,
-    rankChange: -1,
-    id: 'bot-3',
-    name: 'MeanRevert Alpha',
-    avatar: 'MR',
-    verified: true,
-    isPro: false,
-    badges: ['consistent'],
-    type: 'bots',
-    totalReturn: 289.4,
-    monthlyReturn: 21.5,
-    weeklyReturn: 5.8,
-    winRate: 76.2,
-    totalTrades: 3456,
-    profitFactor: 2.78,
-    sharpeRatio: 2.1,
-    maxDrawdown: 9.8,
-    followers: 3210,
-    copiers: 567,
-    riskLevel: 'moderate',
-    tradingStyle: 'Mean Reversion',
-  },
-];
+// No mock data - leaderboard shows real API data only
+// Empty state is shown when no data is available
 
 export function Leaderboard() {
   const [period, setPeriod] = useState<Period>('monthly');
@@ -315,8 +120,8 @@ export function Leaderboard() {
         throw new Error('API error');
       }
     } catch {
-      // Use mock data as fallback - but clearly marked as DEMO
-      setEntries(type === 'traders' ? mockLeaderboard : mockBotLeaderboard);
+      // No mock data fallback - show empty state
+      setEntries([]);
       setIsConnected(false);
     } finally {
       setIsLoading(false);
@@ -521,9 +326,26 @@ export function Leaderboard() {
             <p className="text-slate-400">Loading leaderboard...</p>
           </div>
         ) : filteredEntries.length === 0 ? (
-          <div className="p-8 text-center">
-            <Users className="w-8 h-8 text-slate-600 mx-auto mb-2" />
-            <p className="text-slate-400">No entries found</p>
+          <div className="p-12 text-center">
+            <Trophy className="w-12 h-12 text-slate-600 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-white mb-2">
+              {searchQuery ? 'No traders match your search' : 'No leaderboard data available'}
+            </h3>
+            <p className="text-slate-400 max-w-md mx-auto">
+              {searchQuery
+                ? 'Try adjusting your search query or filters.'
+                : isConnected
+                  ? 'Check back later as traders start competing.'
+                  : 'Unable to load leaderboard data. Please check your connection and try again.'}
+            </p>
+            {!isConnected && (
+              <button
+                onClick={fetchLeaderboard}
+                className="mt-4 px-4 py-2 bg-time-primary text-white rounded-lg hover:bg-time-primary/80 transition-colors"
+              >
+                Try Again
+              </button>
+            )}
           </div>
         ) : (
           <div className="divide-y divide-slate-700/50">

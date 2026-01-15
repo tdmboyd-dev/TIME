@@ -738,6 +738,9 @@ export default function RetirementPage() {
                 <p className="text-xs text-slate-500 mt-1">
                   in {calcRetireAge - calcAge} years at {calcReturn}% annual return
                 </p>
+                <p className="text-xs text-yellow-400/70 mt-2">
+                  * Simulation only - actual returns may vary
+                </p>
               </div>
 
               <button
@@ -886,6 +889,7 @@ export default function RetirementPage() {
                       ))}
                     </p>
                     <p className="text-xs text-green-300/70 mt-1">Based on {newPlan.expectedReturn}% annual return</p>
+                    <p className="text-xs text-yellow-400/70 mt-1">* Simulation only - actual returns may vary</p>
                   </div>
                 </>
               )}
@@ -971,6 +975,7 @@ export default function RetirementPage() {
                         ))}
                       </span>
                     </div>
+                    <p className="text-xs text-yellow-400/70 mt-2 text-center">* Projections are simulations only - actual returns may vary significantly</p>
                   </div>
                 </>
               )}
@@ -1128,6 +1133,7 @@ export default function RetirementPage() {
                     editPlan.expectedReturn
                   ))}
                 </p>
+                <p className="text-xs text-yellow-400/70 mt-1">* Simulation only - actual returns may vary</p>
               </div>
 
               {/* Danger Zone */}

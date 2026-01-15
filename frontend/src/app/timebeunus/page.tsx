@@ -302,40 +302,33 @@ export default function TIMEBEUNUSPage() {
   const fetchSignals = async () => {
     try {
       const symbols = ['EURUSD', 'BTCUSD', 'AAPL', 'TSLA', 'ETH'];
-      const signals: AlphaSignal[] = [];
+      // Fetch REAL trading signals from AI engine - NO FAKE DATA
+      const response = await fetch(`${API_BASE}/signals/ai/pending`, {
+        headers: getAdminHeaders(),
+      });
 
-      // For demo, we'll generate signals from real strategy analysis
-      // In production, you'd fetch from /api/v1/trading/signals/pending
-      for (const symbol of symbols.slice(0, 5)) {
-        try {
-          // Fetch real market data for each symbol
-          const response = await fetch(`${API_BASE}/real-market/quick-quote/${symbol}`);
-          if (response.ok) {
-            const data = await response.json();
-            if (data.success) {
-              // Generate signal based on real price data
-              const direction = Math.random() > 0.5 ? 'long' : 'short';
-              const strength = 60 + Math.random() * 30;
-              const confidence = 65 + Math.random() * 25;
-
-              signals.push({
-                id: `signal_${symbol}_${Date.now()}`,
-                symbol: symbol,
-                direction: direction,
-                strength: strength,
-                confidence: confidence,
-                expectedReturn: 1.5 + Math.random() * 4,
-                strategy: ['RSI Strategy', 'MACD Strategy', 'Moving Average Crossover', 'Bollinger Bands', 'Momentum Strategy'][Math.floor(Math.random() * 5)],
-                timestamp: new Date(),
-              });
-            }
-          }
-        } catch (err) {
-          // Error handled - skip symbol
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && Array.isArray(data.signals)) {
+          const signals: AlphaSignal[] = data.signals.map((s: any) => ({
+            id: s.id || `signal_${s.symbol}_${Date.now()}`,
+            symbol: s.symbol,
+            direction: s.direction || s.action || 'long',
+            strength: s.strength || (s.confidence * 100) || 70,
+            confidence: s.confidence ? s.confidence * 100 : 70,
+            expectedReturn: s.expectedReturn || s.targetPercent || 2,
+            strategy: s.strategy || s.source || 'AI Signal',
+            timestamp: new Date(s.timestamp || Date.now()),
+          }));
+          setAlphaSignals(signals);
+        } else {
+          // No signals available - show empty state
+          setAlphaSignals([]);
         }
+      } else {
+        // API not available - show empty state instead of fake data
+        setAlphaSignals([]);
       }
-
-      setAlphaSignals(signals);
     } catch (err) {
       // Error handled - sets error message
       setError('Failed to fetch trading signals');
@@ -651,17 +644,13 @@ export default function TIMEBEUNUSPage() {
     return () => clearInterval(interval);
   }, []);
 
-  // Real-time updates when active
+  // Real-time updates when active - fetch fresh data instead of fake updates
   useEffect(() => {
     if (!isActive) return;
     const interval = setInterval(() => {
-      // Slight updates to show live activity
-      setPerformance(prev => ({
-        ...prev,
-        dailyReturn: prev.dailyReturn + (Math.random() - 0.5) * 0.05,
-        dominanceScore: Math.min(100, Math.max(0, prev.dominanceScore + (Math.random() - 0.5) * 1)),
-      }));
-    }, 5000);
+      // Refresh real performance data from API instead of fake updates
+      fetchPerformance();
+    }, 30000); // Update every 30 seconds
     return () => clearInterval(interval);
   }, [isActive]);
 

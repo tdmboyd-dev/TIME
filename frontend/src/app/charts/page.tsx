@@ -179,29 +179,20 @@ export default function ChartsPage() {
     fetchChartData();
   }, [fetchChartData]);
 
-  // Real-time updates (simulated tick updates for demo, real WebSocket would be better)
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCandles(prev => {
-        if (prev.length === 0) return prev;
-        const lastCandle = prev[prev.length - 1];
-        const volatility = lastCandle.close * 0.0005; // Small tick updates
-        const newClose = lastCandle.close + (Math.random() - 0.5) * volatility;
-
-        return [
-          ...prev.slice(0, -1),
-          {
-            ...lastCandle,
-            close: newClose,
-            high: Math.max(lastCandle.high, newClose),
-            low: Math.min(lastCandle.low, newClose),
-          },
-        ];
-      });
-    }, 2000);
-
-    return () => clearInterval(interval);
-  }, []);
+  // TODO: Implement real WebSocket connection for live price updates
+  // The backend would need to provide a WebSocket endpoint like /ws/charts/live
+  // that streams real-time price data for the selected symbol.
+  // For now, we only show static snapshots from the /api/charts/candles endpoint.
+  //
+  // Example WebSocket implementation:
+  // useEffect(() => {
+  //   const ws = new WebSocket(`${WS_BASE}/charts/live?symbol=${selectedSymbol.symbol}`);
+  //   ws.onmessage = (event) => {
+  //     const tick = JSON.parse(event.data);
+  //     setCandles(prev => updateCandleWithTick(prev, tick));
+  //   };
+  //   return () => ws.close();
+  // }, [selectedSymbol]);
 
   // Draw chart
   useEffect(() => {

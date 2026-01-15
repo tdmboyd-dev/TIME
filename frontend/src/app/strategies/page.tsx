@@ -216,6 +216,8 @@ export default function StrategiesPage() {
       }
     } catch (error: any) {
       // Fallback to local creation for demo
+      // TODO: Remove this fallback once backend synthesize endpoint is fully implemented
+      // TODO: Fetch real performance metrics from /strategies/{id}/performance endpoint after creation
       const newStrategy: Strategy = {
         id: `strat-${Date.now()}`,
         name: `TIME Synthesis #${strategies.filter(s => s.synthesized).length + 1}`,
@@ -224,20 +226,21 @@ export default function StrategiesPage() {
         status: 'backtesting',
         sourceBots: synthesizeSourceBots,
         performance: {
-          winRate: Math.random() * 20 + 55,
-          profitFactor: Math.random() * 1.5 + 1.5,
-          maxDrawdown: Math.random() * 10 + 5,
-          sharpeRatio: Math.random() * 1 + 1.5,
-          totalTrades: Math.floor(Math.random() * 200) + 100,
-          totalPnL: Math.random() * 20000 + 5000,
-          avgTrade: Math.random() * 50 + 30,
+          // Default to 0 - real metrics will be populated after backtesting completes
+          winRate: 0,
+          profitFactor: 0,
+          maxDrawdown: 0,
+          sharpeRatio: 0,
+          totalTrades: 0,
+          totalPnL: 0,
+          avgTrade: 0,
         },
         riskLevel: synthesizeGoal === 'min_risk' ? 'low' : synthesizeGoal === 'max_return' ? 'high' : 'medium',
         synthesized: true,
         createdAt: new Date(),
       };
       setStrategies(prev => [newStrategy, ...prev]);
-      setNotification({ type: 'success', message: 'Strategy synthesized (demo)! Running backtests...' });
+      setNotification({ type: 'success', message: 'Strategy synthesized (demo)! Awaiting backtest results...' });
     } finally {
       setIsSynthesizing(false);
       setShowSynthesizeModal(false);
@@ -277,6 +280,8 @@ export default function StrategiesPage() {
       }
     } catch (error: any) {
       // Fallback to local creation for demo
+      // TODO: Remove this fallback once backend strategy creation endpoint is fully implemented
+      // TODO: Fetch real performance metrics from /strategies/{id}/performance endpoint after creation
       const newStrategy: Strategy = {
         id: `strat-${Date.now()}`,
         name: newStrategyName,
@@ -285,10 +290,11 @@ export default function StrategiesPage() {
         status: 'optimizing',
         sourceBots: [],
         performance: {
-          winRate: Math.random() * 20 + 50,
-          profitFactor: Math.random() * 1 + 1,
-          maxDrawdown: Math.random() * 15 + 5,
-          sharpeRatio: Math.random() * 1 + 1,
+          // Default to 0 - real metrics will be populated after optimization/backtesting
+          winRate: 0,
+          profitFactor: 0,
+          maxDrawdown: 0,
+          sharpeRatio: 0,
           totalTrades: 0,
           totalPnL: 0,
           avgTrade: 0,
@@ -298,7 +304,7 @@ export default function StrategiesPage() {
         createdAt: new Date(),
       };
       setStrategies(prev => [newStrategy, ...prev]);
-      setNotification({ type: 'success', message: `Strategy "${newStrategyName}" created (demo)! Optimizing parameters...` });
+      setNotification({ type: 'success', message: `Strategy "${newStrategyName}" created (demo)! Awaiting optimization results...` });
     } finally {
       setIsSynthesizing(false);
       setShowCreateModal(false);
@@ -319,9 +325,12 @@ export default function StrategiesPage() {
   };
 
   const handleBacktest = async (strategy: Strategy) => {
+    // TODO: Implement real backtest API call to /strategies/{id}/backtest endpoint
+    // TODO: Poll for backtest results and update strategy performance metrics
     setNotification({ type: 'success', message: `Running backtest for ${strategy.name}...` });
     setTimeout(() => {
-      setNotification({ type: 'success', message: `Backtest complete! Win rate: ${(Math.random() * 20 + 55).toFixed(1)}%` });
+      // Display placeholder message - real results should come from API
+      setNotification({ type: 'success', message: `Backtest initiated for ${strategy.name}. Results will update when complete.` });
       setTimeout(() => setNotification(null), 4000);
     }, 2000);
   };

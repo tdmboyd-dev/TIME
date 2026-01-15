@@ -248,23 +248,36 @@ export default function TradePage() {
     return () => clearInterval(interval);
   }, [fetchMarketData]);
 
-  // Real-time price simulation for smoother updates
+  // Real-time price updates from API - NO FAKE DATA
   useEffect(() => {
     if (!selectedAsset) return;
-    const interval = setInterval(() => {
-      setSelectedAsset(prev => {
-        if (!prev) return prev;
-        const change = (Math.random() - 0.5) * prev.price * 0.0005;
-        return {
-          ...prev,
-          price: prev.price + change,
-          bid: prev.price + change - prev.spread / 2,
-          ask: prev.price + change + prev.spread / 2,
-        };
-      });
-    }, 1000);
+    const interval = setInterval(async () => {
+      try {
+        // Fetch real updated price from API
+        const response = await fetch(`${API_BASE}/real-market/quick-quote/${selectedAsset.symbol}`);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.price) {
+            setSelectedAsset(prev => {
+              if (!prev) return prev;
+              const newPrice = data.price;
+              return {
+                ...prev,
+                price: newPrice,
+                bid: newPrice - (prev.spread / 2),
+                ask: newPrice + (prev.spread / 2),
+                change: data.change || prev.change,
+                changePercent: data.changePercent || prev.changePercent,
+              };
+            });
+          }
+        }
+      } catch {
+        // Keep existing price if API fails - don't fake it
+      }
+    }, 5000); // Update every 5 seconds with real data
     return () => clearInterval(interval);
-  }, [selectedAsset]);
+  }, [selectedAsset?.symbol]);
 
   const handleRefresh = () => {
     setIsRefreshing(true);
