@@ -229,14 +229,18 @@ export const withdrawalLock = requireLock(
 // OPEN REDIRECT PROTECTION
 // ============================================================================
 
-const ALLOWED_REDIRECT_HOSTS = new Set([
+// Configurable via ALLOWED_REDIRECT_HOSTS env var (comma-separated)
+const DEFAULT_REDIRECT_HOSTS = [
   'localhost',
   '127.0.0.1',
   'timebeyondus.com',
   'www.timebeyondus.com',
   'app.timebeyondus.com',
   'api.timebeyondus.com',
-]);
+];
+
+const envHosts = process.env.ALLOWED_REDIRECT_HOSTS?.split(',').map(h => h.trim()).filter(Boolean) || [];
+const ALLOWED_REDIRECT_HOSTS = new Set([...DEFAULT_REDIRECT_HOSTS, ...envHosts]);
 
 /**
  * Validate and sanitize redirect URL

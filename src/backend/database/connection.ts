@@ -241,6 +241,29 @@ class InMemoryCollection {
 
 class InMemoryCache {
   private data: Map<string, { value: string; expiry?: number }> = new Map();
+  private cleanupInterval: NodeJS.Timeout | null = null;
+
+  constructor() {
+    // Start periodic cleanup every 60 seconds to prevent memory leaks
+    this.cleanupInterval = setInterval(() => this.cleanup(), 60000);
+  }
+
+  /**
+   * Cleanup expired keys (prevents memory leak)
+   */
+  private cleanup(): void {
+    const now = Date.now();
+    let cleaned = 0;
+    for (const [key, item] of this.data) {
+      if (item.expiry && now > item.expiry) {
+        this.data.delete(key);
+        cleaned++;
+      }
+    }
+    if (cleaned > 0) {
+      console.log(`[InMemoryCache] Cleaned up ${cleaned} expired keys`);
+    }
+  }
 
   async get(key: string): Promise<string | null> {
     const item = this.data.get(key);
@@ -270,6 +293,16 @@ class InMemoryCache {
   async keys(pattern: string): Promise<string[]> {
     const regex = new RegExp('^' + pattern.replace(/\*/g, '.*') + '$');
     return Array.from(this.data.keys()).filter(k => regex.test(k));
+  }
+
+  /**
+   * Stop cleanup interval (for graceful shutdown)
+   */
+  destroy(): void {
+    if (this.cleanupInterval) {
+      clearInterval(this.cleanupInterval);
+      this.cleanupInterval = null;
+    }
   }
 }
 

@@ -741,8 +741,21 @@ router.post('/password/change', authMiddleware, async (req: Request, res: Respon
     return res.status(400).json({ error: 'Current and new password required' });
   }
 
-  if (newPassword.length < 8) {
-    return res.status(400).json({ error: 'New password must be at least 8 characters' });
+  // SECURITY: Consistent password requirements with registration (12 chars + complexity)
+  if (newPassword.length < 12) {
+    return res.status(400).json({ error: 'New password must be at least 12 characters' });
+  }
+  if (!/[a-z]/.test(newPassword)) {
+    return res.status(400).json({ error: 'Password must contain a lowercase letter' });
+  }
+  if (!/[A-Z]/.test(newPassword)) {
+    return res.status(400).json({ error: 'Password must contain an uppercase letter' });
+  }
+  if (!/[0-9]/.test(newPassword)) {
+    return res.status(400).json({ error: 'Password must contain a number' });
+  }
+  if (!/[!@#$%^&*(),.?":{}|<>]/.test(newPassword)) {
+    return res.status(400).json({ error: 'Password must contain a special character' });
   }
 
   try {
@@ -985,9 +998,12 @@ router.post('/setup-admin', async (req: Request, res: Response) => {
       return res.status(409).json({ error: 'Email already registered' });
     }
 
-    // Validate password strength
-    if (password.length < 8) {
-      return res.status(400).json({ error: 'Password must be at least 8 characters' });
+    // Validate password strength (consistent with registration)
+    if (password.length < 12) {
+      return res.status(400).json({ error: 'Password must be at least 12 characters' });
+    }
+    if (!/[a-z]/.test(password) || !/[A-Z]/.test(password) || !/[0-9]/.test(password) || !/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+      return res.status(400).json({ error: 'Password must contain lowercase, uppercase, number, and special character' });
     }
 
     // Hash password and create admin user with all required fields
