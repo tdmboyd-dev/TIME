@@ -5,6 +5,7 @@
 
 import { LinkingOptions } from '@react-navigation/native';
 import * as Linking from 'expo-linking';
+import { logger } from '../utils/logger';
 // Note: expo-notifications removed - Firebase not configured
 
 const prefix = Linking.createURL('/');
@@ -154,7 +155,7 @@ export async function handleUniversalLink(url: string): Promise<{
         return { screen: 'Home' };
     }
   } catch (error) {
-    console.error('Error handling universal link:', error);
+    logger.error('Error handling universal link', { tag: 'Navigation', data: error });
     return null;
   }
 }

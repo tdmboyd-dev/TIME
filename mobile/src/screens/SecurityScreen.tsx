@@ -19,6 +19,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as LocalAuthentication from 'expo-local-authentication';
 import authService from '../services/auth';
 import { useSettingsStore } from '../store/settingsStore';
+import { logger } from '../utils/logger';
 
 export default function SecurityScreen({ navigation }: any) {
   const [biometricType, setBiometricType] = useState<string>('Biometric');
@@ -42,7 +43,7 @@ export default function SecurityScreen({ navigation }: any) {
         setBiometricType(type);
       }
     } catch (error) {
-      console.error('Error checking biometric support:', error);
+      logger.error('Error checking biometric support', { tag: 'Security', data: error });
     } finally {
       setIsLoading(false);
     }

@@ -6,6 +6,7 @@
 import { create } from 'zustand';
 import * as SecureStore from 'expo-secure-store';
 import { User } from '../types';
+import { logger } from '../utils/logger';
 
 interface AuthState {
   user: User | null;
@@ -37,7 +38,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       await SecureStore.setItemAsync('user_data', JSON.stringify(user));
       set({ user, token, isAuthenticated: true });
     } catch (error) {
-      console.error('Error storing auth data:', error);
+      logger.error('Error storing auth data', { tag: 'Auth', data: error });
       throw error;
     }
   },
@@ -48,7 +49,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       await SecureStore.deleteItemAsync('user_data');
       set({ user: null, token: null, isAuthenticated: false });
     } catch (error) {
-      console.error('Error clearing auth data:', error);
+      logger.error('Error clearing auth data', { tag: 'Auth', data: error });
     }
   },
 
@@ -66,7 +67,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         return false;
       }
     } catch (error) {
-      console.error('Error checking auth:', error);
+      logger.error('Error checking auth', { tag: 'Auth', data: error });
       set({ isAuthenticated: false, isLoading: false });
       return false;
     }

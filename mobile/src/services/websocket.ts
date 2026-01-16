@@ -4,10 +4,9 @@
  */
 
 import { io, Socket } from 'socket.io-client';
-import Constants from 'expo-constants';
 import * as SecureStore from 'expo-secure-store';
-
-const WS_URL = Constants.expoConfig?.extra?.wsUrl || 'wss://time-backend-hosting.fly.dev';
+import { config } from '../config';
+import { logger } from '../utils/logger';
 
 type PriceCallback = (data: PriceUpdate) => void;
 type TradeCallback = (data: TradeUpdate) => void;
@@ -56,8 +55,8 @@ class WebSocketService {
   private connectionCallbacks: Set<ConnectionCallback> = new Set();
   private subscribedSymbols: Set<string> = new Set();
   private reconnectAttempts: number = 0;
-  private maxReconnectAttempts: number = 5;
-  private reconnectDelay: number = 1000;
+  private maxReconnectAttempts: number = config.wsMaxReconnectAttempts;
+  private reconnectDelay: number = config.wsReconnectDelay;
   private isConnecting: boolean = false;
 
   // Initialize WebSocket connection
@@ -72,7 +71,7 @@ class WebSocketService {
     try {
       const token = await SecureStore.getItemAsync('auth_token');
 
-      this.socket = io(WS_URL, {
+      this.socket = io(config.wsUrl, {
         transports: ['websocket'],
         autoConnect: true,
         reconnection: true,
@@ -86,9 +85,11 @@ class WebSocketService {
         },
       });
 
+      logger.ws(`Connecting to ${config.wsUrl}`);
+
       this.setupEventListeners();
     } catch (error) {
-      console.error('WebSocket connection error:', error);
+      logger.error('WebSocket connection error', { tag: 'WebSocket', data: error });
       this.isConnecting = false;
       this.notifyConnectionStatus('error');
     }
@@ -99,7 +100,7 @@ class WebSocketService {
     if (!this.socket) return;
 
     this.socket.on('connect', () => {
-      console.log('WebSocket connected');
+      logger.ws('Connected successfully');
       this.isConnecting = false;
       this.reconnectAttempts = 0;
       this.notifyConnectionStatus('connected');
@@ -111,16 +112,17 @@ class WebSocketService {
     });
 
     this.socket.on('disconnect', (reason) => {
-      console.log('WebSocket disconnected:', reason);
+      logger.ws(`Disconnected: ${reason}`);
       this.notifyConnectionStatus('disconnected');
     });
 
     this.socket.on('connect_error', (error) => {
-      console.error('WebSocket connection error:', error);
+      logger.error('WebSocket connection error', { tag: 'WebSocket', data: error });
       this.isConnecting = false;
       this.reconnectAttempts++;
 
       if (this.reconnectAttempts >= this.maxReconnectAttempts) {
+        logger.error(`Max reconnection attempts (${this.maxReconnectAttempts}) reached`, { tag: 'WebSocket' });
         this.notifyConnectionStatus('error');
       }
     });
@@ -158,12 +160,12 @@ class WebSocketService {
     // Portfolio updates
     this.socket.on('portfolio:update', (data: any) => {
       // Handle portfolio updates - can be extended
-      console.log('Portfolio update:', data);
+      logger.ws('Portfolio update', data);
     });
 
     // Error handling
     this.socket.on('error', (error: any) => {
-      console.error('WebSocket error:', error);
+      logger.error('WebSocket error', { tag: 'WebSocket', data: error });
     });
   }
 
@@ -261,7 +263,7 @@ class WebSocketService {
     if (this.socket?.connected) {
       this.socket.emit(event, data);
     } else {
-      console.warn('WebSocket not connected, cannot emit:', event);
+      logger.warn(`WebSocket not connected, cannot emit: ${event}`, { tag: 'WebSocket' });
     }
   }
 

@@ -1,6 +1,7 @@
 import * as SecureStore from 'expo-secure-store';
 import * as LocalAuthentication from 'expo-local-authentication';
 import apiService from './api';
+import { logger } from '../utils/logger';
 
 class AuthService {
   private TOKEN_KEY = 'auth_token';
@@ -75,7 +76,7 @@ class AuthService {
     try {
       await apiService.logout();
     } catch (error) {
-      console.error('Logout API call failed:', error);
+      logger.error('Logout API call failed', { tag: 'Auth', data: error });
     } finally {
       await this.removeToken();
       await this.removeUser();
@@ -120,7 +121,7 @@ class AuthService {
 
       return result.success;
     } catch (error) {
-      console.error('Biometric authentication error:', error);
+      logger.error('Biometric authentication error', { tag: 'Auth', data: error });
       return false;
     }
   }

@@ -19,6 +19,7 @@ import { Ionicons } from '@expo/vector-icons';
 // Note: expo-notifications removed - Firebase not configured
 import { useSettingsStore } from '../store/settingsStore';
 import pushService from '../services/push';
+import { logger } from '../utils/logger';
 
 interface NotificationCategory {
   id: string;
@@ -144,7 +145,7 @@ export default function NotificationPreferencesScreen({ navigation }: any) {
       // Merge with stored preferences
       setPreferences({ ...defaultPrefs, ...storeNotifications });
     } catch (error) {
-      console.error('Error initializing notification settings:', error);
+      logger.error('Error initializing notification settings', { tag: 'Notifications', data: error });
     } finally {
       setLoading(false);
     }

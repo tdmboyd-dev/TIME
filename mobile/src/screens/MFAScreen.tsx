@@ -20,6 +20,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as Linking from 'expo-linking';
 import authService from '../services/auth';
+import { logger } from '../utils/logger';
 
 type MFAStep = 'choose' | 'setup-app' | 'verify' | 'backup-codes' | 'manage';
 
@@ -56,7 +57,7 @@ export default function MFAScreen({ navigation, route }: any) {
         setStep('manage');
       }
     } catch (err) {
-      console.error('Error checking MFA status:', err);
+      logger.error('Error checking MFA status', { tag: 'MFA', data: err });
     } finally {
       setLoading(false);
     }

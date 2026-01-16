@@ -20,6 +20,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import RootNavigator from './src/navigation/RootNavigator';
 import authService from './src/services/auth';
 import pushService from './src/services/push';
+import { logger } from './src/utils/logger';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -77,11 +78,11 @@ export default function App() {
 
           // Setup notification listeners
           pushService.addNotificationReceivedListener((notification) => {
-            console.log('Notification received:', notification);
+            logger.info('Notification received', { tag: 'Push', data: notification });
           });
 
           pushService.addNotificationResponseReceivedListener((response) => {
-            console.log('Notification tapped:', response);
+            logger.info('Notification tapped', { tag: 'Push', data: response });
             // Handle navigation based on notification data
             const data = response.notification.request.content.data;
             // Navigate to appropriate screen based on notification type
@@ -89,7 +90,7 @@ export default function App() {
         }
       }
     } catch (error) {
-      console.error('Error initializing app:', error);
+      logger.error('Error initializing app', { tag: 'App', data: error });
       setIsAuthenticated(false);
     } finally {
       setIsLoading(false);

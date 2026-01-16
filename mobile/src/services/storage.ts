@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
+import { logger } from '../utils/logger';
 
 class StorageService {
   // Secure storage (for sensitive data like tokens, passwords)
@@ -7,7 +8,7 @@ class StorageService {
     try {
       await SecureStore.setItemAsync(key, value);
     } catch (error) {
-      console.error(`Error setting secure item ${key}:`, error);
+      logger.error(`Error setting secure item ${key}`, error);
       throw error;
     }
   }
@@ -16,7 +17,7 @@ class StorageService {
     try {
       return await SecureStore.getItemAsync(key);
     } catch (error) {
-      console.error(`Error getting secure item ${key}:`, error);
+      logger.error(`Error getting secure item ${key}`, error);
       return null;
     }
   }
@@ -25,7 +26,7 @@ class StorageService {
     try {
       await SecureStore.deleteItemAsync(key);
     } catch (error) {
-      console.error(`Error deleting secure item ${key}:`, error);
+      logger.error(`Error deleting secure item ${key}`, error);
       throw error;
     }
   }
@@ -36,7 +37,7 @@ class StorageService {
       const jsonValue = JSON.stringify(value);
       await AsyncStorage.setItem(key, jsonValue);
     } catch (error) {
-      console.error(`Error setting item ${key}:`, error);
+      logger.error(`Error setting item ${key}`, error);
       throw error;
     }
   }
@@ -46,7 +47,7 @@ class StorageService {
       const jsonValue = await AsyncStorage.getItem(key);
       return jsonValue != null ? JSON.parse(jsonValue) : null;
     } catch (error) {
-      console.error(`Error getting item ${key}:`, error);
+      logger.error(`Error getting item ${key}`, error);
       return null;
     }
   }
@@ -55,7 +56,7 @@ class StorageService {
     try {
       await AsyncStorage.removeItem(key);
     } catch (error) {
-      console.error(`Error deleting item ${key}:`, error);
+      logger.error(`Error deleting item ${key}`, error);
       throw error;
     }
   }
@@ -64,7 +65,7 @@ class StorageService {
     try {
       await AsyncStorage.clear();
     } catch (error) {
-      console.error('Error clearing storage:', error);
+      logger.error('Error clearing storage', error);
       throw error;
     }
   }
@@ -73,7 +74,7 @@ class StorageService {
     try {
       return await AsyncStorage.getAllKeys();
     } catch (error) {
-      console.error('Error getting all keys:', error);
+      logger.error('Error getting all keys', error);
       return [];
     }
   }
@@ -96,7 +97,7 @@ class StorageService {
 
       return result;
     } catch (error) {
-      console.error('Error in multiGet:', error);
+      logger.error('Error in multiGet', error);
       return {};
     }
   }
@@ -110,7 +111,7 @@ class StorageService {
       ]);
       await AsyncStorage.multiSet(jsonPairs);
     } catch (error) {
-      console.error('Error in multiSet:', error);
+      logger.error('Error in multiSet', error);
       throw error;
     }
   }
@@ -120,7 +121,7 @@ class StorageService {
     try {
       await AsyncStorage.multiRemove(keys);
     } catch (error) {
-      console.error('Error in multiRemove:', error);
+      logger.error('Error in multiRemove', error);
       throw error;
     }
   }

@@ -1,12 +1,14 @@
 // Push Notification Service - Stubbed version (expo-notifications removed temporarily)
 // TODO: Re-enable when Firebase is configured properly
 
+import { logger } from '../utils/logger';
+
 class PushNotificationService {
   private expoPushToken: string | null = null;
 
   // Register for push notifications - stubbed
   async registerForPushNotifications(): Promise<string | null> {
-    console.log('Push notifications disabled - Firebase not configured');
+    logger.debug('Push notifications disabled - Firebase not configured');
     return null;
   }
 
@@ -22,18 +24,18 @@ class PushNotificationService {
     data?: any,
     triggerSeconds: number = 0
   ): Promise<string> {
-    console.log('Local notification (stubbed):', title, body);
+    logger.debug('Local notification (stubbed):', title, body);
     return 'stub-notification-id';
   }
 
   // Cancel a scheduled notification - stubbed
   async cancelScheduledNotification(notificationId: string): Promise<void> {
-    console.log('Cancel notification (stubbed):', notificationId);
+    logger.debug('Cancel notification (stubbed):', notificationId);
   }
 
   // Cancel all scheduled notifications - stubbed
   async cancelAllScheduledNotifications(): Promise<void> {
-    console.log('Cancel all notifications (stubbed)');
+    logger.debug('Cancel all notifications (stubbed)');
   }
 
   // Get badge count - stubbed
@@ -43,12 +45,12 @@ class PushNotificationService {
 
   // Set badge count - stubbed
   async setBadgeCount(count: number): Promise<void> {
-    console.log('Set badge count (stubbed):', count);
+    logger.debug('Set badge count (stubbed):', count);
   }
 
   // Clear badge count - stubbed
   async clearBadgeCount(): Promise<void> {
-    console.log('Clear badge count (stubbed)');
+    logger.debug('Clear badge count (stubbed)');
   }
 
   // Add notification received listener - stubbed
@@ -66,7 +68,7 @@ class PushNotificationService {
 
   // Send notification to backend - stubbed
   async registerDeviceToken(token: string, userId: string): Promise<void> {
-    console.log('Register device token (stubbed):', token, userId);
+    logger.debug('Register device token (stubbed):', token, userId);
   }
 
   // Create notification for trade execution - stubbed
@@ -76,12 +78,12 @@ class PushNotificationService {
     amount: number,
     price: number
   ): Promise<void> {
-    console.log('Trade notification (stubbed):', symbol, side, amount, price);
+    logger.debug('Trade notification (stubbed):', symbol, side, amount, price);
   }
 
   // Create notification for bot alert - stubbed
   async notifyBotAlert(botName: string, message: string, data?: any): Promise<void> {
-    console.log('Bot alert notification (stubbed):', botName, message);
+    logger.debug('Bot alert notification (stubbed):', botName, message);
   }
 
   // Create notification for price alert - stubbed
@@ -90,7 +92,7 @@ class PushNotificationService {
     targetPrice: number,
     currentPrice: number
   ): Promise<void> {
-    console.log('Price alert notification (stubbed):', symbol, targetPrice, currentPrice);
+    logger.debug('Price alert notification (stubbed):', symbol, targetPrice, currentPrice);
   }
 
   // Get all scheduled notifications - stubbed
@@ -100,17 +102,17 @@ class PushNotificationService {
 
   // Dismiss all notifications - stubbed
   async dismissAllNotifications(): Promise<void> {
-    console.log('Dismiss all notifications (stubbed)');
+    logger.debug('Dismiss all notifications (stubbed)');
   }
 
   // Dismiss a specific notification - stubbed
   async dismissNotification(notificationId: string): Promise<void> {
-    console.log('Dismiss notification (stubbed):', notificationId);
+    logger.debug('Dismiss notification (stubbed):', notificationId);
   }
 
   // Update notification preferences - stubbed
   async updateNotificationPreferences(preferences: Record<string, boolean>): Promise<void> {
-    console.log('Update preferences (stubbed):', preferences);
+    logger.debug('Update preferences (stubbed):', preferences);
   }
 
   // Get notification preferences - stubbed

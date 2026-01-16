@@ -1,44 +1,69 @@
-import axios, { AxiosInstance, AxiosError } from 'axios';
-import Constants from 'expo-constants';
+import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from 'axios';
 import * as SecureStore from 'expo-secure-store';
-
-const API_URL = Constants.expoConfig?.extra?.apiUrl || 'https://time-backend-hosting.fly.dev/api/v1';
+import { config } from '../config';
+import { logger } from '../utils/logger';
+import { getSecurityHeaders } from '../utils/security';
 
 class ApiService {
   private client: AxiosInstance;
 
   constructor() {
     this.client = axios.create({
-      baseURL: API_URL,
-      timeout: 30000,
+      baseURL: config.apiUrl,
+      timeout: config.apiTimeout,
       headers: {
         'Content-Type': 'application/json',
+        ...getSecurityHeaders(),
       },
     });
 
-    // Request interceptor to add auth token
+    logger.api(`Initialized with base URL: ${config.apiUrl}`);
+
+    // Request interceptor to add auth token and security headers
     this.client.interceptors.request.use(
-      async (config) => {
+      async (requestConfig: InternalAxiosRequestConfig) => {
         const token = await SecureStore.getItemAsync('auth_token');
         if (token) {
-          config.headers.Authorization = `Bearer ${token}`;
+          requestConfig.headers.Authorization = `Bearer ${token}`;
         }
-        return config;
+
+        // Add request timestamp for debugging
+        (requestConfig as any).metadata = { startTime: Date.now() };
+
+        return requestConfig;
       },
       (error) => {
+        logger.error('Request interceptor error', { tag: 'API', data: error });
         return Promise.reject(error);
       }
     );
 
-    // Response interceptor for error handling
+    // Response interceptor for error handling and logging
     this.client.interceptors.response.use(
-      (response) => response,
+      (response) => {
+        // Log successful requests in dev mode
+        const duration = Date.now() - ((response.config as any).metadata?.startTime || Date.now());
+        logger.api(`${response.config.method?.toUpperCase()} ${response.config.url} - ${response.status} (${duration}ms)`);
+        return response;
+      },
       async (error: AxiosError) => {
+        const duration = Date.now() - ((error.config as any)?.metadata?.startTime || Date.now());
+
         if (error.response?.status === 401) {
           // Token expired or invalid
+          logger.warn('Authentication failed - clearing token', { tag: 'API' });
           await SecureStore.deleteItemAsync('auth_token');
           // Trigger logout/redirect to login
+        } else if (error.response?.status === 403) {
+          logger.warn('Access forbidden', { tag: 'API' });
+        } else if (error.response?.status === 429) {
+          logger.warn('Rate limited - too many requests', { tag: 'API' });
+        } else if (error.response?.status && error.response.status >= 500) {
+          logger.error(`Server error: ${error.response.status}`, { tag: 'API' });
         }
+
+        logger.api(`${error.config?.method?.toUpperCase()} ${error.config?.url} - ${error.response?.status || 'NETWORK_ERROR'} (${duration}ms)`);
+
         return Promise.reject(error);
       }
     );

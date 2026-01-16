@@ -19,6 +19,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import { formatDistanceToNow } from 'date-fns';
 import { api } from '../hooks/useApi';
+import { logger } from '../utils/logger';
 
 interface TradeDetail {
   id: string;
@@ -128,7 +129,7 @@ export default function TradeDetailScreen({ route, navigation }: any) {
         title: 'Trade Details',
       });
     } catch (error) {
-      console.error('Error sharing:', error);
+      logger.error('Error sharing trade', { tag: 'Trade', data: error });
     }
   };
 
