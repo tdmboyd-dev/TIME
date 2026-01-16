@@ -761,9 +761,9 @@ router.post('/password/change', authMiddleware, async (req: Request, res: Respon
     const newPasswordHash = await bcrypt.hash(newPassword, SALT_ROUNDS);
     await userRepository.update(user.id, { passwordHash: newPasswordHash } as any);
 
-    // Invalidate all sessions except current
-    const currentToken = (req as any).token;
-    await databaseManager.cacheDelete(`session:*`); // In production, be more selective
+    // Invalidate only this user's sessions (not all sessions platform-wide)
+    // SECURITY FIX: Changed from session:* which deleted ALL users' sessions
+    await databaseManager.cacheDelete(`session:${user.id}:*`);
 
     // Recreate current session
     await createSession(user.id, user.email, user.role, true, req);

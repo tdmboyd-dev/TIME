@@ -427,22 +427,37 @@ export class DatabaseConnectionManager extends EventEmitter {
 
       console.log(`[DatabaseManager] Connecting to Redis: ${this.config.redis.host}:${this.config.redis.port}`);
 
-      // Create client with no auto-reconnect to avoid spam when DB is unavailable
+      // Create client with exponential backoff reconnection strategy
       this.redisClient = createClient({
         url: redisUrl,
         socket: {
-          reconnectStrategy: false, // Disable auto-reconnect
+          // PERFORMANCE FIX: Enable reconnection with exponential backoff
+          reconnectStrategy: (retries: number) => {
+            if (retries > 10) {
+              console.warn('[DatabaseManager] Redis max reconnection attempts reached, falling back to in-memory');
+              return false; // Stop trying after 10 attempts
+            }
+            // Exponential backoff: 100ms, 200ms, 400ms, 800ms... up to 30s max
+            const delay = Math.min(Math.pow(2, retries) * 100, 30000);
+            console.log(`[DatabaseManager] Redis reconnecting in ${delay}ms (attempt ${retries + 1}/10)`);
+            return delay;
+          },
           connectTimeout: 5000,
         },
       });
 
-      // Only log first error, then fall back silently
-      let errorLogged = false;
+      // Log errors but don't spam
+      let errorCount = 0;
       this.redisClient.on('error', (err) => {
-        if (!errorLogged) {
-          console.warn('[DatabaseManager] Redis error, using in-memory cache');
-          errorLogged = true;
+        errorCount++;
+        if (errorCount <= 3) {
+          console.warn(`[DatabaseManager] Redis error #${errorCount}:`, err.message);
         }
+      });
+
+      // Log reconnection events
+      this.redisClient.on('reconnecting', () => {
+        console.log('[DatabaseManager] Redis reconnecting...');
       });
 
       await this.redisClient.connect();

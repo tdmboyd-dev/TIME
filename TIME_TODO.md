@@ -1,607 +1,492 @@
 # TIME BEYOND US - PRODUCTION TODO
 
 ---
-## 🚨 CRITICAL PRODUCTION AUDIT (Jan 15, 2026) 🚨
+## 🚨🚨🚨 COMPREHENSIVE PRODUCTION AUDIT (Jan 16, 2026) 🚨🚨🚨
 ---
 
-### State Persistence Issues (DATA LOSS RISKS) ✅ FIXED v74.15.0-v74.18.0
-- [x] **Settings page**: Broker credentials now backed up to localStorage + backend
-- [x] **Trade page**: Orders persist to localStorage, synced on load
-- [x] **Bots page**: Bot state persisted to localStorage + backend sync
-- [x] **Portfolio page**: localStorage backup implemented
-- [x] **Strategies page**: Fixed to show real data or empty state (no fake)
+### AUDIT SUMMARY
 
-### Fake/Simulated Features - PRODUCTION READY ✅ FIXED v74.16.0-v74.18.0
-- [x] **LiveChart.tsx**: Now fetches real OHLCV data from /api/charts/candles
-- [x] **autonomous_capital_agent.ts**: simulateExecution replaced with real BrokerManager calls
-- [x] **universal_bot_engine.ts**: 30% random replaced with real AI signal analysis
-- [ ] **capital_conductor.ts:700**: Fund transfers simulated - NO REAL MONEY MOVEMENT
-- [x] **Leaderboard.tsx**: Fixed API response mapping, shows real data
-- [x] **CommunityChat.tsx**: Shows "Coming Soon" instead of fake messages
-- [ ] **Achievements.tsx**: Hardcoded badges - NOT REAL ACHIEVEMENTS
-
-### Real Features (WORKING IN PRODUCTION)
-- [x] Broker API integrations (Alpaca, Binance, Kraken, OANDA)
-- [x] Real market data (Finnhub, CoinGecko)
-- [x] Real portfolio aggregation from connected brokers
-- [x] Bot management infrastructure
-- [x] Backtesting engine with real historical data
-- [x] User authentication with JWT + CSRF protection
-
-### PRIORITY FIXES FOR PRODUCTION-READY STATUS
-1. **HIGHEST**: Remove simulateExecution(), connect autonomous agent to real brokers
-2. **HIGH**: Add localStorage persistence for orders, settings, bot state
-3. **HIGH**: Replace Math.random() charts with real OHLCV data from brokers
-4. **MEDIUM**: Implement real opportunity detection based on technical indicators
-5. **MEDIUM**: Add order status tracking and broker reconciliation
-6. **LOW**: Replace mock social features with real user data
+| Category | Critical | High | Medium | Low |
+|----------|----------|------|--------|-----|
+| Security - Authentication | 3 | 4 | 6 | 1 |
+| Security - API Routes | 2 | 5 | 4 | 0 |
+| Security - Secrets Exposure | 5 | 8 | 3 | 0 |
+| Database | 2 | 4 | 3 | 0 |
+| TypeScript Errors | 0 | 1 | 0 | 0 |
+| Dependencies | 1 | 2 | 0 | 9 |
+| Mobile App | 2 | 4 | 10 | 2 |
+| **TOTAL** | **15** | **28** | **26** | **12** |
 
 ---
 
-## CRITICAL FIXES NEEDED
+## 🔴🔴🔴 CRITICAL - IMMEDIATE ACTION REQUIRED 🔴🔴🔴
 
-### 1. CSRF Token Fix ✅ FULLY FIXED & VERIFIED (Jan 13, 2026)
-- [x] Frontend CSRF token handling fixed (`frontend/src/lib/api.ts`)
-- [x] Login, Register, Admin-Login pages now properly fetch and include CSRF tokens
-- [x] Frontend deployed to Vercel: https://timebeyondus.com
-- [x] Backend CSRF endpoint tested and working: `/api/v1/csrf-token`
-- [x] Security verified: Requests without CSRF token are properly rejected
-- [x] Security verified: Requests with CSRF token are properly processed
+### 1. EXPOSED PRODUCTION SECRETS IN .env FILE (CRITICAL)
+**Status:** ⚠️ REQUIRES IMMEDIATE CREDENTIAL ROTATION
+**Location:** `C:\Users\Timeb\OneDrive\TIME\.env`
 
-### 2. Backend TypeScript Build Errors ✅ FIXED & DEPLOYED (Jan 13, 2026)
-**All critical runtime errors fixed:**
-- [x] `../database/client` - Created Prisma compatibility layer
-- [x] `../middleware/auth` - Created auth middleware module
-- [x] Stripe API version - Updated to "2025-02-24.acacia"
-- [x] InMemoryCollection - Added `sort`, `updateMany`, `insertMany`, `matchedCount` methods
-- [x] Logger backtest property - Added `backtest` to loggers
-- [x] Stripe service - Made fail-graceful when STRIPE_SECRET_KEY not set
-- [x] Dockerfile.fly - Fixed to allow build despite type warnings
+**30+ Production API Keys Exposed:**
+- [ ] **MongoDB URI** (Line 16): Full connection string with password exposed
+- [ ] **Binance LIVE API Key/Secret** (Lines 54-55): Real trading credentials
+- [ ] **Alpaca LIVE API Key/Secret** (Lines 66-67): Real trading credentials (NOT paper)
+- [ ] **OANDA LIVE API Key** (Line 74): Real forex trading credentials
+- [ ] **Kraken API Key/Secret** (Lines 59-60): Real crypto trading credentials
+- [ ] **OpenAI API Key** (Line 119): `sk-proj-...` exposed
+- [ ] **GitHub Token** (Line 133): `ghp_...` exposed
+- [ ] **Google OAuth Secret** (Line 154): OAuth credentials exposed
+- [ ] **GitHub OAuth Secret** (Line 158): OAuth credentials exposed
+- [ ] **Resend API Key** (Line 168): Email service credentials
+- [ ] **Telegram Bot Token** (Line 185): Bot credentials exposed
+- [ ] **Discord Webhook URL** (Line 182): Webhook credentials exposed
+- [ ] **Redis Auth Token** (Line 23): Cache credentials exposed
+- [ ] **Upstash Redis Token** (Line 20): Cache credentials exposed
 
-**Status:** Backend deployed and running at https://time-backend-hosting.fly.dev
-**Note:** Type warnings remain but don't block runtime (noEmitOnError: false)
+**TRADING_MODE=live IS ENABLED (Line 71)** - Real money at risk!
 
-### 3. iOS App Store Status 📱
-- **STATUS: RE-SUBMITTED - PENDING APPLE REVIEW**
-- App Name: TIME APEX (TIME BEYOND US)
-- Apple ID: 6757105143
-- Build #13, Version 1.0.0
-- Original Submission: Dec 27, 2025
-- Re-submitted: Jan 13, 2026
-- Apple review typically takes 24-48 hours
-- **NOT YET VISIBLE** on App Store until Apple approves
-
----
-
-## Mobile App Builds
-- [x] Create mobile app assets from SVGs
-- [x] Android build complete - AAB: https://expo.dev/artifacts/eas/6yzb9upXsWQNwFtHSE2fmZ.aab
-- [x] iOS credentials configured (cert, provisioning, push key, ASC API key)
-- [x] **iOS SUBMITTED TO APP STORE!** - App Name: TIME APEX
-  - Build #13, Version 1.0.0
-  - Apple ID: 6757105143
-  - TestFlight: https://appstoreconnect.apple.com/apps/6757105143/testflight/ios
-  - All capabilities: Push, Sign in with Apple, NFC, Siri, HealthKit, Apple Pay
-- [x] Complete App Store screenshots and metadata
-- [x] Fix App Privacy (removed NSUserTrackingUsageDescription conflict)
-- [x] Submit for App Review - PENDING APPLE REVIEW
-- [ ] **ANDROID SUBMISSION** - Do later
-  - Guide: mobile/GOOGLE_PLAY_SUBMISSION_GUIDE.md
-  - AAB file: mobile/application-2d09f050-0f4c-4307-ad9d-d07ffbd8a741.aab
-  - Need to complete Step 4+ in Google Play Console
-
-## iOS App Store Updates (After Jan 1st 2026)
-- [ ] Update PREMIUM tier description to "unlimited capital" (currently shows $100K)
-- [ ] Change App Store icon to TIME letter logo (same as sidebar logo)
-- [ ] Update app description with unlimited capital for PREMIUM tier
-
-## Master Admin Feature Control Panel ✅ COMPLETE
-- [x] Build admin UI for feature flag management (/admin/features)
-- [x] Create feature flags database table
-- [x] API endpoints for toggling features
-- [x] Real-time feature flag sync to mobile/web
-- [x] Feature flag caching system
-
-## Auto-Announcement System ✅ COMPLETE
-- [x] Announcement creation on feature enable
-- [x] Push notification broadcast
-- [x] In-app announcement banner
-- [x] Email notification option
-- [x] Announcement history/archive
-
-## User Segment Targeting ✅ COMPLETE
-- [x] User segments database (premium, free, beta, etc.)
-- [x] Segment-based feature rollout
-- [x] Percentage-based gradual rollout
-- [x] Geographic targeting (by_country)
-- [x] Device-based targeting
-
-## A/B Testing Framework
-- [ ] Experiment creation UI
-- [ ] Variant assignment logic
-- [ ] Analytics tracking per variant
-- [ ] Statistical significance calculator
-- [ ] Winner selection and full rollout
-
-## iOS Capabilities Implementation ✅ UPDATED in app.json
-- [x] Push Notifications - trade alerts, price alerts, bot signals
-- [x] Associated Domains - deep linking configured
-- [x] Sign In with Apple - authentication option
-- [x] In-App Purchases - premium subscriptions (merchant ID configured)
-- [x] Data Protection - secure financial data
-- [x] Time Sensitive Notifications - urgent alerts
-- [x] iCloud - sync settings across devices
-- [ ] App Groups - widget support, extensions (needs additional setup)
-- [x] Siri - Hey Siri show my portfolio
-- [ ] Wallet - trading cards/passes (needs additional setup)
-- [x] NFC Tag Reading - hardware wallet integration
-- [x] HealthKit - stress tracking during trading
-- [ ] WeatherKit - market sentiment correlation (needs API key)
-- [ ] Maps - find brokers/ATMs (needs implementation)
-- [ ] FinanceKit - finance data access (needs additional setup)
-
-## Security
-- [x] Remove exposed passwords from batch files (GitGuardian incident fixed)
-- [x] Add batch files to .gitignore
-- [x] CSRF token protection properly implemented (Jan 13, 2026)
-- [ ] Revoke old app-specific passwords in Apple ID settings
-
-## Apple Developer Setup (for full capabilities)
-- [ ] Apple Pay Payment Processing Certificate (for accepting payments)
-- [ ] Apple Pay Merchant Identity Certificate (for web payments)
-- [ ] Register merchant domains for Apple Pay on web
-- [ ] Configure Push Notification certificates if needed
-
-## Mobile Web Bug Fix
-- [x] Fix "application error: a client-side exception has occurred" on mobile browsers
-  - v71.0.0 already deployed fix for mobile Chrome
-  - If still seeing error, force refresh (pull down on mobile or Ctrl+Shift+R)
+**IMMEDIATE ACTIONS:**
+1. [ ] Rotate ALL exposed API keys immediately
+2. [ ] Revoke GitHub token (check .env line 133)
+3. [ ] Regenerate MongoDB password
+4. [ ] Regenerate all OAuth secrets
+5. [ ] Set TRADING_MODE=paper until audit complete
+6. [ ] Move all secrets to Fly.io secrets: `flyctl secrets set KEY=value`
 
 ---
 
-## PRODUCTION AUDIT FINDINGS (Jan 13, 2026)
+### 2. HARDCODED JWT SECRET FALLBACKS (CRITICAL)
+**Status:** ⚠️ AUTHENTICATION BYPASS POSSIBLE
 
-### Deployment Status
-| Component | Status | URL |
-|-----------|--------|-----|
-| Frontend | ✅ LIVE | https://timebeyondus.com |
-| Backend | ✅ LIVE | https://time-backend-hosting.fly.dev |
-| iOS App | ⏳ PENDING REVIEW | App Store Connect |
-| Android App | 📦 BUILT | Not submitted yet |
+**File:** `src/backend/middleware/auth.ts` (Line 18)
+```typescript
+const JWT_SECRET = process.env.JWT_SECRET || 'time-jwt-secret-change-in-production';
+```
 
-### Backend Health
-- 1 of 2 Fly.io machines healthy (version 112)
-- Failed machine (version 114) was stopped
-- Previous working deployment still serving traffic
+**File:** `src/backend/services/sms_auth_service.ts` (Lines 101-105)
+```typescript
+const secret = process.env.JWT_SECRET || 'time-beyond-us-secret';
+```
 
-### Frontend Changes Deployed
-- CSRF token fetch on page load
-- CSRF token included in all POST/PUT/DELETE requests
-- Updated: login, register, admin-login pages
+**Impact:** If JWT_SECRET env var is not set, attackers can forge valid tokens.
 
-### Recommended Priority Actions
-1. **IMMEDIATE**: Monitor Apple review status for iOS app approval
-2. **HIGH**: Fix InMemoryCollection interface to add missing MongoDB methods
-3. **HIGH**: Update Stripe API version to 2025-02-24.acacia
-4. **MEDIUM**: Create missing module stubs (database/client, middleware/auth)
-5. **MEDIUM**: Complete Android Play Store submission
+**Fix:**
+- [ ] Remove ALL hardcoded JWT secret fallbacks
+- [ ] Make JWT_SECRET required - throw error if not set
+- [ ] Generate cryptographically secure 256-bit secret
 
 ---
 
-## COMPREHENSIVE SYSTEM AUDIT (Jan 13, 2026)
+### 3. ADMIN MFA VERIFICATION DISABLED (CRITICAL)
+**Status:** ⚠️ ADMIN ACCOUNTS VULNERABLE
 
-### 🔴 CRITICAL: Authentication & Cookie Issues
+**File:** `src/backend/security/admin_auth.ts` (Lines 187-194)
+```typescript
+const mfaSecret = user.mfaSecret || user.settings?.mfaSecret;
+if (mfaSecret) {
+    // TODO: Verify TOTP code
+    // const valid = speakeasy.totp.verify({ secret: mfaSecret, encoding: 'base32', token: mfaCode });
+    // if (!valid) return { success: false, error: 'Invalid MFA code' };
+}
+```
 
-**Root Cause of Login "Stuck Loading":**
+**Impact:** Admin accounts with MFA enabled bypass MFA verification completely.
 
-1. **Cross-Origin Cookie Problem** (CRITICAL)
-   - [ ] Backend at `time-backend-hosting.fly.dev` cannot set cookies for frontend domain `timebeyondus.com`
-   - [ ] Cookie `domain: '.timebeyondus.com'` in backend auth won't work - browsers block cross-domain cookie setting
-   - [ ] `SameSite: 'lax'` blocks cookies on cross-origin POST requests (login is POST from different domain)
-   - **FIX**: Frontend must set cookies manually after receiving token from API response
-
-2. **Cookie Security Configuration** (`src/backend/routes/auth.ts`)
-   - [ ] Change `SameSite: 'lax'` to `SameSite: 'none'` for cross-origin (requires `Secure: true`)
-   - [ ] Remove `domain: '.timebeyondus.com'` - let browser default to request origin
-   - [ ] Ensure all auth cookies use `Secure: true` in production
-
-3. **Session Management Issues**
-   - [ ] JWT tokens have no revocation mechanism
-   - [ ] No refresh token rotation implemented
-   - [ ] Session duration of 7 days is too long without refresh
-   - [ ] No device/session tracking for security
-
-4. **Open Redirect Vulnerability** (`login/page.tsx`)
-   - [ ] `redirect` query param not validated - can redirect to malicious sites
-   - [ ] Add URL validation to only allow same-origin redirects
-
-5. **Password Security**
-   - [ ] bcrypt rounds = 10 is acceptable but could be 12 for better security
-   - [ ] No password complexity requirements enforced
-   - [ ] No account lockout after failed attempts
-
-6. **Token Security**
-   - [ ] JWT secret fallback to hardcoded value if env not set
-   - [ ] Admin tokens use same secret as user tokens
-   - [ ] No token binding to IP/user-agent
+**Fix:**
+- [ ] Uncomment and implement TOTP verification
+- [ ] Test MFA flow end-to-end
 
 ---
 
-### 🔴 CRITICAL: WebSocket/Socket.IO Issues
+### 4. UNAUTHENTICATED PAYMENT CREATION (CRITICAL)
+**Status:** ⚠️ PAYMENT FRAUD POSSIBLE
 
-**Files with Socket.IO implementations (DUPLICATE IMPLEMENTATIONS):**
-- `src/backend/websocket/SocketServer.ts` (main implementation)
-- `src/backend/websocket/index.ts` (wrapper)
-- `src/backend/services/realtime.ts` (duplicate implementation!)
+**File:** `src/backend/routes/subscription-payments.ts` (Lines 86-130)
+- POST `/payment/create` has NO authentication middleware
+- userId/userEmail passed in request body without verification
+- Anyone can create payments for any user
 
-1. **CORS Configuration** (CRITICAL)
-   - [ ] `SocketServer.ts` line 29: CORS hardcoded to `http://localhost:3000` only
-   - [ ] Production frontend `https://timebeyondus.com` NOT in CORS allowed origins
-   - [ ] Need to add all production domains to CORS
-
-2. **Duplicate Socket.IO Implementations**
-   - [ ] `realtime.ts` creates its own Socket.IO server (line 97)
-   - [ ] `SocketServer.ts` also creates Socket.IO server
-   - [ ] These conflict and cause connection issues
-   - [ ] Consolidate to single implementation
-
-3. **Missing Heartbeat/Keep-alive**
-   - [ ] No ping/pong heartbeat configured
-   - [ ] Connections may drop silently
-   - [ ] Add `pingInterval` and `pingTimeout` options
-
-4. **Authentication Issues**
-   - [ ] WebSocket auth middleware exists but not enforced on all events
-   - [ ] Token validation in `authenticateSocket` has fallback to allow unauthenticated
-   - [ ] Admin-only events not properly protected
-
-5. **Reconnection Handling**
-   - [ ] Client reconnects create new subscriptions without cleaning old ones
-   - [ ] No server-side session restoration on reconnect
-   - [ ] Memory leak from orphaned subscriptions
-
-6. **Frontend WebSocket Hook** (`useWebSocket.ts`)
-   - [x] Fixed: Now uses production URL in production
-   - [ ] No exponential backoff for reconnection attempts
-   - [ ] No max reconnection limit enforcement
+**Fix:**
+- [ ] Add `authMiddleware` to payment creation endpoint
+- [ ] Verify userId matches authenticated user
+- [ ] Add rate limiting
 
 ---
 
-### 🔴 CRITICAL: CORS Configuration Issues
+### 5. iOS/ANDROID CERTIFICATES IN REPOSITORY (CRITICAL)
+**Status:** ⚠️ APP SIGNING COMPROMISED
 
-**Files with CORS configuration:**
-- `src/backend/index.ts` (main app CORS)
-- `src/backend/websocket/SocketServer.ts` (Socket.IO CORS)
-- `src/backend/services/realtime.ts` (duplicate Socket.IO CORS)
+**Files committed to repository:**
+- [ ] `mobile/AuthKey_79B4P2SWK8.p8` - iOS App Store Connect Auth Key
+- [ ] `mobile/AuthKey_ASC_Y3N7H63S44.p8` - iOS App Store Connect Auth Key
+- [ ] `mobile/ios_distribution.key` - iOS Distribution Key
+- [ ] `mobile/distribution.pem` - Distribution Certificate
+- [ ] `mobile/DistributionCertificate.p12` - PKCS#12 Certificate
+- [ ] `mobile/TIME.mobileprovision` - Provisioning Profile
 
-1. **Inconsistent CORS Origins**
-   - [ ] Main app: Uses `CORS_ORIGINS` env var correctly
-   - [ ] Socket.IO in SocketServer: Hardcoded `localhost:3000` only
-   - [ ] Socket.IO in realtime.ts: Also hardcoded
-   - [ ] All three need same production origins
-
-2. **Missing CORS Headers**
-   - [ ] `Access-Control-Allow-Credentials` may not be set correctly
-   - [ ] Preflight requests (OPTIONS) handling inconsistent
-   - [ ] Some routes may bypass CORS middleware
-
-3. **Recommended CORS Configuration:**
-   ```
-   origins: [
-     'http://localhost:3000',
-     'http://localhost:3001',
-     'https://timebeyondus.com',
-     'https://www.timebeyondus.com',
-     'https://time-frontend.vercel.app'
-   ]
-   credentials: true
-   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS']
-   ```
+**Fix:**
+- [ ] Remove ALL certificate files from repository
+- [ ] Add to .gitignore: `*.p8`, `*.p12`, `*.pem`, `*.cer`, `*.mobileprovision`
+- [ ] Revoke and regenerate all iOS certificates
+- [ ] Use EAS secrets for credential storage
 
 ---
 
-### 🟠 HIGH: API Endpoint Security Issues
+### 6. CSRF DISABLED FOR AUTH ENDPOINTS (HIGH)
+**Status:** ⚠️ CSRF ATTACKS POSSIBLE
 
-1. **Missing Authentication on Routes**
-   - [ ] `/api/v1/marketplace/*` routes missing auth middleware
-   - [ ] `/api/v1/bots/marketplace` publicly accessible
-   - [ ] `/api/v1/strategies/explore` publicly accessible
-   - [ ] Health check and CSRF endpoints correctly public
+**File:** `src/backend/security/csrf_middleware.ts` (Lines 68-73)
+```typescript
+if (req.path.includes('/auth/login') || req.path.includes('/auth/register') || req.path.includes('/auth/admin')) {
+    logger.info('Skipping CSRF for auth endpoint', { path: req.path });
+    return next();
+}
+```
 
-2. **Rate Limiting Issues**
-   - [ ] Rate limiter configured but not applied to all routes
-   - [ ] Login/register should have stricter rate limits
-   - [ ] API endpoints should have tiered rate limits by subscription
-
-3. **Input Validation**
-   - [ ] Many endpoints don't validate request body schema
-   - [ ] SQL/NoSQL injection possible on search endpoints
-   - [ ] File upload endpoints don't validate file types
-
-4. **Error Handling**
-   - [ ] Stack traces exposed in production error responses
-   - [ ] Sensitive data may leak in error messages
-   - [ ] Inconsistent error response format
-
-5. **Missing Security Headers**
-   - [ ] `X-Content-Type-Options: nosniff` not set
-   - [ ] `X-Frame-Options: DENY` not set
-   - [ ] `Content-Security-Policy` not configured
-   - [ ] `Strict-Transport-Security` not set
+**Fix:**
+- [ ] Re-enable CSRF for auth endpoints
+- [ ] Use SameSite=Strict cookies as alternative
+- [ ] Implement double-submit cookie pattern
 
 ---
 
-### 🟠 HIGH: Environment Variable Issues
+### 7. N+1 DATABASE QUERIES (HIGH - PERFORMANCE)
+**Status:** ⚠️ SEVERE PERFORMANCE DEGRADATION
 
-**Missing Required Variables (41 total):**
+**File:** `src/backend/database/repositories.ts`
 
-1. **Authentication:**
-   - [ ] `JWT_SECRET` - Falls back to hardcoded value (SECURITY RISK)
-   - [ ] `JWT_EXPIRES_IN` - Uses default 7d
-   - [ ] `COOKIE_DOMAIN` - Should be empty for cross-origin
+**Affected Methods:**
+- Line 249-251: `findByBot()` - Loads ALL trades, filters in memory
+- Line 254-256: `findByStrategy()` - Loads ALL trades, filters in memory
+- Line 300-310: `getPerformanceStats()` - Loads ALL closed trades
+- Line 339-346: `findByBot()` (SignalRepository) - Loads ALL signals
+- Line 462-467: `markAllRead()` - Individual update per notification
+- Line 630-677: ACATS methods - Load ALL transfers
 
-2. **Database:**
-   - [ ] `MONGODB_URI` - Required for production
-   - [ ] `MONGODB_DB_NAME` - Falls back to 'time'
-   - [ ] `REDIS_URL` - Falls back to disabled caching
-
-3. **External Services:**
-   - [ ] `STRIPE_SECRET_KEY` - Payments disabled without it
-   - [ ] `STRIPE_WEBHOOK_SECRET` - Webhooks won't verify
-   - [ ] `OPENAI_API_KEY` - AI features disabled
-   - [ ] `ANTHROPIC_API_KEY` - AI features disabled
-   - [ ] `ALPACA_API_KEY` - Trading disabled
-   - [ ] `ALPACA_API_SECRET` - Trading disabled
-   - [ ] `POLYGON_API_KEY` - Market data disabled
-   - [ ] `FINNHUB_API_KEY` - Market data disabled
-
-4. **Email:**
-   - [ ] `SENDGRID_API_KEY` - Email disabled
-   - [ ] `EMAIL_FROM` - No sender configured
-
-5. **Monitoring:**
-   - [ ] `SENTRY_DSN` - Error tracking disabled
-   - [ ] `DATADOG_API_KEY` - Metrics disabled
-
-**Exposed Secrets in .env (19 found):**
-- [ ] Audit all `.env` files for committed secrets
-- [ ] Rotate any exposed API keys
-- [ ] Use Fly.io secrets for production values
+**Fix:**
+- [ ] Refactor to use proper MongoDB queries with filters
+- [ ] Add database indexes for frequently queried fields
+- [ ] Use `findMany({ botId })` instead of `findMany({}).filter()`
 
 ---
 
-### 🟠 HIGH: Database & Redis Issues
+### 8. FAKE TRANSACTION IMPLEMENTATION (HIGH)
+**Status:** ⚠️ NO ACID GUARANTEES
 
-1. **MongoDB Connection**
-   - [ ] No automatic reconnection on disconnect
-   - [ ] Connection timeout not configured
-   - [ ] No read preference for replicas
-   - [ ] Indexes not created on startup
+**File:** `src/backend/database/client.ts` (Lines 128-134)
+```typescript
+$transaction: async (operations: any[]) => {
+    const results = [];
+    for (const op of operations) {
+        results.push(await op);  // Sequential, NOT atomic
+    }
+    return results;
+},
+```
 
-2. **Redis Connection**
-   - [ ] Graceful fallback to in-memory but no recovery
-   - [ ] No connection pooling configured
-   - [ ] No cluster support for scaling
+**Impact:** Operations fail midway without rollback, causing data corruption.
 
-3. **In-Memory Fallback Issues**
-   - [ ] Data lost on server restart
-   - [ ] Memory grows unbounded without cleanup
-   - [ ] Missing MongoDB methods cause runtime errors:
-     - `sort()` - Added but incomplete
-     - `updateMany()` - Added but incomplete
-     - `insertMany()` - Added but incomplete
-     - `aggregate()` - Missing
-     - `bulkWrite()` - Missing
-
-4. **Database Indexes Needed:**
-   ```
-   users: { email: 1 } unique
-   users: { createdAt: -1 }
-   trades: { botId: 1, timestamp: -1 }
-   trades: { userId: 1, status: 1 }
-   notifications: { userId: 1, read: 1, createdAt: -1 }
-   ```
+**Fix:**
+- [ ] Implement proper MongoDB session-based transactions
+- [ ] Use `startSession()` and `withTransaction()`
 
 ---
 
-### 🟠 HIGH: TypeScript Compilation Errors (100+ errors)
+### 9. NPM VULNERABILITIES (HIGH)
 
-**Grouped by Category:**
+**Backend (`npm audit`):**
+- 1 high severity: `qs` - DoS via memory exhaustion
+- 9 low severity: `diff` chain affecting jest/ts-node
 
-1. **Import Path Errors (30+)**
-   - [ ] `../database/client` - Module not found
-   - [ ] `../middleware/auth` - Module not found
-   - [ ] Circular dependency issues
-   - [ ] Missing type declarations
+**Frontend (`npm audit`):**
+- 2 high severity: `h3` request smuggling, `hono` JWT algorithm confusion
 
-2. **Type Mismatch Errors (25+)**
-   - [ ] Stripe API version outdated
-   - [ ] MongoDB method signatures incorrect
-   - [ ] Event handler type mismatches
-
-3. **Missing Property Errors (20+)**
-   - [ ] InMemoryCollection missing methods
-   - [ ] Logger missing properties
-   - [ ] Request/Response type extensions
-
-4. **Strict Mode Errors (25+)**
-   - [ ] Implicit any types
-   - [ ] Possibly undefined access
-   - [ ] Missing return types
-
-**Current Workaround:** `noEmitOnError: false` allows build despite errors
-**Proper Fix:** Resolve all type errors for type safety
+**Fix:**
+- [ ] Run `npm audit fix` in root directory
+- [ ] Run `npm audit fix` in frontend directory
+- [ ] Update vulnerable packages to patched versions
 
 ---
 
-### 🟡 MEDIUM: Frontend Issues
+### 10. TYPESCRIPT COMPILATION ERRORS (80+ errors)
 
-1. **AuthProvider Improvements**
-   - [x] Fixed: try-catch-finally ensures isLoading set to false
-   - [ ] Add timeout for auth check (currently can hang indefinitely)
-   - [ ] Add retry logic for failed auth checks
-   - [ ] Show better error messages to user
+**Major Categories:**
+- OrderRequest type mismatch in brokers (missing `quantity` property)
+- ExecutionLog missing `requestedQuantity` property
+- Axios headers type incompatibility
+- InMemoryCollection/MongoDB type mismatches
+- Unknown type access on error objects
 
-2. **Web3Provider Issues**
-   - [x] Fixed: MetaMask error suppression added
-   - [ ] WalletConnect project ID using demo value
-   - [ ] Should gracefully handle Web3 loading failure
-   - [ ] Mobile wallet deep linking not configured
+**Key Files:**
+- `src/backend/autonomous/autonomous_capital_agent.ts`: Lines 1016, 1064, 1071
+- `src/backend/backtesting/trade_logger.ts`: Lines 236, 241, 258, 263, 288, 293
+- `src/backend/brokers/index.ts`: Lines 28, 31, 39, 62, 72, 75, 126
+- `src/backend/email/mailgun_service.ts`: 15+ type errors
+- `src/backend/email/sendgrid_service.ts`: 8+ type errors
 
-3. **API Client Issues**
-   - [x] Fixed: CSRF token fetching implemented
-   - [ ] No request retry on network failure
-   - [ ] No request queuing/deduplication
-   - [ ] Token refresh not automatic on 401
-
-4. **Performance Issues**
-   - [ ] No code splitting for routes
-   - [ ] Large bundle size from Web3 libraries
-   - [ ] Images not optimized
-   - [ ] No service worker for offline support
+**Current Workaround:** `noEmitOnError: false` in tsconfig
+**Proper Fix:**
+- [ ] Fix all type errors for compile-time safety
+- [ ] Enable strict TypeScript checking
 
 ---
 
-### 🟡 MEDIUM: Mobile App Issues
+## 🟠 HIGH PRIORITY ISSUES
 
-1. **Expo Configuration**
-   - [ ] EAS build uses development client in production
-   - [ ] App signing credentials need rotation
-   - [ ] Push notification certificates expire
+### 11. Multiple Socket.IO Server Instances (HIGH)
+**Files creating Socket.IO servers:**
+1. `src/backend/websocket/realtime_service.ts` (Lines 238-246)
+2. `src/backend/websocket/realtime_hub.ts` (Lines 148-159)
+3. `src/backend/services/socket_service.ts` (Lines 31-47)
 
-2. **Deep Linking**
-   - [ ] Universal links not configured in Apple
-   - [ ] Android App Links not verified
-   - [ ] Scheme-based links as fallback
+**Issue:** Three separate Socket.IO servers with identical CORS configs conflict.
 
----
-
-### ✅ FIXES ALREADY APPLIED (This Session)
-
-1. **Frontend Cookie Setting** (`login/page.tsx`)
-   - Token now set as cookie on frontend domain after API response
-   - Bypasses cross-origin cookie restriction
-
-2. **AuthProvider Error Handling** (`AuthProvider.tsx`) - v74.3.0
-   - Added try-catch-finally to ensure loading state always updates
-   - Prevents infinite loading on error
-   - **NEW**: Initialize user from localStorage immediately on mount
-   - **NEW**: Skip loading state if user already stored
-   - **NEW**: 10-second timeout for /auth/me to prevent hangs
-   - **NEW**: Verify session in background without blocking UI
-
-3. **WebSocket Production URL** (`useWebSocket.ts`)
-   - Now detects production environment
-   - Uses `https://time-backend-hosting.fly.dev` instead of localhost
-
-4. **MetaMask Error Suppression** (`Web3Provider.tsx`)
-   - Filters MetaMask disconnect errors from console
-   - Logs as debug instead of error
-
-5. **Socket.IO CORS** (`realtime_service.ts`, `socket_service.ts`, `realtime_hub.ts`)
-   - Added production domains to all Socket.IO CORS configs
-   - `timebeyondus.com`, `www.timebeyondus.com`, `time-frontend.vercel.app`
-
-6. **Main App CORS** (`config/index.ts`)
-   - Added all production domains to Express CORS config
-
-7. **Auth Cookie Settings** (`routes/auth.ts`)
-   - Changed `SameSite` to `none` for cross-origin compatibility
-   - Removed `domain` setting to allow browser default
-
-8. **Open Redirect Prevention** (`login/page.tsx`)
-   - All redirect parameters now validated
-   - Blocks `javascript:`, `data:`, and `//` URLs
+**Fix:**
+- [ ] Consolidate to single Socket.IO server with namespaces
+- [ ] Remove duplicate implementations
 
 ---
 
-### 📋 FIX PRIORITY ORDER
+### 12. Missing Authentication on API Routes (HIGH)
+**Unauthenticated endpoints:**
+- [ ] `POST /api/v1/public/keys/generate` - API key generation (public_api.ts:152)
+- [ ] `POST /api/v1/bots/register-absorbed` - Bulk bot registration (bots.ts:67)
+- [ ] `POST /api/v1/bots/bulk-register` - Bulk bot registration (bots.ts:125)
+- [ ] `POST /api/v1/payment/create` - Payment creation (subscription-payments.ts:86)
 
-**Phase 1: Critical (Login Not Working)**
-1. [ ] Fix Socket.IO CORS to allow production domains
-2. [ ] Consolidate duplicate Socket.IO implementations
-3. [ ] Verify frontend cookie setting works in production
-4. [ ] Test complete login flow end-to-end
-
-**Phase 2: Security**
-1. [ ] Add JWT_SECRET to Fly.io secrets
-2. [ ] Fix open redirect vulnerability
-3. [ ] Add rate limiting to auth endpoints
-4. [ ] Add security headers to all responses
-
-**Phase 3: Reliability**
-1. [ ] Add MongoDB auto-reconnect
-2. [ ] Add Redis connection recovery
-3. [ ] Fix TypeScript errors properly
-4. [ ] Add database indexes
-
-**Phase 4: Performance**
-1. [ ] Implement code splitting
-2. [ ] Optimize Web3 bundle loading
-3. [ ] Add request caching/deduplication
-4. [ ] Enable service worker
+**Fix:**
+- [ ] Add `authMiddleware` to all sensitive endpoints
+- [ ] Verify ownership on all resource modifications
 
 ---
 
-### v74.10.0 - v74.12.0 Fixes (Jan 15, 2026)
+### 13. Missing Input Validation (HIGH)
+**Affected endpoints:**
+- `PUT /api/v1/users/profile` - No length/format validation
+- `POST /api/v1/campaigns/create` - No XSS prevention
+- `POST /api/v1/marketing/promo` - No discount/date validation
+- Search endpoints - Potential NoSQL injection
 
-**v74.10.0 - AuthProvider Redirect Loop Fixed**
-- Removed background API verification that was resetting user state to null
-- When user is loaded from localStorage, no longer re-verifies with /auth/me
-- Changed useEffect dependency from [isHydrated, user] to [isHydrated]
-- This fixes the issue where user was logged out 3 seconds after login
-
-**v74.11.0 - JWT Secret Security Fix**
-- auth.ts: JWT_SECRET now required in production, throws error if not set
-- sms_auth_service.ts: JWT_SECRET only uses dev fallback in non-production
-- Removed hardcoded JWT secret fallbacks for security
-
-**v74.12.0 - Sidebar Navigation + Admin Access Fix**
-- Sidebar: Changed from router.push() to window.location.href for reliable navigation
-- Admin Portal Layout: Now checks localStorage user role before API call
-- Admin Portal Layout: Falls back to localStorage if API fails
-- Fixes sidebar buttons not being clickable
-- Fixes "Access Denied - Admin privileges required" error after login
+**Fix:**
+- [ ] Add Zod schema validation to all endpoints
+- [ ] Sanitize all user input before storage
+- [ ] Validate query parameters
 
 ---
 
-### v74.15.0 - v74.18.0 Fixes (Jan 15, 2026)
+### 14. In-Memory Rate Limiting (HIGH)
+**Issue:** Rate limiting uses in-memory Map, not distributed.
 
-**v74.15.0 - State Persistence Fixes**
-- Trade page: localStorage persistence for orders and favorites
-- Settings page: localStorage backup for broker connections
-- Bots page: localStorage fallback if API fails
+**File:** `src/backend/middleware/csrf_middleware.ts` (Lines 121-169)
 
-**v74.16.0 - PRODUCTION READY: Remove All Fake/Simulated Features**
-- LiveChart.tsx: Replaced Math.random() with real OHLCV API calls
-- autonomous_capital_agent.ts: Replaced simulateExecution() with real broker calls
-- universal_bot_engine.ts: Replaced 30% random with real AI signal analysis
-- Leaderboard.tsx: Fixed API response mapping for real data
+**Impact:** Rate limits reset on server restart, bypass possible across servers.
 
-**v74.17.0 - Remove ALL Fake Data Across Platform**
-- trade/page.tsx: Real price updates from API
-- timebeunus/page.tsx: Real AI signals API integration
-- charts/page.tsx: Removed fake real-time tick updates
-- strategies/page.tsx: Real performance metrics
-- execution/page.tsx: Real fills/slippage from API
-- chat/page.tsx: Shows "Coming Soon" instead of fake messages
-- invest/page.tsx: Added simulation disclaimer
-- retirement/page.tsx: Real projections with proper calculations
-- leaderboard/page.tsx: Fixed API data mapping
-
-**v74.18.0 - MAXIMUM ASSETS + Real-Time WebSocket**
-- Trade page: 400+ tradable assets (was 15)
-  - 200+ stocks (full S&P 500 coverage)
-  - 100+ cryptocurrencies (top 100 by market cap)
-  - 60+ forex pairs (majors, minors, exotics)
-  - 100+ ETFs (index, sector, thematic, leveraged)
-  - Crypto futures (perpetuals)
-  - Commodities (metals, energy, agriculture)
-  - Options underlying symbols
-- Markets page: 100+ assets expanded
-- Invest page: 100+ tokenized assets expanded
-- WebSocket integration for real-time price updates (no more polling)
+**Fix:**
+- [ ] Implement Redis-based rate limiting
+- [ ] Use `rate-limiter-flexible` with Redis store
 
 ---
 
-Last Updated: 2026-01-15
+### 15. Password Change Logs Out All Users (HIGH)
+**File:** `src/backend/routes/auth.ts` (Line 619)
+```typescript
+await databaseManager.cacheDelete(`session:*`);
+```
+
+**Impact:** Wildcard delete logs out ALL platform users when ANY user changes password.
+
+**Fix:**
+- [ ] Delete only user's own sessions: `session:${userId}:*`
+
+---
+
+### 16. Missing Database Indexes (HIGH)
+**Required indexes:**
+```javascript
+// Users
+{ email: 1 } // unique
+{ status: 1, createdAt: -1 }
+{ role: 1 }
+
+// Trades
+{ 'attribution.botId': 1, entryTime: -1 }
+{ userId: 1, status: 1 }
+{ symbol: 1, status: 1, entryTime: -1 }
+
+// Bots
+{ ownerId: 1 }
+{ status: 1, 'performance.sharpeRatio': -1 }
+
+// Signals
+{ botId: 1, timestamp: -1 }
+{ executed: 1 }
+
+// Notifications
+{ userId: 1, read: 1, createdAt: -1 }
+```
+
+**Fix:**
+- [ ] Add index creation script
+- [ ] Run on MongoDB production deployment
+
+---
+
+### 17. Redis Reconnection Disabled (HIGH)
+**File:** `src/backend/database/connection.ts` (Lines 430-437)
+```typescript
+socket: {
+    reconnectStrategy: false,  // DISABLED
+    connectTimeout: 5000,
+},
+```
+
+**Impact:** Redis disconnection causes permanent cache failure.
+
+**Fix:**
+- [ ] Enable reconnection with exponential backoff
+- [ ] Add health check and alerting
+
+---
+
+### 18. Mobile App Hardcoded URLs (HIGH)
+**Files with hardcoded production URLs:**
+- `mobile/src/screens/LoginScreen.tsx` (Line 20)
+- `mobile/app.json` (Lines 131-132)
+- `mobile/src/services/api.ts` (Line 5)
+- `mobile/src/services/websocket.ts` (Line 10)
+
+**Fix:**
+- [ ] Move all URLs to environment variables
+- [ ] Use Expo Constants for runtime configuration
+
+---
+
+### 19. No SSL Certificate Pinning (HIGH)
+**Impact:** Vulnerable to Man-in-the-Middle attacks.
+
+**Fix:**
+- [ ] Implement certificate pinning in mobile app
+- [ ] Pin to backend server certificate
+
+---
+
+## 🟡 MEDIUM PRIORITY ISSUES
+
+### 20. Inconsistent Password Requirements
+- Registration requires 12 chars + complexity
+- Password change only requires 8 chars
+
+**Fix:** Standardize to 12 chars with complexity everywhere
+
+### 21. Session Duration Too Long
+- JWT expires in 7 days with no refresh rotation
+
+**Fix:** Implement refresh token rotation, reduce JWT lifetime to 15 min
+
+### 22. Open Redirect Host Validation
+- Allowed hosts hardcoded in source code
+
+**Fix:** Make configurable via environment variable
+
+### 23. Password Breach Check Fails Open
+- If HIBP API is down, breached passwords are accepted
+
+**Fix:** Queue validation for retry, warn user
+
+### 24. Error Messages Leak Implementation Details
+- Stack traces exposed in production responses
+
+**Fix:** Implement generic error handler, log details server-side only
+
+### 25. Debug Logging in Production Mobile App
+- 32+ console.log statements in service files
+
+**Fix:** Remove or guard with `__DEV__` check
+
+### 26. WebSocket No Rate Limiting
+- No connection/message rate limits on Socket.IO
+
+**Fix:** Implement per-connection rate limiting
+
+### 27. In-Memory Cache Memory Leak
+- Expired keys never cleaned up if not accessed
+
+**Fix:** Add periodic cleanup job
+
+### 28. Frontend Bundle Size
+- Web3 libraries increase bundle significantly
+
+**Fix:** Code split Web3 providers, lazy load
+
+### 29. No Service Worker
+- No offline support or caching
+
+**Fix:** Implement service worker for PWA functionality
+
+### 30. Android App Not Submitted
+- Built but not on Play Store
+
+**Fix:** Complete Play Store submission process
+
+---
+
+## ✅ PREVIOUSLY FIXED (v74.15.0 - v74.20.0)
+
+- [x] State persistence (localStorage backup)
+- [x] Real OHLCV data (no more Math.random charts)
+- [x] Real broker integration (no more simulateExecution)
+- [x] CSRF token protection
+- [x] WebSocket production URLs
+- [x] Socket.IO CORS (production domains added)
+- [x] AuthProvider error handling
+- [x] Leaderboard real data mapping
+- [x] 400+ tradable assets
+
+---
+
+## 📋 FIX PRIORITY ORDER
+
+### Phase 1: CRITICAL SECURITY (Do Today)
+1. [ ] Rotate ALL exposed API keys
+2. [ ] Remove hardcoded JWT secret fallbacks
+3. [ ] Enable admin MFA verification
+4. [ ] Add auth to payment endpoint
+5. [ ] Remove certificates from repository
+6. [ ] Set TRADING_MODE=paper
+
+### Phase 2: HIGH SECURITY (This Week)
+1. [ ] Re-enable CSRF for auth endpoints
+2. [ ] Fix N+1 database queries
+3. [ ] Run npm audit fix
+4. [ ] Consolidate Socket.IO servers
+5. [ ] Add auth to unauthenticated routes
+6. [ ] Implement input validation
+
+### Phase 3: RELIABILITY (Next Week)
+1. [ ] Fix TypeScript compilation errors
+2. [ ] Add database indexes
+3. [ ] Enable Redis reconnection
+4. [ ] Implement proper transactions
+5. [ ] Fix rate limiting (use Redis)
+
+### Phase 4: PERFORMANCE/MOBILE (Next 2 Weeks)
+1. [ ] Certificate pinning in mobile
+2. [ ] Remove hardcoded URLs in mobile
+3. [ ] Code splitting for frontend
+4. [ ] Submit Android to Play Store
+
+---
+
+## DEPLOYMENT CHECKLIST
+
+Before next deployment, verify:
+- [ ] All secrets rotated and in Fly.io secrets
+- [ ] TRADING_MODE=paper or credentials verified
+- [ ] npm audit shows 0 high/critical vulnerabilities
+- [ ] TypeScript compiles without errors (strict mode)
+- [ ] All critical endpoints have authentication
+- [ ] Rate limiting works across server instances
+- [ ] Database indexes created
+
+---
+
+Last Updated: 2026-01-16
+Version: v74.21.0 (Security Audit)

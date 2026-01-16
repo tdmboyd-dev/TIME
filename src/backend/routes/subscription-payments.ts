@@ -11,6 +11,7 @@ import {
   getPaymentTransferSystem,
   PaymentType,
 } from '../payments/PaymentTransferSystem';
+import { authMiddleware } from './auth';
 
 const router = Router();
 
@@ -80,16 +81,25 @@ router.get('/fee-calculator', (req: Request, res: Response) => {
   }
 });
 
-// ============== USER PAYMENT ROUTES ==============
+// ============== USER PAYMENT ROUTES (AUTHENTICATED) ==============
 
 // POST /api/v1/subscription/payment/create - Create a new payment
-router.post('/payment/create', (req: Request, res: Response) => {
+// SECURITY: Requires authentication - user can only create payments for themselves
+router.post('/payment/create', authMiddleware, (req: Request, res: Response) => {
   try {
-    const { userId, userEmail, amount, type, description, metadata } = req.body;
+    // Use authenticated user's info, not from request body (prevents fraud)
+    const authenticatedUser = (req as any).user;
+    if (!authenticatedUser) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
 
-    if (!userId || !userEmail || !amount || !type) {
+    const { amount, type, description, metadata } = req.body;
+    const userId = authenticatedUser.id;
+    const userEmail = authenticatedUser.email;
+
+    if (!amount || !type) {
       return res.status(400).json({
-        error: 'Required fields: userId, userEmail, amount, type',
+        error: 'Required fields: amount, type',
       });
     }
 

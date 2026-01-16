@@ -909,6 +909,8 @@ export const indexes = {
   users: [
     { email: 1, unique: true },
     { lastActivity: -1 },
+    { status: 1, createdAt: -1 },  // AUDIT FIX: Added for user filtering
+    { role: 1 },                   // AUDIT FIX: Added for permission checks
   ],
   bots: [
     { status: 1, rating: -1 },
@@ -916,6 +918,9 @@ export const indexes = {
     { 'fingerprint.dnaHash': 1 },
     { isAbsorbed: 1 },
     { tags: 1 },
+    { ownerId: 1 },                // AUDIT FIX: Added for owner queries
+    { status: 1, 'performance.sharpeRatio': -1 },  // AUDIT FIX: Added for top performers
+    { downloads: -1 },             // AUDIT FIX: Added for ranking queries
   ],
   strategies: [
     { status: 1 },
@@ -928,6 +933,9 @@ export const indexes = {
     { 'attribution.strategyId': 1 },
     { symbol: 1, entryTime: -1 },
     { status: 1 },
+    { userId: 1, status: 1 },           // AUDIT FIX: Added for user+status queries
+    { 'attribution.botId': 1, entryTime: -1 },  // AUDIT FIX: Compound index for bot trades
+    { symbol: 1, status: 1, entryTime: -1 },    // AUDIT FIX: Added for filtered queries
   ],
   signals: [
     { botId: 1, timestamp: -1 },

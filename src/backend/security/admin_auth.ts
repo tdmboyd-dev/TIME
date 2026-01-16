@@ -235,13 +235,25 @@ export async function adminLogin(
         return { success: false, requiresMfa: true };
       }
 
-      // Verify MFA (simplified - would use actual TOTP verification)
-      // In production, use speakeasy or similar
+      // Verify MFA using TOTP
       const mfaSecret = user.mfaSecret || user.settings?.mfaSecret;
       if (mfaSecret) {
-        // TODO: Verify TOTP code
-        // const valid = speakeasy.totp.verify({ secret: mfaSecret, encoding: 'base32', token: mfaCode });
-        // if (!valid) return { success: false, error: 'Invalid MFA code' };
+        try {
+          const speakeasy = await import('speakeasy');
+          const valid = speakeasy.default.totp.verify({
+            secret: mfaSecret,
+            encoding: 'base32',
+            token: mfaCode,
+            window: 1, // Allow 1 step before/after for clock drift
+          });
+          if (!valid) {
+            await auditLogRepository.log('admin', 'login_failed', { email, reason: 'invalid_mfa' }, { success: false });
+            return { success: false, error: 'Invalid MFA code' };
+          }
+        } catch (mfaError) {
+          logger.error('[AdminAuth] MFA verification error:', mfaError);
+          return { success: false, error: 'MFA verification failed' };
+        }
       }
     }
 

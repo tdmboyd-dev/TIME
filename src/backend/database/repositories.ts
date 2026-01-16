@@ -247,13 +247,13 @@ export class TradeRepository extends BaseRepository<TradeSchema> {
   }
 
   async findByBot(botId: string): Promise<TradeSchema[]> {
-    const trades = await this.findMany({} as any);
-    return trades.filter(t => t.attribution?.botId === botId);
+    // PERFORMANCE FIX: Query directly instead of loading all and filtering
+    return this.findMany({ 'attribution.botId': botId } as any);
   }
 
   async findByStrategy(strategyId: string): Promise<TradeSchema[]> {
-    const trades = await this.findMany({} as any);
-    return trades.filter(t => t.attribution?.strategyId === strategyId);
+    // PERFORMANCE FIX: Query directly instead of loading all and filtering
+    return this.findMany({ 'attribution.strategyId': strategyId } as any);
   }
 
   async findOpenTrades(): Promise<TradeSchema[]> {
@@ -283,10 +283,10 @@ export class TradeRepository extends BaseRepository<TradeSchema> {
   }
 
   async getRecentTrades(limit: number = 50): Promise<TradeSchema[]> {
-    const trades = await this.findMany({} as any);
-    return trades
-      .sort((a, b) => new Date(b.entryTime).getTime() - new Date(a.entryTime).getTime())
-      .slice(0, limit);
+    // PERFORMANCE FIX: Use database sorting and limit
+    const collection = this.getCollection();
+    const cursor = collection.find({}).sort({ entryTime: -1 }).limit(limit);
+    return cursor.toArray() as Promise<TradeSchema[]>;
   }
 
   async getPerformanceStats(filter: { botId?: string; strategyId?: string; symbol?: string } = {}): Promise<{
@@ -297,17 +297,19 @@ export class TradeRepository extends BaseRepository<TradeSchema> {
     avgWin: number;
     avgLoss: number;
   }> {
-    let trades = await this.findMany({ status: 'closed' } as any);
-
+    // PERFORMANCE FIX: Build query filter instead of loading all and filtering
+    const query: any = { status: 'closed' };
     if (filter.botId) {
-      trades = trades.filter(t => t.attribution?.botId === filter.botId);
+      query['attribution.botId'] = filter.botId;
     }
     if (filter.strategyId) {
-      trades = trades.filter(t => t.attribution?.strategyId === filter.strategyId);
+      query['attribution.strategyId'] = filter.strategyId;
     }
     if (filter.symbol) {
-      trades = trades.filter(t => t.symbol === filter.symbol);
+      query.symbol = filter.symbol;
     }
+
+    const trades = await this.findMany(query);
 
     const wins = trades.filter(t => (t.pnl || 0) > 0);
     const losses = trades.filter(t => (t.pnl || 0) < 0);
@@ -336,15 +338,19 @@ export class SignalRepository extends BaseRepository<SignalSchema> {
   }
 
   async findByBot(botId: string, limit?: number): Promise<SignalSchema[]> {
-    const signals = await this.findMany({ botId } as any);
-    const sorted = signals.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-    return limit ? sorted.slice(0, limit) : sorted;
+    // PERFORMANCE FIX: Use database sorting and limit
+    const collection = this.getCollection();
+    const cursor = collection.find({ botId }).sort({ timestamp: -1 });
+    if (limit) cursor.limit(limit);
+    return cursor.toArray() as Promise<SignalSchema[]>;
   }
 
   async findBySymbol(symbol: string, limit?: number): Promise<SignalSchema[]> {
-    const signals = await this.findMany({ symbol } as any);
-    const sorted = signals.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-    return limit ? sorted.slice(0, limit) : sorted;
+    // PERFORMANCE FIX: Use database sorting and limit
+    const collection = this.getCollection();
+    const cursor = collection.find({ symbol }).sort({ timestamp: -1 });
+    if (limit) cursor.limit(limit);
+    return cursor.toArray() as Promise<SignalSchema[]>;
   }
 
   async findUnexecuted(): Promise<SignalSchema[]> {
@@ -364,10 +370,9 @@ export class SignalRepository extends BaseRepository<SignalSchema> {
   }
 
   async getRecentSignals(limit: number = 100): Promise<SignalSchema[]> {
-    const signals = await this.findMany({} as any);
-    return signals
-      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-      .slice(0, limit);
+    // PERFORMANCE FIX: Use database sorting and limit
+    const collection = this.getCollection();
+    return collection.find({}).sort({ timestamp: -1 }).limit(limit).toArray() as Promise<SignalSchema[]>;
   }
 }
 
@@ -397,10 +402,9 @@ export class LearningEventRepository extends BaseRepository<LearningEventSchema>
   }
 
   async getRecentInsights(limit: number = 50): Promise<LearningEventSchema[]> {
-    const events = await this.findMany({ processed: true } as any);
-    return events
-      .sort((a, b) => new Date(b.processedAt || b.timestamp).getTime() - new Date(a.processedAt || a.timestamp).getTime())
-      .slice(0, limit);
+    // PERFORMANCE FIX: Use database sorting and limit
+    const collection = this.getCollection();
+    return collection.find({ processed: true }).sort({ processedAt: -1, timestamp: -1 }).limit(limit).toArray() as Promise<LearningEventSchema[]>;
   }
 }
 

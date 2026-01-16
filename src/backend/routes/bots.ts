@@ -62,9 +62,10 @@ router.get('/public', (req: Request, res: Response) => {
 
 /**
  * POST /bots/register-absorbed
- * Register an absorbed bot from external source (no auth for bulk import)
+ * Register an absorbed bot from external source
+ * SECURITY: Requires admin authentication for bot registration
  */
-router.post('/register-absorbed', async (req: Request, res: Response) => {
+router.post('/register-absorbed', adminMiddleware, async (req: Request, res: Response) => {
   try {
     const botData = req.body;
 
@@ -121,8 +122,9 @@ router.post('/register-absorbed', async (req: Request, res: Response) => {
 /**
  * POST /bots/bulk-register
  * Bulk register multiple absorbed bots
+ * SECURITY: Requires admin authentication for bulk bot registration
  */
-router.post('/bulk-register', async (req: Request, res: Response) => {
+router.post('/bulk-register', adminMiddleware, async (req: Request, res: Response) => {
   try {
     const { bots } = req.body;
 
