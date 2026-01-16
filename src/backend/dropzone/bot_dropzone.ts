@@ -234,7 +234,7 @@ export class BotDropZone extends EventEmitter {
       processedFolder: './dropzone/processed',
       rejectedFolder: './dropzone/rejected',
       reportsFolder: './dropzone/reports',
-      minRating: 4.0,
+      minRating: 3.5, // Lower threshold to absorb more quality bots (3.5 = good, 4.0 = excellent)
       autoAbsorb: false, // Require manual approval by default
       scanInterval: 5000, // Check every 5 seconds
       maxFileSize: 10 * 1024 * 1024, // 10MB max

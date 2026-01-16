@@ -52,6 +52,9 @@ import { stockWatchers } from './watchers/stock_watchers';
 import { botDropZone } from './dropzone/bot_dropzone';
 import { githubBotFetcher } from './fetcher/github_bot_fetcher';
 
+// Unified Systems Integration - Connects ALL 84+ TIME systems
+import { initializeUnifiedSystems, getSystemStatus, eventBus } from './systems/unified_systems';
+
 // Bot Brain & Auto Perfect Bot Generator - Never-Before-Seen Inventions!
 import { botBrain } from './bots/bot_brain';
 import { autoPerfectBotGenerator } from './bots/auto_perfect_bot_generator';
@@ -195,6 +198,24 @@ async function initializeTIME(): Promise<void> {
 
   // Initialize TIME Governor (this initializes all components)
   await timeGovernor.initialize();
+
+  // ===============================================
+  // UNIFIED SYSTEMS - Connect ALL major systems
+  // ===============================================
+  log.info('Initializing Unified Systems Integration...');
+  try {
+    const unifiedResult = await initializeUnifiedSystems();
+    if (unifiedResult.success) {
+      log.info(`✅ Unified Systems online: ${unifiedResult.systemsOnline.join(', ')}`);
+    } else {
+      log.warn(`⚠️ Unified Systems partial: ${unifiedResult.systemsOnline.length}/8 online`);
+      if (unifiedResult.errors.length > 0) {
+        log.warn(`   Errors: ${unifiedResult.errors.join('; ')}`);
+      }
+    }
+  } catch (error: any) {
+    log.warn('Unified Systems initialization failed (non-critical)', { error: error.message });
+  }
 
   // ===============================================
   // REAL BROKER CONNECTIONS - FOR REAL TRADING
