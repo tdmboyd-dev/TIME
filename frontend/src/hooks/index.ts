@@ -8,6 +8,9 @@
  * - useWallet: Web3 wallet connection
  * - useBots: Bot management
  * - useSignals: Trading signals
+ * - usePortfolio: Portfolio positions and summary
+ * - useStrategies: Trading strategies
+ * - useLeaderboard: Trader rankings
  */
 
 export * from './useWebSocket';
@@ -16,3 +19,6 @@ export * from './useRealTimeData';
 export * from './useWallet';
 export * from './useBots';
 export * from './useSignals';
+export * from './usePortfolio';
+export * from './useStrategies';
+export * from './useLeaderboard';
