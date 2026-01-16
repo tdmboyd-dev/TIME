@@ -12,6 +12,7 @@
 
 import { Router, Request, Response, NextFunction } from 'express';
 import { logger } from '../utils/logger';
+import { authMiddleware } from './auth';
 
 const router = Router();
 
@@ -148,28 +149,38 @@ router.get('/info', (_req: Request, res: Response) => {
 /**
  * POST /api/public/keys/generate
  * Generate a new API key (requires user authentication)
+ * SECURITY: User must be authenticated - userId comes from session, not request body
  */
-router.post('/keys/generate', (req: Request, res: Response) => {
-  const { userId, tier = 'free' } = req.body;
+router.post('/keys/generate', authMiddleware, (req: Request, res: Response) => {
+  const user = (req as any).user;
+  const { tier = 'free' } = req.body;
 
-  if (!userId) {
-    return res.status(400).json({
-      error: 'Bad Request',
-      message: 'userId is required',
-    });
+  // SECURITY: Use authenticated user's ID, not from request body
+  const userId = user.id;
+
+  // Validate tier (only admin can create pro/enterprise keys)
+  let actualTier: 'free' | 'pro' | 'enterprise' = 'free';
+  if (tier === 'pro' || tier === 'enterprise') {
+    if (user.role !== 'admin' && user.role !== 'owner') {
+      return res.status(403).json({
+        error: 'Forbidden',
+        message: 'Only admins can create pro/enterprise API keys',
+      });
+    }
+    actualTier = tier;
   }
 
-  const apiKey = generateApiKey(userId, tier);
+  const apiKey = generateApiKey(userId, actualTier);
 
-  logger.info(`[PUBLIC API] Generated ${tier} API key for user ${userId}`);
+  logger.info(`[PUBLIC API] Generated ${actualTier} API key for user ${userId}`);
 
   const rateLimits: Record<string, number> = { free: 100, pro: 1000, enterprise: 10000 };
 
   res.json({
     success: true,
     apiKey,
-    tier,
-    rateLimit: rateLimits[tier],
+    tier: actualTier,
+    rateLimit: rateLimits[actualTier],
     message: 'Store this key securely. It will not be shown again.',
   });
 });

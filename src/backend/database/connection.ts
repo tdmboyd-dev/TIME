@@ -532,6 +532,47 @@ export class DatabaseConnectionManager extends EventEmitter {
   }
 
   /**
+   * Get MongoClient for transaction support
+   * Returns null if using mock/in-memory mode
+   */
+  getMongoClient(): MongoClient | null {
+    if (this.usingMock || !this.mongoClient) {
+      return null;
+    }
+    return this.mongoClient;
+  }
+
+  /**
+   * Execute operations within a MongoDB transaction
+   * Provides ACID guarantees when using real MongoDB
+   * Falls back to sequential execution for in-memory mock
+   *
+   * @param callback - Function receiving session that executes operations
+   * @returns Result of the callback
+   */
+  async withTransaction<T>(callback: (session: any) => Promise<T>): Promise<T> {
+    const client = this.getMongoClient();
+
+    // Fallback for mock mode - no transaction support
+    if (!client) {
+      console.warn('[DatabaseManager] Transaction requested but using mock mode - executing without ACID guarantees');
+      return callback(null);
+    }
+
+    // Real MongoDB transaction with session
+    const session = client.startSession();
+    try {
+      let result: T;
+      await session.withTransaction(async () => {
+        result = await callback(session);
+      });
+      return result!;
+    } finally {
+      await session.endSession();
+    }
+  }
+
+  /**
    * Cache get with fallback
    */
   async cacheGet<T>(key: string, fallback: () => Promise<T>, ttlSeconds: number = 300): Promise<T> {
