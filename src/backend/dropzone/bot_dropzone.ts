@@ -104,6 +104,8 @@ export interface DropZoneConfig {
   autoAbsorb: boolean;
   scanInterval: number; // ms
   maxFileSize: number; // bytes
+  scanSubdirectories: boolean; // Scan harvested repos in subdirectories
+  maxFilesPerScan: number; // Limit files per scan to avoid overwhelming
 }
 
 // ============================================================================
@@ -236,6 +238,8 @@ export class BotDropZone extends EventEmitter {
       autoAbsorb: false, // Require manual approval by default
       scanInterval: 5000, // Check every 5 seconds
       maxFileSize: 10 * 1024 * 1024, // 10MB max
+      scanSubdirectories: true, // Scan harvested repos
+      maxFilesPerScan: 10, // Process 10 files per scan cycle
     };
   }
 
@@ -315,46 +319,138 @@ export class BotDropZone extends EventEmitter {
       return;
     }
 
-    const files = fs.readdirSync(this.config.watchFolder);
+    // Collect all candidate files (including from subdirectories if enabled)
+    const candidateFiles = this.collectCandidateFiles(this.config.watchFolder, 0);
 
-    for (const filename of files) {
-      const filepath = path.join(this.config.watchFolder, filename);
-      const stats = fs.statSync(filepath);
+    // Process up to maxFilesPerScan files per cycle
+    let processedCount = 0;
 
-      // Skip directories
-      if (stats.isDirectory()) continue;
-
-      // Skip if already processing
-      const hash = this.getFileHash(filepath);
-      if (this.processingQueue.has(hash) || this.processedFiles.has(hash)) {
-        continue;
+    for (const { filepath, filename } of candidateFiles) {
+      if (processedCount >= this.config.maxFilesPerScan) {
+        break;
       }
 
-      // Check file size
-      if (stats.size > this.config.maxFileSize) {
-        console.log(`[BotDropZone] File too large: ${filename}`);
+      try {
+        const stats = fs.statSync(filepath);
+
+        // Skip if already processing
+        const hash = this.getFileHash(filepath);
+        if (this.processingQueue.has(hash) || this.processedFiles.has(hash)) {
+          continue;
+        }
+
+        // Check file size
+        if (stats.size > this.config.maxFileSize) {
+          continue;
+        }
+
+        // Only process bot-relevant files
+        const fileType = this.detectFileType(filename);
+        if (fileType === 'unknown') {
+          continue;
+        }
+
+        // Create dropped file entry
+        const droppedFile: DroppedFile = {
+          id: crypto.randomUUID(),
+          filename,
+          filepath,
+          fileType,
+          size: stats.size,
+          hash,
+          droppedAt: new Date(),
+          status: 'pending',
+        };
+
+        this.processingQueue.set(hash, droppedFile);
+        console.log(`[BotDropZone] New file detected: ${filename}`);
+        this.emit('file_detected', droppedFile);
+
+        // Process the file
+        this.processFile(droppedFile);
+        processedCount++;
+      } catch (error) {
+        // Skip files that can't be read
         continue;
       }
-
-      // Create dropped file entry
-      const droppedFile: DroppedFile = {
-        id: crypto.randomUUID(),
-        filename,
-        filepath,
-        fileType: this.detectFileType(filename),
-        size: stats.size,
-        hash,
-        droppedAt: new Date(),
-        status: 'pending',
-      };
-
-      this.processingQueue.set(hash, droppedFile);
-      console.log(`[BotDropZone] New file detected: ${filename}`);
-      this.emit('file_detected', droppedFile);
-
-      // Process the file
-      this.processFile(droppedFile);
     }
+  }
+
+  /**
+   * Recursively collect candidate bot files from directories
+   */
+  private collectCandidateFiles(dir: string, depth: number): Array<{ filepath: string; filename: string }> {
+    const results: Array<{ filepath: string; filename: string }> = [];
+    const maxDepth = 3; // Don't go too deep
+
+    if (depth > maxDepth) return results;
+
+    try {
+      const entries = fs.readdirSync(dir, { withFileTypes: true });
+
+      for (const entry of entries) {
+        const fullPath = path.join(dir, entry.name);
+
+        if (entry.isDirectory()) {
+          // Skip common non-bot directories
+          if (this.shouldSkipDirectory(entry.name)) {
+            continue;
+          }
+
+          // Recurse into subdirectories if enabled
+          if (this.config.scanSubdirectories) {
+            results.push(...this.collectCandidateFiles(fullPath, depth + 1));
+          }
+        } else if (entry.isFile()) {
+          // Only include files with bot-relevant extensions
+          if (this.isBotRelevantFile(entry.name)) {
+            results.push({ filepath: fullPath, filename: entry.name });
+          }
+        }
+      }
+    } catch (error) {
+      // Directory not readable
+    }
+
+    return results;
+  }
+
+  /**
+   * Check if directory should be skipped during scanning
+   */
+  private shouldSkipDirectory(name: string): boolean {
+    const skipDirs = [
+      'node_modules', '.git', '__pycache__', '.venv', 'venv',
+      'build', 'dist', '.next', 'coverage', '.idea', '.vscode',
+      'tests', 'test', 'docs', 'examples', '.github'
+    ];
+    return skipDirs.includes(name.toLowerCase()) || name.startsWith('.');
+  }
+
+  /**
+   * Check if file is a potential bot file worth analyzing
+   */
+  private isBotRelevantFile(filename: string): boolean {
+    const ext = path.extname(filename).toLowerCase();
+    const relevantExtensions = [
+      '.mq4', '.mq5', '.py', '.js', '.ts', '.pine', '.ex4', '.ex5',
+      '.mqh', '.pinescript'
+    ];
+
+    // Skip config/setup files
+    const skipPatterns = [
+      'setup.py', 'config.', 'settings.', '__init__', 'test_',
+      '.test.', '.spec.', 'package.json', 'tsconfig.', 'webpack.',
+      'babel.', 'jest.', 'eslint', 'prettier', 'vite.config',
+      'requirements.txt', 'Dockerfile', 'docker-compose'
+    ];
+
+    const lowerFilename = filename.toLowerCase();
+    if (skipPatterns.some(p => lowerFilename.includes(p))) {
+      return false;
+    }
+
+    return relevantExtensions.includes(ext);
   }
 
   // ==========================================================================

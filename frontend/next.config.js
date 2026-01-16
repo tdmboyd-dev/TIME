@@ -10,7 +10,7 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
 
-  // Suppress specific warnings
+  // Production optimizations
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production',
   },
@@ -19,6 +19,14 @@ const nextConfig = {
   experimental: {
     workerThreads: false,
     cpus: 1,
+    optimizePackageImports: ['lucide-react', 'date-fns', '@tanstack/react-query'],
+  },
+
+  // Modular imports for smaller bundles
+  modularizeImports: {
+    'lucide-react': {
+      transform: 'lucide-react/dist/esm/icons/{{kebabCase member}}',
+    },
   },
 
   async rewrites() {
