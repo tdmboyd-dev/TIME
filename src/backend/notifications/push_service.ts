@@ -143,7 +143,7 @@ async function getFCMAccessToken(): Promise<string | null> {
       throw new Error(`FCM token exchange failed: ${response.status}`);
     }
 
-    const data = await response.json();
+    const data = await response.json() as { access_token: string; expires_in: number };
     fcmAccessToken = data.access_token;
     fcmTokenExpiry = new Date(Date.now() + (data.expires_in - 60) * 1000);
 
@@ -232,11 +232,11 @@ async function sendFCMNotification(
     );
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
+      const errorData = await response.json().catch(() => ({})) as { error?: { message?: string } };
       throw new Error(errorData.error?.message || `FCM send failed: ${response.status}`);
     }
 
-    const result = await response.json();
+    const result = await response.json() as { name?: string };
     logger.info('FCM notification sent', { messageId: result.name });
     return { success: true, messageId: result.name };
   } catch (error: any) {

@@ -501,24 +501,26 @@ export class UniversalBotEngine extends EventEmitter {
    */
   private async analyzeMarketForOpportunity(bot: UniversalBot): Promise<Opportunity | null> {
     // Lazy import to avoid circular dependencies
-    const { AITradingSignals } = await import('../signals/ai_trading_signals');
-    const signalEngine = AITradingSignals.getInstance();
+    const { aiTradingSignals } = await import('../signals/ai_trading_signals');
+    const signalEngine = aiTradingSignals;
 
     // Get symbols to analyze based on bot type
     const symbols = this.getSymbolsForBot(bot);
     if (symbols.length === 0) return null;
 
+    // Determine asset class based on bot type
+    const assetClass = bot.type.includes('crypto') ? 'crypto' : 'equity';
+
     // Analyze each symbol for real opportunities
     for (const symbol of symbols) {
       try {
         // Get real-time signals from AI engine
-        const signal = await signalEngine.generateSignal(symbol, {
-          includeAnalysis: true,
-          timeframe: '15min',
-        });
+        const signal = await signalEngine.generateSignal(symbol, assetClass as any, '15m' as any);
 
-        // Only create opportunity if confidence is high enough (>70%)
-        if (signal && signal.confidence >= 0.70 && signal.action !== 'hold') {
+        // Only create opportunity if confidence is high enough (>70%) and signal is actionable
+        const signalAction = signal.signalType; // STRONG_BUY, BUY, HOLD, SELL, STRONG_SELL
+        const isActionable = signalAction !== 'HOLD'; // Uppercase per SignalType enum
+        if (signal && signal.confidence >= 70 && isActionable) {
           const templates = this.getOpportunityTemplates(bot);
           const relevantTemplate = templates.find(t =>
             t.data?.symbol === symbol || templates.length > 0
@@ -526,25 +528,29 @@ export class UniversalBotEngine extends EventEmitter {
 
           if (!relevantTemplate) continue;
 
+          const confidenceDecimal = signal.confidence / 100;
+          const reasoningText = Array.isArray(signal.reasoning) ? signal.reasoning.join('; ') : String(signal.reasoning || '');
+          const actionLabel = signalAction.replace('STRONG_', '').toLowerCase();
+
           return {
             id: uuidv4(),
             category: bot.category,
             type: bot.type,
-            title: `${signal.action.toUpperCase()} ${symbol} - ${(signal.confidence * 100).toFixed(0)}% Confidence`,
-            description: signal.reasoning || `AI detected ${signal.action} signal on ${symbol}`,
-            potentialValue: relevantTemplate.value * signal.confidence,
-            confidence: signal.confidence,
-            priority: signal.confidence > 0.85 ? 'high' : signal.confidence > 0.75 ? 'medium' : 'low',
+            title: `${signalAction} ${symbol} - ${signal.confidence.toFixed(0)}% Confidence`,
+            description: reasoningText || `AI detected ${actionLabel} signal on ${symbol}`,
+            potentialValue: relevantTemplate.value * confidenceDecimal,
+            confidence: confidenceDecimal,
+            priority: signal.confidence > 85 ? 'high' : signal.confidence > 75 ? 'medium' : 'low',
             timeToAct: 300, // 5 minute window
-            requiresAction: signal.action !== 'hold',
-            autoExecutable: signal.confidence >= 0.80,
+            requiresAction: isActionable,
+            autoExecutable: signal.confidence >= 80,
             data: {
               symbol,
-              action: signal.action,
-              price: signal.price,
-              targetPrice: signal.targetPrice,
-              stopLoss: signal.stopLoss,
-              indicators: signal.indicators,
+              action: actionLabel,
+              price: signal.currentPrice,
+              targetPrice: signal.riskManagement?.takeProfit1, // Use first take profit level
+              stopLoss: signal.riskManagement?.stopLoss,
+              indicators: signal.technicalIndicators,
             },
             foundBy: bot.id,
             foundAt: new Date(),

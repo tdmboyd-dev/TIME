@@ -883,7 +883,7 @@ export class VisualizationFormatter {
     statistics: Record<string, number>;
   } {
     return {
-      histogram: result.distribution,
+      histogram: result.distribution.map(d => ({ range: d.capitalRange, count: d.count })),
       statistics: {
         median: result.medianFinalCapital,
         mean: result.meanFinalCapital,

@@ -338,7 +338,7 @@ async function saveChatMessage(
         $inc: {
           messagesCount: 1,
         },
-      },
+      } as any,
       { upsert: true }
     );
   } catch (error) {

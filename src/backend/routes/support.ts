@@ -353,7 +353,7 @@ router.post('/ticket/:ticketNumber/message', authMiddleware, async (req: Request
           updatedAt: new Date(),
           status: 'waiting_response',
         },
-      }
+      } as any
     );
 
     if (result.matchedCount === 0) {
@@ -439,7 +439,7 @@ router.post('/faq/:faqId/vote', async (req: Request, res: Response) => {
       ? { $inc: { helpful_votes: 1 } }
       : { $inc: { unhelpful_votes: 1 } };
 
-    await faqs.updateOne({ _id: faqId }, update);
+    await faqs.updateOne({ _id: faqId } as any, update);
 
     res.json({
       success: true,
@@ -708,7 +708,7 @@ router.post('/admin/ticket/:ticketNumber/reply', authMiddleware, async (req: Req
           updatedAt: new Date(),
           status: 'waiting_response',
         },
-      }
+      } as any
     );
 
     if (result.matchedCount === 0) {

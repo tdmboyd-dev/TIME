@@ -374,13 +374,14 @@ router.get('/quick-quote/:symbol', async (req: Request, res: Response) => {
     }
 
     // Return minimal data for quick display
+    const quoteData = quote as any;
     res.json({
       success: true,
       data: {
         symbol: upperSymbol,
-        price: 'price' in quote ? quote.price : 0,
-        change: 'change' in quote ? quote.change : ('change24h' in quote ? quote.change24h : 0),
-        changePercent: 'changePercent' in quote ? quote.changePercent : ('changePercent24h' in quote ? quote.changePercent24h : 0),
+        price: quoteData.price || 0,
+        change: quoteData.change || quoteData.change24h || 0,
+        changePercent: quoteData.changePercent || quoteData.changePercent24h || 0,
         type: isCrypto ? 'crypto' : 'stock',
       },
     });

@@ -51,7 +51,7 @@ export abstract class BaseRepository<T extends { _id: string }> {
   }
 
   protected get collection(): CollectionLike {
-    return databaseManager.collection(this.collectionName) as CollectionLike;
+    return databaseManager.collection(this.collectionName) as unknown as CollectionLike;
   }
 
   async findById(id: string): Promise<T | null> {
@@ -284,7 +284,7 @@ export class TradeRepository extends BaseRepository<TradeSchema> {
 
   async getRecentTrades(limit: number = 50): Promise<TradeSchema[]> {
     // PERFORMANCE FIX: Use database sorting and limit
-    const collection = this.getCollection();
+    const collection = this.collection as any;
     const cursor = collection.find({}).sort({ entryTime: -1 }).limit(limit);
     return cursor.toArray() as Promise<TradeSchema[]>;
   }
@@ -339,7 +339,7 @@ export class SignalRepository extends BaseRepository<SignalSchema> {
 
   async findByBot(botId: string, limit?: number): Promise<SignalSchema[]> {
     // PERFORMANCE FIX: Use database sorting and limit
-    const collection = this.getCollection();
+    const collection = this.collection as any;
     const cursor = collection.find({ botId }).sort({ timestamp: -1 });
     if (limit) cursor.limit(limit);
     return cursor.toArray() as Promise<SignalSchema[]>;
@@ -347,7 +347,7 @@ export class SignalRepository extends BaseRepository<SignalSchema> {
 
   async findBySymbol(symbol: string, limit?: number): Promise<SignalSchema[]> {
     // PERFORMANCE FIX: Use database sorting and limit
-    const collection = this.getCollection();
+    const collection = this.collection as any;
     const cursor = collection.find({ symbol }).sort({ timestamp: -1 });
     if (limit) cursor.limit(limit);
     return cursor.toArray() as Promise<SignalSchema[]>;
@@ -371,7 +371,7 @@ export class SignalRepository extends BaseRepository<SignalSchema> {
 
   async getRecentSignals(limit: number = 100): Promise<SignalSchema[]> {
     // PERFORMANCE FIX: Use database sorting and limit
-    const collection = this.getCollection();
+    const collection = this.collection as any;
     return collection.find({}).sort({ timestamp: -1 }).limit(limit).toArray() as Promise<SignalSchema[]>;
   }
 }
@@ -403,7 +403,7 @@ export class LearningEventRepository extends BaseRepository<LearningEventSchema>
 
   async getRecentInsights(limit: number = 50): Promise<LearningEventSchema[]> {
     // PERFORMANCE FIX: Use database sorting and limit
-    const collection = this.getCollection();
+    const collection = this.collection as any;
     return collection.find({ processed: true }).sort({ processedAt: -1, timestamp: -1 }).limit(limit).toArray() as Promise<LearningEventSchema[]>;
   }
 }

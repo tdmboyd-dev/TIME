@@ -632,7 +632,7 @@ export class OptionsBacktestEngine {
       commission: this.config.commissionPerContract * Math.abs(position.quantity),
       slippage: slippage * Math.abs(position.quantity) * position.contract.multiplier,
       holdingPeriodHours: (date.getTime() - position.entryDate.getTime()) / (1000 * 60 * 60),
-      exitReason: reason,
+      exitReason: reason as any, // Options-specific exit reasons
       contract: position.contract,
       strategyType: 'single_leg',
       entryIV: volatility,

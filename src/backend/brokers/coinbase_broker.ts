@@ -9,7 +9,7 @@
  * - Advanced trading features
  */
 
-import axios, { AxiosInstance } from 'axios';
+import axios, { AxiosInstance, AxiosHeaders } from 'axios';
 import WebSocket from 'ws';
 import crypto from 'crypto';
 import {
@@ -125,17 +125,16 @@ export class CoinbaseBroker extends BrokerInterface {
 
       const signature = this.signRequest(timestamp, method, path, body);
 
-      config.headers = {
-        ...config.headers,
-        'CB-ACCESS-KEY': this.config.apiKey,
-        'CB-ACCESS-SIGN': signature,
-        'CB-ACCESS-TIMESTAMP': timestamp,
-        'CB-VERSION': '2023-11-15',
-        'Content-Type': 'application/json',
-      };
+      const headers = new AxiosHeaders(config.headers);
+      headers.set('CB-ACCESS-KEY', this.config.apiKey);
+      headers.set('CB-ACCESS-SIGN', signature);
+      headers.set('CB-ACCESS-TIMESTAMP', timestamp);
+      headers.set('CB-VERSION', '2023-11-15');
+      headers.set('Content-Type', 'application/json');
+      config.headers = headers;
 
       if (this.passphrase) {
-        config.headers['CB-ACCESS-PASSPHRASE'] = this.passphrase;
+        headers.set('CB-ACCESS-PASSPHRASE', this.passphrase);
       }
 
       return config;

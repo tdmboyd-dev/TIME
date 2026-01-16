@@ -993,7 +993,7 @@ router.get('/user/:userId', authMiddleware, async (req: Request, res: Response) 
     }
 
     // Get user's trades
-    const userTrades = await tradeRepository.findMany({ userId });
+    const userTrades = await tradeRepository.findMany({ userId } as any);
 
     // Filter by date range
     const tradesInRange = userTrades.filter((t: any) => {
@@ -1002,7 +1002,7 @@ router.get('/user/:userId', authMiddleware, async (req: Request, res: Response) 
     });
 
     // Get user's bots
-    const userBots = await botRepository.findMany({ userId });
+    const userBots = await botRepository.findMany({ userId } as any);
 
     // Calculate trading metrics
     const totalTrades = tradesInRange.length;

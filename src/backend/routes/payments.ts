@@ -287,7 +287,8 @@ router.post('/send', authMiddleware, async (req: Request, res: Response) => {
 
   // SECURITY: Verify the sender owns the fromWallet
   if (!verifyWalletOwnership(fromWalletId, user.id)) {
-    await auditLogger.logAction(AUDIT_ACTIONS.SUSPICIOUS_ACTIVITY || 'security_violation', {
+    const auditAction = AUDIT_ACTIONS.SUSPICIOUS_ACTIVITY || { action: 'security_violation', category: 'security', severity: 'high' };
+    await auditLogger.logAction(auditAction as any, {
       userId: user.id,
       clientIP,
       resource: 'wallet',

@@ -238,11 +238,12 @@ export class TradeLogger {
       eventType: 'position_opened',
       orderId,
       tradeId,
-      symbol: trade.symbol || '',
+      symbol: (trade as any).symbol || '',
       direction: trade.direction || 'long',
       orderType: 'market',
       executedPrice: trade.entryPrice,
       executedQuantity: trade.quantity,
+      requestedQuantity: trade.quantity || 0,
     });
 
     return tradeId;
@@ -260,11 +261,12 @@ export class TradeLogger {
       eventType: 'position_closed',
       orderId: trade.exitOrderId,
       tradeId: trade.id,
-      symbol: trade.symbol || '',
+      symbol: (trade as any).symbol || '',
       direction: trade.direction,
       orderType: trade.exitOrderType,
       executedPrice: trade.exitPrice,
       executedQuantity: trade.quantity,
+      requestedQuantity: trade.quantity,
       slippage: trade.exitSlippage,
       commission: trade.exitCommission,
       notes: trade.exitReason,
@@ -290,11 +292,12 @@ export class TradeLogger {
       eventType: 'position_scaled',
       orderId: this.generateOrderId(),
       tradeId,
-      symbol: trade?.symbol || '',
+      symbol: (trade as any)?.symbol || '',
       direction: trade?.direction || 'long',
       orderType: 'market',
       executedPrice: event.price,
       executedQuantity: event.quantity,
+      requestedQuantity: event.quantity,
       slippage: event.slippage,
       commission: event.commission,
       notes: event.reason,
@@ -415,7 +418,7 @@ export class TradeLogger {
 
     const rows = this.trades.map(t => [
       t.id,
-      t.symbol || '',
+      (t as any).symbol || '',
       t.direction,
       t.entryDate.toISOString(),
       t.exitDate.toISOString(),
@@ -513,7 +516,7 @@ export class TradeLogger {
     return this.trades.filter(t => {
       if (criteria.startDate && t.entryDate < criteria.startDate) return false;
       if (criteria.endDate && t.exitDate > criteria.endDate) return false;
-      if (criteria.symbol && t.symbol !== criteria.symbol) return false;
+      if (criteria.symbol && (t as any).symbol !== criteria.symbol) return false;
       if (criteria.direction && t.direction !== criteria.direction) return false;
       if (criteria.minPnl !== undefined && t.netPnl < criteria.minPnl) return false;
       if (criteria.maxPnl !== undefined && t.netPnl > criteria.maxPnl) return false;

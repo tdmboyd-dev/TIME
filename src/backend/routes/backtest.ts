@@ -1126,7 +1126,9 @@ router.post('/benchmark', async (req: Request, res: Response) => {
     const strategyResult = engine.runBacktest(candleData);
 
     const benchmarkNames = benchmarks || ['Buy & Hold', 'Risk-Free (2%)'];
-    const additionalCandles = benchmarkCandles ? new Map(Object.entries(benchmarkCandles)) : undefined;
+    const additionalCandles = benchmarkCandles
+      ? new Map(Object.entries(benchmarkCandles)) as Map<string, any[]>
+      : undefined;
 
     const benchmarkResults = await benchmarkManager.calculateBenchmarks(
       benchmarkNames,

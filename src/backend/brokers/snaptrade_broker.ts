@@ -32,8 +32,8 @@ import * as crypto from 'crypto';
 const logger = createComponentLogger('SnapTradeBroker');
 
 // SnapTrade-specific types
-interface SnapTradeConfig extends BrokerConfig {
-  clientId: string;
+export interface SnapTradeConfig extends Omit<BrokerConfig, 'clientId'> {
+  clientId: string; // SnapTrade uses string client IDs
   consumerKey: string;
   redirectUri?: string;
 }
@@ -110,7 +110,7 @@ export class SnapTradeBroker extends BrokerInterface {
   private connectedBrokerages: SnapTradeBrokerageAuth[] = [];
 
   constructor(config: SnapTradeConfig) {
-    super(config);
+    super(config as any); // SnapTrade uses string clientId vs number in BrokerConfig
     this.clientId = config.clientId;
     this.consumerKey = config.consumerKey;
   }

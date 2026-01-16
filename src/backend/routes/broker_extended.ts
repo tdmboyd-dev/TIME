@@ -906,7 +906,7 @@ router.post('/connect/:broker/oauth/callback', async (req: Request, res: Respons
             redirect_uri: process.env.ALPACA_REDIRECT_URI || '',
           }),
         });
-        const alpacaTokens = await alpacaResponse.json();
+        const alpacaTokens = await alpacaResponse.json() as { access_token?: string; refresh_token?: string };
         tokens = {
           accessToken: alpacaTokens.access_token,
           refreshToken: alpacaTokens.refresh_token,
@@ -924,7 +924,7 @@ router.post('/connect/:broker/oauth/callback', async (req: Request, res: Respons
             redirect_uri: process.env.COINBASE_REDIRECT_URI || '',
           }),
         });
-        const coinbaseTokens = await coinbaseResponse.json();
+        const coinbaseTokens = await coinbaseResponse.json() as { access_token?: string; refresh_token?: string };
         tokens = {
           accessToken: coinbaseTokens.access_token,
           refreshToken: coinbaseTokens.refresh_token,

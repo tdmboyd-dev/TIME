@@ -683,7 +683,7 @@ export class OANDABroker extends BrokerInterface {
           logger.debug('Price stream heartbeat');
         }
       } catch (error) {
-        logger.warn('Failed to parse price stream message:', line);
+        logger.warn('Failed to parse price stream message:', { line });
       }
     }
   }
@@ -812,7 +812,7 @@ export class OANDABroker extends BrokerInterface {
             break;
         }
       } catch (error) {
-        logger.warn('Failed to parse transaction stream message:', line);
+        logger.warn('Failed to parse transaction stream message:', { line });
       }
     }
   }

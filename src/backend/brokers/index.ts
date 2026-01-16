@@ -25,18 +25,23 @@
 export * from './broker_interface';
 
 // Individual broker implementations
-export { AlpacaBroker, createAlpacaBroker } from './alpaca_broker';
+export { AlpacaBroker } from './alpaca_broker';
 export { IBKRBroker, createIBKRBroker } from './ibkr_broker';
 export { OANDABroker } from './oanda_broker';
-export { CoinbaseBroker, createCoinbaseBroker } from './coinbase_broker';
+export { CoinbaseBroker } from './coinbase_broker';
 export { BinanceBroker, createBinanceBroker } from './binance_broker';
 export { SnapTradeBroker, createSnapTradeBroker } from './snaptrade_broker';
 
 // Paper trading wrapper
 export { PaperTradingBroker, createPaperTradingBroker } from './paper_trading_broker';
 
-// Crypto futures
-export * from './crypto_futures';
+// Crypto futures - explicit exports to avoid ambiguity
+export {
+  BinanceFutures,
+  BybitFutures,
+  CryptoFuturesManager,
+  cryptoFuturesManager,
+} from './crypto_futures';
 
 // Advanced broker engine
 export { AdvancedBrokerEngine, advancedBrokerEngine } from './advanced_broker_engine';
@@ -59,7 +64,7 @@ export {
 export * from './ib_client';
 
 // Broker manager for unified access
-export { default as BrokerManager } from './broker_manager';
+export { BrokerManager } from './broker_manager';
 
 // =============================================================================
 // UNIFIED BROKER FACTORY
@@ -69,12 +74,12 @@ import {
   BrokerInterface,
   BrokerConfig,
 } from './broker_interface';
-import { AlpacaBroker, createAlpacaBroker } from './alpaca_broker';
+import { AlpacaBroker } from './alpaca_broker';
 import { IBKRBroker, createIBKRBroker } from './ibkr_broker';
 import { OANDABroker } from './oanda_broker';
-import { CoinbaseBroker, createCoinbaseBroker } from './coinbase_broker';
+import { CoinbaseBroker } from './coinbase_broker';
 import { BinanceBroker, createBinanceBroker } from './binance_broker';
-import { SnapTradeBroker, createSnapTradeBroker } from './snaptrade_broker';
+import { SnapTradeBroker, createSnapTradeBroker, SnapTradeConfig } from './snaptrade_broker';
 import { PaperTradingBroker, createPaperTradingBroker } from './paper_trading_broker';
 
 export type BrokerName =
@@ -97,7 +102,7 @@ export function createBroker(
 ): BrokerInterface {
   switch (brokerName.toLowerCase()) {
     case 'alpaca':
-      return createAlpacaBroker(config);
+      return new AlpacaBroker(config as any);
 
     case 'ibkr':
     case 'interactive_brokers':
@@ -107,7 +112,7 @@ export function createBroker(
       return new OANDABroker(config as any);
 
     case 'coinbase':
-      return createCoinbaseBroker(config);
+      return new CoinbaseBroker(config as any);
 
     case 'binance':
       return createBinanceBroker({
@@ -123,7 +128,7 @@ export function createBroker(
       });
 
     case 'snaptrade':
-      return createSnapTradeBroker(config);
+      return createSnapTradeBroker(config as unknown as SnapTradeConfig);
 
     case 'paper':
       return createPaperTradingBroker(config);

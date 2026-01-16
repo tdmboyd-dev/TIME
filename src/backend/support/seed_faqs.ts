@@ -268,7 +268,7 @@ export async function seedFAQs(): Promise<void> {
       published: true,
     }));
 
-    await faqCollection.insertMany(faqDocuments);
+    await faqCollection.insertMany(faqDocuments as any[]);
 
     logger.info('FAQs seeded successfully', { count: faqDocuments.length });
   } catch (error) {

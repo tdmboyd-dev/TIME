@@ -232,7 +232,7 @@ export class MailgunService {
         body: formData
       });
 
-      const result = await response.json();
+      const result = await response.json() as { id?: string; message?: string };
 
       if (!response.ok) {
         throw new Error(result.message || `Mailgun error: ${response.status}`);
@@ -327,15 +327,24 @@ export class MailgunService {
         }
       );
 
-      const result = await response.json();
+      const result = await response.json() as {
+        address?: string;
+        is_valid?: boolean;
+        is_disposable_address?: boolean;
+        is_role_address?: boolean;
+        reason?: string;
+        did_you_mean?: string;
+        risk?: 'low' | 'medium' | 'high' | 'unknown';
+        message?: string;
+      };
 
       if (!response.ok) {
         throw new Error(result.message || 'Validation failed');
       }
 
       return {
-        address: result.address,
-        isValid: result.is_valid,
+        address: result.address || email,
+        isValid: result.is_valid || false,
         isDisposable: result.is_disposable_address || false,
         isRoleAddress: result.is_role_address || false,
         reason: result.reason,
@@ -484,7 +493,7 @@ export class MailgunService {
         }
       );
 
-      const result = await response.json();
+      const result = await response.json() as { message?: string; stats?: unknown };
 
       if (!response.ok) {
         throw new Error(result.message || 'Failed to get stats');
@@ -524,7 +533,7 @@ export class MailgunService {
         }
       );
 
-      const result = await response.json();
+      const result = await response.json() as { message?: string };
 
       if (!response.ok) {
         throw new Error(result.message || 'Failed to add to unsubscribe list');
@@ -560,7 +569,7 @@ export class MailgunService {
       );
 
       if (!response.ok) {
-        const result = await response.json();
+        const result = await response.json() as { message?: string };
         throw new Error(result.message || 'Failed to remove from unsubscribe list');
       }
 

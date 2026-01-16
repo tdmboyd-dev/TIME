@@ -120,6 +120,7 @@ export interface AgentDecision {
     fees?: number;
     slippage?: number;
     completedAt?: Date;
+    orderId?: string;
   };
 
   // Learning
@@ -1049,7 +1050,7 @@ export class AutonomousCapitalAgent extends EventEmitter {
       // Build order request
       const orderRequest = {
         symbol: decision.action.asset,
-        qty: decision.action.amount,
+        quantity: decision.action.amount, // Fixed: use 'quantity' not 'qty'
         side: decision.action.direction as 'buy' | 'sell',
         type: 'market' as const,
         timeInForce: 'day' as const,
@@ -1061,14 +1062,15 @@ export class AutonomousCapitalAgent extends EventEmitter {
       console.log(`[ACA] Submitting REAL order to broker:`, orderRequest);
 
       // Submit to broker manager - it will route to appropriate broker
-      const result = await brokerManager.submitOrder(orderRequest, assetClass);
+      const result = await brokerManager.submitOrder(orderRequest, assetClass as any);
+      const order = result.order as any; // Cast to access broker-specific fields
 
-      console.log(`[ACA] Order submitted successfully via ${result.brokerId}: ${result.order.id}`);
+      console.log(`[ACA] Order submitted successfully via ${result.brokerId}: ${order.id}`);
 
       return {
         success: true,
-        orderId: result.order.id,
-        price: result.order.filledAvgPrice || result.order.limitPrice || 0,
+        orderId: order.id,
+        price: order.filledAvgPrice || order.limitPrice || order.avgFillPrice || 0,
       };
     } catch (error: any) {
       console.error('[ACA] Broker execution failed:', error.message);

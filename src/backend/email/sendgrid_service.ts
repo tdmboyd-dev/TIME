@@ -266,7 +266,7 @@ export class SendGridService {
       });
 
       if (!response.ok) {
-        const error = await response.json();
+        const error = await response.json() as { errors?: Array<{ message?: string }> };
         throw new Error(error.errors?.[0]?.message || 'Failed to cancel scheduled send');
       }
 
@@ -304,7 +304,7 @@ export class SendGridService {
         }),
       });
 
-      const result = await response.json();
+      const result = await response.json() as { id?: string; errors?: Array<{ message?: string }> };
 
       if (!response.ok) {
         throw new Error(result.errors?.[0]?.message || 'Failed to create template');
@@ -353,7 +353,7 @@ export class SendGridService {
         }
       );
 
-      const result = await response.json();
+      const result = await response.json() as { id?: string; errors?: Array<{ message?: string }> };
 
       if (!response.ok) {
         throw new Error(result.errors?.[0]?.message || 'Failed to add template version');
@@ -489,7 +489,7 @@ export class SendGridService {
         },
       });
 
-      const result = await response.json();
+      const result = await response.json() as unknown;
 
       if (!response.ok) {
         throw new Error('Failed to get stats');
