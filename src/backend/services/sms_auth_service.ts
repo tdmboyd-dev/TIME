@@ -82,8 +82,11 @@ class SMSAuthService extends EventEmitter {
    * Hash OTP for secure storage
    */
   private hashOTP(code: string, phone: string): string {
-    // JWT_SECRET is required for security - use empty string for dev only
-    const secret = process.env.JWT_SECRET || (process.env.NODE_ENV !== 'production' ? 'dev-only-secret' : '');
+    // SECURITY: JWT_SECRET is required - validated at startup in config/index.ts
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+      throw new Error('CRITICAL: JWT_SECRET not configured - cannot hash OTP');
+    }
     return crypto
       .createHmac('sha256', secret)
       .update(`${code}:${phone}`)

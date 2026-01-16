@@ -10,12 +10,12 @@ import { createComponentLogger } from '../utils/logger';
 
 const logger = createComponentLogger('AuthMiddleware');
 
-// JWT_SECRET must be set in production - no fallback allowed
+// SECURITY: JWT_SECRET is ALWAYS required - no fallbacks allowed
 const JWT_SECRET = process.env.JWT_SECRET;
-if (!JWT_SECRET && process.env.NODE_ENV === 'production') {
-  throw new Error('JWT_SECRET environment variable is required in production');
+if (!JWT_SECRET) {
+  throw new Error('CRITICAL: JWT_SECRET environment variable must be set - refusing to start');
 }
-const JWT_SECRET_VALUE = JWT_SECRET || 'dev-only-secret-not-for-production';
+const JWT_SECRET_VALUE = JWT_SECRET;
 
 export interface AuthenticatedRequest extends Request {
   user?: {

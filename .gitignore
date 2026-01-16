@@ -63,6 +63,20 @@ secrets/
 *.pem
 *.key
 
+# iOS/Android Certificates (CRITICAL - never commit)
+*.p8
+*.p12
+*.cer
+*.mobileprovision
+AuthKey_*.p8
+ios_distribution.*
+distribution.*
+DistributionCertificate.*
+*.keystore
+*.jks
+google-services.json
+GoogleService-Info.plist
+
 # Database
 *.sqlite
 *.db

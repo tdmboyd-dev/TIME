@@ -66,12 +66,9 @@ export function csrfMiddleware(req: Request, res: Response, next: NextFunction):
     return next();
   }
 
-  // Skip CSRF for auth endpoints - they use rate limiting for protection
-  // and the cross-origin cookie issue makes CSRF impractical for these
-  if (req.path.includes('/auth/login') || req.path.includes('/auth/register') || req.path.includes('/auth/admin')) {
-    logger.info('Skipping CSRF for auth endpoint', { path: req.path });
-    return next();
-  }
+  // SECURITY: Auth endpoints now require CSRF protection
+  // Rate limiting provides additional defense-in-depth
+  // Frontend must fetch CSRF token via GET request before POST
 
   // Skip CSRF for timebeunus/trading routes - cross-origin cookie issues
   // These are protected by admin key authentication instead
@@ -88,6 +85,13 @@ export function csrfMiddleware(req: Request, res: Response, next: NextFunction):
   if (!submittedToken) {
     logger.warn('CSRF token missing', { path: req.path, method: req.method });
     res.status(403).json({ error: 'CSRF token missing' });
+    return;
+  }
+
+  // Validate token length first (timingSafeEqual requires equal lengths)
+  if (csrfToken.length !== submittedToken.length) {
+    logger.warn('CSRF token length mismatch', { path: req.path, method: req.method });
+    res.status(403).json({ error: 'CSRF token invalid' });
     return;
   }
 

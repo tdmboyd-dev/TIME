@@ -25,7 +25,7 @@ export const config = {
 
   // Authentication
   jwt: {
-    // CRITICAL: No fallback - JWT_SECRET MUST be set in environment
+    // CRITICAL: JWT_SECRET is validated at startup - see validateConfig()
     secret: process.env.JWT_SECRET || '',
     expiresIn: process.env.JWT_EXPIRES_IN || '7d',
   },
