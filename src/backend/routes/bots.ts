@@ -191,7 +191,7 @@ router.post('/bulk-register', adminMiddleware, async (req: Request, res: Respons
  * Generate REAL performance data for all bots by running backtests
  * NO MOCK DATA - Real strategies, real backtests, real results
  */
-router.post('/generate-real-performance', async (req: Request, res: Response) => {
+router.post('/generate-real-performance', authMiddleware, adminMiddleware, async (req: Request, res: Response) => {
   try {
     const { limit = 200 } = req.body;
 
@@ -265,7 +265,7 @@ router.post('/generate-real-performance', async (req: Request, res: Response) =>
  * POST /bots/:botId/regenerate-performance
  * Regenerate REAL performance data for a specific bot
  */
-router.post('/:botId/regenerate-performance', async (req: Request, res: Response) => {
+router.post('/:botId/regenerate-performance', authMiddleware, adminMiddleware, async (req: Request, res: Response) => {
   try {
     const { botId } = req.params;
     const bot = botManager.getBot(botId);

@@ -70,7 +70,7 @@
         "backgroundColor": "#020617"
       },
       "package": "com.timebeyondus.trading",
-      "versionCode": 15,
+      "versionCode": 16,
       "permissions": [
         "USE_BIOMETRIC",
         "USE_FINGERPRINT",
