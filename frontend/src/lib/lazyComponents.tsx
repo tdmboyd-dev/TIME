@@ -170,12 +170,52 @@ export const LazyBigMovesAlerts = dynamic(
 );
 
 // ============================================================================
+// Lazy Loaded Analytics/Chart Components
+// ============================================================================
+
+/**
+ * Analytics charts - heavy recharts/tremor library
+ */
+export const LazyAnalyticsCharts = dynamic(
+  () => import('@/components/analytics/AnalyticsCharts').then((mod) => mod.default || mod.AnalyticsCharts),
+  {
+    loading: () => <ChartLoadingFallback />,
+    ssr: false,
+  }
+);
+
+/**
+ * Backtest results chart
+ */
+export const LazyBacktestChart = dynamic(
+  () => import('@/components/backtest/BacktestChart').then((mod) => mod.default || mod.BacktestChart),
+  {
+    loading: () => <ChartLoadingFallback />,
+    ssr: false,
+  }
+);
+
+/**
+ * Portfolio performance chart
+ */
+export const LazyPortfolioChart = dynamic(
+  () => import('@/components/portfolio/PortfolioChart').then((mod) => mod.default || mod.PortfolioChart),
+  {
+    loading: () => <ChartLoadingFallback />,
+    ssr: false,
+  }
+);
+
+// ============================================================================
 // Export all lazy components
 // ============================================================================
 
 export const LazyComponents = {
   // Charts
   LiveChart: LazyLiveChart,
+  AnalyticsCharts: LazyAnalyticsCharts,
+  BacktestChart: LazyBacktestChart,
+  PortfolioChart: LazyPortfolioChart,
 
   // Social
   Leaderboard: LazyLeaderboard,

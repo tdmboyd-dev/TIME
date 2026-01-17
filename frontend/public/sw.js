@@ -1,7 +1,11 @@
 // TIME BEYOND US Platform Service Worker
-// Version 2.0.0 - Enhanced Push Notifications + PWA Support
+// Version 3.0.0 - Enhanced Caching + Offline Support + Push Notifications
 
-const CACHE_NAME = 'time-trading-v2';
+const CACHE_NAME = 'time-trading-v3';
+const STATIC_CACHE = 'time-static-v3';
+const DYNAMIC_CACHE = 'time-dynamic-v3';
+
+// Core pages that should always be cached
 const STATIC_ASSETS = [
   '/',
   '/trade',
@@ -10,11 +14,22 @@ const STATIC_ASSETS = [
   '/timebeunus',
   '/notifications',
   '/settings',
+  '/signals',
+  '/bots',
+  '/strategies',
+  '/markets',
+  '/alerts',
+  '/analytics',
+  '/login',
   '/icon.svg',
   '/favicon.svg',
   '/apple-touch-icon.svg',
   '/manifest.json',
 ];
+
+// Cache limits
+const MAX_DYNAMIC_CACHE_ITEMS = 50;
+const MAX_CACHE_AGE_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 
 // Notification category icons (emoji fallbacks)
 const CATEGORY_ICONS = {
@@ -50,12 +65,16 @@ self.addEventListener('install', (event) => {
 });
 
 self.addEventListener('activate', (event) => {
+  const currentCaches = [CACHE_NAME, STATIC_CACHE, DYNAMIC_CACHE];
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames
-          .filter((name) => name !== CACHE_NAME)
-          .map((name) => caches.delete(name))
+          .filter((name) => !currentCaches.includes(name))
+          .map((name) => {
+            console.log('[SW] Deleting old cache:', name);
+            return caches.delete(name);
+          })
       );
     })
   );
@@ -63,39 +82,138 @@ self.addEventListener('activate', (event) => {
 });
 
 // ============================================================
-// FETCH HANDLER
+// FETCH HANDLER - Stale While Revalidate Strategy
 // ============================================================
 
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
 
   const url = new URL(event.request.url);
+
+  // Skip API calls and WebSocket connections
   if (url.pathname.startsWith('/api') || url.protocol === 'ws:' || url.protocol === 'wss:') {
     return;
   }
 
-  event.respondWith(
-    fetch(event.request)
-      .then((response) => {
-        const responseClone = response.clone();
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, responseClone);
-        });
-        return response;
-      })
-      .catch(() => {
-        return caches.match(event.request).then((cachedResponse) => {
-          if (cachedResponse) {
-            return cachedResponse;
-          }
-          if (event.request.mode === 'navigate') {
-            return caches.match('/');
-          }
-          return new Response('Offline', { status: 503, statusText: 'Offline' });
-        });
-      })
-  );
+  // Skip external requests
+  if (url.origin !== self.location.origin) {
+    return;
+  }
+
+  // Use cache-first for static assets (images, fonts, etc.)
+  if (isStaticAsset(url.pathname)) {
+    event.respondWith(cacheFirst(event.request));
+    return;
+  }
+
+  // Use stale-while-revalidate for pages and JS/CSS
+  event.respondWith(staleWhileRevalidate(event.request));
 });
+
+function isStaticAsset(pathname) {
+  return /\.(svg|png|jpg|jpeg|gif|webp|ico|woff|woff2|ttf|eot)$/i.test(pathname);
+}
+
+async function cacheFirst(request) {
+  const cached = await caches.match(request);
+  if (cached) {
+    return cached;
+  }
+
+  try {
+    const response = await fetch(request);
+    if (response.ok) {
+      const cache = await caches.open(STATIC_CACHE);
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch (error) {
+    return new Response('Offline', { status: 503, statusText: 'Offline' });
+  }
+}
+
+async function staleWhileRevalidate(request) {
+  const cached = await caches.match(request);
+
+  const fetchPromise = fetch(request)
+    .then(async (response) => {
+      if (response.ok) {
+        const cache = await caches.open(DYNAMIC_CACHE);
+        cache.put(request, response.clone());
+        // Trim cache if too large
+        trimCache(DYNAMIC_CACHE, MAX_DYNAMIC_CACHE_ITEMS);
+      }
+      return response;
+    })
+    .catch(() => {
+      // Network failed, return cached or offline page
+      if (request.mode === 'navigate') {
+        return caches.match('/') || offlinePage();
+      }
+      return new Response('Offline', { status: 503, statusText: 'Offline' });
+    });
+
+  // Return cached immediately, fetch in background
+  return cached || fetchPromise;
+}
+
+async function trimCache(cacheName, maxItems) {
+  const cache = await caches.open(cacheName);
+  const keys = await cache.keys();
+  if (keys.length > maxItems) {
+    // Delete oldest items (FIFO)
+    const toDelete = keys.slice(0, keys.length - maxItems);
+    await Promise.all(toDelete.map(key => cache.delete(key)));
+  }
+}
+
+function offlinePage() {
+  return new Response(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>TIME - Offline</title>
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <style>
+        body {
+          font-family: system-ui, sans-serif;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          min-height: 100vh;
+          margin: 0;
+          background: #0f172a;
+          color: #e2e8f0;
+          text-align: center;
+        }
+        .container { padding: 2rem; }
+        h1 { color: #7c3aed; margin-bottom: 1rem; }
+        p { color: #94a3b8; margin-bottom: 2rem; }
+        button {
+          background: #7c3aed;
+          color: white;
+          border: none;
+          padding: 0.75rem 1.5rem;
+          border-radius: 0.5rem;
+          cursor: pointer;
+          font-size: 1rem;
+        }
+        button:hover { background: #6d28d9; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <h1>⏱️ TIME BEYOND US</h1>
+        <p>You appear to be offline. Check your connection and try again.</p>
+        <button onclick="location.reload()">Retry</button>
+      </div>
+    </body>
+    </html>
+  `, {
+    status: 503,
+    headers: { 'Content-Type': 'text/html' }
+  });
+}
 
 // ============================================================
 // ENHANCED PUSH NOTIFICATION HANDLER
@@ -438,10 +556,10 @@ self.addEventListener('message', (event) => {
     case 'GET_VERSION':
       event.source?.postMessage({
         type: 'VERSION',
-        version: '2.0.0',
+        version: '3.0.0',
       });
       break;
   }
 });
 
-console.log('[SW] TIME BEYOND US Service Worker v2.0.0 loaded');
+console.log('[SW] TIME BEYOND US Service Worker v3.0.0 loaded');

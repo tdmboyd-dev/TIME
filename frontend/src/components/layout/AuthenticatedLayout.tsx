@@ -9,7 +9,13 @@ import { Web3Provider } from '@/providers/Web3Provider';
 import { NotificationProvider } from '@/components/notifications/NotificationProvider';
 import { TimeIcon } from '@/components/branding/TimeLogo';
 import { ErrorBoundary, PageErrorBoundary } from '@/components/ErrorBoundary';
-import { AIChatWidget } from '@/components/support/AIChatWidget';
+import dynamic from 'next/dynamic';
+
+// Lazy load heavy components
+const AIChatWidget = dynamic(
+  () => import('@/components/support/AIChatWidget').then(mod => mod.AIChatWidget || mod.default),
+  { ssr: false }
+);
 
 // PWA Service Worker Registration
 function PWARegistration() {

@@ -2,7 +2,7 @@
   "expo": {
     "name": "TIME BEYOND US",
     "slug": "time-beyond-us",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "scheme": "timebeyondus",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -39,7 +39,7 @@
           "fetch"
         ]
       },
-      "buildNumber": "17",
+      "buildNumber": "18",
       "config": {
         "usesNonExemptEncryption": false
       },
@@ -70,7 +70,7 @@
         "backgroundColor": "#020617"
       },
       "package": "com.timebeyondus.trading",
-      "versionCode": 14,
+      "versionCode": 15,
       "permissions": [
         "USE_BIOMETRIC",
         "USE_FINGERPRINT",
