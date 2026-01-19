@@ -1,8 +1,34 @@
 # TIMEBEUNUS — THE MASTER AI GUIDE
 ## For Copilot, Claude, and All AI Assistants
 
-**Version:** 74.21.0 - COMPREHENSIVE SECURITY AUDIT
-**Last Updated:** 2026-01-16 (Full Production Security Audit Completed)
+**Version:** 74.21.0 - COINBASE COMMERCE + MULTI-PAYMENT SYSTEM
+**Last Updated:** 2026-01-19 (Coinbase Commerce Integration Complete)
+
+---
+
+## 💰 MULTI-PAYMENT SYSTEM (Jan 19, 2026)
+
+### Payment Providers Now Active:
+| Provider | Fees | Status |
+|----------|------|--------|
+| **Stripe** | 2.9% + $0.30 | ✅ LIVE |
+| **Coinbase Commerce** | 1% | ✅ LIVE |
+| **NOWPayments** | 0.5% | 🔜 Coming |
+| **Solana Pay** | ~$0.00025 | 🔜 Coming |
+
+### Coinbase Commerce Integration:
+- **Supported Currencies:** BTC, ETH, USDC, DAI, LTC, BCH, DOGE, SHIB, APE
+- **Webhook URL:** `https://time-backend-hosting.fly.dev/api/v1/webhooks/coinbase`
+- **API Endpoints:**
+  - `POST /api/v1/crypto/create-checkout` - Subscription checkout
+  - `POST /api/v1/crypto/create-addon-checkout` - Add-on purchase
+  - `POST /api/v1/crypto/create-bot-checkout` - Bot rental checkout
+  - `GET /api/v1/crypto/info` - Payment info
+
+### Files:
+- `src/backend/payments/coinbase_commerce.ts` - Service
+- `src/backend/routes/coinbase_webhook.ts` - Webhooks
+- `src/backend/routes/crypto_checkout.ts` - Checkout API
 
 ---
 

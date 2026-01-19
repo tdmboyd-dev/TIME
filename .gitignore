@@ -86,3 +86,4 @@ bot_library/external/
 .vercel
 .env*.local
 .claude/
+*.json.json

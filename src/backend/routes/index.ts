@@ -106,6 +106,10 @@ import supportRoutes from './support';
 // STRIPE PAYMENTS - Subscription management
 import stripeRoutes from './stripe';
 
+// COINBASE COMMERCE - Crypto payments (1% fee!)
+import coinbaseWebhookRoutes from './coinbase_webhook';
+import cryptoCheckoutRoutes from './crypto_checkout';
+
 // USER ONBOARDING - 7-step wizard with bot recommendations
 import onboardingRoutes from './onboarding';
 
@@ -224,6 +228,12 @@ router.use('/support', supportRoutes);
 
 // STRIPE PAYMENTS - Subscription management, billing, checkout
 router.use('/stripe', stripeRoutes);
+
+// COINBASE COMMERCE - Crypto payments webhook (1% fee vs Stripe 2.9%!)
+router.use('/webhooks/coinbase', coinbaseWebhookRoutes);
+
+// CRYPTO CHECKOUT - Create crypto payment checkouts
+router.use('/crypto', cryptoCheckoutRoutes);
 
 // USER ONBOARDING - 7-step wizard with bot recommendations & pricing
 router.use('/onboarding', onboardingRoutes);

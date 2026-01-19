@@ -1,12 +1,44 @@
 # DROP THIS TO COPILOT - QUICK REFERENCE
 
-**Last Updated:** 2026-01-16
-**Version:** v74.21.0 - COMPREHENSIVE SECURITY AUDIT
+**Last Updated:** 2026-01-19
+**Version:** v74.21.0 - COINBASE COMMERCE INTEGRATION
 **Purpose:** Quick summary for Copilot/Claude when starting new sessions
 
 ---
 
-## 🚨 v74.21.0 - COMPREHENSIVE SECURITY AUDIT (2026-01-16)
+## 💰 v74.21.0 - COINBASE COMMERCE INTEGRATION (2026-01-19)
+
+**Multi-Payment System Now Live:**
+- **Stripe (Cards):** 2.9% + $0.30 - Traditional card payments
+- **Coinbase Commerce (Crypto):** 1% - Accept BTC, ETH, USDC, etc.
+- **Coming Soon:** NOWPayments (0.5%), Solana Pay (~$0.00)
+
+**Coinbase Commerce Setup:**
+- API Key: Configured on Fly.io
+- Webhook Secret: Configured on Fly.io
+- Webhook URL: `https://time-backend-hosting.fly.dev/api/v1/webhooks/coinbase`
+- Supported Currencies: BTC, ETH, USDC, DAI, LTC, BCH, DOGE, SHIB, APE
+
+**New API Endpoints:**
+- `POST /api/v1/crypto/create-checkout` - Create crypto subscription checkout
+- `POST /api/v1/crypto/create-addon-checkout` - Create add-on checkout
+- `POST /api/v1/crypto/create-bot-checkout` - Create bot purchase checkout
+- `GET /api/v1/crypto/charge/:chargeId` - Get charge status
+- `GET /api/v1/crypto/info` - Get crypto payment info
+- `POST /api/v1/webhooks/coinbase` - Webhook handler
+
+**New Files:**
+- `src/backend/payments/coinbase_commerce.ts` - Coinbase Commerce service
+- `src/backend/routes/coinbase_webhook.ts` - Webhook handler
+- `src/backend/routes/crypto_checkout.ts` - Checkout routes
+
+**Environment Variables (Fly.io):**
+- COINBASE_COMMERCE_API_KEY
+- COINBASE_COMMERCE_WEBHOOK_SECRET
+
+---
+
+## 🚨 v74.20.0 - COMPREHENSIVE SECURITY AUDIT (2026-01-16)
 
 **Full Production Security Audit Completed:**
 - 15 CRITICAL, 28 HIGH, 26 MEDIUM, 12 LOW severity issues identified
