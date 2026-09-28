@@ -42,7 +42,7 @@ interface BotCandidate {
   source: BotSource;
   sourceUrl: string;
   description: string;
-  rating: number;
+  rating: number | null;
   downloads: number;
   reviews: number;
   author: string;
@@ -343,70 +343,66 @@ export class BotResearchPipeline extends EventEmitter implements TIMEComponent {
    * Search GitHub for open-source trading bots
    */
   private async searchGitHub(): Promise<BotCandidate[]> {
+    logger.info('Searching GitHub for real open-source trading repositories...');
+
+    const cutoff = new Date(Date.now() - this.searchCriteria.maxAge * 24 * 60 * 60 * 1000)
+      .toISOString().slice(0, 10);
+    const query = encodeURIComponent(`algorithmic trading bot in:name,description,topics stars:>50 archived:false pushed:>=${cutoff}`);
+    const headers: Record<string, string> = {
+      Accept: 'application/vnd.github+json',
+      'User-Agent': 'TIME-BotResearchPipeline'
+    };
+    const token = process.env.GITHUB_TOKEN?.trim();
+    if (token) headers.Authorization = `Bearer ${token}`;
+
+    const response = await fetch(`https://api.github.com/search/repositories?q=${query}&sort=stars&order=desc&per_page=50`, {
+      headers
+    });
+    if (!response.ok) {
+      throw new Error(`GitHub research request failed: ${response.status}`);
+    }
+
+    const payload = await response.json() as {
+      items?: Array<{
+        id: number;
+        name: string;
+        full_name: string;
+        html_url: string;
+        description: string | null;
+        stargazers_count: number;
+        forks_count: number;
+        language: string | null;
+        pushed_at: string;
+        owner?: { login?: string };
+        license?: { spdx_id?: string | null } | null;
+        topics?: string[];
+        archived?: boolean;
+      }>;
+    };
+
     const candidates: BotCandidate[] = [];
-
-    // In a real implementation, this would use the GitHub API
-    // For now, we'll simulate the search results
-    logger.info('Searching GitHub for trading bots...');
-
-    // Simulated results - in production, use:
-    // const response = await fetch('https://api.github.com/search/repositories?q=trading+bot+language:python+stars:>50');
-
-    const simulatedResults = [
-      {
-        name: 'freqtrade/freqtrade',
-        description: 'Free, open source crypto trading bot',
-        stars: 25000,
-        forks: 5600,
-        language: 'Python',
-        updated: new Date(Date.now() - 86400000), // 1 day ago
-        license: 'GPL-3.0',
-      },
-      {
-        name: 'jesse-ai/jesse',
-        description: 'An advanced crypto trading bot written in Python',
-        stars: 5200,
-        forks: 890,
-        language: 'Python',
-        updated: new Date(Date.now() - 172800000), // 2 days ago
-        license: 'MIT',
-      },
-      {
-        name: 'ccxt/ccxt',
-        description: 'CryptoCurrency eXchange Trading Library',
-        stars: 31000,
-        forks: 7500,
-        language: 'JavaScript',
-        updated: new Date(Date.now() - 43200000), // 12 hours ago
-        license: 'MIT',
-      },
-    ];
-
-    for (const repo of simulatedResults) {
+    for (const item of payload.items ?? []) {
+      if (item.archived) continue;
       const candidate: BotCandidate = {
-        id: `github-${repo.name.replace('/', '-')}`,
-        name: repo.name.split('/')[1],
+        id: `github-${item.id}`,
+        name: item.name,
         source: 'github',
-        sourceUrl: `https://github.com/${repo.name}`,
-        description: repo.description,
-        rating: Math.min(5, 3.5 + (repo.stars / 10000)), // Derive rating from stars
-        downloads: repo.stars,
-        reviews: repo.forks,
-        author: repo.name.split('/')[0],
-        lastUpdated: repo.updated,
-        tags: ['open-source', repo.language.toLowerCase(), 'community'],
+        sourceUrl: item.html_url,
+        description: item.description || '',
+        rating: null,
+        downloads: item.stargazers_count,
+        reviews: item.forks_count,
+        author: item.owner?.login || item.full_name.split('/')[0],
+        lastUpdated: new Date(item.pushed_at),
+        tags: ['open-source', item.language?.toLowerCase() || 'unknown', ...(item.topics || []).slice(0, 8)],
         codeAvailable: true,
-        license: repo.license,
+        license: item.license?.spdx_id || 'Unknown',
         evaluationScore: 0,
         discoveredAt: new Date(),
         status: 'pending',
       };
-
-      if (this.meetsSearchCriteria(candidate)) {
-        candidates.push(candidate);
-      }
+      if (this.meetsSearchCriteria(candidate)) candidates.push(candidate);
     }
-
     return candidates;
   }
 
@@ -414,225 +410,32 @@ export class BotResearchPipeline extends EventEmitter implements TIMEComponent {
    * Search MQL5 Market for free expert advisors
    */
   private async searchMQL5(): Promise<BotCandidate[]> {
-    const candidates: BotCandidate[] = [];
-
-    logger.info('Searching MQL5 Market for free EAs...');
-
-    // Simulated MQL5 results
-    const simulatedResults = [
-      {
-        id: 'mql5-ea-123456',
-        name: 'Trend Master Pro',
-        description: 'Advanced trend following EA with dynamic trailing stop',
-        rating: 4.5,
-        downloads: 15420,
-        reviews: 234,
-        author: 'TradePro',
-        updated: new Date(Date.now() - 604800000), // 1 week ago
-      },
-      {
-        id: 'mql5-ea-789012',
-        name: 'Scalper Grid',
-        description: 'High-frequency scalping EA with grid recovery',
-        rating: 4.2,
-        downloads: 8750,
-        reviews: 156,
-        author: 'AlgoMaster',
-        updated: new Date(Date.now() - 1209600000), // 2 weeks ago
-      },
-    ];
-
-    for (const ea of simulatedResults) {
-      const candidate: BotCandidate = {
-        id: ea.id,
-        name: ea.name,
-        source: 'mql5',
-        sourceUrl: `https://www.mql5.com/en/market/product/${ea.id.split('-').pop()}`,
-        description: ea.description,
-        rating: ea.rating,
-        downloads: ea.downloads,
-        reviews: ea.reviews,
-        author: ea.author,
-        lastUpdated: ea.updated,
-        tags: ['metatrader', 'forex', 'expert-advisor'],
-        codeAvailable: false, // MQL5 compiled code
-        license: 'Commercial Free',
-        evaluationScore: 0,
-        discoveredAt: new Date(),
-        status: 'pending',
-      };
-
-      if (this.meetsSearchCriteria(candidate)) {
-        candidates.push(candidate);
-      }
-    }
-
-    return candidates;
+    logger.warn('MQL5 research connector is not implemented with verified source data; returning no candidates instead of simulated results.');
+    return [];
   }
 
   /**
    * Search cTrader for free cBots
    */
   private async searchCTrader(): Promise<BotCandidate[]> {
-    const candidates: BotCandidate[] = [];
-
-    logger.info('Searching cTrader for free cBots...');
-
-    // Simulated cTrader results
-    const simulatedResults = [
-      {
-        id: 'ctrader-bot-001',
-        name: 'Smart Money cBot',
-        description: 'Identifies institutional order flow and smart money',
-        rating: 4.3,
-        downloads: 5600,
-        reviews: 89,
-        author: 'PriceAction_Pro',
-        updated: new Date(Date.now() - 432000000), // 5 days ago
-      },
-    ];
-
-    for (const bot of simulatedResults) {
-      const candidate: BotCandidate = {
-        id: bot.id,
-        name: bot.name,
-        source: 'ctrader',
-        sourceUrl: `https://ctrader.com/algos/${bot.id}`,
-        description: bot.description,
-        rating: bot.rating,
-        downloads: bot.downloads,
-        reviews: bot.reviews,
-        author: bot.author,
-        lastUpdated: bot.updated,
-        tags: ['ctrader', 'cbot', 'forex'],
-        codeAvailable: true, // cTrader provides source
-        license: 'Free',
-        evaluationScore: 0,
-        discoveredAt: new Date(),
-        status: 'pending',
-      };
-
-      if (this.meetsSearchCriteria(candidate)) {
-        candidates.push(candidate);
-      }
-    }
-
-    return candidates;
+    logger.warn('cTrader research connector is not implemented with verified source data; returning no candidates instead of simulated results.');
+    return [];
   }
 
   /**
    * Search TradingView for community scripts
    */
   private async searchTradingView(): Promise<BotCandidate[]> {
-    const candidates: BotCandidate[] = [];
-
-    logger.info('Searching TradingView for trading scripts...');
-
-    // Simulated TradingView results
-    const simulatedResults = [
-      {
-        id: 'tv-script-supertrend',
-        name: 'SuperTrend Strategy',
-        description: 'ATR-based trend following with dynamic bands',
-        likes: 12500,
-        views: 450000,
-        author: 'LuxAlgo',
-        updated: new Date(Date.now() - 259200000), // 3 days ago
-      },
-      {
-        id: 'tv-script-rsi-divergence',
-        name: 'RSI Divergence Pro',
-        description: 'Automatic divergence detection with alerts',
-        likes: 8900,
-        views: 320000,
-        author: 'QuantVue',
-        updated: new Date(Date.now() - 518400000), // 6 days ago
-      },
-    ];
-
-    for (const script of simulatedResults) {
-      const candidate: BotCandidate = {
-        id: script.id,
-        name: script.name,
-        source: 'tradingview',
-        sourceUrl: `https://www.tradingview.com/script/${script.id}`,
-        description: script.description,
-        rating: Math.min(5, 3.5 + (script.likes / 5000)), // Derive from likes
-        downloads: script.views,
-        reviews: script.likes,
-        author: script.author,
-        lastUpdated: script.updated,
-        tags: ['pinescript', 'tradingview', 'indicator'],
-        codeAvailable: true, // TradingView open source scripts
-        license: 'MPL-2.0',
-        evaluationScore: 0,
-        discoveredAt: new Date(),
-        status: 'pending',
-      };
-
-      if (this.meetsSearchCriteria(candidate)) {
-        candidates.push(candidate);
-      }
-    }
-
-    return candidates;
+    logger.warn('TradingView research connector is not implemented with verified source data; returning no candidates instead of simulated results.');
+    return [];
   }
 
   /**
    * Search trading forums and Reddit for recommended bots
    */
   private async searchForums(): Promise<BotCandidate[]> {
-    const candidates: BotCandidate[] = [];
-
-    logger.info('Searching forums and Reddit for bot recommendations...');
-
-    // In production, this would scrape/API forums like:
-    // - r/algotrading
-    // - r/forex
-    // - r/cryptocurrency
-    // - ForexFactory
-    // - Elite Trader
-
-    // Simulated forum discoveries
-    const simulatedResults = [
-      {
-        id: 'forum-discovery-001',
-        name: 'Community Grid Bot',
-        description: 'Highly recommended grid bot from r/algotrading',
-        source: 'Reddit r/algotrading',
-        upvotes: 450,
-        comments: 89,
-        author: 'algo_enthusiast',
-        repoUrl: 'https://github.com/community/grid-bot',
-      },
-    ];
-
-    for (const discovery of simulatedResults) {
-      const candidate: BotCandidate = {
-        id: discovery.id,
-        name: discovery.name,
-        source: 'forum',
-        sourceUrl: discovery.repoUrl,
-        description: discovery.description,
-        rating: Math.min(5, 3.5 + (discovery.upvotes / 200)),
-        downloads: discovery.upvotes * 10, // Estimate
-        reviews: discovery.comments,
-        author: discovery.author,
-        lastUpdated: new Date(),
-        tags: ['community', 'recommended', 'reddit'],
-        codeAvailable: true,
-        license: 'Unknown',
-        evaluationScore: 0,
-        discoveredAt: new Date(),
-        status: 'pending',
-      };
-
-      if (this.meetsSearchCriteria(candidate)) {
-        candidates.push(candidate);
-      }
-    }
-
-    return candidates;
+    logger.warn('Forum/Reddit research connector is not implemented with verified source data; returning no candidates instead of simulated results.');
+    return [];
   }
 
   /**
@@ -640,7 +443,7 @@ export class BotResearchPipeline extends EventEmitter implements TIMEComponent {
    */
   private meetsSearchCriteria(candidate: BotCandidate): boolean {
     // Check minimum rating
-    if (candidate.rating < this.searchCriteria.minRating) {
+    if (candidate.rating !== null && candidate.rating < this.searchCriteria.minRating) {
       return false;
     }
 
@@ -810,7 +613,7 @@ export class BotResearchPipeline extends EventEmitter implements TIMEComponent {
     let score = 40; // Base score
 
     // Rating contribution
-    score += (candidate.rating / 5) * 30;
+    if (candidate.rating !== null) score += (candidate.rating / 5) * 30;
 
     // Downloads/reviews contribution
     if (candidate.downloads > 10000) {
@@ -907,10 +710,10 @@ export class BotResearchPipeline extends EventEmitter implements TIMEComponent {
       results = results.filter((c) => c.source === filter.source);
     }
     if (filter?.minRating !== undefined) {
-      results = results.filter((c) => c.rating >= filter.minRating!);
+      results = results.filter((c) => c.rating !== null && c.rating >= filter.minRating!);
     }
 
-    return results.sort((a, b) => b.rating - a.rating);
+    return results.sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
   }
 
   /**
