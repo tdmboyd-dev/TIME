@@ -36,11 +36,10 @@ jobs:
         run: npm ci
 
       - name: Run ESLint
-        run: npm run lint 2>/dev/null || echo "No lint script found, skipping"
+        run: npm run lint
 
       - name: Check TypeScript
-        run: npx tsc --noEmit || echo "TypeScript warnings detected, continuing..."
-        continue-on-error: true
+        run: npm run typecheck
 
   # ===================================
   # Backend Tests
@@ -63,7 +62,7 @@ jobs:
         run: npm ci
 
       - name: Run backend tests
-        run: npm test 2>/dev/null || echo "No tests configured yet"
+        run: npm test -- --runInBand
         env:
           NODE_ENV: test
           JWT_SECRET: test-secret-key
@@ -93,7 +92,7 @@ jobs:
         run: npm ci
 
       - name: Run frontend tests
-        run: npm test 2>/dev/null || echo "No tests configured yet"
+        run: npm test -- --runInBand
 
   # ===================================
   # Build Backend
@@ -116,8 +115,7 @@ jobs:
         run: npm ci
 
       - name: Build TypeScript
-        run: npx tsc --skipLibCheck || echo "Build completed with warnings"
-        continue-on-error: true
+        run: npm run build:backend
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
