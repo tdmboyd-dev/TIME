@@ -1,3 +1,5 @@
+> **Historical December 2025 snapshot.** “100% connected” below means the then-recorded frontend/API hookups with demo fallback. It does not prove September 2026 broker execution, research quality, authentication, or production trading. See research/BOT-DISCOVERY-TRUTH-2026-09-29.md for current bot ingestion/approval scope.
+
 # TIME PLATFORM - MASTER BUILD TRACKER
 ## Complete Feature List with Descriptions & Implementation Status
 

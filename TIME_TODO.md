@@ -538,3 +538,7 @@ Version: v74.24.0 (PWA + CODE SPLITTING + PLAY STORE READY)
 - `src/backend/middleware/error_handler.ts` - Global error handling
 - `src/backend/database/create_indexes.ts` - Database index creation script
 - `src/backend/utils/validation.ts` - Input validation utilities
+
+## 2026-09-29 Backwards–Forwards bot discovery research
+- [R] Read current BotResearchPipeline and reconcile historic mock/100%-API claims in research/BOT-DISCOVERY-TRUTH-2026-09-29.md. Real GitHub metadata search is present; four other source connectors return no candidates. The metadata-only weighted score can label a bot approved without source inspection.
+- [ ] Research one exact licensed candidate and full dependencies/behavior; keep code-quality, safety and performance UNKNOWN until actual evidence exists. Define isolated evaluation, trading permissions and refusal cases before rebuilding the approval gate. No live trade authorized by discovery.

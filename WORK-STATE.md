@@ -33,7 +33,7 @@ The original windows' complete transfer packets are pending. Their private local
 
 ## Work ownership
 
-Current claim: ACTIVE — owner /root; narrow bot research truth; branch master; scope research/BOT-DISCOVERY-TRUTH-2026-09-29.md, TIME_BUILD_TRACKER.md, TIME_TODO.md, WORK-STATE.md; base 683dd40ff6ddc7aed43c35e1f41c5a6fb775085e; claimed 2026-09-29T14:59:41.534Z; review 2026-09-29T15:59:41.534Z.
+Current claim: RELEASED — narrow bot research truth study committed; no active process.
 This documentation recovery claims no ongoing runtime or exclusive ownership over another window.
 Before edits, record task, owner/session, branch, exact path scope, fresh base SHA, claimed UTC time and review/expiry UTC time; check other claims. A recorded claim is advisory, not a technical lock. A stale claim requires reconciliation, not an overwrite.
 
@@ -42,3 +42,6 @@ Before edits, record task, owner/session, branch, exact path scope, fresh base S
 This batch concerns continuity documentation only. No new product runtime, provider, device, database or deployment success is claimed. Existing test reports retain their original scope and dates. Read the batch's commit/diff and any local integrity receipt before calling the documentation installed.
 At resume, compare current HEAD with the base above, inspect intervening changes, and update this file plus the existing queue/audit/scorecard after the next meaningful batch. Never force an update over another writer.
 No scheduled continuation was created by this recovery.
+
+## 2026-09-29 bot discovery research
+Read full BotResearchPipeline and historical audit/tracker. GitHub discovery is real metadata, other four connectors return empty honestly; candidate quality/safety is scored without reading code and can reach 'approved'. Research dossier research/BOT-DISCOVERY-TRUTH-2026-09-29.md specifies discovery, source, license, sandbox, claim and trading-authority gates. TIME_BUILD_TRACKER historical 100% header annotated; TIME_TODO queue added. No market call, broker operation, trading or runtime verification this batch.
