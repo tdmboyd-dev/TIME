@@ -33,7 +33,7 @@ The original windows' complete transfer packets are pending. Their private local
 
 ## Work ownership
 
-Current claim: UNCLAIMED for product implementation.
+Current claim: ACTIVE — owner /root; narrow bot research truth; branch master; scope research/BOT-DISCOVERY-TRUTH-2026-09-29.md, TIME_BUILD_TRACKER.md, TIME_TODO.md, WORK-STATE.md; base 683dd40ff6ddc7aed43c35e1f41c5a6fb775085e; claimed 2026-09-29T14:59:41.534Z; review 2026-09-29T15:59:41.534Z.
 This documentation recovery claims no ongoing runtime or exclusive ownership over another window.
 Before edits, record task, owner/session, branch, exact path scope, fresh base SHA, claimed UTC time and review/expiry UTC time; check other claims. A recorded claim is advisory, not a technical lock. A stale claim requires reconciliation, not an overwrite.
 
