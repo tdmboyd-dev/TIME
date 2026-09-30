@@ -12,8 +12,7 @@ Research/automation/trading domain. Decision triage never grants trading or fina
 
 ## Read before continuing
 
-Read AGENTS.md and canonical BEAST, then the [continuity protocol](https://github.com/tdmboyd-dev/mgr-perfect-skill/blob/master/CONTINUITY-PROTOCOL.md). Follow stricter local read orders.
-- [BEAST-JEV-READ-FIRST.md](BEAST-JEV-READ-FIRST.md)
+- [JEV-READ-FIRST.md](JEV-READ-FIRST.md)
 - [TIME_BUILD_TRACKER.md](TIME_BUILD_TRACKER.md)
 - [TIME_TODO.md](TIME_TODO.md)
 - [TIME_MASTER_AUDIT.md](TIME_MASTER_AUDIT.md)
@@ -35,12 +34,10 @@ The original windows' complete transfer packets are pending. Their private local
 
 Current claim: RELEASED — narrow bot research truth study committed; no active process.
 This documentation recovery claims no ongoing runtime or exclusive ownership over another window.
-Before edits, record task, owner/session, branch, exact path scope, fresh base SHA, claimed UTC time and review/expiry UTC time; check other claims. A recorded claim is advisory, not a technical lock. A stale claim requires reconciliation, not an overwrite.
 
 ## Verification and stopping point
 
 This batch concerns continuity documentation only. No new product runtime, provider, device, database or deployment success is claimed. Existing test reports retain their original scope and dates. Read the batch's commit/diff and any local integrity receipt before calling the documentation installed.
-At resume, compare current HEAD with the base above, inspect intervening changes, and update this file plus the existing queue/audit/scorecard after the next meaningful batch. Never force an update over another writer.
 No scheduled continuation was created by this recovery.
 
 ## 2026-09-29 bot discovery research

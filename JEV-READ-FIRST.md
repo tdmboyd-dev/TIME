@@ -1,5 +1,4 @@
-# BEAST + Jev Read First — TIME
-Canonical operating method: `tdmboyd-dev/mgr-perfect-skill/BEAST.md`.
+# Jev Read First — TIME
 
 ## Existing-system audit
 ### AgentSwarm — REPAIR
@@ -18,10 +17,3 @@ Research candidate relevance/priority, agent/task assignment, non-trading model 
 Jev must never generate or authorize a trade, capital allocation, position size, risk limit, signal, order route, compliance approval, or movement of funds. Those stay in tested financial/risk code plus required controls.
 
 Use SHADOW -> ASSIST -> ACTIVE only for low-impact bounded decisions.
-
-
-## BEAST v2.1 synchronization rule
-Canonical operating method: `tdmboyd-dev/mgr-perfect-skill/BEAST.md` v2.1.
-This repo extends that doctrine; it does not fork a competing BEAST.
-Compound capabilities must be decomposed into research tracks, substantial work should run in Backwards-Forwards batches, proven defects should be repaired in the same wave when safe, and architecture/research truth must be embedded in the owning repo rather than left only in chat.
-New-repo template: `tdmboyd-dev/mgr-perfect-skill/BEAST-NEW-REPO-BOOTSTRAP.md`.
