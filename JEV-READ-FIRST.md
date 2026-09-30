@@ -1,5 +1,7 @@
 # Jev Read First — TIME
 
+Read `MGR-Beast-Pack/MGR-BEAST-PACK.md` as the current MGR BEAST operating handbook. Preserve this repository's product requirements and existing work records.
+
 ## Existing-system audit
 ### AgentSwarm — REPAIR
 Keep the role/proposal/message primitives, manual/automatic mode controls, external governor hook, and observability events. Repair autonomy boundaries, durable state, budgets, evals, and routing before relying on it for high-impact work.
