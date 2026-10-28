@@ -93,7 +93,7 @@ This will output something like:
 ```
 Public Key: BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBUYIHBQFLXYp5Nksh8U
 
-Private Key: UUxI4O8-FbRouAevSmBQ6o18hgE4nSG3qwvJTfKc-ls
+Private Key: <generate-and-store-privately>
 ```
 
 ### 3. Configure Environment Variables
@@ -104,7 +104,7 @@ Add to your `.env` file:
 # Push Notifications (Web Push API)
 # Generate using: npx web-push generate-vapid-keys
 VAPID_PUBLIC_KEY=BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBUYIHBQFLXYp5Nksh8U
-VAPID_PRIVATE_KEY=UUxI4O8-FbRouAevSmBQ6o18hgE4nSG3qwvJTfKc-ls
+VAPID_PRIVATE_KEY=<generate-and-store-privately>
 VAPID_EMAIL=mailto:notifications@timebeyondus.com
 ```
 

@@ -1,6 +1,7 @@
 # Account settings
 ACCOUNT_ID = "000-000-00000000-000"
-ACCESS_TOKEN = "166acab065f0bd72c33aee2d02037829-00700707adc454f3a0e075cf0351aa8c"
+import os as _mgr_secret_environment
+ACCESS_TOKEN = _mgr_secret_environment.environ.get("OANDA_ACCESS_TOKEN", "")
 ENVIRONMENT = "practice"
 
 # Pair to trade.
