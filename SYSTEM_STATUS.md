@@ -1,48 +1,13 @@
+> HISTORICAL RECORD: This status was written in December 2025. It is not proof of current configuration, service health, security, or authority to trade.
+
 # TIME Platform - System Status Report
 ## Generated: December 14, 2025
 
 ---
 
-# YOUR API KEYS - WHAT YOU HAVE
+# Credential safety notice
 
-## DATABASES (CONFIGURED)
-| Service | Status | Value |
-|---------|--------|-------|
-| MongoDB Atlas | CONFIGURED | `mongodb+srv://Timebeunus:***@time-db.lzphe8l.mongodb.net` |
-| Redis (Upstash) | CONFIGURED | `rediss://***@touched-pheasant-14189.upstash.io:6379` |
-
-## BROKERS (CONFIGURED)
-| Broker | Status | Mode | Account |
-|--------|--------|------|---------|
-| Alpaca | CONFIGURED | Paper Trading | `PKQ2PAYL2OOSEYYLM4T6` |
-| OANDA | CONFIGURED | **LIVE** | `001-001-19983395-001` |
-| Binance | CONFIGURED | **LIVE** | `rLvIsiIW...` |
-| Kraken | CONFIGURED | **LIVE** | US Crypto Futures |
-| SnapTrade | CONFIGURED | Multi-Broker | `TIME-TEST-IMUHU` |
-| MetaTrader Bridge | CONFIGURED | Port 15555 | Enabled |
-
-## MARKET DATA (CONFIGURED)
-| Provider | Status | API Key |
-|----------|--------|---------|
-| Alpha Vantage | CONFIGURED | `048UD46ZP2XTTXCY` |
-| Finnhub | CONFIGURED | `d4tto21r01qk9ur8s860...` |
-| TwelveData | CONFIGURED | `63f9b0b2b17f4ebb98134166e8215436` |
-| FMP | CONFIGURED | `CKeDxW1aL9tMHGUK3S5jESxpwm4CvyzV` |
-| FRED | CONFIGURED | `2a35ca95bf55fe94cc1fcb104f87494a` |
-| CoinGecko | NO KEY NEEDED | Free unlimited |
-
-## AI & BLOCKCHAIN (CONFIGURED)
-| Service | Status | API Key |
-|---------|--------|---------|
-| OpenAI | CONFIGURED | `sk-proj-IkZaSJIQ7M9DINCUU3lh...` |
-| Alchemy | CONFIGURED | `Y6Z1o1QSdcpCLhuRXudjv` |
-
-## OTHER (CONFIGURED)
-| Service | Status |
-|---------|--------|
-| GitHub Token | CONFIGURED |
-| JWT Secret | CONFIGURED |
-| Admin Email | `tdm.boyd@gmail.com` |
+Credential-like values and account identifiers were removed from this status document. Keep connection details in approved private credential storage. Removal here does not revoke credentials or erase historical copies. Validity and rotation have not been verified. Review affected providers through official account controls; do not paste replacements into chat or GitHub.
 
 ---
 

@@ -174,15 +174,6 @@ export default function AdminPage() {
     }
   };
 
-  const handleEmergencyBrake = async () => {
-    setShowEmergencyDialog(false);
-    setNotification({ type: 'warning', message: 'EMERGENCY: Closing all positions...' });
-    await new Promise(resolve => setTimeout(resolve, 3000));
-    setBotsRunning(false);
-    setNotification({ type: 'success', message: 'All positions closed. All bots stopped. System safe.' });
-    setTimeout(() => setNotification(null), 6000);
-  };
-
   const handleModeToggle = (mode: EvolutionMode) => {
     if (mode === evolutionMode) return;
     setPendingMode(mode);
@@ -618,8 +609,8 @@ export default function AdminPage() {
               className="p-4 bg-slate-800/50 rounded-lg hover:bg-red-500/20 hover:border hover:border-red-500/30 transition-colors text-left"
             >
               <AlertTriangle className="w-5 h-5 text-red-400 mb-2" />
-              <p className="text-sm font-medium text-white">Emergency Brake</p>
-              <p className="text-xs text-slate-500">Close all positions</p>
+              <p className="text-sm font-medium text-white">Emergency Brake — Unavailable</p>
+              <p className="text-xs text-slate-500">No verified broker safety workflow is connected</p>
             </button>
           </div>
         </div>
@@ -681,30 +672,22 @@ export default function AdminPage() {
               </div>
               <h3 className="text-lg font-semibold text-white">Emergency Brake</h3>
             </div>
-            <p className="text-sm text-slate-400 mb-4">
-              This will immediately:
+            <p role="alert" className="text-sm text-red-400 font-medium mb-6">
+              Emergency liquidation is unavailable in this panel. No positions have
+              been closed, no orders cancelled, and no bots or execution stopped by
+              opening this dialog. This panel cannot confirm that your accounts are safe.
             </p>
-            <ul className="text-sm text-slate-400 mb-6 space-y-1 list-disc list-inside">
-              <li>Close all open positions at market price</li>
-              <li>Cancel all pending orders</li>
-              <li>Pause all active bots</li>
-              <li>Disable new trade execution</li>
-            </ul>
-            <p className="text-sm text-red-400 font-medium mb-6">
-              This action cannot be undone. Use only in emergencies.
+            <p className="text-sm text-slate-400 mb-6">
+              Review account and order status directly in your broker&apos;s official
+              controls. Do not rely on this panel for emergency execution.
             </p>
-            <div className="flex items-center gap-3 justify-end">
+            <div className="flex items-center justify-end">
               <button
+                type="button"
                 onClick={() => setShowEmergencyDialog(false)}
                 className="btn-secondary"
               >
-                Cancel
-              </button>
-              <button
-                onClick={handleEmergencyBrake}
-                className="px-4 py-2 rounded-lg font-medium bg-red-500 hover:bg-red-600 text-white"
-              >
-                Confirm Emergency Stop
+                Dismiss warning
               </button>
             </div>
           </div>
